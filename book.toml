@@ -1,0 +1,26 @@
+[book]
+title = "Zig 编程语言全面入门教程"
+authors = ["Zig Tutorial Contributors"]
+language = "zh-CN"
+src = "src"
+
+[build]
+build-dir = "book"
+create-missing = false
+
+[output.html]
+default-theme = "light"
+preferred-dark-theme = "navy"
+git-repository-url = "https://github.com/vincentme/zig-tutorial"
+edit-url-template = "https://github.com/vincentme/zig-tutorial/edit/main/{path}"
+additional-css = ["theme/css/auto-numbering.css"]
+
+
+[output.html.search]
+enable = true
+limit-results = 30
+use-boolean-and = true
+
+[output.html.fold]
+enable = true
+level = 0
