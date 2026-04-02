@@ -669,7 +669,7 @@ pub fn main(_: std.process.Init.Minimal) !void {
 在 Zig 中，数组和切片是两个重要但不同的概念：
 
 - **数组**：固定大小，大小是类型的一部分。默认存储在栈上，也可通过分配器存储在堆上（此时返回切片类型）
-- **切片**：动态大小，包含指针和长度，是对数组的"视图"
+- **切片**：包含指针和长度两个字段，是对连续内存区域的"视图"。切片本身大小固定，但可以在运行时引用不同长度的数据（而数组长度是编译期常量）。切片可以引用数组、堆分配的内存、字符串字面量等任何连续内存
 
 > 📖 **相关章节**：切片的底层实现涉及指针操作，详细内容请参考[指针与引用类型](../part2-advanced/chapter-pointers.md)。
 
@@ -679,9 +679,7 @@ pub fn main(_: std.process.Init.Minimal) !void {
 2. **安全**：数组边界检查在编译期进行，切片在运行期检查
 3. **灵活性**：切片可以引用数组的任意部分，更灵活
 
-**数组：**
-
-##### 数组的核心特性
+### 数组的核心特性
 
 1. **大小固定**：数组大小在编译期确定，不可改变
 2. **类型包含大小**：`[5]i32` 和 `[10]i32` 是不同的类型
@@ -691,31 +689,37 @@ pub fn main(_: std.process.Init.Minimal) !void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     // 固定大小数组
     // 类型 [5]i32 表示：5个 i32 元素的数组
-    var array: [5]i32 = [_]i32{ 1, 2, 3, 4, 5 };
-    
+    const array: [5]i32 = [_]i32{ 1, 2, 3, 4, 5 };
+
     // 数组长度：编译期已知
     const len = array.len;
-    
+
     // 访问元素：边界检查在编译期或运行期进行
     const first = array[0];
     const last = array[array.len - 1];
-    
-    // 多维数组：数组的数组
-    var matrix: [3][3]i32 = [_][3]i32{
-        [_]i32{ 1, 2, 3 },
-        [_]i32{ 4, 5, 6 },
-        [_]i32{ 7, 8, 9 },
-    };
-    
+
     // 数组遍历
     for (array, 0..) |item, index| {
         std.debug.print("array[{}] = {}\n", .{ index, item });
     }
-    
+
     std.debug.print("array length: {}, first: {}, last: {}\n", .{ len, first, last });
+
+    // 多维数组：数组的数组
+    const matrix: [3][3]i32 = [_][3]i32{
+        [_]i32{ 1, 2, 3 },
+        [_]i32{ 4, 5, 6 },
+        [_]i32{ 7, 8, 9 },
+    };
+    // 多维数组遍历
+    for (matrix, 0..) |row, row_index| {
+        for (row, 0..) |item, col_index| {
+            std.debug.print("matrix[{}][{}] = {}\n", .{ row_index, col_index, item });
+        }
+    }
 }
 ```
 
@@ -755,16 +759,14 @@ fn matrixMultiply(a: [3][3]f32, b: [3][3]f32) [3][3]f32 {
 }
 ```
 
-**切片：**
-
-##### 切片的核心特性
+### 切片的核心特性
 
 1. **动态大小**：切片大小在运行期确定
 2. **胖指针**：包含指针和长度两个字段
 
 > 📖 **深入学习**：胖指针是 Zig 指针系统的重要组成部分，[指针与引用类型](../part2-advanced/chapter-pointers.md)将详细讲解各种指针类型及其应用场景。
 
-3. **引用语义**：切片是对底层数组的引用，不拥有数据
+3. **引用语义**：切片是对底层内存的引用，不拥有数据
 4. **边界检查**：运行期进行边界检查，更安全
 
 ```zig
@@ -780,7 +782,7 @@ pub fn main(init: std.process.Init.Minimal) void {
     // 切片长度：运行期可知
     std.debug.print("slice length: {}, first: {}\n", .{ slice.len, slice[0] });
     
-    // 切片指针：指向底层数组
+    // 切片指针：指向底层内存
     const ptr = slice.ptr;
     std.debug.print("slice pointer: {}\n", .{ptr});
     
