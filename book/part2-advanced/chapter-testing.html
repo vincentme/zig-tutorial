@@ -1,0 +1,1727 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>【draft】测试与基准测试 - Zig 编程语言全面入门教程</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-2459343d.css">
+        <link rel="stylesheet" href="../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../theme/css/auto-numbering-66d94143.css">
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-22febf57.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-f48f4758.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Zig 编程语言全面入门教程</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/vincentme/zig-tutorial" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/vincentme/zig-tutorial/edit/main/src/part2-advanced/chapter-testing.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="draft测试与基准测试"><a class="header" href="#draft测试与基准测试">【draft】测试与基准测试</a></h1>
+<blockquote>
+<p>📖 <strong>章节概述</strong>：本章将全面介绍 Zig 的测试框架，包括单元测试、内存安全测试、基准测试以及测试与构建系统的集成。</p>
+</blockquote>
+<h2 id="单元测试基础"><a class="header" href="#单元测试基础">单元测试基础</a></h2>
+<blockquote>
+<p>📖 <strong>本节内容来源</strong>：整合自 Pedro Park 的 Zig Book 和官方文档</p>
+</blockquote>
+<h1 id="为什么需要单元测试"><a class="header" href="#为什么需要单元测试">为什么需要单元测试？</a></h1>
+<p>单元测试是软件质量保证的重要手段。在 Zig 中，单元测试具有特殊的重要性：</p>
+<ol>
+<li><strong>内存安全验证</strong>：检测内存泄漏、双重释放等问题</li>
+<li><strong>错误处理验证</strong>：确保错误路径正确处理</li>
+<li><strong>边界条件测试</strong>：验证边界情况的行为</li>
+<li><strong>重构保障</strong>：确保重构后功能不变</li>
+</ol>
+<blockquote>
+<p>📜 <strong>Zig Zen 原则关联</strong></p>
+<p>单元测试体现了以下 Zig Zen 原则：</p>
+<ul>
+<li><strong>“Edge cases matter.”</strong>（边界情况很重要）<br>单元测试帮助我们验证边界条件和异常情况，防止潜在 bug。</li>
+<li><strong>“Runtime crashes are better than bugs.”</strong>（运行时崩溃优于潜在的 bug）<br>测试可以及早发现问题，避免 bug 进入生产环境。</li>
+<li><strong>“Compile errors are better than runtime crashes.”</strong>（编译期错误优于运行时崩溃）<br>Zig 的测试框架可以在编译期捕获部分错误。</li>
+</ul>
+</blockquote>
+<h1 id="测试块语法"><a class="header" href="#测试块语法">测试块语法</a></h1>
+<p>Zig 使用 <code>test</code> 关键字定义测试块：</p>
+<pre><code class="language-zig">test "测试名称" {
+    // 测试代码
+}
+</code></pre>
+<p><strong>关键特性</strong>：</p>
+<ul>
+<li>测试块在正常编译时被忽略</li>
+<li>只有使用 <code>zig test</code> 命令时才会编译和执行</li>
+<li>测试块可以与源代码混合编写</li>
+<li>测试块具有隐式的返回值类型 <code>anyerror!void</code></li>
+</ul>
+<h1 id="测试与源代码共存"><a class="header" href="#测试与源代码共存">测试与源代码共存</a></h1>
+<p>Zig 标准库采用测试与源代码共存的方式：</p>
+<pre><code class="language-zig">// src/math.zig
+
+/// 计算两个数的和
+pub fn add(a: i32, b: i32) i32 {
+    return a + b;
+}
+
+test "add function" {
+    try std.testing.expect(add(2, 3) == 5);
+}
+</code></pre>
+<p><strong>优势</strong>：</p>
+<ul>
+<li>测试代码紧邻被测试代码，易于维护</li>
+<li>文档化代码的预期行为</li>
+<li>便于重构时验证功能</li>
+</ul>
+<p><strong>最佳实践</strong>：</p>
+<ul>
+<li>将测试块放在被测试函数之后</li>
+<li>使用描述性的测试名称</li>
+<li>每个测试块专注于一个功能点</li>
+</ul>
+<h1 id="基本测试示例"><a class="header" href="#基本测试示例">基本测试示例</a></h1>
+<p>Zig 内置了测试框架：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+// 被测试的函数
+fn add(a: i32, b: i32) i32 {
+    return a + b;
+}
+
+fn divide(a: i32, b: i32) !i32 {
+    if (b == 0) return error.DivisionByZero;
+    return @divTrunc(a, b);
+}
+
+// 基本测试
+test "add function" {
+    try std.testing.expect(add(2, 3) == 5);
+    try std.testing.expect(add(-1, 1) == 0);
+    try std.testing.expect(add(0, 0) == 0);
+}
+
+// 测试错误处理
+test "divide function" {
+    const result = try divide(10, 2);
+    try std.testing.expect(result == 5);
+    
+    const err = divide(10, 0);
+    try std.testing.expectError(error.DivisionByZero, err);
+}
+
+// 测试相等性
+test "expect equal" {
+    const expected: i32 = 42;
+    const actual: i32 = 42;
+    try std.testing.expectEqual(expected, actual);
+}
+
+// 测试近似相等（浮点数）
+test "expect approach" {
+    const expected: f32 = 3.14159;
+    const actual: f32 = 3.14160;
+    try std.testing.expectApproxEqAbs(expected, actual, 0.001);
+}
+</code></pre>
+<h2 id="测试组织与嵌套测试"><a class="header" href="#测试组织与嵌套测试">测试组织与嵌套测试</a></h2>
+<blockquote>
+<p>📖 <strong>本节内容来源</strong>：整合自 Zig Language Bible</p>
+</blockquote>
+<h1 id="嵌套测试机制"><a class="header" href="#嵌套测试机制">嵌套测试机制</a></h1>
+<p>Zig 支持在结构体、枚举、联合等类型内部定义测试块：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+const Math = struct {
+    fn add(a: i32, b: i32) i32 {
+        return a + b;
+    }
+    
+    fn subtract(a: i32, b: i32) i32 {
+        return a - b;
+    }
+    
+    // 嵌套测试
+    test "Math operations" {
+        try std.testing.expect(add(5, 3) == 8);
+        try std.testing.expect(subtract(5, 3) == 2);
+    }
+};
+</code></pre>
+<p><strong>重要特性</strong>：</p>
+<ul>
+<li><code>zig test</code> 默认只执行顶级测试块</li>
+<li>嵌套测试需要显式引用才会执行</li>
+</ul>
+<h1 id="运行嵌套测试"><a class="header" href="#运行嵌套测试">运行嵌套测试</a></h1>
+<p><strong>方法 1：使用 refAllDecls</strong></p>
+<pre><code class="language-zig">const std = @import("std");
+
+test "all tests" {
+    // 引用所有声明，触发嵌套测试执行
+    std.testing.refAllDecls(Math);
+    _ = Math; // 确保类型被引用
+}
+</code></pre>
+<p><strong>refAllDecls 实现原理</strong>：</p>
+<pre><code class="language-zig">pub fn refAllDecls(comptime T: type) void {
+    if (!builtin.is_test) return;
+    inline for (comptime std.meta.declarations(T)) |decl| {
+        _ = &amp;@field(T, decl.name);
+    }
+}
+</code></pre>
+<p><strong>注意事项</strong>：</p>
+<ul>
+<li><code>refAllDecls</code> 只引用公共成员（pub 修饰）</li>
+<li>非公共成员需要手动引用</li>
+</ul>
+<p><strong>方法 2：手动引用</strong></p>
+<pre><code class="language-zig">test "all tests" {
+    _ = Math.add; // 手动引用特定成员
+    _ = Math.subtract;
+}
+</code></pre>
+<h1 id="测试过滤"><a class="header" href="#测试过滤">测试过滤</a></h1>
+<p>使用 <code>--test-filter</code> 运行特定测试：</p>
+<pre><code class="language-bash"># 只运行名称包含 "add" 的测试
+zig test src/main.zig --test-filter "add"
+
+# 只运行特定模块的测试
+zig test src/main.zig --test-filter "Math"
+</code></pre>
+<p><strong>注意</strong>：未命名的测试块（<code>test { }</code>）始终会运行，不受过滤影响。</p>
+<h1 id="跳过测试"><a class="header" href="#跳过测试">跳过测试</a></h1>
+<p><strong>方法 1：返回 error.SkipZigTest</strong></p>
+<pre><code class="language-zig">test "skip this test" {
+    return error.SkipZigTest; // 标记为跳过
+    // 后续代码不会执行
+}
+</code></pre>
+<p><strong>方法 2：使用 –test-filter 过滤</strong></p>
+<pre><code class="language-bash"># 通过过滤排除特定测试
+zig test src/main.zig --test-filter "其他测试"
+</code></pre>
+<h1 id="条件编译测试"><a class="header" href="#条件编译测试">条件编译测试</a></h1>
+<p>使用 <code>builtin.is_test</code> 检测测试模式：</p>
+<pre><code class="language-zig">const builtin = @import("builtin");
+
+const config = if (builtin.is_test) struct {
+    const debug_mode = true;
+} else struct {
+    const debug_mode = false;
+};
+</code></pre>
+<p><strong>应用场景</strong>：</p>
+<ul>
+<li>测试时使用不同的配置</li>
+<li>测试时跳过耗时的初始化</li>
+<li>测试时使用模拟数据</li>
+</ul>
+<h1 id="测试组织最佳实践"><a class="header" href="#测试组织最佳实践">测试组织最佳实践</a></h1>
+<p><strong>1. 按功能模块组织测试</strong></p>
+<pre><code class="language-zig">const std = @import("std");
+
+const StringUtils = struct {
+    fn isEmpty(s: []const u8) bool {
+        return s.len == 0;
+    }
+    
+    fn trim(s: []const u8) []const u8 {
+        // 实现
+    }
+    
+    test "StringUtils tests" {
+        try std.testing.expect(isEmpty(""));
+        try std.testing.expect(!isEmpty("hello"));
+    }
+};
+
+const MathUtils = struct {
+    fn add(a: i32, b: i32) i32 {
+        return a + b;
+    }
+    
+    test "MathUtils tests" {
+        try std.testing.expect(add(2, 3) == 5);
+    }
+};
+
+// 顶级测试块
+test "all tests" {
+    std.testing.refAllDecls(StringUtils);
+    std.testing.refAllDecls(MathUtils);
+}
+</code></pre>
+<p><strong>2. 使用命名约定</strong></p>
+<pre><code class="language-zig">test "StringUtils.isEmpty returns true for empty string" {
+    // 测试描述清晰
+}
+
+test "StringUtils.isEmpty returns false for non-empty string" {
+    // 测试描述清晰
+}
+</code></pre>
+<p><strong>3. 分离测试文件（可选）</strong></p>
+<p>如果偏好将测试分离到独立文件：</p>
+<pre><code>src/
+├── utils.zig        # 源代码
+└── utils_test.zig   # 测试代码
+</code></pre>
+<pre><code class="language-zig">// src/utils_test.zig
+const std = @import("std");
+const utils = @import("utils.zig");
+
+test "utils tests" {
+    // 测试代码
+}
+</code></pre>
+<h2 id="测试辅助函数"><a class="header" href="#测试辅助函数">测试辅助函数</a></h2>
+<p>Zig 标准库提供了丰富的测试辅助函数，位于 <code>std.testing</code> 模块：</p>
+<h1 id="核心断言函数"><a class="header" href="#核心断言函数">核心断言函数</a></h1>
+<pre><code class="language-zig">const std = @import("std");
+
+test "core assertions" {
+    // expect：断言布尔值为真
+    try std.testing.expect(true);
+    try std.testing.expect(1 + 1 == 2);
+    
+    // expectEqual：断言两个值相等（支持类型推断）
+    try std.testing.expectEqual(@as(i32, 42), 42);
+    try std.testing.expectEqual("hello", "hello");
+    
+    // expectEqualSlices：断言切片相等
+    const expected = [_]i32{ 1, 2, 3 };
+    const actual = [_]i32{ 1, 2, 3 };
+    try std.testing.expectEqualSlices(i32, &amp;expected, &amp;actual);
+    
+    // expectEqualStrings：断言字符串相等
+    try std.testing.expectEqualStrings("hello", "hello");
+    
+    // expectError：断言错误类型
+    const err = error.TestError;
+    try std.testing.expectError(err, error.TestError);
+}
+</code></pre>
+<h1 id="浮点数比较"><a class="header" href="#浮点数比较">浮点数比较</a></h1>
+<pre><code class="language-zig">const std = @import("std");
+
+test "float comparisons" {
+    // expectApproxEqAbs：绝对误差比较
+    const expected: f32 = 3.14159;
+    const actual: f32 = 3.14160;
+    try std.testing.expectApproxEqAbs(expected, actual, 0.001);
+    
+    // expectApproxEqRel：相对误差比较
+    // 适用于比较不同数量级的浮点数
+    const large: f64 = 1000000.0;
+    const large_approx: f64 = 1000001.0;
+    try std.testing.expectApproxEqRel(large, large_approx, 0.0001);
+}
+</code></pre>
+<h1 id="字符串断言"><a class="header" href="#字符串断言">字符串断言</a></h1>
+<pre><code class="language-zig">const std = @import("std");
+
+test "string assertions" {
+    // expectStringStartsWith：断言字符串前缀
+    try std.testing.expectStringStartsWith("hello world", "hello");
+    
+    // expectStringEndsWith：断言字符串后缀
+    try std.testing.expectStringEndsWith("hello world", "world");
+    
+    // expectFmt：断言格式化输出
+    try std.testing.expectFmt("42", "{}", .{@as(i32, 42)});
+}
+</code></pre>
+<h1 id="分配器测试"><a class="header" href="#分配器测试">分配器测试</a></h1>
+<pre><code class="language-zig">const std = @import("std");
+
+test "allocator testing" {
+    // testing.allocator：测试专用分配器
+    // 会检测内存泄漏和双重释放
+    const allocator = std.testing.allocator;
+    
+    const slice = try allocator.alloc(u8, 100);
+    defer allocator.free(slice); // 必须释放，否则测试失败
+    
+    // FailingAllocator：模拟分配失败
+    var failing = std.testing.FailingAllocator.init(
+        std.heap.page_allocator,
+        .{ .fail_index = 0 }, // 第 0 次分配失败
+    );
+    const fail_alloc = failing.allocator();
+    
+    const result = fail_alloc.alloc(u8, 10);
+    try std.testing.expectError(error.OutOfMemory, result);
+}
+</code></pre>
+<h1 id="测试组织函数"><a class="header" href="#测试组织函数">测试组织函数</a></h1>
+<pre><code class="language-zig">const std = @import("std");
+
+const MyModule = struct {
+    fn add(a: i32, b: i32) i32 {
+        return a + b;
+    }
+    
+    fn multiply(a: i32, b: i32) i32 {
+        return a * b;
+    }
+    
+    // 嵌套测试
+    test "Math operations" {
+        try std.testing.expect(add(5, 3) == 8);
+        try std.testing.expect(multiply(5, 3) == 15);
+    }
+};
+
+// refAllDecls：引用所有声明以运行嵌套测试
+test "all tests" {
+    std.testing.refAllDecls(MyModule);
+}
+</code></pre>
+<h1 id="测试辅助函数一览表"><a class="header" href="#测试辅助函数一览表">测试辅助函数一览表</a></h1>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>函数</th><th>用途</th><th>示例</th></tr>
+</thead>
+<tbody>
+<tr><td><code>expect</code></td><td>断言布尔值为真</td><td><code>try expect(true)</code></td></tr>
+<tr><td><code>expectEqual</code></td><td>断言两个值相等</td><td><code>try expectEqual(42, 42)</code></td></tr>
+<tr><td><code>expectEqualSlices</code></td><td>断言切片相等</td><td><code>try expectEqualSlices(u8, "a", "a")</code></td></tr>
+<tr><td><code>expectEqualStrings</code></td><td>断言字符串相等</td><td><code>try expectEqualStrings("a", "a")</code></td></tr>
+<tr><td><code>expectError</code></td><td>断言错误类型</td><td><code>try expectError(err, result)</code></td></tr>
+<tr><td><code>expectApproxEqAbs</code></td><td>绝对误差比较</td><td><code>try expectApproxEqAbs(1.0, 1.1, 0.2)</code></td></tr>
+<tr><td><code>expectApproxEqRel</code></td><td>相对误差比较</td><td><code>try expectApproxEqRel(100.0, 101.0, 0.02)</code></td></tr>
+<tr><td><code>expectStringStartsWith</code></td><td>断言前缀</td><td><code>try expectStringStartsWith("abc", "ab")</code></td></tr>
+<tr><td><code>expectStringEndsWith</code></td><td>断言后缀</td><td><code>try expectStringEndsWith("abc", "bc")</code></td></tr>
+<tr><td><code>expectFmt</code></td><td>断言格式化输出</td><td><code>try expectFmt("42", "{}", .{42})</code></td></tr>
+<tr><td><code>refAllDecls</code></td><td>运行嵌套测试</td><td><code>refAllDecls(MyStruct)</code></td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="内存安全测试"><a class="header" href="#内存安全测试">内存安全测试</a></h2>
+<blockquote>
+<p>📖 <strong>本节内容来源</strong>：整合自 Pedro Park 的 Zig Book</p>
+</blockquote>
+<h1 id="为什么需要内存安全测试"><a class="header" href="#为什么需要内存安全测试">为什么需要内存安全测试？</a></h1>
+<p>Zig 没有垃圾回收器，需要手动管理内存。内存安全测试可以检测：</p>
+<ol>
+<li><strong>内存泄漏</strong>：分配但未释放的内存</li>
+<li><strong>双重释放</strong>：同一内存被释放多次</li>
+<li><strong>使用后释放</strong>：释放后继续使用内存</li>
+<li><strong>缓冲区溢出</strong>：访问超出分配范围的内存</li>
+</ol>
+<h1 id="使用-stdtestingallocator"><a class="header" href="#使用-stdtestingallocator">使用 std.testing.allocator</a></h1>
+<p><code>std.testing.allocator</code> 是一个特殊的分配器，会在测试结束时自动检测内存问题：</p>
+<pre><code class="language-zig">// ❌ 错误示例
+const std = @import("std");
+
+test "memory leak detection" {
+    const allocator = std.testing.allocator;
+    
+    // 正确的内存管理
+    const slice = try allocator.alloc(u8, 100);
+    defer allocator.free(slice); // 必须释放
+    
+    // 使用内存
+    @memset(slice, 0xAA);
+}
+
+test "detect memory leak" {
+    const allocator = std.testing.allocator;
+    
+    // ❌ 错误示例：忘记释放内存
+    const slice = try allocator.alloc(u8, 100);
+    // 没有 defer allocator.free(slice);
+    
+    // 测试结束时，testing.allocator 会检测到内存泄漏并报告错误
+    // Error: memory leak detected
+}
+</code></pre>
+<p><strong>测试输出示例</strong>：</p>
+<pre><code>Test [1/2] test "memory leak detection"... OK
+Test [2/2] test "detect memory leak"... FAIL (MemoryLeakDetected)
+error: memory leak detected
+</code></pre>
+<h1 id="测试内存分配函数"><a class="header" href="#测试内存分配函数">测试内存分配函数</a></h1>
+<p>当测试需要分配内存的函数时，使用 <code>std.testing.allocator</code>：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+fn createString(allocator: std.mem.Allocator, content: []const u8) ![]u8 {
+    const buffer = try allocator.alloc(u8, content.len);
+    @memcpy(buffer, content);
+    return buffer;
+}
+
+test "createString" {
+    const allocator = std.testing.allocator;
+    
+    const str = try createString(allocator, "hello");
+    defer allocator.free(str); // 必须释放
+    
+    try std.testing.expectEqualSlices(u8, "hello", str);
+}
+</code></pre>
+<h1 id="测试需要分配器的结构体"><a class="header" href="#测试需要分配器的结构体">测试需要分配器的结构体</a></h1>
+<p>对于需要分配器的结构体，测试时传入 <code>std.testing.allocator</code>：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+const ArrayList = struct {
+    items: []i32,
+    allocator: std.mem.Allocator,
+    
+    fn init(allocator: std.mem.Allocator) ArrayList {
+        return .{
+            .items = &amp;[_]i32{},
+            .allocator = allocator,
+        };
+    }
+    
+    fn deinit(self: *ArrayList) void {
+        if (self.items.len &gt; 0) {
+            self.allocator.free(self.items);
+        }
+    }
+    
+    fn append(self: *ArrayList, item: i32) !void {
+        const new_items = try self.allocator.alloc(i32, self.items.len + 1);
+        @memcpy(new_items[0..self.items.len], self.items);
+        new_items[self.items.len] = item;
+        if (self.items.len &gt; 0) {
+            self.allocator.free(self.items);
+        }
+        self.items = new_items;
+    }
+};
+
+test "ArrayList" {
+    const allocator = std.testing.allocator;
+    var list = ArrayList.init(allocator);
+    defer list.deinit(); // 必须调用 deinit
+    
+    try list.append(1);
+    try list.append(2);
+    try list.append(3);
+    
+    try std.testing.expectEqual(@as(usize, 3), list.items.len);
+    try std.testing.expectEqual(@as(i32, 1), list.items[0]);
+}
+</code></pre>
+<h1 id="模拟分配失败"><a class="header" href="#模拟分配失败">模拟分配失败</a></h1>
+<p>使用 <code>FailingAllocator</code> 测试内存不足的情况：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+test "allocation failure" {
+    // 创建一个会在第 N 次分配时失败的分配器
+    var failing = std.testing.FailingAllocator.init(
+        std.heap.page_allocator,
+        .{ .fail_index = 2 }, // 第 2 次分配时失败
+    );
+    const allocator = failing.allocator();
+    
+    // 第 1 次分配成功
+    const ptr1 = try allocator.alloc(u8, 10);
+    defer allocator.free(ptr1);
+    
+    // 第 2 次分配失败
+    const result = allocator.alloc(u8, 10);
+    try std.testing.expectError(error.OutOfMemory, result);
+}
+</code></pre>
+<p><strong>应用场景</strong>：</p>
+<ul>
+<li>测试错误处理路径</li>
+<li>验证资源清理逻辑</li>
+<li>确保程序在内存不足时优雅降级</li>
+</ul>
+<h1 id="检测未初始化内存"><a class="header" href="#检测未初始化内存">检测未初始化内存</a></h1>
+<p>使用 <code>undefined</code> 标记未初始化变量，配合安全检查：</p>
+<pre><code class="language-zig">// 💡 最佳实践
+const std = @import("std");
+
+test "undefined detection" {
+    // Debug 模式下，Zig 会用 0xAA 填充未初始化内存
+    var buffer: [10]u8 = undefined;
+    
+    // 在 Debug 模式下，读取未初始化的内存可能触发运行时错误
+    // 但在 Release 模式下，这是未定义行为
+    
+    // 正确做法：先初始化再使用
+    @memset(&amp;buffer, 0);
+    try std.testing.expectEqual(@as(u8, 0), buffer[0]);
+}
+</code></pre>
+<h1 id="内存安全测试最佳实践"><a class="header" href="#内存安全测试最佳实践">内存安全测试最佳实践</a></h1>
+<p><strong>1. 总是使用 std.testing.allocator</strong></p>
+<pre><code class="language-zig">// 🚫 已废弃：0.16.0，请使用 DebugAllocator
+test "correct pattern" {
+    const allocator = std.testing.allocator;
+    // 测试代码
+}
+
+// ❌ 错误示例
+test "incorrect pattern" {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+    // 这样无法自动检测内存泄漏
+}
+</code></pre>
+<p><strong>2. 确保所有分配都有对应的释放</strong></p>
+<pre><code class="language-zig">test "proper cleanup" {
+    const allocator = std.testing.allocator;
+    
+    const ptr1 = try allocator.alloc(u8, 10);
+    defer allocator.free(ptr1); // 使用 defer 确保释放
+    
+    const ptr2 = try allocator.create(i32);
+    defer allocator.destroy(ptr2); // 使用 defer 确保释放
+    
+    // 即使测试失败，defer 也会执行
+}
+</code></pre>
+<p><strong>3. 测试错误路径的内存清理</strong></p>
+<pre><code class="language-zig">// ❌ 错误示例
+const std = @import("std");
+
+fn complexOperation(allocator: std.mem.Allocator) !void {
+    const ptr1 = try allocator.alloc(u8, 100);
+    errdefer allocator.free(ptr1); // 错误时释放
+    
+    const ptr2 = try allocator.alloc(u8, 200);
+    errdefer allocator.free(ptr2); // 错误时释放
+    
+    // 如果这里失败，ptr1 和 ptr2 都会被正确释放
+    return error.SomeError;
+}
+
+test "error path cleanup" {
+    const allocator = std.testing.allocator;
+    
+    try std.testing.expectError(error.SomeError, complexOperation(allocator));
+    // testing.allocator 会验证所有内存都已释放
+}
+</code></pre>
+<p><strong>4. 测试边界条件</strong></p>
+<pre><code class="language-zig">test "boundary conditions" {
+    const allocator = std.testing.allocator;
+    
+    // 测试零长度分配
+    const empty = try allocator.alloc(u8, 0);
+    defer allocator.free(empty);
+    
+    // 测试大块分配
+    const large = try allocator.alloc(u8, 1024 * 1024);
+    defer allocator.free(large);
+}
+</code></pre>
+<h1 id="内存安全检测工具"><a class="header" href="#内存安全检测工具">内存安全检测工具</a></h1>
+<p><strong>GeneralPurposeAllocator 的泄漏检测</strong></p>
+<p>在非测试代码中，使用 <code>GeneralPurposeAllocator</code> 检测内存泄漏：</p>
+<pre><code class="language-zig">// 🚫 已废弃：0.16.0，请使用 DebugAllocator
+const std = @import("std");
+
+pub fn main() !void {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer {
+        const leaked = gpa.deinit();
+        if (leaked == .leak) {
+            std.debug.print("Memory leak detected!\n", .{});
+        }
+    }
+    const allocator = gpa.allocator();
+    
+    // 程序代码
+}
+</code></pre>
+<p><strong>安全检查编译选项</strong></p>
+<pre><code class="language-bash"># Debug 模式：启用所有安全检查
+zig build -Doptimize=Debug
+
+# ReleaseSafe 模式：优化但保留安全检查
+zig build -Doptimize=ReleaseSafe
+
+# ReleaseFast 模式：完全优化，禁用安全检查
+zig build -Doptimize=ReleaseFast
+</code></pre>
+<h2 id="基准测试"><a class="header" href="#基准测试">基准测试</a></h2>
+<pre><code class="language-zig">const std = @import("std");
+
+fn fibonacci(n: usize) usize {
+    if (n &lt;= 1) return n;
+    return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+pub fn main(init: std.process.Init.Minimal) !void {
+    const iterations = 10_000;
+    
+    // 计时开始
+    const start = std.time.nanoTimestamp();
+    
+    // 运行基准测试
+    var i: usize = 0;
+    while (i &lt; iterations) : (i += 1) {
+        const result = fibonacci(20);
+        std.mem.doNotOptimizeAway(result);
+    }
+    
+    // 计时结束
+    const end = std.time.nanoTimestamp();
+    
+    // 计算耗时
+    const elapsed_ns = end - start;
+    const elapsed_ms = @as(f64, @floatFromInt(elapsed_ns)) / std.time.ns_per_ms;
+    const avg_ns = @as(f64, @floatFromInt(elapsed_ns)) / @as(f64, @floatFromInt(iterations));
+    
+    std.debug.print("总耗时：{d:.2} ms\n", .{elapsed_ms});
+    std.debug.print("平均耗时：{d:.2} ns/次\n", .{avg_ns});
+    std.debug.print("吞吐量：{d:.0} 次/秒\n", .{1_000_000_000.0 / avg_ns});
+}
+</code></pre>
+<h2 id="测试运行与构建集成"><a class="header" href="#测试运行与构建集成">测试运行与构建集成</a></h2>
+<blockquote>
+<p>📖 <strong>本节内容来源</strong>：整合自 Pedro Park 的 Zig Book 和 Zig Language Bible</p>
+</blockquote>
+<h1 id="基本测试命令"><a class="header" href="#基本测试命令">基本测试命令</a></h1>
+<pre><code class="language-bash"># 运行所有测试
+zig test src/main.zig
+
+# 运行特定测试
+zig test src/main.zig --test-filter "add function"
+
+# 运行测试并显示详细输出
+zig test src/main.zig --verbose
+
+# 在构建系统中运行测试
+zig build test
+</code></pre>
+<h1 id="测试命令选项详解"><a class="header" href="#测试命令选项详解">测试命令选项详解</a></h1>
+<p><strong>1. –test-filter：过滤测试</strong></p>
+<pre><code class="language-bash"># 只运行名称包含 "add" 的测试
+zig test src/main.zig --test-filter "add"
+
+# 支持部分匹配
+zig test src/main.zig --test-filter "Math"
+</code></pre>
+<p><strong>注意事项</strong>：</p>
+<ul>
+<li>未命名的测试块（<code>test { }</code>）始终会运行</li>
+<li>过滤器区分大小写</li>
+<li>支持正则表达式模式</li>
+</ul>
+<p><strong>2. –test-cmd：自定义测试运行器</strong></p>
+<pre><code class="language-bash"># 使用自定义测试运行器
+zig test src/main.zig --test-cmd "path/to/test_runner"
+
+# 在特定环境下运行测试
+zig test src/main.zig --test-cmd "wine" --test-cmd-bin
+</code></pre>
+<p><strong>3. –test-name-prefix：测试名称前缀</strong></p>
+<pre><code class="language-bash"># 为测试名称添加前缀（用于区分不同模块）
+zig test src/main.zig --test-name-prefix "module1."
+</code></pre>
+<h1 id="构建系统集成"><a class="header" href="#构建系统集成">构建系统集成</a></h1>
+<p><strong>基本 build.zig 测试配置：</strong></p>
+<pre><code class="language-zig">// 🚫 已废弃：0.15.x 已移除
+const std = @import("std");
+
+pub fn build(b: *std.Build) void {
+    const target = b.standardTargetOptions(.{});
+    const optimize = b.standardOptimizeOption(.{});
+    
+    // 主程序
+    const exe = b.addExecutable(.{
+        .name = "myapp",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/main.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    b.installArtifact(exe);
+    
+    // 单元测试
+    const unit_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/main.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    
+    const run_unit_tests = b.addRunArtifact(unit_tests);
+    
+    const test_step = b.step("test", "Run unit tests");
+    test_step.dependOn(&amp;run_unit_tests.step);
+}
+</code></pre>
+<p><strong>高级测试配置：</strong></p>
+<pre><code class="language-zig">// 🚫 已废弃：0.15.x 已移除
+const std = @import("std");
+
+pub fn build(b: *std.Build) void {
+    const target = b.standardTargetOptions(.{});
+    const optimize = b.standardOptimizeOption(.{});
+    
+    // 1. 单元测试
+    const unit_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/main.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+        .filters = &amp;[_][]const u8{}, // 可选：测试过滤器
+    });
+    
+    // 2. 集成测试
+    const integration_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("test/integration.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    
+    // 添加依赖
+    const my_module = b.createModule(.{
+        .root_source_file = b.path("src/lib.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    integration_tests.root_module.addImport("mylib", my_module);
+    
+    // 3. 测试步骤
+    const unit_test_step = b.step("test-unit", "Run unit tests");
+    unit_test_step.dependOn(&amp;b.addRunArtifact(unit_tests).step);
+    
+    const integration_test_step = b.step("test-integration", "Run integration tests");
+    integration_test_step.dependOn(&amp;b.addRunArtifact(integration_tests).step);
+    
+    // 4. 运行所有测试
+    const all_tests_step = b.step("test-all", "Run all tests");
+    all_tests_step.dependOn(unit_test_step);
+    all_tests_step.dependOn(integration_test_step);
+    
+    // 默认测试步骤
+    const test_step = b.step("test", "Run tests");
+    test_step.dependOn(unit_test_step);
+}
+</code></pre>
+<p><strong>运行构建系统的测试：</strong></p>
+<pre><code class="language-bash"># 运行默认测试
+zig build test
+
+# 运行单元测试
+zig build test-unit
+
+# 运行集成测试
+zig build test-integration
+
+# 运行所有测试
+zig build test-all
+
+# 指定优化级别
+zig build test -Doptimize=ReleaseSafe
+
+# 指定目标平台
+zig build test -Dtarget=x86_64-linux
+</code></pre>
+<h1 id="测试输出格式"><a class="header" href="#测试输出格式">测试输出格式</a></h1>
+<p><strong>默认输出：</strong></p>
+<pre><code>Test [1/3] test "add function"... OK
+Test [2/3] test "divide function"... OK
+Test [3/3] test "expect equal"... OK
+All 3 tests passed.
+</code></pre>
+<p><strong>详细输出（–verbose）：</strong></p>
+<pre><code>Test [1/3] test "add function"... OK
+  try std.testing.expect(add(2, 3) == 5);
+  try std.testing.expect(add(-1, 1) == 0);
+  try std.testing.expect(add(0, 0) == 0);
+Test [2/3] test "divide function"... OK
+  const result = try divide(10, 2);
+  try std.testing.expect(result == 5);
+  const err = divide(10, 0);
+  try std.testing.expectError(error.DivisionByZero, err);
+...
+</code></pre>
+<p><strong>失败输出：</strong></p>
+<pre><code>Test [1/2] test "add function"... OK
+Test [2/2] test "divide function"... FAIL (DivisionByZero)
+/home/user/src/main.zig:10:5: error: DivisionByZero
+    return error.DivisionByZero;
+    ^~~~~~~~~~~~~~~~~~~~~~~~~~
+</code></pre>
+<h1 id="测试最佳实践"><a class="header" href="#测试最佳实践">测试最佳实践</a></h1>
+<p><strong>1. 测试命名规范</strong></p>
+<pre><code class="language-zig">// ✅ 好的命名：描述性强
+// ❌ 错误示例
+test "StringUtils.isEmpty returns true for empty string" { }
+test "MathUtils.add handles negative numbers" { }
+test "ArrayList.append increases length" { }
+
+// ❌ 不好的命名：模糊
+test "test1" { }
+test "my test" { }
+</code></pre>
+<p><strong>2. 测试组织结构</strong></p>
+<pre><code>src/
+├── main.zig
+├── utils.zig
+└── math.zig
+
+test/
+├── integration.zig    # 集成测试
+└── benchmark.zig      # 性能测试
+</code></pre>
+<p><strong>3. 测试覆盖率</strong></p>
+<pre><code class="language-bash"># 使用 Debug 模式确保所有安全检查启用
+zig test src/main.zig -Doptimize=Debug
+
+# 使用 ReleaseSafe 模式测试优化后的行为
+zig test src/main.zig -Doptimize=ReleaseSafe
+</code></pre>
+<p><strong>4. 持续集成配置</strong></p>
+<p><strong>GitHub Actions 示例：</strong></p>
+<pre><code class="language-yaml">name: Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Install Zig
+        uses: goto-bus-stop/setup-zig@v2
+        with:
+          version: master
+      
+      - name: Run tests
+        run: zig build test
+      
+      - name: Run all tests
+        run: zig build test-all
+</code></pre>
+<h1 id="测试调试技巧"><a class="header" href="#测试调试技巧">测试调试技巧</a></h1>
+<p><strong>1. 使用 std.debug.print 调试</strong></p>
+<pre><code class="language-zig">test "debug example" {
+    const value = calculateSomething();
+    std.debug.print("Debug: value = {}\n", .{value});
+    try std.testing.expect(value &gt; 0);
+}
+</code></pre>
+<p><strong>2. 使用断点调试</strong></p>
+<pre><code class="language-zig">test "breakpoint example" {
+    const value = calculateSomething();
+    
+    // 在这里设置断点
+    std.debug.breakpoint();
+    
+    try std.testing.expect(value &gt; 0);
+}
+</code></pre>
+<p><strong>3. 测试隔离</strong></p>
+<pre><code class="language-zig">// 每个测试应该独立，不依赖其他测试的状态
+test "independent test 1" {
+    // 独立的测试环境
+    const allocator = std.testing.allocator;
+    // ...
+}
+
+test "independent test 2" {
+    // 另一个独立的测试环境
+    const allocator = std.testing.allocator;
+    // ...
+}
+</code></pre>
+<h1 id="测试性能优化"><a class="header" href="#测试性能优化">测试性能优化</a></h1>
+<p><strong>1. 并行测试</strong></p>
+<p>Zig 默认并行运行测试，可以通过环境变量控制：</p>
+<pre><code class="language-bash"># 设置并行线程数
+ZIG_TEST_THREADS=4 zig test src/main.zig
+
+# 串行运行测试
+ZIG_TEST_THREADS=1 zig test src/main.zig
+</code></pre>
+<p><strong>2. 测试过滤加速</strong></p>
+<pre><code class="language-bash"># 只运行修改相关的测试
+zig test src/main.zig --test-filter "modified_module"
+</code></pre>
+<p><strong>3. 增量测试</strong></p>
+<pre><code class="language-bash"># 使用构建系统的增量编译
+zig build test
+</code></pre>
+<h1 id="测试命令速查表"><a class="header" href="#测试命令速查表">测试命令速查表</a></h1>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>命令</th><th>说明</th></tr>
+</thead>
+<tbody>
+<tr><td><code>zig test file.zig</code></td><td>运行单个文件的测试</td></tr>
+<tr><td><code>zig test file.zig --test-filter "name"</code></td><td>运行匹配的测试</td></tr>
+<tr><td><code>zig test file.zig --verbose</code></td><td>显示详细输出</td></tr>
+<tr><td><code>zig build test</code></td><td>运行构建系统的测试</td></tr>
+<tr><td><code>zig build test-all</code></td><td>运行所有测试</td></tr>
+<tr><td><code>zig build test -Doptimize=Debug</code></td><td>Debug 模式测试</td></tr>
+<tr><td><code>zig build test -Doptimize=ReleaseSafe</code></td><td>ReleaseSafe 模式测试</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
+<h1 id="章节练习题"><a class="header" href="#章节练习题">章节练习题</a></h1>
+<h1 id="基础题"><a class="header" href="#基础题">基础题</a></h1>
+<p><strong>题目1</strong>：编写一个函数，使用指针交换两个变量的值。</p>
+<p><strong>要求</strong>：</p>
+<ul>
+<li>函数签名为 <code>fn swap(a: *i32, b: *i32) void</code></li>
+<li>使用指针参数</li>
+<li>交换两个变量的值</li>
+</ul>
+<p><strong>参考答案</strong>：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+fn swap(a: *i32, b: *i32) void {
+    const temp = a.*;
+    a.* = b.*;
+    b.* = temp;
+}
+
+pub fn main(init: std.process.Init.Minimal) void {
+    var x: i32 = 10;
+    var y: i32 = 20;
+    
+    std.debug.print("交换前：x={}, y={}\n", .{ x, y });
+    swap(&amp;x, &amp;y);
+    std.debug.print("交换后：x={}, y={}\n", .{ x, y });
+}
+</code></pre>
+<p><strong>题目2</strong>：编写一个函数，使用指针修改数组元素。</p>
+<p><strong>要求</strong>：</p>
+<ul>
+<li>函数签名为 <code>fn doubleAll(arr: []i32) void</code></li>
+<li>将数组中所有元素乘以 2</li>
+<li>使用指针访问元素</li>
+</ul>
+<p><strong>参考答案</strong>：</p>
+<pre><code class="language-zig">fn doubleAll(arr: []i32) void {
+    for (arr) |*item| {
+        item.* *= 2;
+    }
+}
+
+pub fn main(init: std.process.Init.Minimal) void {
+    var arr = [_]i32{ 1, 2, 3, 4, 5 };
+    doubleAll(&amp;arr);
+    std.debug.print("结果：{any}\n", .{arr});
+}
+</code></pre>
+<p><strong>题目3</strong>：编写一个函数，使用 const 指针读取数据。</p>
+<p><strong>要求</strong>：</p>
+<ul>
+<li>函数签名为 <code>fn sum(arr: *const [5]i32) i32</code></li>
+<li>使用 const 指针参数</li>
+<li>计算数组元素之和</li>
+</ul>
+<p><strong>参考答案</strong>：</p>
+<pre><code class="language-zig">fn sum(arr: *const [5]i32) i32 {
+    var total: i32 = 0;
+    for (arr.*) |item| {
+        total += item;
+    }
+    return total;
+}
+
+pub fn main(init: std.process.Init.Minimal) void {
+    const arr = [_]i32{ 1, 2, 3, 4, 5 };
+    const result = sum(&amp;arr);
+    std.debug.print("总和：{}\n", .{result});
+}
+</code></pre>
+<h1 id="进阶题"><a class="header" href="#进阶题">进阶题</a></h1>
+<p><strong>题目1</strong>：实现一个简单的链表节点结构，使用指针链接。</p>
+<p><strong>要求</strong>：</p>
+<ul>
+<li>定义链表节点结构</li>
+<li>实现插入和遍历功能</li>
+<li>使用指针管理节点</li>
+</ul>
+<p><strong>参考答案</strong>：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+const Node = struct {
+    value: i32,
+    next: ?*Node,
+    
+    fn init(value: i32) Node {
+        return Node{
+            .value = value,
+            .next = null,
+        };
+    }
+};
+
+pub fn main(init: std.process.Init.Minimal) void {
+    var node1 = Node.init(1);
+    var node2 = Node.init(2);
+    var node3 = Node.init(3);
+    
+    node1.next = &amp;node2;
+    node2.next = &amp;node3;
+    
+    var current: ?*Node = &amp;node1;
+    while (current) |node| {
+        std.debug.print("{} -&gt; ", .{node.value});
+        current = node.next;
+    }
+    std.debug.print("null\n", .{});
+}
+</code></pre>
+<p><strong>题目2</strong>：使用多级指针实现二维数组的动态分配。</p>
+<p><strong>要求</strong>：</p>
+<ul>
+<li>使用二级指针</li>
+<li>分配 3x3 的二维数组</li>
+<li>初始化并输出数组</li>
+</ul>
+<p><strong>参考答案</strong>：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(init: std.process.Init.Minimal) !void {
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+    
+    const rows: usize = 3;
+    const cols: usize = 3;
+    
+    var matrix = try allocator.alloc([]i32, rows);
+    defer allocator.free(matrix);
+    
+    for (0..rows) |i| {
+        matrix[i] = try allocator.alloc(i32, cols);
+        for (0..cols) |j| {
+            matrix[i][j] = @intCast(i * cols + j);
+        }
+    }
+    
+    defer {
+        for (matrix) |row| {
+            allocator.free(row);
+        }
+    }
+    
+    for (matrix, 0..) |row, i| {
+        std.debug.print("行 {}: {any}\n", .{ i, row });
+    }
+}
+</code></pre>
+<h1 id="挑战题"><a class="header" href="#挑战题">挑战题</a></h1>
+<p><strong>题目</strong>：实现一个简单的二叉树结构，使用指针管理节点。</p>
+<p><strong>要求</strong>：</p>
+<ul>
+<li>定义二叉树节点结构</li>
+<li>实现插入和遍历功能</li>
+<li>使用递归遍历</li>
+</ul>
+<p><strong>参考答案</strong>：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+const TreeNode = struct {
+    value: i32,
+    left: ?*TreeNode,
+    right: ?*TreeNode,
+    
+    fn init(value: i32) TreeNode {
+        return TreeNode{
+            .value = value,
+            .left = null,
+            .right = null,
+        };
+    }
+    
+    fn insert(node: *TreeNode, value: i32) void {
+        if (value &lt; node.value) {
+            if (node.left) |left| {
+                left.insert(value);
+            } else {
+                // 需要分配器来创建新节点
+                // 这里简化处理
+            }
+        } else {
+            if (node.right) |right| {
+                right.insert(value);
+            } else {
+                // 需要分配器来创建新节点
+                // 这里简化处理
+            }
+        }
+    }
+    
+    fn inorder(node: *const TreeNode) void {
+        if (node.left) |left| {
+            left.inorder();
+        }
+        std.debug.print("{} ", .{node.value});
+        if (node.right) |right| {
+            right.inorder();
+        }
+    }
+};
+
+pub fn main(init: std.process.Init.Minimal) void {
+    var root = TreeNode.init(5);
+    var left = TreeNode.init(3);
+    var right = TreeNode.init(7);
+    
+    root.left = &amp;left;
+    root.right = &amp;right;
+    
+    std.debug.print("中序遍历：", .{});
+    root.inorder();
+    std.debug.print("\n", .{});
+}
+</code></pre>
+<hr>
+<h1 id="章节练习题-1"><a class="header" href="#章节练习题-1">章节练习题</a></h1>
+<h1 id="基础题-1"><a class="header" href="#基础题-1">基础题</a></h1>
+<p><strong>题目1</strong>：编写一个简单的单元测试，验证加法函数。</p>
+<p><strong>要求</strong>：</p>
+<ul>
+<li>创建一个 <code>add</code> 函数</li>
+<li>使用 <code>test</code> 块编写测试</li>
+<li>使用 <code>std.testing.expect</code> 断言</li>
+</ul>
+<p><strong>参考答案</strong>：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+fn add(a: i32, b: i32) i32 {
+    return a + b;
+}
+
+test "add function" {
+    try std.testing.expect(add(2, 3) == 5);
+    try std.testing.expect(add(-1, 1) == 0);
+    try std.testing.expect(add(0, 0) == 0);
+}
+</code></pre>
+<p><strong>运行测试</strong>：</p>
+<pre><code class="language-bash">zig test main.zig
+</code></pre>
+<p><strong>题目2</strong>：编写测试验证错误处理函数。</p>
+<p><strong>要求</strong>：</p>
+<ul>
+<li>创建一个可能失败的函数</li>
+<li>测试成功和失败情况</li>
+<li>使用 <code>std.testing.expectError</code></li>
+</ul>
+<p><strong>参考答案</strong>：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+const MathError = error{
+    DivisionByZero,
+};
+
+fn divide(a: i32, b: i32) MathError!i32 {
+    if (b == 0) return error.DivisionByZero;
+    return @divTrunc(a, b);
+}
+
+test "divide success" {
+    const result = try divide(10, 2);
+    try std.testing.expect(result == 5);
+}
+
+test "divide by zero" {
+    try std.testing.expectError(error.DivisionByZero, divide(10, 0));
+}
+</code></pre>
+<p><strong>题目3</strong>：编写表格驱动测试。</p>
+<p><strong>要求</strong>：</p>
+<ul>
+<li>使用结构体数组定义测试用例</li>
+<li>遍历测试用例进行验证</li>
+<li>输出失败的测试用例</li>
+</ul>
+<p><strong>参考答案</strong>：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+fn isEven(n: i32) bool {
+    return n % 2 == 0;
+}
+
+test "isEven table driven" {
+    const cases = [_]struct {
+        input: i32,
+        expected: bool,
+    }{
+        .{ .input = 2, .expected = true },
+        .{ .input = 3, .expected = false },
+        .{ .input = 0, .expected = true },
+        .{ .input = -4, .expected = true },
+        .{ .input = -5, .expected = false },
+    };
+
+    for (cases) |c| {
+        try std.testing.expectEqual(c.expected, isEven(c.input));
+    }
+}
+</code></pre>
+<h1 id="进阶题-1"><a class="header" href="#进阶题-1">进阶题</a></h1>
+<p><strong>题目1</strong>：编写基准测试，比较不同算法的性能。</p>
+<p><strong>要求</strong>：</p>
+<ul>
+<li>实现两个不同的排序算法</li>
+<li>使用 <code>std.time</code> 测量执行时间</li>
+<li>输出性能对比结果</li>
+</ul>
+<p><strong>参考答案</strong>：</p>
+<pre><code class="language-zig">// ✨ 新特性：DebugAllocator
+const std = @import("std");
+
+fn bubbleSort(arr: []i32) void {
+    var swapped = true;
+    while (swapped) {
+        swapped = false;
+        for (arr[0 .. arr.len - 1], 0..) |*item, i| {
+            if (item.* &gt; arr[i + 1]) {
+                const temp = item.*;
+                item.* = arr[i + 1];
+                arr[i + 1] = temp;
+                swapped = true;
+            }
+        }
+    }
+}
+
+fn quickSort(arr: []i32, low: usize, high: usize) void {
+    if (low &lt; high) {
+        const pivot = arr[high];
+        var i = low;
+        for (low..high) |j| {
+            if (arr[j] &lt; pivot) {
+                const temp = arr[i];
+                arr[i] = arr[j];
+                arr[j] = temp;
+                i += 1;
+            }
+        }
+        const temp = arr[i];
+        arr[i] = arr[high];
+        arr[high] = temp;
+
+        quickSort(arr, low, i - 1);
+        quickSort(arr, i + 1, high);
+    }
+}
+
+test "sort performance comparison" {
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const size: usize = 1000;
+    var arr1 = try allocator.alloc(i32, size);
+    defer allocator.free(arr1);
+    var arr2 = try allocator.alloc(i32, size);
+    defer allocator.free(arr2);
+
+    // 初始化数组
+    for (0..size) |i| {
+        arr1[i] = @intCast(size - i);
+        arr2[i] = @intCast(size - i);
+    }
+
+    // 测量冒泡排序
+    const start1 = std.time.nanoTimestamp();
+    bubbleSort(arr1);
+    const end1 = std.time.nanoTimestamp();
+
+    // 测量快速排序
+    const start2 = std.time.nanoTimestamp();
+    quickSort(arr2, 0, arr2.len - 1);
+    const end2 = std.time.nanoTimestamp();
+
+    std.debug.print("冒泡排序：{} ns\n", .{end1 - start1});
+    std.debug.print("快速排序：{} ns\n", .{end2 - start2});
+}
+</code></pre>
+<p><strong>题目2</strong>：编写测试辅助函数，简化测试代码。</p>
+<p><strong>要求</strong>：</p>
+<ul>
+<li>创建自定义断言函数</li>
+<li>提供更详细的错误信息</li>
+<li>支持多种数据类型</li>
+</ul>
+<p><strong>参考答案</strong>：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+fn assertEqual(comptime T: type, expected: T, actual: T, message: []const u8) !void {
+    if (expected != actual) {
+        std.debug.print("断言失败：{s}\n", .{message});
+        std.debug.print("  期望：{}\n", .{expected});
+        std.debug.print("  实际：{}\n", .{actual});
+        return error.TestFailed;
+    }
+}
+
+fn assertSliceEqual(comptime T: type, expected: []const T, actual: []const T) !void {
+    if (expected.len != actual.len) {
+        std.debug.print("切片长度不匹配：{} != {}\n", .{ expected.len, actual.len });
+        return error.TestFailed;
+    }
+
+    for (expected, actual, 0..) |e, a, i| {
+        if (e != a) {
+            std.debug.print("切片元素不匹配，索引 {}：{} != {}\n", .{ i, e, a });
+            return error.TestFailed;
+        }
+    }
+}
+
+test "custom assertions" {
+    try assertEqual(i32, 42, 42, "数值应该相等");
+    try assertSliceEqual(u8, "hello", "hello");
+}
+</code></pre>
+<h1 id="挑战题-1"><a class="header" href="#挑战题-1">挑战题</a></h1>
+<p><strong>题目</strong>：实现一个完整的测试框架，支持测试套件和测试报告。</p>
+<p><strong>要求</strong>：</p>
+<ul>
+<li>支持测试套件组织</li>
+<li>提供测试报告生成</li>
+<li>支持测试过滤</li>
+</ul>
+<p><strong>参考答案</strong>：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+const TestResult = struct {
+    name: []const u8,
+    passed: bool,
+    duration_ns: i64,
+    error_msg: ?[]const u8,
+};
+
+const TestSuite = struct {
+    name: []const u8,
+    tests: std.ArrayList(TestResult),
+    
+    fn init(allocator: std.mem.Allocator, name: []const u8) TestSuite {
+        return .{
+            .name = name,
+            .tests = std.ArrayList(TestResult).init(allocator),
+        };
+    }
+    
+    fn deinit(self: *TestSuite) void {
+        self.tests.deinit();
+    }
+    
+    fn addTest(self: *TestSuite, name: []const u8, test_fn: fn () anyerror!void) void {
+        const start = std.time.nanoTimestamp();
+        var result = TestResult{
+            .name = name,
+            .passed = false,
+            .duration_ns = 0,
+            .error_msg = null,
+        };
+        
+        test_fn() catch |err| {
+            result.error_msg = @errorName(err);
+        };
+        
+        const end = std.time.nanoTimestamp();
+        result.duration_ns = end - start;
+        result.passed = result.error_msg == null;
+        
+        self.tests.append(result) catch {};
+    }
+    
+    fn printReport(self: *TestSuite) void {
+        std.debug.print("\n=== 测试报告：{s} ===\n\n", .{self.name});
+        
+        var passed: usize = 0;
+        var failed: usize = 0;
+        
+        for (self.tests.items) |test_result| {
+            if (test_result.passed) {
+                passed += 1;
+                std.debug.print("✓ {s} ({} ns)\n", .{ test_result.name, test_result.duration_ns });
+            } else {
+                failed += 1;
+                std.debug.print("✗ {s} - {s}\n", .{ test_result.name, test_result.error_msg.? });
+            }
+        }
+        
+        std.debug.print("\n总计：{} 通过，{} 失败\n", .{ passed, failed });
+    }
+};
+
+test "test framework" {
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+    
+    var suite = TestSuite.init(allocator, "数学函数测试");
+    defer suite.deinit();
+    
+    suite.addTest("加法测试", struct {
+        fn test() anyerror!void {
+            try std.testing.expect(2 + 2 == 4);
+        }
+    }.test);
+    
+    suite.addTest("减法测试", struct {
+        fn test() anyerror!void {
+            try std.testing.expect(5 - 3 == 2);
+        }
+    }.test);
+    
+    suite.printReport();
+}
+
+---
+
+## 第三部分：实战案例
+
+&gt; 💡 **章节过渡**：从测试到实战案例
+&gt; 
+&gt; 在[实战案例1 - CLI工具开发](../part3-practice/chapter-cli-tool.md)中，我们学习了测试与基准测试，掌握了如何验证代码的正确性和性能。
+&gt; 现在，我们将通过实战案例巩固所学知识，从 CLI 工具开发开始。
+&gt; 
+&gt; **为什么测试是实战开发的基础？**
+&gt; 
+&gt; 1. **质量保证**：测试驱动开发（TDD）确保代码质量
+&gt; 2. **重构信心**：有测试覆盖的代码更容易重构
+&gt; 3. **文档作用**：测试用例本身就是最好的文档
+&gt; 
+&gt; **学习建议**：
+&gt; - 在开发实战案例时，养成编写测试的习惯
+&gt; - 使用基准测试验证性能优化效果
+&gt; - 将测试作为开发流程的一部分
+</code></pre>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../part2-advanced/chapter-package-management.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../part3-practice/chapter-cli-tool.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../part2-advanced/chapter-package-management.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../part3-practice/chapter-cli-tool.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-c2a407aa.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-362d1e8a.js"></script>
+        <script src="../book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

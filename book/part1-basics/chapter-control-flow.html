@@ -1,0 +1,1456 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>【draft】控制流 - Zig 编程语言全面入门教程</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-2459343d.css">
+        <link rel="stylesheet" href="../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../theme/css/auto-numbering-66d94143.css">
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-22febf57.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-f48f4758.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Zig 编程语言全面入门教程</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/vincentme/zig-tutorial" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/vincentme/zig-tutorial/edit/main/src/part1-basics/chapter-control-flow.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="draft控制流语句"><a class="header" href="#draft控制流语句">【draft】控制流语句</a></h1>
+<p>本章介绍 Zig 的控制流语句，包括条件判断、循环和分支选择。Zig 的控制流设计强调显式性和安全性。</p>
+<h2 id="条件语句"><a class="header" href="#条件语句">条件语句</a></h2>
+<h1 id="zig-控制流的独特设计"><a class="header" href="#zig-控制流的独特设计">Zig 控制流的独特设计</a></h1>
+<p>与其他语言相比，Zig 的控制流有以下特点：</p>
+<ol>
+<li><strong>if 是表达式</strong>：可以返回值，不仅用于控制流</li>
+<li><strong>模式匹配</strong>：if 可以解构可选类型和错误联合类型</li>
+<li><strong>无三元运算符</strong>：使用 if 表达式替代</li>
+<li><strong>编译期执行</strong>：控制流可以在编译期运行</li>
+</ol>
+<p><strong>if 语句：</strong></p>
+<h1 id="if-语句的核心概念"><a class="header" href="#if-语句的核心概念">if 语句的核心概念</a></h1>
+<p>在 Zig 中，if 不仅是语句，还是表达式。这意味着：</p>
+<ul>
+<li>if 可以返回值</li>
+<li>必须保证所有分支都返回相同类型的值</li>
+<li>最后一个表达式就是返回值</li>
+</ul>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(init: std.process.Init.Minimal) void {
+    const number: i32 = 42;
+    
+    // 基本 if 语句：控制流
+    if (number &gt; 50) {
+        std.debug.print("大于 50\n", .{});
+    } else if (number &gt; 30) {
+        std.debug.print("大于 30 但小于等于 50\n", .{});
+    } else {
+        std.debug.print("小于等于 30\n", .{});
+    }
+    
+    // if 作为表达式：返回值
+    // 注意：所有分支必须返回相同类型
+    const result = if (number &gt; 40) "大数" else "小数";
+    std.debug.print("结果：{s}\n", .{result});
+    
+    // 实际应用：条件初始化
+    const max_value = if (number &gt; 100) number else 100;
+    std.debug.print("最大值：{}\n", .{max_value});
+    
+    // 嵌套 if 表达式
+    const category = if (number &lt; 10) "小"
+                     else if (number &lt; 100) "中"
+                     else "大";
+    std.debug.print("类别：{s}\n", .{category});
+}
+</code></pre>
+<h1 id="if-表达式-vs-三元运算符"><a class="header" href="#if-表达式-vs-三元运算符">if 表达式 vs 三元运算符</a></h1>
+<p>Zig 没有三元运算符（?:），而是使用 if 表达式：</p>
+<pre><code class="language-zig">// 其他语言：const result = condition ? value1 : value2;
+// Zig：const result = if (condition) value1 else value2;
+
+const abs_value = if (x &gt;= 0) x else -x;
+const max = if (a &gt; b) a else b;
+</code></pre>
+<p><strong>处理 Optionals 的 if：</strong></p>
+<h1 id="可选类型的模式匹配"><a class="header" href="#可选类型的模式匹配">可选类型的模式匹配</a></h1>
+<p>Zig 的 if 可以直接解构可选类型，这是 Zig 的重要特性：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(init: std.process.Init.Minimal) void {
+    const maybe_number: ?i32 = 42;
+    
+    // 模式匹配：自动解包可选类型
+    // 如果 maybe_number 不为 null，number 绑定到内部值
+    if (maybe_number) |number| {
+        std.debug.print("数字是：{}\n", .{number});
+        // number 的类型是 i32，不是 ?i32
+    } else {
+        std.debug.print("没有数字 (null)\n", .{});
+    }
+    
+    // 捕获指针：可以修改值
+    var mutable_number: ?i32 = 10;
+    if (mutable_number) |*num| {
+        num.* += 5; // 修改内部值
+    }
+    std.debug.print("修改后：{}\n", .{mutable_number});
+    
+    // 处理错误联合类型
+    const error_value: anyerror!i32 = 42;
+    if (error_value) |number| {
+        std.debug.print("数字是：{}\n", .{number});
+    } else |err| {
+        std.debug.print("错误：{}\n", .{err});
+    }
+}
+</code></pre>
+<h1 id="实际应用场景"><a class="header" href="#实际应用场景">实际应用场景</a></h1>
+<pre><code class="language-zig">// 场景1：安全的配置读取
+const Config = struct {
+    timeout: ?u32,
+    max_retries: ?u32,
+};
+
+fn getTimeout(config: Config) u32 {
+    // 如果配置中有值，使用配置值；否则使用默认值
+    return if (config.timeout) |t| t else 30;
+}
+
+// 场景2：错误处理
+fn readFile(path: []const u8) ?[]const u8 {
+    // 可能返回 null
+    return null;
+}
+
+fn processFile(path: []const u8) void {
+    if (readFile(path)) |content| {
+        std.debug.print("文件内容：{s}\n", .{content});
+    } else {
+        std.debug.print("无法读取文件\n", .{});
+    }
+}
+
+// 场景3：链式可选值处理
+fn getNestedValue(data: ?*const Data) ?i32 {
+    if (data) |d| {
+        if (d.value) |v| {
+            return v * 2;
+        }
+    }
+    return null;
+}
+</code></pre>
+<h2 id="循环语句"><a class="header" href="#循环语句">循环语句</a></h2>
+<p><strong>while 循环：</strong></p>
+<h1 id="while-循环的独特之处"><a class="header" href="#while-循环的独特之处">while 循环的独特之处</a></h1>
+<p>Zig 的 while 循环支持：</p>
+<ul>
+<li><strong>continue 表达式</strong>：每次迭代后执行的表达式</li>
+<li><strong>可选类型解包</strong>：自动处理可选值</li>
+<li><strong>标签</strong>：支持嵌套循环的控制</li>
+</ul>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(init: std.process.Init.Minimal) void {
+    var i: usize = 0;
+    
+    // 基本 while 循环
+    while (i &lt; 5) {
+        std.debug.print("i = {}\n", .{i});
+        i += 1;
+    }
+    
+    // 带 continue 表达式的 while
+    // 格式：while (condition) : (continue_expression) { ... }
+    var j: usize = 0;
+    while (j &lt; 10) : (j += 2) {
+        std.debug.print("j = {}\n", .{j});
+        // j += 2 在每次迭代后自动执行
+    }
+    
+    // 带 break 条件的 while
+    var k: usize = 0;
+    while (true) {
+        if (k &gt;= 3) break;
+        std.debug.print("k = {}\n", .{k});
+        k += 1;
+    }
+    
+    // 处理可选值的 while
+    var numbers = [_]?i32{ 1, 2, null, 4, null };
+    var index: usize = 0;
+    while (index &lt; numbers.len) : (index += 1) {
+        if (numbers[index]) |num| {
+            std.debug.print("有效数字：{}\n", .{num});
+        }
+    }
+}
+</code></pre>
+<h1 id="while-循环的实际应用"><a class="header" href="#while-循环的实际应用">while 循环的实际应用</a></h1>
+<pre><code class="language-zig">// 场景1：读取直到结束
+fn readUntilEnd(reader: anytype) !void {
+    var buffer: [1024]u8 = undefined;
+    while (try reader.read(buffer[0..])) |bytes_read| {
+        if (bytes_read == 0) break;
+        // 处理数据
+    }
+}
+
+// 场景2：带重试的操作
+fn retryOperation(max_retries: u32) !void {
+    var retries: u32 = 0;
+    while (retries &lt; max_retries) : (retries += 1) {
+        if (tryRiskyOperation()) {
+            return; // 成功，退出
+        }
+        std.time.sleep(1000 * std.time.ns_per_ms);
+    }
+    return error.MaxRetriesExceeded;
+}
+
+// 场景3：迭代器模式
+fn Iterator(comptime T: type) type {
+    return struct {
+        items: []T,
+        index: usize = 0,
+        
+        fn next(self: *@This()) ?T {
+            if (self.index &gt;= self.items.len) return null;
+            defer self.index += 1;
+            return self.items[self.index];
+        }
+    };
+}
+</code></pre>
+<p><strong>for 循环：</strong></p>
+<h1 id="for-循环的强大功能"><a class="header" href="#for-循环的强大功能">for 循环的强大功能</a></h1>
+<p>Zig 的 for 循环支持：</p>
+<ul>
+<li><strong>单元素遍历</strong>：遍历数组、切片等</li>
+<li><strong>带索引遍历</strong>：同时获取元素和索引</li>
+<li><strong>多序列并行遍历</strong>：同时遍历多个序列</li>
+<li><strong>范围遍历</strong>：遍历数字范围</li>
+</ul>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(init: std.process.Init.Minimal) void {
+    const array = [_]i32{ 1, 2, 3, 4, 5 };
+    
+    // 遍历数组：只获取元素
+    for (array) |item| {
+        std.debug.print("item = {}\n", .{item});
+    }
+    
+    // 带索引的遍历：使用 0.. 获取索引
+    for (array, 0..) |item, index| {
+        std.debug.print("array[{}] = {}\n", .{ index, item });
+    }
+    
+    // 多数组并行遍历：同时遍历两个数组
+    const array2 = [_]i32{ 10, 20, 30, 40, 50 };
+    for (array, array2) |a, b| {
+        std.debug.print("{} + {} = {}\n", .{ a, b, a + b });
+    }
+    
+    // 修改元素：使用指针捕获
+    var mutable_array = [_]i32{ 1, 2, 3, 4, 5 };
+    for (&amp;mutable_array) |*item| {
+        item.* *= 2; // 每个元素乘以 2
+    }
+    
+    // 范围遍历：遍历数字范围
+    for (0..5) |i| {
+        std.debug.print("i = {}\n", .{i});
+    }
+    
+    // 标签和 break/continue
+    outer: for (0..3) |i| {
+        for (0..3) |j| {
+            if (i == 1 and j == 1) break :outer;
+            std.debug.print("({}, {})\n", .{ i, j });
+        }
+    }
+}
+</code></pre>
+<h1 id="for-循环的实际应用"><a class="header" href="#for-循环的实际应用">for 循环的实际应用</a></h1>
+<pre><code class="language-zig">// 场景1：数据处理管道
+fn processBatch(data: []const u8) void {
+    for (data) |byte| {
+        // 处理每个字节
+        _ = byte;
+    }
+}
+
+// 场景2：查找和过滤
+fn findFirst(items: []const i32, target: i32) ?usize {
+    for (items, 0..) |item, index| {
+        if (item == target) return index;
+    }
+    return null;
+}
+
+// 场景3：矩阵操作
+fn matrixAdd(a: [][]f32, b: [][]f32, result: [][]f32) void {
+    for (a, b, result) |row_a, row_b, row_result| {
+        for (row_a, row_b, row_result) |val_a, val_b, *val_result| {
+            val_result.* = val_a + val_b;
+        }
+    }
+}
+</code></pre>
+<h2 id="switch-语句"><a class="header" href="#switch-语句">switch 语句</a></h2>
+<h1 id="switch-的强大功能"><a class="header" href="#switch-的强大功能">switch 的强大功能</a></h1>
+<p>Zig 的 switch 语句非常强大：</p>
+<ul>
+<li><strong>穷尽性检查</strong>：必须处理所有可能的情况</li>
+<li><strong>模式匹配</strong>：支持范围、多值匹配</li>
+<li><strong>表达式</strong>：可以返回值</li>
+<li><strong>编译期检查</strong>：确保所有分支都被处理</li>
+</ul>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(init: std.process.Init.Minimal) void {
+    const number: i32 = 2;
+    
+    // 基本 switch：必须穷尽所有情况
+    // 使用 else 处理其他所有情况
+    const result = switch (number) {
+        1 =&gt; "一",
+        2 =&gt; "二",
+        3 =&gt; "三",
+        else =&gt; "其他",
+    };
+    std.debug.print("结果：{s}\n", .{result});
+    
+    // 范围匹配：使用 ... 操作符
+    // 注意：范围是闭区间（包含两端）
+    const grade: u8 = 85;
+    const level = switch (grade) {
+        90...100 =&gt; "A",
+        80...89 =&gt; "B",
+        70...79 =&gt; "C",
+        60...69 =&gt; "D",
+        else =&gt; "F",
+    };
+    std.debug.print("等级：{s}\n", .{level});
+    
+    // 多值匹配：使用逗号分隔
+    const char: u8 = 'a';
+    const is_vowel = switch (char) {
+        'a', 'e', 'i', 'o', 'u' =&gt; true,
+        'A', 'E', 'I', 'O', 'U' =&gt; true,
+        else =&gt; false,
+    };
+    std.debug.print("是元音：{}\n", .{is_vowel});
+}
+</code></pre>
+<h1 id="switch-的高级用法"><a class="header" href="#switch-的高级用法">switch 的高级用法</a></h1>
+<pre><code class="language-zig">// 场景1：枚举匹配（编译器确保穷尽）
+const Color = enum {
+    red,
+    green,
+    blue,
+};
+
+fn colorToHex(color: Color) u32 {
+    return switch (color) {
+        .red =&gt; 0xFF0000,
+        .green =&gt; 0x00FF00,
+        .blue =&gt; 0x0000FF,
+        // 不需要 else：编译器会检查是否穷尽
+    };
+}
+
+// 场景2：捕获匹配值
+fn classifyNumber(n: i32) []const u8 {
+    return switch (n) {
+        0 =&gt; "零",
+        1...10 =&gt; |val| blk: {
+            std.debug.print("小数字：{}\n", .{val});
+            break :blk "小";
+        },
+        11...100 =&gt; "中",
+        else =&gt; "大",
+    };
+}
+
+// 场景3：指针捕获（修改值）
+fn doublePositive(numbers: []i32) void {
+    for (numbers) |*n| {
+        switch (n.*) {
+            1...100 =&gt; |*val| val.* *= 2,
+            else =&gt; {},
+        }
+    }
+}
+</code></pre>
+<h2 id="defer-语句"><a class="header" href="#defer-语句">defer 语句</a></h2>
+<h1 id="什么是-defer"><a class="header" href="#什么是-defer">什么是 defer？</a></h1>
+<p><code>defer</code> 是 Zig 的资源管理核心机制，它确保指定的代码在当前作用域结束时执行。这类似于其他语言的 RAII（资源获取即初始化）模式。</p>
+<h1 id="为什么使用-defer"><a class="header" href="#为什么使用-defer">为什么使用 defer？</a></h1>
+<ol>
+<li><strong>资源安全释放</strong>：确保文件、内存等资源被正确释放</li>
+<li><strong>异常安全</strong>：即使发生错误，defer 代码也会执行</li>
+<li><strong>代码清晰</strong>：资源获取和释放代码放在一起，更易理解</li>
+<li><strong>减少错误</strong>：避免忘记释放资源</li>
+</ol>
+<p><code>defer</code>用于确保代码在作用域结束时执行，常用于资源清理：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(init: std.process.Init.Minimal) void {
+    std.debug.print("开始\n", .{});
+
+    {
+        // defer 在作用域结束时执行
+        defer std.debug.print("作用域结束\n", .{});
+        std.debug.print("作用域中间\n", .{});
+    }
+
+    std.debug.print("结束\n", .{});
+}
+
+// 输出顺序：
+// 开始
+// 作用域中间
+// 作用域结束
+// 结束
+</code></pre>
+<h1 id="defer-的实际应用"><a class="header" href="#defer-的实际应用">defer 的实际应用</a></h1>
+<pre><code class="language-zig">// 场景1：文件操作
+fn readFile(path: []const u8) !void {
+    const file = try std.fs.cwd().openFile(path, .{});
+    defer file.close(); // 确保文件关闭
+    
+    // 使用文件...
+    // 即使发生错误，文件也会被关闭
+}
+
+// 场景2：内存管理
+fn processBuffer(allocator: std.mem.Allocator) !void {
+    const buffer = try allocator.alloc(u8, 1024);
+    defer allocator.free(buffer); // 确保内存释放
+    
+    // 使用缓冲区...
+    // 即使发生错误，内存也会被释放
+}
+
+// 场景3：互斥锁
+// 📖 **相关章节**：并发编程的详细讲解请参考[并发编程模型](../part2-advanced/chapter-c-interop.md)
+fn protectedOperation(mutex: *std.Thread.Mutex) void {
+    mutex.lock();
+    defer mutex.unlock(); // 确保解锁
+    
+    // 临界区代码...
+    // 即使发生 panic，锁也会被释放
+}
+</code></pre>
+<p><strong>多个 defer 的执行顺序：</strong></p>
+<h1 id="lifo后进先出原则"><a class="header" href="#lifo后进先出原则">LIFO（后进先出）原则</a></h1>
+<p>多个 defer 按照后进先出的顺序执行，这确保了资源的正确释放顺序：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(init: std.process.Init.Minimal) void {
+    defer std.debug.print("第一个 defer\n", .{});
+    defer std.debug.print("第二个 defer\n", .{});
+    defer std.debug.print("第三个 defer\n", .{});
+    
+    std.debug.print("主体代码\n", .{});
+}
+
+// 输出顺序（LIFO - 后进先出）：
+// 主体代码
+// 第三个 defer
+// 第二个 defer
+// 第一个 defer
+</code></pre>
+<h1 id="defer-vs-errdefer"><a class="header" href="#defer-vs-errdefer">defer vs errdefer</a></h1>
+<p>Zig 还提供了 <code>errdefer</code>，只在发生错误时执行：</p>
+<pre><code class="language-zig">fn allocateAndInit(allocator: std.mem.Allocator) !*Resource {
+    const resource = try allocator.create(Resource);
+    // 如果后续代码出错，释放内存
+    errdefer allocator.destroy(resource);
+    
+    try resource.init(); // 如果这里失败，errdefer 会执行
+    
+    // 成功时，errdefer 不会执行
+    return resource;
+}
+</code></pre>
+<p><strong>defer 的常见应用场景：</strong></p>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(init: std.process.Init.Minimal) !void {
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
+    defer _ = gpa.deinit(); // 确保分配器被清理
+    
+    const allocator = gpa.allocator();
+    
+    // 文件操作（0.16.0-dev 新API）
+    const file = try std.fs.cwd().openFile("test.txt", .{});
+    defer file.close(); // 确保文件被关闭
+    
+    // 内存分配
+    const buffer = try allocator.alloc(u8, 1024);
+    defer allocator.free(buffer); // 确保内存被释放
+    
+    // 使用资源。..
+    std.debug.print("资源已分配\n", .{});
+}
+</code></pre>
+<h2 id="线程安全的最佳实践"><a class="header" href="#线程安全的最佳实践">线程安全的最佳实践</a></h2>
+<h1 id="线程安全的数据结构"><a class="header" href="#线程安全的数据结构">线程安全的数据结构</a></h1>
+<p>在实际项目中，经常需要线程安全的数据结构。以下是线程安全计数器的实现：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+const ThreadSafeCounter = struct {
+    value: std.atomic.Value(usize),
+    mutex: std.Thread.Mutex,
+    
+    fn init() ThreadSafeCounter {
+        return .{
+            .value = std.atomic.Value(usize).init(0),
+            .mutex = .{},
+        };
+    }
+    
+    fn increment(self: *ThreadSafeCounter) void {
+        // 方式1：使用原子操作（推荐，性能更好）
+        _ = self.value.fetchAdd(1, .monotonic);
+    }
+    
+    fn incrementComplex(self: *ThreadSafeCounter) void {
+        // 方式2：使用互斥锁（复杂操作）
+        self.mutex.lock();
+        defer self.mutex.unlock();
+        // 执行复杂操作...
+        const current = self.value.load(.monotonic);
+        // 可以进行更复杂的逻辑
+        self.value.store(current + 1, .monotonic);
+    }
+    
+    fn get(self: *const ThreadSafeCounter) usize {
+        return self.value.load(.monotonic);
+    }
+};
+
+pub fn main(init: std.process.Init.Minimal) !void {
+    var counter = ThreadSafeCounter.init();
+    
+    const worker = struct {
+        fn work(c: *ThreadSafeCounter) void {
+            for (0..1000) |_| {
+                c.increment();
+            }
+        }
+    }.work;
+    
+    var threads: [10]std.Thread = undefined;
+    for (&amp;threads, 0..) |*thread, i| {
+        _ = i;
+        thread.* = try std.Thread.spawn(.{}, worker, .{&amp;counter});
+    }
+    
+    for (threads) |thread| {
+        thread.join();
+    }
+    
+    std.debug.print("最终计数：{}\n", .{counter.get()});
+}
+</code></pre>
+<h1 id="选择同步原语的原则"><a class="header" href="#选择同步原语的原则">选择同步原语的原则</a></h1>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>场景</th><th>推荐方案</th><th>原因</th></tr>
+</thead>
+<tbody>
+<tr><td>简单计数器</td><td>原子操作</td><td>性能最优，无锁</td></tr>
+<tr><td>复杂临界区</td><td>互斥锁</td><td>保证互斥访问</td></tr>
+<tr><td>读多写少</td><td>读写锁</td><td>提高并发度</td></tr>
+<tr><td>等待条件</td><td>条件变量</td><td>高效等待</td></tr>
+</tbody>
+</table>
+</div>
+<h1 id="线程安全检查清单"><a class="header" href="#线程安全检查清单">线程安全检查清单</a></h1>
+<ol>
+<li>✅ <strong>识别共享数据</strong>：明确哪些数据会被多个线程访问</li>
+<li>✅ <strong>选择同步原语</strong>：根据访问模式选择合适的锁或原子操作</li>
+<li>✅ <strong>最小化临界区</strong>：锁的范围越小越好</li>
+<li>✅ <strong>避免嵌套锁</strong>：防止死锁</li>
+<li>✅ <strong>使用 RAII 模式</strong>：确保锁一定会释放</li>
+</ol>
+<h2 id="常见并发陷阱"><a class="header" href="#常见并发陷阱">常见并发陷阱</a></h2>
+<h1 id="死锁deadlock"><a class="header" href="#死锁deadlock">死锁（Deadlock）</a></h1>
+<p>死锁是指两个或多个线程互相等待对方释放资源，导致所有线程都无法继续执行。</p>
+<p><strong>死锁示例</strong>：</p>
+<pre><code class="language-zig">// ❌ 错误示例
+fn deadlockExample() void {
+    var mutex1: std.Thread.Mutex = .{};
+    var mutex2: std.Thread.Mutex = .{};
+    
+    // 线程1：先锁 mutex1，再锁 mutex2
+    const thread1 = std.Thread.spawn(.{}, struct {
+        fn work(m1: *std.Thread.Mutex, m2: *std.Thread.Mutex) void {
+            m1.lock();
+            defer m1.unlock();
+            
+            std.time.sleep(100 * std.time.ns_per_ms);  // 模拟工作
+            
+            m2.lock();  // 可能死锁
+            defer m2.unlock();
+        }
+    }.work, .{ &amp;mutex1, &amp;mutex2 });
+    
+    // 线程2：先锁 mutex2，再锁 mutex1（相反顺序）
+    const thread2 = std.Thread.spawn(.{}, struct {
+        fn work(m1: *std.Thread.Mutex, m2: *std.Thread.Mutex) void {
+            m2.lock();
+            defer m2.unlock();
+            
+            std.time.sleep(100 * std.time.ns_per_ms);
+            
+            m1.lock();  // 死锁发生
+            defer m1.unlock();
+        }
+    }.work, .{ &amp;mutex1, &amp;mutex2 });
+    
+    thread1.join();
+    thread2.join();
+}
+</code></pre>
+<p><strong>避免死锁的方法</strong>：</p>
+<pre><code class="language-zig">// ✅ 方法1：统一加锁顺序
+// 💡 最佳实践
+fn noDeadlockMethod1() void {
+    var mutex1: std.Thread.Mutex = .{};
+    var mutex2: std.Thread.Mutex = .{};
+    
+    // 所有线程按相同顺序加锁
+    mutex1.lock();
+    defer mutex1.unlock();
+    
+    mutex2.lock();
+    defer mutex2.unlock();
+    
+    // 执行操作...
+}
+
+// ✅ 方法2：使用 tryLock 避免阻塞
+fn noDeadlockMethod2() void {
+    var mutex1: std.Thread.Mutex = .{};
+    var mutex2: std.Thread.Mutex = .{};
+    
+    mutex1.lock();
+    errdefer mutex1.unlock();
+    
+    if (mutex2.tryLock()) {
+        defer mutex2.unlock();
+        // 成功获取两个锁
+    } else {
+        // 无法获取第二个锁，释放第一个锁
+        mutex1.unlock();
+        // 重试或返回错误
+    }
+}
+</code></pre>
+<h1 id="竞态条件race-condition"><a class="header" href="#竞态条件race-condition">竞态条件（Race Condition）</a></h1>
+<p>竞态条件是指多个线程访问共享数据，且至少有一个线程在写入，导致结果依赖于执行顺序。</p>
+<pre><code class="language-zig">// ❌ 错误示例
+var counter: usize = 0;
+
+fn unsafeIncrement() void {
+    for (0..1000) |_| {
+        counter += 1;  // 非原子操作，存在竞态
+    }
+}
+
+// ✅ 正确做法：使用原子操作
+var safe_counter: std.atomic.Value(usize) = std.atomic.Value(usize).init(0);
+
+fn safeIncrement() void {
+    for (0..1000) |_| {
+        _ = safe_counter.fetchAdd(1, .monotonic);
+    }
+}
+</code></pre>
+<h1 id="活锁livelock"><a class="header" href="#活锁livelock">活锁（Livelock）</a></h1>
+<p>活锁是指线程不断改变状态但无法取得进展，类似于两个人在走廊里互相让路。</p>
+<pre><code class="language-zig">// 💡 最佳实践
+fn livelockExample() void {
+    var mutex: std.Thread.Mutex = .{};
+    var should_retry = true;
+    
+    while (should_retry) {
+        if (mutex.tryLock()) {
+            defer mutex.unlock();
+            // 执行操作
+            should_retry = false;
+        } else {
+            // 立即重试，可能导致活锁
+            // 应该添加退避策略
+        }
+    }
+}
+
+// ✅ 正确做法：添加退避策略
+fn noLivelock() void {
+    var mutex: std.Thread.Mutex = .{};
+    var retry_count: usize = 0;
+    
+    while (retry_count &lt; 10) : (retry_count += 1) {
+        if (mutex.tryLock()) {
+            defer mutex.unlock();
+            // 执行操作
+            break;
+        }
+        // 指数退避
+        std.time.sleep(std.time.ns_per_ms * @as(u64, 1) &lt;&lt; @intCast(retry_count));
+    }
+}
+</code></pre>
+<h2 id="性能优化建议"><a class="header" href="#性能优化建议">性能优化建议</a></h2>
+<h1 id="1-减少锁竞争"><a class="header" href="#1-减少锁竞争">1. 减少锁竞争</a></h1>
+<pre><code class="language-zig">// ❌ 错误示例
+fn inefficientLock(data: *Data) void {
+    var mutex: std.Thread.Mutex = .{};
+    mutex.lock();
+    defer mutex.unlock();
+    
+    // 整个操作都在临界区内
+    processData(data);  // 耗时操作
+    saveResult(data);   // 耗时操作
+}
+
+// ✅ 最小化临界区
+fn efficientLock(data: *Data) void {
+    var mutex: std.Thread.Mutex = .{};
+    
+    // 只在必要时加锁
+    mutex.lock();
+    const local_copy = data.value;
+    mutex.unlock();
+    
+    // 在锁外处理
+    const result = processData(local_copy);
+    
+    // 只在写回时加锁
+    mutex.lock();
+    data.result = result;
+    mutex.unlock();
+}
+</code></pre>
+<h1 id="2-使用无锁数据结构"><a class="header" href="#2-使用无锁数据结构">2. 使用无锁数据结构</a></h1>
+<p>对于简单操作，优先使用原子操作：</p>
+<pre><code class="language-zig">// ✅ 无锁计数器
+// 💡 最佳实践
+const LockFreeCounter = struct {
+    value: std.atomic.Value(usize),
+    
+    fn increment(self: *LockFreeCounter) void {
+        _ = self.value.fetchAdd(1, .monotonic);
+    }
+    
+    fn get(self: *const LockFreeCounter) usize {
+        return self.value.load(.monotonic);
+    }
+};
+</code></pre>
+<h1 id="3-避免伪共享false-sharing"><a class="header" href="#3-避免伪共享false-sharing">3. 避免伪共享（False Sharing）</a></h1>
+<p>伪共享是指多个线程访问同一缓存行的不同变量，导致缓存频繁失效。</p>
+<pre><code class="language-zig">// ❌ 错误示例
+const Data = struct {
+    counter1: usize,  // 线程1访问
+    counter2: usize,  // 线程2访问
+};
+
+// ✅ 使用缓存行对齐
+const CACHE_LINE_SIZE = 64;
+
+const AlignedData = struct {
+    counter1: usize align(CACHE_LINE_SIZE),
+    counter2: usize align(CACHE_LINE_SIZE),
+};
+</code></pre>
+<h1 id="4-性能对比"><a class="header" href="#4-性能对比">4. 性能对比</a></h1>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>同步方式</th><th>性能</th><th>适用场景</th></tr>
+</thead>
+<tbody>
+<tr><td>无锁（原子操作）</td><td>⭐⭐⭐⭐⭐</td><td>简单计数、标志位</td></tr>
+<tr><td>自旋锁</td><td>⭐⭐⭐⭐</td><td>短临界区、低竞争</td></tr>
+<tr><td>互斥锁</td><td>⭐⭐⭐</td><td>长临界区、高竞争</td></tr>
+<tr><td>读写锁</td><td>⭐⭐⭐</td><td>读多写少</td></tr>
+</tbody>
+</table>
+</div>
+<h1 id="5-性能测试建议"><a class="header" href="#5-性能测试建议">5. 性能测试建议</a></h1>
+<pre><code class="language-zig">const std = @import("std");
+
+fn benchmarkMutex(allocator: std.mem.Allocator) !void {
+    var mutex: std.Thread.Mutex = .{};
+    var counter: usize = 0;
+    
+    const start = std.time.nanoTimestamp();
+    
+    var threads: [4]std.Thread = undefined;
+    for (&amp;threads) |*thread| {
+        thread.* = try std.Thread.spawn(.{}, struct {
+            fn work(m: *std.Thread.Mutex, c: *usize) void {
+                for (0..100000) |_| {
+                    m.lock();
+                    defer m.unlock();
+                    c.* += 1;
+                }
+            }
+        }.work, .{ &amp;mutex, &amp;counter });
+    }
+    
+    for (threads) |thread| thread.join();
+    
+    const end = std.time.nanoTimestamp();
+    const elapsed = @as(f64, @floatFromInt(end - start)) / 1_000_000.0;
+    
+    std.debug.print("互斥锁耗时：{d:.2}ms\n", .{elapsed});
+}
+</code></pre>
+<hr>
+<h1 id="章节练习题"><a class="header" href="#章节练习题">章节练习题</a></h1>
+<h1 id="基础题"><a class="header" href="#基础题">基础题</a></h1>
+<p><strong>题目1</strong>：编写一个程序，使用 for 循环打印九九乘法表。</p>
+<p><strong>要求</strong>：</p>
+<ul>
+<li>使用嵌套 for 循环</li>
+<li>格式化输出，对齐整齐</li>
+<li>输出完整的 9x9 乘法表</li>
+</ul>
+<p><strong>解题思路</strong>：</p>
+<ol>
+<li>使用两层嵌套 for 循环</li>
+<li>外层循环控制行（1-9）</li>
+<li>内层循环控制列（1-当前行数）</li>
+<li>使用格式化字符串对齐输出</li>
+</ol>
+<p><strong>参考答案</strong>：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(init: std.process.Init.Minimal) void {
+    std.debug.print("九九乘法表：\n\n", .{});
+    
+    for (1..10) |i| {
+        for (1..i + 1) |j| {
+            std.debug.print("{}x{}={:2} ", .{ j, i, j * i });
+        }
+        std.debug.print("\n", .{});
+    }
+}
+</code></pre>
+<p><strong>预期输出</strong>：</p>
+<pre><code>九九乘法表：
+
+1x1= 1 
+1x2= 2 2x2= 4 
+1x3= 3 2x3= 6 3x3= 9 
+1x4= 4 2x4= 8 3x4=12 4x4=16 
+1x5= 5 2x5=10 3x5=15 4x5=20 5x5=25 
+1x6= 6 2x6=12 3x6=18 4x6=24 5x6=30 6x6=36 
+1x7= 7 2x7=14 3x7=21 4x7=28 5x7=35 6x7=42 7x7=49 
+1x8= 8 2x8=16 3x8=24 4x8=32 5x8=40 6x8=48 7x8=56 8x8=64 
+1x9= 9 2x9=18 3x9=27 4x9=36 5x9=45 6x9=54 7x9=63 8x9=72 9x9=81 
+</code></pre>
+<p><strong>题目2</strong>：编写一个程序，使用 while 循环计算阶乘。</p>
+<p><strong>要求</strong>：</p>
+<ul>
+<li>计算 5! = 5 × 4 × 3 × 2 × 1</li>
+<li>使用 while 循环</li>
+<li>输出计算过程和结果</li>
+</ul>
+<p><strong>解题思路</strong>：</p>
+<ol>
+<li>初始化结果为 1</li>
+<li>使用 while 循环从 1 乘到 5</li>
+<li>在循环中累乘</li>
+<li>输出结果</li>
+</ol>
+<p><strong>参考答案</strong>：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(init: std.process.Init.Minimal) void {
+    std.debug.print("=== 阶乘计算 ===\n\n", .{});
+    
+    var result: u32 = 1;
+    var i: u32 = 1;
+    const n: u32 = 5;
+    
+    std.debug.print("计算 {}! = ", .{n});
+    
+    while (i &lt;= n) : (i += 1) {
+        result *= i;
+        if (i &lt; n) {
+            std.debug.print("{} × ", .{i});
+        } else {
+            std.debug.print("{} ", .{i});
+        }
+    }
+    
+    std.debug.print("= {}\n", .{result});
+}
+</code></pre>
+<p><strong>预期输出</strong>：</p>
+<pre><code>=== 阶乘计算 ===
+
+计算 5! = 1 × 2 × 3 × 4 × 5  = 120
+</code></pre>
+<p><strong>题目3</strong>：编写一个程序，使用 switch 语句判断成绩等级。</p>
+<p><strong>要求</strong>：</p>
+<ul>
+<li>根据分数（0-100）判断等级</li>
+<li>A: 90-100, B: 80-89, C: 70-79, D: 60-69, F: 0-59</li>
+<li>输出分数和对应等级</li>
+</ul>
+<p><strong>解题思路</strong>：</p>
+<ol>
+<li>使用整数除法将分数映射到等级</li>
+<li>使用 switch 匹配等级</li>
+<li>输出结果</li>
+</ol>
+<p><strong>参考答案</strong>：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(init: std.process.Init.Minimal) void {
+    const scores: [5]u32 = [_]u32{ 95, 82, 75, 63, 45 };
+    
+    std.debug.print("=== 成绩等级判断 ===\n\n", .{});
+    
+    for (scores) |score| {
+        const grade: u8 = @intCast(score / 10);
+        const level = switch (grade) {
+            10, 9 =&gt; "A",
+            8 =&gt; "B",
+            7 =&gt; "C",
+            6 =&gt; "D",
+            else =&gt; "F",
+        };
+        std.debug.print("分数 {} -&gt; 等级 {s}\n", .{ score, level });
+    }
+}
+</code></pre>
+<p><strong>预期输出</strong>：</p>
+<pre><code>=== 成绩等级判断 ===
+
+分数 95 -&gt; 等级 A
+分数 82 -&gt; 等级 B
+分数 75 -&gt; 等级 C
+分数 63 -&gt; 等级 D
+分数 45 -&gt; 等级 F
+</code></pre>
+<h1 id="进阶题"><a class="header" href="#进阶题">进阶题</a></h1>
+<p><strong>题目1</strong>：实现一个简单的猜数字游戏，使用 while 循环和二分查找。</p>
+<p><strong>要求</strong>：</p>
+<ul>
+<li>生成 1-100 的随机数</li>
+<li>使用二分查找策略猜测</li>
+<li>提示“太大“、“太小“或“正确”</li>
+<li>记录猜测次数</li>
+<li>输出猜测过程</li>
+</ul>
+<p><strong>解题思路</strong>：</p>
+<ol>
+<li>使用 <code>std.Random</code> 生成随机数</li>
+<li>使用 while 循环持续游戏</li>
+<li>使用 if-else 判断大小</li>
+<li>使用二分查找更新猜测范围</li>
+<li>猜对后退出循环</li>
+</ol>
+<p><strong>参考答案</strong>：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(init: std.process.Init.Minimal) void {
+    var prng = std.Random.DefaultPrng.init(42);
+    const random = prng.random();
+    
+    const target = random.intRangeAtMost(u32, 1, 100);
+    var guess: u32 = 50;
+    var attempts: u32 = 0;
+    var low: u32 = 1;
+    var high: u32 = 100;
+    
+    std.debug.print("=== 猜数字游戏 ===\n", .{});
+    std.debug.print("目标数字（秘密）：{}\n\n", .{target});
+    
+    while (guess != target) {
+        attempts += 1;
+        std.debug.print("第 {} 次猜测：{}", .{ attempts, guess });
+        
+        if (guess &lt; target) {
+            std.debug.print(" - 太小！\n", .{});
+            low = guess + 1;
+        } else if (guess &gt; target) {
+            std.debug.print(" - 太大！\n", .{});
+            high = guess - 1;
+        } else {
+            std.debug.print(" - 正确！\n", .{});
+            break;
+        }
+        
+        guess = (low + high) / 2;
+    }
+    
+    std.debug.print("\n恭喜！你用了 {} 次猜对了数字 {}！\n", .{ attempts, target });
+}
+</code></pre>
+<p><strong>预期输出</strong>（示例）：</p>
+<pre><code>=== 猜数字游戏 ===
+目标数字（秘密）：73
+
+第 1 次猜测：50 - 太小！
+第 2 次猜测：75 - 太大！
+第 3 次猜测：62 - 太小！
+第 4 次猜测：68 - 太小！
+第 5 次猜测：71 - 太小！
+第 6 次猜测：73 - 正确！
+
+恭喜！你用了 6 次猜对了数字 73！
+</code></pre>
+<p><strong>题目2</strong>：实现一个简单的状态机，使用 labeled switch 控制状态转换。</p>
+<p><strong>要求</strong>：</p>
+<ul>
+<li>定义至少 4 个状态（如：空闲、运行、暂停、停止）</li>
+<li>使用 labeled switch 实现状态转换</li>
+<li>模拟状态机的执行过程</li>
+<li>输出状态转换路径</li>
+</ul>
+<p><strong>解题思路</strong>：</p>
+<ol>
+<li>定义状态枚举</li>
+<li>使用 labeled switch 实现状态机</li>
+<li>使用 <code>continue :label</code> 实现状态转换</li>
+<li>使用计数器限制循环次数</li>
+<li>输出状态转换过程</li>
+</ol>
+<p><strong>参考答案</strong>：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+const State = enum {
+    idle,
+    running,
+    paused,
+    stopped,
+};
+
+pub fn main(init: std.process.Init.Minimal) void {
+    std.debug.print("=== 状态机演示 ===\n\n", .{});
+    
+    var current_state: State = .idle;
+    var step: u32 = 0;
+    const max_steps = 10;
+    
+    std.debug.print("初始状态：{s}\n\n", .{@tagName(current_state)});
+    
+    state_machine: switch (current_state) {
+        .idle =&gt; {
+            step += 1;
+            std.debug.print("步骤 {} - 状态：空闲\n", .{step});
+            std.debug.print("  -&gt; 启动系统\n", .{});
+            current_state = .running;
+            if (step &lt; max_steps) continue :state_machine current_state;
+        },
+        .running =&gt; {
+            step += 1;
+            std.debug.print("步骤 {} - 状态：运行中\n", .{step});
+            
+            if (step == 3) {
+                std.debug.print("  -&gt; 暂停系统\n", .{});
+                current_state = .paused;
+                continue :state_machine current_state;
+            } else if (step == 7) {
+                std.debug.print("  -&gt; 停止系统\n", .{});
+                current_state = .stopped;
+                continue :state_machine current_state;
+            } else {
+                std.debug.print("  -&gt; 继续运行\n", .{});
+                if (step &lt; max_steps) continue :state_machine current_state;
+            }
+        },
+        .paused =&gt; {
+            step += 1;
+            std.debug.print("步骤 {} - 状态：已暂停\n", .{step});
+            std.debug.print("  -&gt; 恢复运行\n", .{});
+            current_state = .running;
+            if (step &lt; max_steps) continue :state_machine current_state;
+        },
+        .stopped =&gt; {
+            step += 1;
+            std.debug.print("步骤 {} - 状态：已停止\n", .{step});
+            std.debug.print("  -&gt; 系统终止\n", .{});
+            break :state_machine;
+        },
+    }
+    
+    std.debug.print("\n状态机执行完成！总步骤：{}\n", .{step});
+}
+</code></pre>
+<p><strong>预期输出</strong>：</p>
+<pre><code>=== 状态机演示 ===
+
+初始状态：idle
+
+步骤 1 - 状态：空闲
+  -&gt; 启动系统
+步骤 2 - 状态：运行中
+  -&gt; 继续运行
+步骤 3 - 状态：运行中
+  -&gt; 暂停系统
+步骤 4 - 状态：已暂停
+  -&gt; 恢复运行
+步骤 5 - 状态：运行中
+  -&gt; 继续运行
+步骤 6 - 状态：运行中
+  -&gt; 继续运行
+步骤 7 - 状态：运行中
+  -&gt; 停止系统
+步骤 8 - 状态：已停止
+  -&gt; 系统终止
+
+状态机执行完成！总步骤：8
+</code></pre>
+<h1 id="挑战题"><a class="header" href="#挑战题">挑战题</a></h1>
+<p><strong>题目</strong>：实现一个简单的文本解析器，使用控制流语句解析简单的命令。</p>
+<p><strong>要求</strong>：</p>
+<ul>
+<li>支持以下命令：<code>PRINT &lt;message&gt;</code>、<code>REPEAT &lt;n&gt; &lt;message&gt;</code>、<code>EXIT</code></li>
+<li>使用字符串比较和循环</li>
+<li>输出解析结果和执行过程</li>
+<li>处理无效命令</li>
+</ul>
+<p><strong>解题思路</strong>：</p>
+<ol>
+<li>定义命令枚举</li>
+<li>使用字符串比较识别命令</li>
+<li>使用循环处理 REPEAT 命令</li>
+<li>使用 switch 或 if-else 处理不同命令</li>
+<li>输出执行结果</li>
+</ol>
+<p><strong>参考答案</strong>：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+const Command = enum {
+    print,
+    repeat,
+    exit,
+    unknown,
+};
+
+fn parseCommand(input: []const u8) Command {
+    if (std.mem.startsWith(u8, input, "PRINT ")) {
+        return .print;
+    } else if (std.mem.startsWith(u8, input, "REPEAT ")) {
+        return .repeat;
+    } else if (std.mem.eql(u8, input, "EXIT")) {
+        return .exit;
+    } else {
+        return .unknown;
+    }
+}
+
+pub fn main(init: std.process.Init.Minimal) void {
+    const commands: [5][]const u8 = [_][]const u8{
+        "PRINT Hello, World!",
+        "REPEAT 3 Zig is awesome!",
+        "INVALID",
+        "PRINT Goodbye!",
+        "EXIT",
+    };
+    
+    std.debug.print("=== 文本命令解析器 ===\n\n", .{});
+    
+    var running = true;
+    var cmd_index: usize = 0;
+    
+    while (running and cmd_index &lt; commands.len) {
+        const cmd = commands[cmd_index];
+        std.debug.print("命令：{s}\n", .{cmd});
+        
+        switch (parseCommand(cmd)) {
+            .print =&gt; {
+                const message = cmd["PRINT ".len..];
+                std.debug.print("  输出：{s}\n\n", .{message});
+            },
+            .repeat =&gt; {
+                const rest = cmd["REPEAT ".len..];
+                var iter = std.mem.split(u8, rest, " ");
+                const count_str = iter.next() orelse "0";
+                const count = std.fmt.parseInt(u32, count_str, 10) catch 0;
+                const message = iter.rest();
+                
+                std.debug.print("  重复 {} 次：\n", .{count});
+                var i: u32 = 0;
+                while (i &lt; count) : (i += 1) {
+                    std.debug.print("    {d}: {s}\n", .{ i + 1, message });
+                }
+                std.debug.print("\n", .{});
+            },
+            .exit =&gt; {
+                std.debug.print("  退出程序\n\n", .{});
+                running = false;
+            },
+            .unknown =&gt; {
+                std.debug.print("  错误：未知命令\n\n", .{});
+            },
+        }
+        
+        cmd_index += 1;
+    }
+    
+    std.debug.print("解析器执行完成！\n", .{});
+}
+</code></pre>
+<p><strong>预期输出</strong>：</p>
+<pre><code>=== 文本命令解析器 ===
+
+命令：PRINT Hello, World!
+  输出：Hello, World!
+
+命令：REPEAT 3 Zig is awesome!
+  重复 3 次：
+    1: Zig is awesome!
+    2: Zig is awesome!
+    3: Zig is awesome!
+
+命令：INVALID
+  错误：未知命令
+
+命令：PRINT Goodbye!
+  输出：Goodbye!
+
+命令：EXIT
+  退出程序
+
+解析器执行完成！
+</code></pre>
+<hr>
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../part1-basics/chapter-basic-syntax.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../part1-basics/chapter-functions.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../part1-basics/chapter-basic-syntax.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../part1-basics/chapter-functions.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-c2a407aa.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-362d1e8a.js"></script>
+        <script src="../book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

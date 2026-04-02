@@ -3,8 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Page not found - Zig 编程语言全面入门教程</title>
-        <base href="/">
+        <title>【draft】实战案例7 - 性能优化与调试 - Zig 编程语言全面入门教程</title>
 
 
         <!-- Custom HTML head -->
@@ -13,34 +12,34 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
 
-        <link rel="icon" href="favicon-de23e50b.svg">
-        <link rel="shortcut icon" href="favicon-8114d1fc.png">
-        <link rel="stylesheet" href="css/variables-8adf115d.css">
-        <link rel="stylesheet" href="css/general-2459343d.css">
-        <link rel="stylesheet" href="css/chrome-ae938929.css">
-        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-2459343d.css">
+        <link rel="stylesheet" href="../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
 
         <!-- Fonts -->
-        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
 
         <!-- Highlight.js Stylesheets -->
-        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
-        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
-        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
 
         <!-- Custom theme stylesheets -->
-        <link rel="stylesheet" href="theme/css/auto-numbering-66d94143.css">
+        <link rel="stylesheet" href="../theme/css/auto-numbering-66d94143.css">
 
 
         <!-- Provide site root and default themes to javascript -->
         <script>
-            const path_to_root = "";
+            const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-22febf57.js";
+            window.path_to_searchindex_js = "../searchindex-22febf57.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-f48f4758.js"></script>
+        <script src="../toc-f48f4758.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -107,7 +106,7 @@
             <!-- populated by js -->
             <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
             <noscript>
-                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
             </noscript>
             <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
                 <div class="sidebar-resize-indicator"></div>
@@ -142,11 +141,14 @@
                     <h1 class="menu-title">Zig 编程语言全面入门教程</h1>
 
                     <div class="right-buttons">
-                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
                             <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
                         </a>
                         <a href="https://github.com/vincentme/zig-tutorial" title="Git repository" aria-label="Git repository">
                             <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/vincentme/zig-tutorial/edit/main/src/part3-practice/chapter-optimization.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
                         </a>
 
                     </div>
@@ -179,13 +181,259 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="document-not-found-404"><a class="header" href="#document-not-found-404">Document not found (404)</a></h1>
-<p>This URL is invalid, sorry. Please use the navigation bar or search to continue.</p>
+                        <h1 id="draft性能优化与调试"><a class="header" href="#draft性能优化与调试">【draft】性能优化与调试</a></h1>
+<h2 id="编译优化选项"><a class="header" href="#编译优化选项">编译优化选项</a></h2>
+<pre><code class="language-bash"># Debug 模式：无优化，包含调试信息
+zig build -Doptimize=Debug
+
+# ReleaseSafe：优化但保留安全检查
+zig build -Doptimize=ReleaseSafe
+
+# ReleaseFast：最大优化，移除安全检查
+zig build -Doptimize=ReleaseFast
+
+# ReleaseSmall：优化大小
+zig build -Doptimize=ReleaseSmall
+</code></pre>
+<h2 id="性能分析"><a class="header" href="#性能分析">性能分析</a></h2>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(init: std.process.Init.Minimal) !void {
+    const start = std.time.nanoTimestamp();
+    
+    // 要测试的代码
+    var sum: usize = 0;
+    for (0..1_000_000) |i| {
+        sum += i;
+    }
+    
+    const end = std.time.nanoTimestamp();
+    const elapsed_ns = end - start;
+    const elapsed_ms = @as(f64, @floatFromInt(elapsed_ns)) / std.time.ns_per_ms;
+    
+    std.debug.print("计算结果：{}\n", .{sum});
+    std.debug.print("耗时：{d:.3} ms\n", .{elapsed_ms});
+}
+</code></pre>
+<h2 id="调试技巧"><a class="header" href="#调试技巧">调试技巧</a></h2>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(init: std.process.Init.Minimal) void {
+    var value: i32 = 42;
+    
+    // 使用 std.debug.print 调试
+    std.debug.print("调试：value = {}\n", .{value});
+    
+    // 使用断言
+    std.debug.assert(value == 42);
+    
+    // 使用 panic 触发崩溃
+    if (value &lt; 0) {
+        @panic("value 不能为负数");
+    }
+    
+    // 使用 reachability 检查
+    const result = switch (value) {
+        0...10 =&gt; "小",
+        11...50 =&gt; "中",
+        51...100 =&gt; "大",
+        else =&gt; unreachable, // 编译器会优化掉其他分支
+    };
+    
+    std.debug.print("结果：{s}\n", .{result});
+}
+</code></pre>
+<hr>
+<h2 id="版本兼容性指南"><a class="header" href="#版本兼容性指南">版本兼容性指南</a></h2>
+<h1 id="zig版本演进概述"><a class="header" href="#zig版本演进概述">Zig版本演进概述</a></h1>
+<p>Zig语言目前处于快速开发阶段，每个版本都可能引入重大变更。本节帮助您理解不同版本之间的差异，并提供迁移指南。</p>
+<h1 id="版本命名规则"><a class="header" href="#版本命名规则">版本命名规则</a></h1>
+<p>Zig采用语义化版本号，但处于0.x阶段时不保证API稳定性：</p>
+<ul>
+<li><strong>稳定版本</strong>: 0.11.0, 0.12.0, 0.13.0等</li>
+<li><strong>开发版本</strong>: 0.14.0-dev.xxxx, 0.15.0-dev.xxxx等</li>
+<li><strong>本教程版本</strong>: 0.16.0-dev</li>
+</ul>
+<h1 id="重大变更时间线"><a class="header" href="#重大变更时间线">重大变更时间线</a></h1>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>版本</th><th>主要变更</th><th>影响范围</th></tr>
+</thead>
+<tbody>
+<tr><td>0.11.0</td><td>新的错误处理语法</td><td>所有错误处理代码</td></tr>
+<tr><td>0.13.0</td><td>构建系统重构</td><td>build.zig文件</td></tr>
+<tr><td>0.15.0</td><td>分配器API变更</td><td>内存管理代码</td></tr>
+<tr><td>0.16.0-dev</td><td>I/O系统重构</td><td>所有I/O操作</td></tr>
+</tbody>
+</table>
+</div>
+<h1 id="0160-dev版本迁移指南"><a class="header" href="#0160-dev版本迁移指南">0.16.0-dev版本迁移指南</a></h1>
+<h1 id="io系统变更"><a class="header" href="#io系统变更">I/O系统变更</a></h1>
+<p><strong>旧版本 (0.15.x及之前)</strong>:</p>
+<pre><code class="language-zig">const stdout = std.io.getStdOut().writer();
+try stdout.print("Hello\n", .{});
+</code></pre>
+<p><strong>新版本 (0.16.0-dev)</strong>:</p>
+<pre><code class="language-zig">// ✨ 新特性：std.Io 统一接口
+pub fn main(init: std.process.Init) !void {
+    try std.Io.File.stdout().writeStreamingAll(init.io, "Hello\n");
+}
+</code></pre>
+<h1 id="分配器变更"><a class="header" href="#分配器变更">分配器变更</a></h1>
+<p><strong>旧版本</strong>:</p>
+<pre><code class="language-zig">// 🚫 已废弃：0.16.0，请使用 DebugAllocator
+var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+defer _ = gpa.deinit();
+</code></pre>
+<p><strong>新版本</strong>:</p>
+<pre><code class="language-zig">// ✨ 新特性：DebugAllocator
+var gpa: std.heap.DebugAllocator(.{}) = .init;
+defer _ = gpa.deinit();
+</code></pre>
+<h1 id="网络模块迁移"><a class="header" href="#网络模块迁移">网络模块迁移</a></h1>
+<p><strong>旧版本</strong>:</p>
+<pre><code class="language-zig">// 🚫 已废弃：0.16.0，请使用 std.Io.net
+const address = try std.net.Address.initIp4([4]u8{ 0, 0, 0, 0 }, port);
+</code></pre>
+<p><strong>新版本</strong>:</p>
+<pre><code class="language-zig">// 网络功能已迁移到 std.Io.net
+// 方式1：直接构造 Ip4Address 结构体
+// ✨ 新特性：std.Io 统一接口
+const address = std.Io.net.Ip4Address{
+    .bytes = [4]u8{ 0, 0, 0, 0 },
+    .port = port,
+};
+
+// 方式2：使用 IpAddress 联合类型
+const ip_address: std.Io.net.IpAddress = .{ .ip4 = address };
+
+// 方式3：使用 parse 函数解析字符串
+const ip_address = try std.Io.net.IpAddress.parse("0.0.0.0", port);
+</code></pre>
+<h1 id="兼容性最佳实践"><a class="header" href="#兼容性最佳实践">兼容性最佳实践</a></h1>
+<h1 id="1-使用版本检测"><a class="header" href="#1-使用版本检测">1. 使用版本检测</a></h1>
+<pre><code class="language-zig">const builtin = @import("builtin");
+
+const zig_version = builtin.zig_version;
+
+comptime {
+    if (zig_version.major == 0 and zig_version.minor &lt; 16) {
+        @compileError("This code requires Zig 0.16.0 or later");
+    }
+}
+</code></pre>
+<h1 id="2-避免版本条件编译"><a class="header" href="#2-避免版本条件编译">2. 避免版本条件编译</a></h1>
+<p>Zig 不推荐使用条件编译来处理版本差异。建议：</p>
+<ul>
+<li>选择一个目标版本并坚持使用</li>
+<li>升级时一次性更新所有代码</li>
+<li>使用 Git 分支管理不同版本的代码</li>
+</ul>
+<h1 id="3-查阅官方迁移指南"><a class="header" href="#3-查阅官方迁移指南">3. 查阅官方迁移指南</a></h1>
+<p>每次重大版本发布时，官方会提供迁移指南：</p>
+<ul>
+<li>GitHub Release Notes: https://github.com/ziglang/zig/releases</li>
+<li>官方文档: https://ziglang.org/documentation/</li>
+</ul>
+<h1 id="常见迁移问题"><a class="header" href="#常见迁移问题">常见迁移问题</a></h1>
+<h1 id="问题1-编译错误function-signature-mismatch"><a class="header" href="#问题1-编译错误function-signature-mismatch">问题1: 编译错误“function signature mismatch“</a></h1>
+<p><strong>原因</strong>: 函数签名在新版本中已变更</p>
+<p><strong>解决</strong>: 查阅文档，更新函数调用方式</p>
+<h1 id="问题2-use-of-undeclared-identifier"><a class="header" href="#问题2-use-of-undeclared-identifier">问题2: “use of undeclared identifier”</a></h1>
+<p><strong>原因</strong>: 模块或函数已重命名/迁移</p>
+<p><strong>解决</strong>: 搜索标准库源码，找到新的位置</p>
+<h1 id="问题3-deprecated警告"><a class="header" href="#问题3-deprecated警告">问题3: “deprecated“警告</a></h1>
+<p><strong>原因</strong>: 使用了已废弃的API</p>
+<p><strong>解决</strong>: 按照警告提示，使用推荐的替代方案</p>
+<h1 id="保持代码可维护性"><a class="header" href="#保持代码可维护性">保持代码可维护性</a></h1>
+<ol>
+<li><strong>添加版本注释</strong>: 在使用特定版本特性时添加注释</li>
+<li><strong>编写测试</strong>: 确保升级后测试仍然通过</li>
+<li><strong>渐进式迁移</strong>: 不要一次性升级所有代码</li>
+<li><strong>关注变更日志</strong>: 定期查看官方变更日志</li>
+</ol>
+<hr>
+<h2 id="总结与最佳实践"><a class="header" href="#总结与最佳实践">总结与最佳实践</a></h2>
+<h1 id="zig-编程最佳实践"><a class="header" href="#zig-编程最佳实践">Zig 编程最佳实践</a></h1>
+<ol>
+<li>
+<p><strong>内存管理</strong></p>
+<ul>
+<li>总是使用<code>defer</code>释放资源</li>
+<li>选择合适的分配器（GPA 用于调试，Arena 用于批量分配）</li>
+<li>使用<code>errdefer</code>处理错误时的资源清理</li>
+</ul>
+</li>
+<li>
+<p><strong>错误处理</strong></p>
+<ul>
+<li>定义明确的错误集合</li>
+<li>使用<code>try</code>传递错误，使用<code>catch</code>处理错误</li>
+<li>在可能失败的操作中使用<code>errdefer</code></li>
+</ul>
+</li>
+<li>
+<p><strong>性能优化</strong></p>
+<ul>
+<li>使用<code>comptime</code>进行编译期计算</li>
+<li>选择合适的优化级别</li>
+<li>使用基准测试验证性能</li>
+</ul>
+</li>
+<li>
+<p><strong>代码组织</strong></p>
+<ul>
+<li>使用结构体组织相关功能</li>
+<li>使用<code>const</code>声明不可变值</li>
+<li>编写清晰的测试</li>
+</ul>
+</li>
+<li>
+<p><strong>与 C 互操作</strong></p>
+<ul>
+<li>使用<code>@cImport</code>导入 C 头文件</li>
+<li>使用<code>export</code>导出 C ABI 函数</li>
+<li>注意类型映射和内存管理</li>
+</ul>
+</li>
+</ol>
+<h1 id="学习资源"><a class="header" href="#学习资源">学习资源</a></h1>
+<ul>
+<li><strong>官方文档</strong>：<a href="https://ziglang.org/documentation/master/">https://ziglang.org/documentation/master/</a></li>
+<li><strong>标准库文档</strong>：<a href="https://ziglang.org/documentation/master/std/">https://ziglang.org/documentation/master/std/</a></li>
+<li><strong>Zig 语言圣经</strong>：<a href="https://course.ziglang.cc/">https://course.ziglang.cc/</a></li>
+<li><strong>Zig Cookbook</strong>：<a href="https://cookbook.ziglang.cc/">https://cookbook.ziglang.cc/</a></li>
+<li><strong>社区资源</strong>：
+<ul>
+<li>Reddit: <a href="https://www.reddit.com/r/Zig/">https://www.reddit.com/r/Zig/</a></li>
+<li>Ziggit: <a href="https://ziggit.dev/">https://ziggit.dev/</a></li>
+<li>Discord/Slack: <a href="https://ziglang.org/community/">https://ziglang.org/community/</a></li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="结语"><a class="header" href="#结语">结语</a></h2>
+<p>恭喜您完成了 Zig 编程语言的全面学习！通过本教程，您已经掌握了：</p>
+<ul>
+<li><strong>基础语法</strong>：变量、类型、控制流、函数</li>
+<li><strong>错误处理</strong>：错误集合、try/catch、errdefer</li>
+<li><strong>内存管理</strong>：分配器、栈与堆、内存安全</li>
+<li><strong>高级特性</strong>：comptime、泛型、类型反射</li>
+<li><strong>并发编程</strong>：线程、互斥锁、原子操作</li>
+<li><strong>C 互操作</strong>：导入导出、类型映射</li>
+<li><strong>测试</strong>：单元测试、基准测试</li>
+</ul>
+<p>Zig 是一门年轻但强大的语言，它的设计哲学“少即是多“使其成为系统编程的优秀选择。继续实践，阅读标准库源码，参与社区讨论，您将成为一名优秀的 Zig 程序员！</p>
+<p>祝您在 Zig 的世界里探索愉快！🚀</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../part3-practice/chapter-advanced-memory.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
 
 
                         <div style="clear: both"></div>
@@ -194,6 +442,9 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../part3-practice/chapter-advanced-memory.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
 
             </nav>
 
@@ -212,13 +463,13 @@
         </script>
 
 
-        <script src="elasticlunr-ef4e11c1.min.js"></script>
-        <script src="mark-09e88c2c.min.js"></script>
-        <script src="searcher-c2a407aa.js"></script>
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-c2a407aa.js"></script>
 
-        <script src="clipboard-1626706a.min.js"></script>
-        <script src="highlight-362d1e8a.js"></script>
-        <script src="book-a0b12cfe.js"></script>
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-362d1e8a.js"></script>
+        <script src="../book-a0b12cfe.js"></script>
 
         <!-- Custom JS scripts -->
 

@@ -1,0 +1,1072 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>【draft】编译期计算与元编程 - Zig 编程语言全面入门教程</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-2459343d.css">
+        <link rel="stylesheet" href="../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../theme/css/auto-numbering-66d94143.css">
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-22febf57.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-f48f4758.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Zig 编程语言全面入门教程</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/vincentme/zig-tutorial" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/vincentme/zig-tutorial/edit/main/src/part2-advanced/chapter-comptime.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="draft编译期计算与元编程"><a class="header" href="#draft编译期计算与元编程">【draft】编译期计算与元编程</a></h1>
+<h2 id="理解编译期计算"><a class="header" href="#理解编译期计算">理解编译期计算</a></h2>
+<blockquote>
+<p>📜 <strong>Zig Zen 原则关联</strong></p>
+<p>本章内容深刻体现了以下 Zig Zen 原则：</p>
+<ul>
+<li><strong>“Compile errors are better than runtime crashes.”</strong>（编译期错误优于运行时崩溃）<br>这是 Zig 强调编译期计算的核心原因之一。通过 <code>comptime</code>，将尽可能多的检查提前到编译期，在编译阶段就捕获错误，而不是等到运行时才崩溃。</li>
+<li><strong>“Edge cases matter.”</strong>（边界情况很重要）<br>编译期计算可以在编译阶段验证所有边界情况，确保泛型代码对所有可能的类型都正确工作。</li>
+<li><strong>“Reduce the amount one must remember.”</strong>（减少必须记忆的内容）<br><code>comptime</code> 让泛型编程变得简单直观，开发者不需要记忆复杂的模板元编程技巧，只需要理解普通的 Zig 代码即可。</li>
+</ul>
+</blockquote>
+<h1 id="什么是编译期计算"><a class="header" href="#什么是编译期计算">什么是编译期计算？</a></h1>
+<p>编译期计算是指在程序<strong>编译阶段</strong>就完成的计算，而不是在程序<strong>运行时</strong>计算。</p>
+<p><strong>类比理解</strong>：</p>
+<ul>
+<li><strong>运行时计算</strong>：像是在做菜时切菜，每次都要花时间</li>
+<li><strong>编译期计算</strong>：像是提前切好菜，做菜时直接用</li>
+</ul>
+<h1 id="为什么zig重视编译期计算"><a class="header" href="#为什么zig重视编译期计算">为什么Zig重视编译期计算？</a></h1>
+<p>Zig的设计哲学是“编译期能做的，不要留到运行时“。原因：</p>
+<ol>
+<li>
+<p><strong>性能优势</strong></p>
+<ul>
+<li>运行时不需要计算，直接使用预计算结果</li>
+<li>编译器可以进行更激进的优化</li>
+<li>示例：数学常量PI在编译时计算，运行时直接使用</li>
+</ul>
+</li>
+<li>
+<p><strong>类型安全</strong></p>
+<ul>
+<li>在编译期捕获类型错误，而不是运行时崩溃</li>
+<li>示例：泛型容器在编译期验证类型正确性</li>
+</ul>
+</li>
+<li>
+<p><strong>零成本抽象</strong></p>
+<ul>
+<li>高级抽象没有运行时开销</li>
+<li>示例：泛型函数编译后与手写特化版本一样高效</li>
+</ul>
+</li>
+<li>
+<p><strong>代码生成</strong></p>
+<ul>
+<li>根据配置自动生成代码</li>
+<li>示例：根据协议定义生成序列化代码</li>
+</ul>
+</li>
+</ol>
+<h1 id="与c模板元编程的对比"><a class="header" href="#与c模板元编程的对比">与C++模板元编程的对比</a></h1>
+<p>很多开发者关心Zig的<code>comptime</code>与C++模板元编程的区别：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>维度</th><th>C++模板元编程</th><th>Zig comptime</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>语法</strong></td><td>复杂（模板特化、SFINAE）</td><td>简单（普通代码加comptime）</td></tr>
+<tr><td><strong>学习曲线</strong></td><td>陡峭，需要深入理解模板机制</td><td>平缓，就是普通Zig代码</td></tr>
+<tr><td><strong>错误信息</strong></td><td>难以理解（几百行模板错误）</td><td>清晰直接（普通编译错误）</td></tr>
+<tr><td><strong>调试能力</strong></td><td>困难（无法在编译期调试）</td><td>可以（可以print编译期值）</td></tr>
+<tr><td><strong>编译速度</strong></td><td>较慢（模板实例化开销）</td><td>较快（更直接的机制）</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>示例对比</strong>：</p>
+<p>C++实现泛型max函数：</p>
+<pre><code class="language-cpp">// C++模板版本
+template&lt;typename T&gt;
+T max(T a, T b) {
+    return (a &gt; b) ? a : b;
+}
+
+// 使用
+auto result = max(10, 20);  // 编译器推断T为int
+</code></pre>
+<p>Zig实现：</p>
+<pre><code class="language-zig">// Zig comptime版本
+fn max(comptime T: type, a: T, b: T) T {
+    return if (a &gt; b) a else b;
+}
+
+// 使用
+const result = max(i32, 10, 20);  // 显式指定类型
+</code></pre>
+<p><strong>关键区别</strong>：</p>
+<ul>
+<li>C++：类型推断是隐式的，错误信息难以理解</li>
+<li>Zig：类型是显式参数，错误信息清晰</li>
+</ul>
+<h1 id="实际应用场景"><a class="header" href="#实际应用场景">实际应用场景</a></h1>
+<p><strong>场景1：泛型数据结构</strong></p>
+<pre><code class="language-zig">// 编译期生成不同类型的栈
+fn Stack(comptime T: type) type {
+
+###### comptime 执行流程图
+
+**编译期计算 vs 运行时计算流程对比**：
+</code></pre>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                 完整程序执行流程                               │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│                    编译阶段（Compile Time）                    │
+└─────────────────────────────────────────────────────────────┘
+
+  ┌──────────────┐
+  │  源代码解析   │
+  └──────┬───────┘
+         │
+         ↓
+  ┌──────────────────┐
+  │  识别 comptime   │
+  │  关键字和标记    │
+  └──────┬───────────┘
+         │
+         ├─────────────────────┐
+         │                     │
+         ↓                     ↓
+  ┌─────────────┐      ┌──────────────┐
+  │ comptime 变量│      │ comptime 函数 │
+  │ const x =   │      │ fn foo(      │
+  │   comptime  │      │   comptime   │
+  │   5 + 3;    │      │   T: type)   │
+  └──────┬──────┘      └──────┬───────┘
+         │                     │
+         ↓                     ↓
+  ┌─────────────┐      ┌──────────────┐
+  │  编译期计算  │      │  类型生成     │
+  │  5 + 3 = 8  │      │  生成特化版本 │
+  └──────┬──────┘      └──────┬───────┘
+         │                     │
+         ↓                     ↓
+  ┌─────────────┐      ┌──────────────┐
+  │  常量折叠    │      │  代码生成     │
+  │  替换为 8    │      │  特定类型代码 │
+  └──────┬──────┘      └──────┬───────┘
+         │                     │
+         └──────────┬──────────┘
+                    │
+                    ↓
+         ┌──────────────────┐
+         │  类型检查和验证   │
+         │  确保类型安全     │
+         └──────────┬───────┘
+                    │
+                    ↓
+         ┌──────────────────┐
+         │  生成可执行代码   │
+         │  机器码/字节码    │
+         └──────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│                    运行阶段（Runtime）                         │
+└─────────────────────────────────────────────────────────────┘
+
+  ┌──────────────┐
+  │  程序启动     │
+  └──────┬───────┘
+         │
+         ↓
+  ┌──────────────────┐
+  │  加载可执行代码   │
+  └──────┬───────────┘
+         │
+         ├─────────────────────┐
+         │                     │
+         ↓                     ↓
+  ┌─────────────┐      ┌──────────────┐
+  │ comptime    │      │  运行时代码   │
+  │ 计算结果     │      │  正常执行     │
+  │ 直接使用     │      │  动态计算     │
+  │ （无开销）   │      │              │
+  └──────┬──────┘      └──────┬───────┘
+         │                     │
+         │                     ↓
+         │              ┌──────────────┐
+         │              │  运行时计算   │
+         │              │  需要时间     │
+         │              └──────┬───────┘
+         │                     │
+         └──────────┬──────────┘
+                    │
+                    ↓
+         ┌──────────────────┐
+         │  程序继续执行     │
+         └──────────────────┘
+</code></pre>
+<p><strong>comptime 执行的关键阶段</strong>：</p>
+<pre><code>阶段1：编译期计算
+┌─────────────────────────────────────────────────────────┐
+│ 输入：comptime 表达式或函数                               │
+│   例如：const result = comptime fibonacci(10);          │
+│                                                          │
+│ 编译器操作：                                              │
+│   1. 解析表达式，识别 comptime 关键字                     │
+│   2. 在编译环境中执行计算                                 │
+│   3. 验证类型正确性                                       │
+│   4. 将结果嵌入到生成的代码中                             │
+│                                                          │
+│ 输出：编译期常量                                          │
+│   例如：const result = 55;  // 直接替换                  │
+└─────────────────────────────────────────────────────────┘
+
+阶段2：类型生成
+┌─────────────────────────────────────────────────────────┐
+│ 输入：comptime 类型参数                                   │
+│   例如：fn Stack(comptime T: type) type { ... }         │
+│                                                          │
+│ 编译器操作：                                              │
+│   1. 接收类型参数（如 i32, []u8）                        │
+│   2. 生成特定类型的结构体定义                             │
+│   3. 验证类型约束（如是否有 &gt; 操作符）                    │
+│   4. 生成类型特化的方法                                   │
+│                                                          │
+│ 输出：特化的类型定义                                      │
+│   例如：Stack(i32) 生成包含 i32 元素的栈类型              │
+└─────────────────────────────────────────────────────────┘
+
+阶段3：代码生成
+┌─────────────────────────────────────────────────────────┐
+│ 输入：编译期计算结果和特化类型                             │
+│                                                          │
+│ 编译器操作：                                              │
+│   1. 将 comptime 常量内联到代码中                        │
+│   2. 生成特化类型的机器码                                 │
+│   3. 移除死代码（编译期已知分支）                         │
+│   4. 优化生成的代码                                       │
+│                                                          │
+│ 输出：优化后的可执行代码                                  │
+│   特点：无运行时开销，类型安全                            │
+└─────────────────────────────────────────────────────────┘
+</code></pre>
+<p><strong>comptime vs 运行时对比表</strong>：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>特性</th><th>comptime</th><th>运行时</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>执行时机</strong></td><td>编译阶段</td><td>程序运行时</td></tr>
+<tr><td><strong>计算开销</strong></td><td>编译时消耗，运行时零开销</td><td>每次运行都消耗</td></tr>
+<tr><td><strong>灵活性</strong></td><td>需要编译期已知值</td><td>可以处理动态值</td></tr>
+<tr><td><strong>类型检查</strong></td><td>编译期完成，更安全</td><td>运行时检查</td></tr>
+<tr><td><strong>优化程度</strong></td><td>编译器可深度优化</td><td>优化有限</td></tr>
+<tr><td><strong>调试难度</strong></td><td>较难（编译期）</td><td>较易（运行时）</td></tr>
+<tr><td><strong>适用场景</strong></td><td>常量、类型生成、泛型</td><td>用户输入、动态数据</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>实际应用示例</strong>：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+// 编译期计算斐波那契数列
+fn fibonacci(comptime n: u32) u32 {
+    if (n &lt;= 1) return n;
+    return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+// 编译期生成类型
+fn Vector(comptime T: type, comptime size: usize) type {
+    return [size]T;
+}
+
+pub fn main(init: std.process.Init.Minimal) void {
+    std.debug.print("=== comptime 执行流程演示 ===\n\n", .{});
+    
+    // 示例1：编译期常量计算
+    std.debug.print("1. 编译期常量计算：\n", .{});
+    const fib_10 = comptime fibonacci(10);
+    std.debug.print("   fibonacci(10) = {} (编译期计算)\n", .{fib_10});
+    std.debug.print("   运行时直接使用，无计算开销\n\n", .{});
+    
+    // 示例2：编译期类型生成
+    std.debug.print("2. 编译期类型生成：\n", .{});
+    const IntVector3 = Vector(i32, 3);
+    const FloatVector4 = Vector(f64, 4);
+    
+    var v1: IntVector3 = .{ 1, 2, 3 };
+    var v2: FloatVector4 = .{ 1.0, 2.0, 3.0, 4.0 };
+    
+    std.debug.print("   IntVector3 类型大小：{} 字节\n", .{@sizeOf(IntVector3)});
+    std.debug.print("   FloatVector4 类型大小：{} 字节\n", .{@sizeOf(FloatVector4)});
+    std.debug.print("   v1 = {any}\n", .{v1});
+    std.debug.print("   v2 = {any}\n\n", .{v2});
+    
+    // 示例3：编译期条件编译
+    std.debug.print("3. 编译期条件编译：\n", .{});
+    const debug_mode = true;
+    
+    if (comptime debug_mode) {
+        std.debug.print("   调试模式已启用\n", .{});
+        std.debug.print("   编译器会包含调试代码\n\n", .{});
+    } else {
+        std.debug.print("   调试模式已禁用\n", .{});
+        std.debug.print("   编译器会移除调试代码\n\n", .{});
+    }
+    
+    // 示例4：编译期循环展开
+    std.debug.print("4. 编译期循环展开：\n", .{});
+    comptime var sum: u32 = 0;
+    inline for (0..5) |i| {
+        sum += i;
+        std.debug.print("   编译期计算：sum += {} = {}\n", .{ i, sum });
+    }
+    std.debug.print("   最终结果：{} (编译期完成)\n", .{sum});
+}
+</code></pre>
+<p><strong>预期输出</strong>：</p>
+<pre><code>=== comptime 执行流程演示 ===
+
+1. 编译期常量计算：
+   fibonacci(10) = 55 (编译期计算)
+   运行时直接使用，无计算开销
+
+2. 编译期类型生成：
+   IntVector3 类型大小：12 字节
+   FloatVector4 类型大小：32 字节
+   v1 = { 1, 2, 3 }
+   v2 = { 1, 2, 3, 4 }
+
+3. 编译期条件编译：
+   调试模式已启用
+   编译器会包含调试代码
+
+4. 编译期循环展开：
+   编译期计算：sum += 0 = 0
+   编译期计算：sum += 1 = 1
+   编译期计算：sum += 2 = 3
+   编译期计算：sum += 3 = 6
+   编译期计算：sum += 4 = 10
+   最终结果：10 (编译期完成)
+</code></pre>
+<p><strong>comptime 最佳实践</strong>：</p>
+<ol>
+<li><strong>优先使用 comptime</strong>：如果值在编译期已知，优先使用 comptime</li>
+<li><strong>避免过度使用</strong>：编译期计算会增加编译时间，权衡使用</li>
+<li><strong>类型参数必用 comptime</strong>：泛型类型参数必须使用 comptime</li>
+<li><strong>利用类型推导</strong>：让编译器推导类型，减少显式类型声明</li>
+<li><strong>编译期验证</strong>：使用 comptime 验证约束条件，提前发现错误</li>
+</ol>
+<p><strong>性能对比分析</strong>：</p>
+<pre><code>计算 fibonacci(35)：
+
+运行时计算：
+- 时间：约 100ms（递归实现）
+- 每次运行都需要计算
+- 适合动态输入
+
+编译期计算：
+- 时间：编译时一次性计算
+- 运行时：0ms（直接使用结果）
+- 适合编译期已知值
+
+结论：编译期计算适合常量和已知配置，运行时计算适合动态数据
+</code></pre>
+<p><strong>关键要点</strong>：</p>
+<ol>
+<li><strong>编译期计算在编译阶段完成</strong>：运行时直接使用结果，零开销</li>
+<li><strong>类型生成是 comptime 的核心应用</strong>：实现泛型和代码生成</li>
+<li><strong>编译期和运行时有明确边界</strong>：comptime 标记清晰区分</li>
+<li><strong>性能和灵活性需要权衡</strong>：根据场景选择合适的计算时机</li>
+<li><strong>类型安全是核心优势</strong>：编译期捕获错误，避免运行时崩溃</li>
+</ol>
+<pre><code class="language-zig">// 编译期生成不同类型的栈
+fn Stack(comptime T: type) type {
+    return struct {
+        items: []T,
+        // ...
+    };
+}
+
+// 使用
+const IntStack = Stack(i32);    // 编译期生成整数栈
+const StringStack = Stack([]const u8);  // 编译期生成字符串栈
+</code></pre>
+<p><strong>场景2：编译期验证</strong></p>
+<pre><code class="language-zig">// 编译期验证配置
+const Config = struct {
+    port: u16,
+    max_connections: usize,
+    
+    fn validate(comptime self: Config) void {
+        comptime {
+            if (self.port == 0) {
+                @compileError("Port cannot be 0");
+            }
+            if (self.max_connections &gt; 10000) {
+                @compileError("Too many connections");
+            }
+        }
+    }
+};
+
+// 编译时就会检查，错误配置无法编译
+const config = Config{ .port = 8080, .max_connections = 100 };
+comptime config.validate();
+</code></pre>
+<p><strong>场景3：性能优化</strong></p>
+<pre><code class="language-zig">// 编译期计算查找表
+const SIN_TABLE = comptime blk: {
+    var table: [360]f32 = undefined;
+    for (&amp;table, 0..) |*item, i| {
+        item.* = @sin(@as(f32, @floatFromInt(i)) * std.math.pi / 180.0);
+    }
+    break :blk table;
+};
+
+// 运行时直接查表，不需要计算
+pub fn fastSin(degrees: usize) f32 {
+    return SIN_TABLE[degrees % 360];
+}
+</code></pre>
+<h4 id="91-comptime-关键字详解"><a class="header" href="#91-comptime-关键字详解">9.1 comptime 关键字详解</a></h4>
+<p>现在我们已经理解了编译期计算的概念，让我们深入学习<code>comptime</code>关键字的使用。</p>
+<h5 id="comptime的三种用法"><a class="header" href="#comptime的三种用法">comptime的三种用法</a></h5>
+<ol>
+<li><strong>comptime参数</strong>: 函数参数在编译期必须已知</li>
+<li><strong>comptime变量</strong>: 局部变量在编译期计算</li>
+<li><strong>comptime块</strong>: 代码块在编译期执行</li>
+</ol>
+<p><strong>用法1：comptime参数</strong></p>
+<p>Zig 的<code>comptime</code>允许在编译期执行代码：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+// 编译期参数
+fn max(comptime T: type, a: T, b: T) T {
+    return if (a &gt; b) a else b;
+}
+
+pub fn main(init: std.process.Init.Minimal) void {
+    const result1 = max(i32, 10, 20);
+    const result2 = max(f64, 3.14, 2.71);
+    
+    std.debug.print("max(i32, 10, 20) = {}\n", .{result1});
+    std.debug.print("max(f64, 3.14, 2.71) = {}\n", .{result2});
+}
+</code></pre>
+<p><strong>编译期变量：</strong></p>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(init: std.process.Init.Minimal) void {
+    // 编译期变量
+    comptime var i: usize = 0;
+    
+    // 编译期循环（会被展开）
+    inline while (i &lt; 5) : (i += 1) {
+        std.debug.print("i = {}\n", .{i});
+    }
+}
+</code></pre>
+<h4 id="92-泛型编程"><a class="header" href="#92-泛型编程">9.2 泛型编程</a></h4>
+<p>使用<code>comptime</code>实现泛型：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+// 泛型栈
+fn Stack(comptime T: type) type {
+    return struct {
+        const Self = @This();
+        
+        items: []T,
+        top: usize,
+        allocator: std.mem.Allocator,
+        
+        fn init(allocator: std.mem.Allocator) Self {
+            return .{
+                .items = &amp;[_]T{},
+                .top = 0,
+                .allocator = allocator,
+            };
+        }
+        
+        fn push(self: *Self, value: T) !void {
+            if (self.top &gt;= self.items.len) {
+                const new_size = if (self.items.len == 0) 4 else self.items.len * 2;
+                self.items = try self.allocator.realloc(self.items, new_size);
+            }
+            self.items[self.top] = value;
+            self.top += 1;
+        }
+        
+        fn pop(self: *Self) ?T {
+            if (self.top == 0) return null;
+            self.top -= 1;
+            return self.items[self.top];
+        }
+        
+        fn deinit(self: *Self) void {
+            self.allocator.free(self.items);
+        }
+    };
+}
+
+pub fn main(init: std.process.Init.Minimal) !void {
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
+    defer _ = gpa.deinit();
+    
+    // 创建整数栈
+    var int_stack = Stack(i32).init(gpa.allocator());
+    defer int_stack.deinit();
+    
+    try int_stack.push(1);
+    try int_stack.push(2);
+    try int_stack.push(3);
+    
+    while (int_stack.pop()) |value| {
+        std.debug.print("弹出：{}\n", .{value});
+    }
+}
+</code></pre>
+<h4 id="93-类型反射"><a class="header" href="#93-类型反射">9.3 类型反射</a></h4>
+<p>使用<code>@typeInfo</code>进行类型反射：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+// 打印结构体字段
+fn printFields(comptime T: type) void {
+    const info = @typeInfo(T);
+    
+    switch (info) {
+        .Struct =&gt; |struct_info| {
+            inline for (struct_info.fields) |field| {
+                std.debug.print("字段：{s}, 类型：{}\n", .{ field.name, field.type });
+            }
+        },
+        else =&gt; {
+            std.debug.print("不是结构体类型\n", .{});
+        },
+    }
+}
+
+// 检查是否有某个方法
+fn hasMethod(comptime T: type, comptime method_name: []const u8) bool {
+    const info = @typeInfo(T);
+    
+    switch (info) {
+        .Struct =&gt; |struct_info| {
+            for (struct_info.decls) |decl| {
+                if (std.mem.eql(u8, decl.name, method_name)) {
+                    return true;
+                }
+            }
+        },
+        else =&gt; {},
+    }
+    
+    return false;
+}
+
+const Person = struct {
+    name: []const u8,
+    age: u32,
+    
+    fn greet(self: Person) void {
+        std.debug.print("Hello, I'm {s}\n", .{self.name});
+    }
+};
+
+pub fn main(init: std.process.Init.Minimal) void {
+    printFields(Person);
+    
+    if (hasMethod(Person, "greet")) {
+        std.debug.print("Person 有 greet 方法\n", .{});
+    }
+}
+</code></pre>
+<h4 id="94-编译期代码生成"><a class="header" href="#94-编译期代码生成">9.4 编译期代码生成</a></h4>
+<pre><code class="language-zig">const std = @import("std");
+
+// 编译期生成枚举到字符串的映射
+fn EnumToString(comptime T: type) type {
+    const info = @typeInfo(T).Enum;
+    const field_count = info.fields.len;
+    
+    var mappings: [field_count]struct { []const u8, []const u8 } = undefined;
+    
+    inline for (info.fields, 0..) |field, i| {
+        mappings[i] = .{ field.name, @tagName(@as(T, @enumFromInt(field.value))) };
+    }
+    
+    return struct {
+        const map = mappings;
+        
+        fn toString(value: T) []const u8 {
+            inline for (map) |entry| {
+                if (std.mem.eql(u8, entry[1], @tagName(value))) {
+                    return entry[0];
+                }
+            }
+            return "unknown";
+        }
+    };
+}
+
+const Color = enum {
+    Red,
+    Green,
+    Blue,
+};
+
+const ColorStrings = EnumToString(Color);
+
+pub fn main(init: std.process.Init.Minimal) void {
+    const color = Color.Red;
+    std.debug.print("颜色：{s}\n", .{ColorStrings.toString(color)});
+}
+</code></pre>
+<h4 id="95-anytype-与动态类型"><a class="header" href="#95-anytype-与动态类型">9.5 anytype 与动态类型</a></h4>
+<p><code>anytype</code> 是 Zig 中的动态类型占位符，在编译期确定具体类型：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+fn printValue(value: anytype) void {
+    const T = @TypeOf(value);
+    std.debug.print("类型：{}, 值：{}\n", .{ T, value });
+}
+
+pub fn main(init: std.process.Init.Minimal) void {
+    printValue(42);         // i32
+    printValue(3.14);        // f64
+    printValue("hello");     // *const [5:0]u8
+    printValue(true);        // bool
+}
+</code></pre>
+<p><strong>使用 @TypeOf 和 @Type：</strong></p>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(init: std.process.Init.Minimal) void {
+    const x = 10;
+    const y = 20;
+
+    // 获取类型
+    const T1 = @TypeOf(x);
+    const T2 = @TypeOf(y);
+    std.debug.print("T1: {}, T2: {}\n", .{ T1, T2 });
+
+    // 使用 @Type 创建类型
+    const IntType = @Type(.{
+        .Int = .{
+            .signedness = .signed,
+            .bits = 32,
+        },
+    });
+    const val: IntType = 100;
+    std.debug.print("动态创建的类型值：{}\n", .{val});
+}
+</code></pre>
+<h4 id="96-opaque-类型"><a class="header" href="#96-opaque-类型">9.6 opaque 类型</a></h4>
+<p><code>opaque</code> 用于创建不透明的类型，隐藏内部实现：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+// 创建一个不透明的句柄类型
+const FileHandle = opaque type;
+
+// 声明外部类型（通常来自 C 库）
+extern const FileHandle : type = opaque {};
+
+const OpaqueTest = struct {
+    fn demo() void {
+        // 不透明类型不能直接访问其内部字段
+        // 只能通过暴露的 API 操作
+        std.debug.print("这是一个不透明类型示例\n", .{});
+    }
+};
+
+pub fn main(init: std.process.Init.Minimal) void {
+    OpaqueTest.demo();
+}
+</code></pre>
+<p><strong>实际应用：不透明类型封装：</strong></p>
+<pre><code class="language-zig">const std = @import("std");
+
+// 不透明类型用于信息隐藏
+const Connection = opaque type;
+
+const ConnectionImpl = struct {
+    fd: i32,
+    connected: bool,
+
+    fn connect(addr: []const u8) !*Connection {
+        _ = addr;
+        return &amp;(ConnectionImpl{ .fd = 0, .connected = true });
+    }
+
+    fn close(conn: *Connection) void {
+        _ = conn;
+    }
+};
+
+pub fn main(init: std.process.Init.Minimal) void {
+    std.debug.print("不透明类型用于隐藏实现细节\n", .{});
+}
+</code></pre>
+<hr>
+<h3 id="章节练习题"><a class="header" href="#章节练习题">章节练习题</a></h3>
+<h4 id="基础题"><a class="header" href="#基础题">基础题</a></h4>
+<p><strong>题目1</strong>：编写一个 comptime 函数，计算数组长度。</p>
+<p><strong>要求</strong>：</p>
+<ul>
+<li>函数签名为 <code>fn arrayLength(comptime T: type, comptime size: usize) usize</code></li>
+<li>在编译期返回数组长度</li>
+<li>使用 <code>comptime</code> 关键字</li>
+</ul>
+<p><strong>参考答案</strong>：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+fn arrayLength(comptime T: type, comptime size: usize) usize {
+    return size;
+}
+
+pub fn main(init: std.process.Init.Minimal) void {
+    const len = comptime arrayLength(i32, 10);
+    std.debug.print("数组长度：{}\n", .{len});
+}
+</code></pre>
+<p><strong>题目2</strong>：使用 <code>comptime</code> 实现类型检查函数。</p>
+<p><strong>要求</strong>：</p>
+<ul>
+<li>函数签名为 <code>fn isInteger(comptime T: type) bool</code></li>
+<li>检查类型是否为整数类型</li>
+<li>使用 <code>@typeInfo</code></li>
+</ul>
+<p><strong>参考答案</strong>：</p>
+<pre><code class="language-zig">fn isInteger(comptime T: type) bool {
+    return switch (@typeInfo(T)) {
+        .int =&gt; true,
+        else =&gt; false,
+    };
+}
+
+pub fn main(init: std.process.Init.Minimal) void {
+    std.debug.print("i32 是整数：{}\n", .{isInteger(i32)});
+    std.debug.print("f32 是整数：{}\n", .{isInteger(f32)});
+}
+</code></pre>
+<p><strong>题目3</strong>：编写一个 comptime 函数，计算斐波那契数列。</p>
+<p><strong>要求</strong>：</p>
+<ul>
+<li>函数签名为 <code>fn fib(comptime n: u32) u32</code></li>
+<li>在编译期计算结果</li>
+<li>使用递归实现</li>
+</ul>
+<p><strong>参考答案</strong>：</p>
+<pre><code class="language-zig">fn fib(comptime n: u32) u32 {
+    if (n &lt;= 1) return n;
+    return fib(n - 1) + fib(n - 2);
+}
+
+pub fn main(init: std.process.Init.Minimal) void {
+    const result = comptime fib(10);
+    std.debug.print("fib(10) = {}\n", .{result});
+}
+</code></pre>
+<h4 id="进阶题"><a class="header" href="#进阶题">进阶题</a></h4>
+<p><strong>题目1</strong>：实现一个 comptime 类型转换函数。</p>
+<p><strong>要求</strong>：</p>
+<ul>
+<li>函数签名为 <code>fn typeName(comptime T: type) []const u8</code></li>
+<li>返回类型的名称字符串</li>
+<li>使用 <code>@typeName</code></li>
+</ul>
+<p><strong>参考答案</strong>：</p>
+<pre><code class="language-zig">fn typeName(comptime T: type) []const u8 {
+    return @typeName(T);
+}
+
+pub fn main(init: std.process.Init.Minimal) void {
+    std.debug.print("类型名称：{s}\n", .{typeName(i32)});
+    std.debug.print("类型名称：{s}\n", .{typeName([]const u8)});
+}
+</code></pre>
+<p><strong>题目2</strong>：使用 <code>comptime</code> 实现泛型最大值函数。</p>
+<p><strong>要求</strong>：</p>
+<ul>
+<li>函数签名为 <code>fn max(comptime T: type, a: T, b: T) T</code></li>
+<li>支持多种数值类型</li>
+<li>使用 <code>comptime</code> 约束类型</li>
+</ul>
+<p><strong>参考答案</strong>：</p>
+<pre><code class="language-zig">fn max(comptime T: type, a: T, b: T) T {
+    return if (a &gt; b) a else b;
+}
+
+pub fn main(init: std.process.Init.Minimal) void {
+    std.debug.print("max(i32, 10, 20) = {}\n", .{max(i32, 10, 20)});
+    std.debug.print("max(f64, 3.14, 2.71) = {}\n", .{max(f64, 3.14, 2.71)});
+}
+</code></pre>
+<h4 id="挑战题"><a class="header" href="#挑战题">挑战题</a></h4>
+<p><strong>题目</strong>：实现一个 comptime 字符串哈希函数。</p>
+<p><strong>要求</strong>：</p>
+<ul>
+<li>函数签名为 <code>fn hash(comptime str: []const u8) u32</code></li>
+<li>在编译期计算字符串哈希值</li>
+<li>使用简单的哈希算法（如 DJB2）</li>
+</ul>
+<p><strong>参考答案</strong>：</p>
+<pre><code class="language-zig">fn hash(comptime str: []const u8) u32 {
+    var h: u32 = 5381;
+    for (str) |c| {
+        h = ((h &lt;&lt; 5) + h) + c;
+    }
+    return h;
+}
+
+pub fn main(init: std.process.Init.Minimal) void {
+    const h1 = comptime hash("hello");
+    const h2 = comptime hash("world");
+    std.debug.print("hash(\"hello\") = {}\n", .{h1});
+    std.debug.print("hash(\"world\") = {}\n", .{h2});
+}
+</code></pre>
+<hr>
+<blockquote>
+<p>💡 <strong>章节过渡</strong>：从编译期计算到泛型编程</p>
+<p>在<a href="chapter-comptime.html">编译期计算与元编程</a>中，我们学习了编译期计算（comptime）的强大功能，掌握了如何在编译阶段完成计算、类型反射和代码生成。
+现在，我们将学习泛型编程，了解如何利用编译期计算实现类型参数化的代码复用。</p>
+<p><strong>为什么编译期计算是泛型编程的基础？</strong></p>
+<ol>
+<li><strong>类型参数化</strong>：泛型使用 <code>comptime T: type</code> 参数，在编译期确定具体类型</li>
+<li><strong>代码生成</strong>：泛型函数在编译期为每种类型生成特化代码</li>
+<li><strong>零成本抽象</strong>：编译期泛型没有运行时开销</li>
+</ol>
+<p><strong>学习建议</strong>：</p>
+<ul>
+<li>确保你已经理解了 <code>comptime</code> 的基本用法</li>
+<li>回顾类型反射（<code>@typeInfo</code>、<code>@Type</code>）的相关知识</li>
+<li>准备好将编译期计算应用到实际编程中</li>
+</ul>
+</blockquote>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../part2-advanced/chapter-standard-library.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../part2-advanced/chapter-generics.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../part2-advanced/chapter-standard-library.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../part2-advanced/chapter-generics.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-c2a407aa.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-362d1e8a.js"></script>
+        <script src="../book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

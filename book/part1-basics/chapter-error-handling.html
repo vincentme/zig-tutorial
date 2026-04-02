@@ -1,0 +1,1131 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>【draft】错误处理 - Zig 编程语言全面入门教程</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-2459343d.css">
+        <link rel="stylesheet" href="../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../theme/css/auto-numbering-66d94143.css">
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-22febf57.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-f48f4758.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Zig 编程语言全面入门教程</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/vincentme/zig-tutorial" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/vincentme/zig-tutorial/edit/main/src/part1-basics/chapter-error-handling.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="draft错误处理基础"><a class="header" href="#draft错误处理基础">【draft】错误处理基础</a></h1>
+<h2 id="zig错误处理哲学"><a class="header" href="#zig错误处理哲学">Zig错误处理哲学</a></h2>
+<blockquote>
+<p>📜 <strong>Zig Zen 原则关联</strong></p>
+<p>本章内容体现了以下 Zig Zen 原则：</p>
+<ul>
+<li><strong>“Compile errors are better than runtime crashes.”</strong>（编译期错误优于运行时崩溃）<br>Zig 的错误联合类型（<code>!T</code>）强制开发者显式处理错误，在编译期就能发现未处理的错误情况。</li>
+<li><strong>“Edge cases matter.”</strong>（边界情况很重要）<br>Zig 要求显式声明所有可能的错误类型，确保边界情况和异常情况得到妥善处理。</li>
+<li><strong>“Runtime crashes are better than bugs.”</strong>（运行时崩溃优于潜在的 bug）<br>Zig 的 fail-fast 哲学：与其让错误隐藏在代码中，不如让程序快速失败，便于及早发现问题。</li>
+</ul>
+</blockquote>
+<h1 id="为什么zig不用异常"><a class="header" href="#为什么zig不用异常">为什么Zig不用异常？</a></h1>
+<p>Zig选择显式错误处理而非异常机制，原因如下：</p>
+<ol>
+<li><strong>可预测性</strong>: 控制流清晰可见，没有隐藏的跳转</li>
+<li><strong>性能</strong>: 无异常处理开销，错误处理代码只在需要时执行</li>
+<li><strong>可读性</strong>: 函数签名明确声明可能返回的错误</li>
+<li><strong>可调试性</strong>: 错误追踪完整，易于定位问题根源</li>
+</ol>
+<h1 id="错误处理的最佳实践"><a class="header" href="#错误处理的最佳实践">错误处理的最佳实践</a></h1>
+<p><strong>实践1：定义清晰的错误类型</strong></p>
+<pre><code class="language-zig">// 好的做法：语义化的错误名称
+const ConfigError = error{
+    FileNotFound,
+    InvalidFormat,
+    MissingRequiredField,
+    ValueOutOfRange,
+};
+
+// 不好的做法：模糊的错误名称
+const Error = error{
+    Failed,
+    Error,
+    Bad,
+};
+</code></pre>
+<p><strong>实践2：错误传播策略</strong></p>
+<pre><code class="language-zig">// 策略1：使用try传播错误（让调用者处理）
+fn readConfig(path: []const u8) !Config {
+    const file = try std.fs.cwd().openFile(path, .{});
+    defer file.close();
+    // ...
+}
+
+// 策略2：使用catch处理错误（当前层级处理）
+fn readConfigOrDefault(path: []const u8) Config {
+    return readConfig(path) catch {
+        return Config.default();
+    };
+}
+
+// 策略3：错误转换（统一错误类型）
+fn readConfigUnified(path: []const u8) UnifiedError!Config {
+    return readConfig(path) catch |err| switch (err) {
+        error.FileNotFound =&gt; UnifiedError.NotFound,
+        else =&gt; UnifiedError.IOError,
+    };
+}
+</code></pre>
+<p><strong>实践3：使用errdefer确保资源清理</strong></p>
+<pre><code class="language-zig">fn processFile(path: []const u8) !void {
+    const file = try std.fs.cwd().openFile(path, .{});
+    errdefer file.close();  // 出错时关闭文件
+    
+    const buffer = try allocator.alloc(u8, 1024);
+    errdefer allocator.free(buffer);  // 出错时释放内存
+    
+    // 如果这里出错，上面的errdefer会自动执行
+    try processContent(buffer);
+    
+    // 成功时手动清理
+    allocator.free(buffer);
+    file.close();
+}
+</code></pre>
+<h1 id="错误调试技巧"><a class="header" href="#错误调试技巧">错误调试技巧</a></h1>
+<h1 id="错误处理流程图"><a class="header" href="#错误处理流程图">错误处理流程图</a></h1>
+<p><strong>完整错误处理流程</strong>：</p>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                    错误处理完整流程                            │
+└─────────────────────────────────────────────────────────────┘
+
+                    ┌──────────────┐
+                    │   函数调用    │
+                    └──────┬───────┘
+                           │
+                           ↓
+                ┌─────────────────────┐
+                │  执行函数体代码      │
+                └──────────┬──────────┘
+                           │
+                  ┌────────┴────────┐
+                  │                 │
+                  ↓                 ↓
+          ┌─────────────┐   ┌─────────────┐
+          │   成功执行   │   │   发生错误   │
+          └──────┬──────┘   └──────┬──────┘
+                 │                 │
+                 │                 ↓
+                 │        ┌──────────────────┐
+                 │        │  创建错误值       │
+                 │        │  error.ErrorName │
+                 │        └────────┬─────────┘
+                 │                 │
+                 │                 ↓
+                 │        ┌──────────────────┐
+                 │        │  执行 errdefer   │
+                 │        │  清理资源        │
+                 │        └────────┬─────────┘
+                 │                 │
+                 │                 ↓
+                 │        ┌──────────────────┐
+                 │        │  返回错误值       │
+                 │        │  return err      │
+                 │        └────────┬─────────┘
+                 │                 │
+                 ↓                 ↓
+        ┌────────────────────────────────────┐
+        │        调用者接收返回值              │
+        └────────────┬───────────────────────┘
+                     │
+            ┌────────┴────────┐
+            │                 │
+            ↓                 ↓
+    ┌─────────────┐   ┌─────────────┐
+    │  正常值 T   │   │  错误值 !T  │
+    └──────┬──────┘   └──────┬──────┘
+           │                 │
+           ↓                 ↓
+    ┌─────────────┐   ┌─────────────────┐
+    │  继续执行   │   │  错误处理分支    │
+    │  正常逻辑   │   └────────┬────────┘
+    └─────────────┘            │
+                      ┌────────┼────────┐
+                      │        │        │
+                      ↓        ↓        ↓
+              ┌─────────┐ ┌────────┐ ┌────────┐
+              │  try    │ │ catch  │ │ if err │
+              │  传播   │ │ 处理   │ │ 匹配   │
+              └────┬────┘ └───┬────┘ └───┬────┘
+                   │          │          │
+                   ↓          ↓          ↓
+              ┌─────────┐ ┌────────┐ ┌────────┐
+              │继续传播 │ │恢复/默认│ │特定处理│
+              └─────────┘ └────────┘ └────────┘
+</code></pre>
+<p><strong>错误处理路径详解</strong>：</p>
+<pre><code>路径1：成功路径（正常流程）
+┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐
+│ 函数调用 │ -&gt; │ 成功执行 │ -&gt; │ 返回值T │ -&gt; │ 继续执行 │
+└─────────┘    └─────────┘    └─────────┘    └─────────┘
+   无错误        无 errdefer     无错误处理     正常逻辑
+   发生          执行           需要
+
+路径2：错误传播路径（try）
+┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐
+│ 函数调用 │ -&gt; │ 发生错误 │ -&gt; │ errdefer│ -&gt; │  try    │
+└─────────┘    └─────────┘    └─────────┘    └─────────┘
+   错误发生      创建错误值      清理资源       传播错误
+                error.E                      给上层
+
+路径3：错误处理路径（catch）
+┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐
+│ 函数调用 │ -&gt; │ 发生错误 │ -&gt; │ errdefer│ -&gt; │  catch  │
+└─────────┘    └─────────┘    └─────────┘    └─────────┘
+   错误发生      创建错误值      清理资源       处理错误
+                error.E                      恢复/默认
+
+路径4：错误匹配路径（if catch）
+┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐
+│ 函数调用 │ -&gt; │ 发生错误 │ -&gt; │ errdefer│ -&gt; │ if err  │
+└─────────┘    └─────────┘    └─────────┘    └─────────┘
+   错误发生      创建错误值      清理资源       匹配错误
+                error.E                      特定处理
+</code></pre>
+<p><strong>错误处理关键节点</strong>：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>节点</th><th>作用</th><th>示例</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>错误创建</strong></td><td>定义错误类型并创建错误值</td><td><code>return error.FileNotFound;</code></td></tr>
+<tr><td><strong>errdefer</strong></td><td>确保错误发生时资源被清理</td><td><code>errdefer file.close();</code></td></tr>
+<tr><td><strong>错误传播</strong></td><td>将错误传递给上层调用者</td><td><code>try openFile(path);</code></td></tr>
+<tr><td><strong>错误捕获</strong></td><td>在当前层级处理错误</td><td><code>catch { return default; }</code></td></tr>
+<tr><td><strong>错误匹配</strong></td><td>根据错误类型执行不同逻辑</td><td><code>if (err == error.NotFound) ...</code></td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>实际应用示例</strong>：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+const FileError = error{
+    NotFound,
+    PermissionDenied,
+    DiskFull,
+};
+
+fn saveData(path: []const u8, data: []const u8) FileError!void {
+    std.debug.print("尝试保存数据到：{s}\n", .{path});
+    
+    // 模拟不同的错误情况
+    if (std.mem.eql(u8, path, "/forbidden")) {
+        return error.PermissionDenied;
+    }
+    if (std.mem.eql(u8, path, "/disk_full")) {
+        return error.DiskFull;
+    }
+    if (std.mem.eql(u8, path, "/missing")) {
+        return error.NotFound;
+    }
+    
+    std.debug.print("数据保存成功！\n", .{});
+}
+
+fn handleSave() void {
+    std.debug.print("\n=== 错误处理流程演示 ===\n\n", .{});
+    
+    // 路径1：成功路径
+    std.debug.print("1. 成功路径：\n", .{});
+    saveData("/valid", "data") catch |err| {
+        std.debug.print("  错误：{}\n", .{err});
+    };
+    
+    // 路径2：错误传播路径
+    std.debug.print("\n2. 错误传播路径：\n", .{});
+    saveData("/missing", "data") catch |err| {
+        std.debug.print("  捕获错误：{}\n", .{err});
+        std.debug.print("  使用默认值继续...\n", .{});
+    };
+    
+    // 路径3：错误匹配路径
+    std.debug.print("\n3. 错误匹配路径：\n", .{});
+    saveData("/forbidden", "data") catch |err| switch (err) {
+        error.NotFound =&gt; std.debug.print("  文件未找到，创建新文件\n", .{}),
+        error.PermissionDenied =&gt; std.debug.print("  权限不足，请求管理员权限\n", .{}),
+        error.DiskFull =&gt; std.debug.print("  磁盘已满，清理空间\n", .{}),
+    };
+}
+</code></pre>
+<p><strong>预期输出</strong>：</p>
+<pre><code>=== 错误处理流程演示 ===
+
+1. 成功路径：
+尝试保存数据到：/valid
+数据保存成功！
+
+2. 错误传播路径：
+尝试保存数据到：/missing
+  捕获错误：error.NotFound
+  使用默认值继续...
+
+3. 错误匹配路径：
+尝试保存数据到：/forbidden
+  权限不足，请求管理员权限
+</code></pre>
+<p><strong>错误处理最佳实践总结</strong>：</p>
+<ol>
+<li><strong>显式声明错误</strong>：在函数签名中明确声明可能返回的错误类型</li>
+<li><strong>及时清理资源</strong>：使用 <code>errdefer</code> 确保错误发生时资源被正确释放</li>
+<li><strong>合理传播错误</strong>：让有能力处理错误的层级处理，不要过度捕获</li>
+<li><strong>提供上下文信息</strong>：错误消息应包含足够的调试信息</li>
+<li><strong>统一错误类型</strong>：在模块级别定义统一的错误类型，便于管理</li>
+</ol>
+<p><strong>技巧1：打印错误追踪</strong></p>
+<pre><code class="language-zig">fn main() !void {
+    const result = riskyOperation() catch |err| {
+        std.debug.print("错误: {}\n", .{err});
+        std.debug.print("错误追踪: {}\n", .{std.debug.getStackTrace()});
+        return err;
+    };
+}
+</code></pre>
+<p><strong>技巧2：使用try和catch的组合</strong></p>
+<pre><code class="language-zig">// 带默认值的错误处理
+const value = mightFail() catch 0;
+
+// 带日志的错误处理
+const value = mightFail() catch |err| {
+    std.log.err("操作失败: {}", .{err});
+    return err;
+};
+
+// 多错误类型处理
+const value = mightFailMultiple() catch |err| switch (err) {
+    error.NetworkError =&gt; handleNetworkError(err),
+    error.Timeout =&gt; retry(),
+    else =&gt; return err,
+};
+</code></pre>
+<p><strong>技巧3：编译期错误检查</strong></p>
+<pre><code class="language-zig">const std = @import("std");
+
+fn validateConfig(comptime config: Config) void {
+    comptime {
+        if (config.port == 0) {
+            @compileError("Port cannot be 0");
+        }
+    }
+}
+</code></pre>
+<h2 id="错误集合"><a class="header" href="#错误集合">错误集合</a></h2>
+<pre><code class="language-zig">const std = @import("std");
+
+// 定义错误集合
+const FileError = error{
+    NotFound,
+    PermissionDenied,
+    OutOfMemory,
+};
+
+const NetworkError = error{
+    ConnectionFailed,
+    Timeout,
+};
+
+// 错误集合合并
+const CombinedError = FileError || NetworkError;
+
+pub fn main(init: std.process.Init.Minimal) void {
+    const err: FileError = FileError.NotFound;
+    
+    // 错误比较
+    if (err == FileError.NotFound) {
+        std.debug.print("文件未找到\n", .{});
+    }
+    
+    // 错误转换
+    const combined: CombinedError = err;
+    std.debug.print("合并错误：{}\n", .{combined});
+}
+</code></pre>
+<h2 id="错误联合类型"><a class="header" href="#错误联合类型">错误联合类型</a></h2>
+<pre><code class="language-zig">const std = @import("std");
+
+const ParseError = error{
+    InvalidFormat,
+    OutOfRange,
+};
+
+// 错误联合类型：可能返回 i32 或 ParseError
+fn parseNumber(str: []const u8) ParseError!i32 {
+    if (str.len == 0) return ParseError.InvalidFormat;
+    
+    var result: i32 = 0;
+    for (str) |char| {
+        if (char &lt; '0' or char &gt; '9') return ParseError.InvalidFormat;
+        result = result * 10 + (char - '0');
+    }
+    
+    return result;
+}
+
+pub fn main(init: std.process.Init.Minimal) !void {
+    // 使用 try 传递错误
+    const num1 = try parseNumber("123");
+    std.debug.print("解析结果：{}\n", .{num1});
+    
+    // 使用 catch 处理错误
+    const num2 = parseNumber("abc") catch |err| {
+        std.debug.print("解析失败：{}\n", .{err});
+        return;
+    };
+    std.debug.print("解析结果：{}\n", .{num2});
+}
+</code></pre>
+<h2 id="try-和-catch"><a class="header" href="#try-和-catch">try 和 catch</a></h2>
+<pre><code class="language-zig">const std = @import("std");
+
+fn mayFail() !i32 {
+    return error.SomethingWrong;
+}
+
+pub fn main(init: std.process.Init.Minimal) !void {
+    // try：传递错误给调用者
+    // const result = try mayFail(); // 如果失败，main 返回错误
+    
+    // catch：捕获并处理错误
+    const result1 = mayFail() catch 0;
+    std.debug.print("结果 1: {}\n", .{result1});
+    
+    // catch with payload：获取错误值
+    const result2 = mayFail() catch |err| {
+        std.debug.print("捕获错误：{}\n", .{err});
+        return;
+    };
+    std.debug.print("结果 2: {}\n", .{result2});
+    
+    // catch with else：成功时的处理
+    const result3 = mayFail() catch |err| {
+        std.debug.print("错误：{}\n", .{err});
+        return;
+    } else |value| {
+        std.debug.print("成功：{}\n", .{value});
+    };
+}
+</code></pre>
+<h2 id="errdefer"><a class="header" href="#errdefer">errdefer</a></h2>
+<p><code>errdefer</code>用于在函数返回错误时执行清理：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+fn allocateAndProcess(allocator: std.mem.Allocator) !void {
+    const memory = try allocator.alloc(u8, 100);
+    
+    // 如果函数返回错误，释放内存
+    errdefer allocator.free(memory);
+    
+    // 可能失败的操作
+    const success = false;
+    if (!success) {
+        return error.ProcessingFailed;
+    }
+    
+    // 成功时的清理
+    allocator.free(memory);
+}
+
+pub fn main(init: std.process.Init.Minimal) !void {
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+    
+    allocateAndProcess(allocator) catch |err| {
+        std.debug.print("错误：{}\n", .{err});
+    };
+}
+</code></pre>
+<h1 id="完整的错误处理示例"><a class="header" href="#完整的错误处理示例">完整的错误处理示例</a></h1>
+<p>在实际项目中，经常需要管理多个资源。以下是完整的错误处理模式：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+// 示例：处理文件和内存资源
+fn processFile(allocator: std.mem.Allocator, path: []const u8) !void {
+    // 资源获取顺序：按依赖关系获取
+    const file = try std.fs.cwd().openFile(path, .{});
+    errdefer file.close();  // 出错时关闭文件
+    
+    const buffer = try allocator.alloc(u8, 1024);
+    errdefer allocator.free(buffer);  // 出错时释放内存
+    
+    // 处理内容
+    const bytes_read = try file.read(buffer);
+    try processContent(buffer[0..bytes_read]);
+    
+    // 成功时的清理（按相反顺序）
+    allocator.free(buffer);
+    file.close();
+}
+
+fn processContent(content: []const u8) !void {
+    if (content.len == 0) {
+        return error.EmptyContent;
+    }
+    std.debug.print("处理内容：{s}\n", .{content});
+}
+
+pub fn main(init: std.process.Init.Minimal) !void {
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+    
+    processFile(allocator, "data.txt") catch |err| {
+        std.debug.print("处理失败: {}\n", .{err});
+        return err;
+    };
+    
+    std.debug.print("处理成功\n", .{});
+}
+</code></pre>
+<p><strong>错误处理最佳实践</strong>：</p>
+<ol>
+<li><strong>资源获取顺序</strong>：按依赖关系获取资源</li>
+<li><strong>清理顺序</strong>：按相反顺序清理资源（LIFO - 后进先出）</li>
+<li><strong>errdefer 位置</strong>：紧跟在资源获取之后</li>
+<li><strong>错误传播</strong>：使用 <code>try</code> 或 <code>catch</code> 明确处理</li>
+</ol>
+<p><strong>错误处理流程图</strong>：</p>
+<pre><code>┌─────────────────────────────────────────────────────────┐
+│              资源获取与错误处理流程                        │
+└─────────────────────────────────────────────────────────┘
+
+函数开始
+    │
+    ├─ 获取资源1（文件）
+    │   └─ errdefer: 资源1.close()
+    │
+    ├─ 获取资源2（内存）
+    │   └─ errdefer: 资源2.free()
+    │
+    ├─ 获取资源3（网络连接）
+    │   └─ errdefer: 资源3.close()
+    │
+    ├─ 处理数据
+    │   │
+    │   ├─ 成功 ──┐
+    │   │         │
+    │   └─ 失败 ──┤
+    │             │
+    └─────────────┤
+                  │
+    ┌─────────────┴─────────────┐
+    │                           │
+    ▼                           ▼
+成功路径                    错误路径
+    │                           │
+    ├─ 清理资源3                ├─ 执行 errdefer 3
+    ├─ 清理资源2                ├─ 执行 errdefer 2
+    ├─ 清理资源1                ├─ 执行 errdefer 1
+    │                           │
+    ▼                           ▼
+  返回成功                    返回错误
+</code></pre>
+<p><strong>关键要点</strong>：</p>
+<ul>
+<li><code>errdefer</code> 只在函数返回错误时执行</li>
+<li>成功路径需要手动清理资源</li>
+<li>多个 <code>errdefer</code> 按相反顺序执行（LIFO）</li>
+<li>每个资源获取后立即添加对应的 <code>errdefer</code></li>
+</ul>
+<h2 id="常见错误与调试指南"><a class="header" href="#常见错误与调试指南">常见错误与调试指南</a></h2>
+<h1 id="常见编译错误"><a class="header" href="#常见编译错误">常见编译错误</a></h1>
+<p><strong>1. “use of undefined value”</strong></p>
+<pre><code class="language-zig">// ❌ 错误示例
+var x: i32 = undefined;
+const y = x + 1;  // 错误：使用未定义的值
+
+// ✅ 正确做法
+var x: i32 = 0;
+const y = x + 1;
+</code></pre>
+<p><strong>原因</strong>：Zig 0.11+ 禁止对 <code>undefined</code> 值进行算术运算。</p>
+<p><strong>2. “expected type ‘X’, found ‘Y’”</strong></p>
+<pre><code class="language-zig">// ❌ 错误示例
+fn foo(x: i32) void { _ = x; }
+foo(42.0);  // 错误：期望 i32，找到 comptime_float
+
+// ✅ 正确做法
+foo(@as(i32, 42));
+// 或
+foo(@intFromFloat(42.0));
+</code></pre>
+<p><strong>原因</strong>：Zig 不进行隐式类型转换。</p>
+<p><strong>3. “unable to resolve comptime value”</strong></p>
+<pre><code class="language-zig">// ❌ 错误示例
+var runtime_value: i32 = 42;
+const array: [runtime_value]u8 = undefined;  // 错误
+
+// ✅ 正确做法
+const comptime_value = 42;
+const array: [comptime_value]u8 = undefined;
+</code></pre>
+<p><strong>原因</strong>：数组大小必须是编译期常量。</p>
+<p><strong>4. “variable of type ‘X’ must be const or comptime”</strong></p>
+<pre><code class="language-zig">// ❌ 错误示例
+var list: std.ArrayList(u32) = .{};  // 错误：需要初始化
+
+// ✅ 正确做法
+var list: std.ArrayList(u32) = .empty;
+// 或
+var list = std.ArrayList(u32).init(allocator);
+</code></pre>
+<p><strong>原因</strong>：容器类型必须正确初始化。</p>
+<p><strong>5. “no field ‘root_source_file’”</strong></p>
+<pre><code class="language-zig">// 🚫 已废弃：0.15.x 已移除
+const exe = b.addExecutable(.{
+    .name = "app",
+    .root_source_file = b.path("src/main.zig"),  // 错误
+});
+
+// ✅ 正确做法（0.15.x+）
+const exe = b.addExecutable(.{
+    .name = "app",
+    .root_module = b.createModule(.{
+        .root_source_file = b.path("src/main.zig"),
+        .target = target,
+        .optimize = optimize,
+    }),
+});
+</code></pre>
+<p><strong>原因</strong>：构建系统 API 在 0.15.x 中已变更。</p>
+<h1 id="常见运行时错误"><a class="header" href="#常见运行时错误">常见运行时错误</a></h1>
+<p><strong>1. “integer overflow”</strong></p>
+<pre><code class="language-zig">// ❌ 错误示例
+const x: u8 = 255;
+const y = x + 1;  // Debug 模式下 panic
+
+// ✅ 安全处理
+const y = std.math.add(u8, x, 1) catch overflowHandler;
+// 或使用溢出检测
+const result = @addWithOverflow(u8, x, 1);
+if (result[1] != 0) {
+    // 处理溢出
+}
+</code></pre>
+<p><strong>2. “index out of bounds”</strong></p>
+<pre><code class="language-zig">// ❌ 错误示例
+const array = [_]i32{ 1, 2, 3 };
+const value = array[5];  // panic
+
+// ✅ 安全访问
+if (index &lt; array.len) {
+    const value = array[index];
+} else {
+    // 处理错误
+}
+</code></pre>
+<p><strong>3. “attempt to use null value”</strong></p>
+<pre><code class="language-zig">// ❌ 错误示例
+const maybe: ?i32 = null;
+const value = maybe.?;  // panic
+
+// ✅ 安全解包
+if (maybe) |value| {
+    // 使用 value
+} else {
+    // 处理 null
+}
+</code></pre>
+<h1 id="调试技巧"><a class="header" href="#调试技巧">调试技巧</a></h1>
+<p><strong>1. 使用 std.debug.print</strong></p>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(init: std.process.Init.Minimal) void {
+    const value = 42;
+    std.debug.print("调试：value = {}\n", .{value});
+    
+    // 打印类型
+    std.debug.print("类型：{}\n", .{@TypeOf(value)});
+    
+    // 打印完整结构
+    const data = .{ 1, 2, 3 };
+    std.debug.print("完整结构：{any}\n", .{data});
+}
+</code></pre>
+<p><strong>2. 使用 std.debug.assert</strong></p>
+<pre><code class="language-zig">const std = @import("std");
+
+fn process(value: i32) i32 {
+    // 在 Debug 模式下检查条件
+    std.debug.assert(value &gt;= 0);
+    return value * 2;
+}
+</code></pre>
+<p><strong>3. 使用错误追踪</strong></p>
+<pre><code class="language-zig">const std = @import("std");
+
+fn deepFunction() !void {
+    return error.DeepError;
+}
+
+fn middleFunction() !void {
+    try deepFunction();
+}
+
+pub fn main(init: std.process.Init.Minimal) void {
+    middleFunction() catch |err| {
+        std.debug.print("错误：{}\n", .{err});
+        // 打印堆栈追踪
+        std.debug.dumpCurrentStackTrace(null);
+    };
+}
+</code></pre>
+<p><strong>4. 使用安全检查模式</strong></p>
+<pre><code class="language-bash"># Debug 模式：启用所有安全检查
+zig build-exe app.zig
+
+# ReleaseSafe 模式：启用优化但保留安全检查
+zig build-exe app.zig -O ReleaseSafe
+
+# ReleaseFast 模式：最大优化，禁用安全检查
+zig build-exe app.zig -O ReleaseFast
+</code></pre>
+<h1 id="错误处理最佳实践"><a class="header" href="#错误处理最佳实践">错误处理最佳实践</a></h1>
+<p><strong>1. 使用语义化的错误名称</strong></p>
+<pre><code class="language-zig">// ✅ 好的做法
+// ❌ 错误示例
+const FileError = error{
+    NotFound,
+    PermissionDenied,
+    InvalidFormat,
+};
+
+// ❌ 不好的做法
+const Error = error{
+    Failed,
+    Error,
+};
+</code></pre>
+<p><strong>2. 在函数签名中声明具体错误</strong></p>
+<pre><code class="language-zig">// ✅ 好的做法：明确声明可能的错误
+// ❌ 错误示例
+fn readFile(path: []const u8) FileError![]u8 {
+    // ...
+}
+
+// ❌ 不好的做法：使用 anyerror
+fn readFile(path: []const u8) anyerror![]u8 {
+    // ...
+}
+</code></pre>
+<p><strong>3. 使用 errdefer 确保资源清理</strong></p>
+<pre><code class="language-zig">// ❌ 错误示例
+fn processFile(path: []const u8) !void {
+    const file = try std.fs.cwd().openFile(path, .{});
+    errdefer file.close();  // 错误时关闭文件
+    
+    // 可能失败的操作...
+}
+</code></pre>
+<p><strong>4. 记录错误上下文</strong></p>
+<pre><code class="language-zig">fn loadData(path: []const u8) !Data {
+    return readFile(path) catch |err| {
+        std.log.err("无法加载 {s}: {}", .{ path, err });
+        return err;
+    };
+}
+</code></pre>
+<hr>
+<h1 id="章节练习题"><a class="header" href="#章节练习题">章节练习题</a></h1>
+<h1 id="基础题"><a class="header" href="#基础题">基础题</a></h1>
+<p><strong>题目1</strong>：编写一个函数，实现安全的整数除法，使用错误处理。</p>
+<p><strong>要求</strong>：</p>
+<ul>
+<li>函数签名为 <code>fn safeDivide(a: i32, b: i32) !i32</code></li>
+<li>除数为 0 时返回错误 <code>error.DivisionByZero</code></li>
+<li>正常情况返回商</li>
+</ul>
+<p><strong>参考答案</strong>：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+const MathError = error{
+    DivisionByZero,
+};
+
+fn safeDivide(a: i32, b: i32) MathError!i32 {
+    if (b == 0) return error.DivisionByZero;
+    return @divTrunc(a, b);
+}
+
+pub fn main(init: std.process.Init.Minimal) void {
+    const result = safeDivide(10, 2) catch |err| {
+        std.debug.print("错误：{}\n", .{err});
+        return;
+    };
+    std.debug.print("结果：{}\n", .{result});
+}
+</code></pre>
+<p><strong>题目2</strong>：编写一个函数，解析字符串为整数，处理可能的错误。</p>
+<p><strong>要求</strong>：</p>
+<ul>
+<li>函数签名为 <code>fn parseInt(str: []const u8) !i32</code></li>
+<li>无效输入返回错误 <code>error.InvalidInput</code></li>
+<li>使用 <code>std.fmt.parseInt</code></li>
+</ul>
+<p><strong>参考答案</strong>：</p>
+<pre><code class="language-zig">fn parseInt(str: []const u8) !i32 {
+    return std.fmt.parseInt(i32, str, 10) catch |err| {
+        return error.InvalidInput;
+    };
+}
+</code></pre>
+<p><strong>题目3</strong>：编写一个函数，演示 <code>try</code> 和 <code>catch</code> 的使用。</p>
+<p><strong>要求</strong>：</p>
+<ul>
+<li>定义错误集 <code>FileError</code></li>
+<li>实现文件读取函数（模拟）</li>
+<li>使用 <code>try</code> 和 <code>catch</code> 处理错误</li>
+</ul>
+<p><strong>参考答案</strong>：</p>
+<pre><code class="language-zig">const FileError = error{
+    FileNotFound,
+    PermissionDenied,
+};
+
+fn openFile(path: []const u8) FileError!void {
+    if (std.mem.eql(u8, path, "secret.txt")) {
+        return error.PermissionDenied;
+    }
+    std.debug.print("文件已打开：{s}\n", .{path});
+}
+
+pub fn main(init: std.process.Init.Minimal) void {
+    openFile("test.txt") catch |err| {
+        std.debug.print("错误：{}\n", .{err});
+    };
+}
+</code></pre>
+<h1 id="进阶题"><a class="header" href="#进阶题">进阶题</a></h1>
+<p><strong>题目1</strong>：实现一个函数，使用 <code>errdefer</code> 进行资源清理。</p>
+<p><strong>要求</strong>：</p>
+<ul>
+<li>模拟资源分配</li>
+<li>错误时自动清理资源</li>
+<li>成功时手动清理</li>
+</ul>
+<p><strong>参考答案</strong>：</p>
+<pre><code class="language-zig">const ResourceError = error{
+    AllocationFailed,
+    InitializationFailed,
+};
+
+fn createResource() ResourceError!void {
+    std.debug.print("分配资源...\n", .{});
+    errdefer std.debug.print("清理资源（错误）\n", .{});
+    
+    // 模拟初始化失败
+    return error.InitializationFailed;
+}
+
+pub fn main(init: std.process.Init.Minimal) void {
+    createResource() catch |err| {
+        std.debug.print("错误：{}\n", .{err});
+    };
+}
+</code></pre>
+<p><strong>题目2</strong>：实现一个函数，使用 <code>catch |err| switch</code> 处理多种错误。</p>
+<p><strong>要求</strong>：</p>
+<ul>
+<li>定义包含至少 3 种错误的错误集</li>
+<li>对每种错误提供不同的处理方式</li>
+<li>使用 switch 处理错误</li>
+</ul>
+<p><strong>参考答案</strong>：</p>
+<pre><code class="language-zig">const NetworkError = error{
+    ConnectionFailed,
+    Timeout,
+    InvalidResponse,
+};
+
+fn fetchData() NetworkError![]const u8 {
+    return error.Timeout;
+}
+
+pub fn main(init: std.process.Init.Minimal) void {
+    const data = fetchData() catch |err| switch (err) {
+        error.ConnectionFailed =&gt; {
+            std.debug.print("连接失败，重试中...\n", .{});
+            return;
+        },
+        error.Timeout =&gt; {
+            std.debug.print("超时，使用缓存数据\n", .{});
+            return;
+        },
+        error.InvalidResponse =&gt; {
+            std.debug.print("无效响应，记录日志\n", .{});
+            return;
+        },
+    };
+    _ = data;
+}
+</code></pre>
+<h1 id="挑战题"><a class="header" href="#挑战题">挑战题</a></h1>
+<p><strong>题目</strong>：实现一个简单的错误传播链，演示多层函数的错误处理。</p>
+<p><strong>要求</strong>：</p>
+<ul>
+<li>实现至少 3 层函数调用</li>
+<li>每层函数都可能返回错误</li>
+<li>使用 <code>try</code> 传播错误</li>
+<li>在顶层统一处理错误</li>
+</ul>
+<p><strong>参考答案</strong>：</p>
+<pre><code class="language-zig">const AppError = error{
+    ConfigLoadFailed,
+    DatabaseConnectFailed,
+    QueryFailed,
+};
+
+fn loadConfig() AppError!void {
+    std.debug.print("加载配置...\n", .{});
+}
+
+fn connectDatabase() AppError!void {
+    try loadConfig();
+    std.debug.print("连接数据库...\n", .{});
+}
+
+fn queryData() AppError!void {
+    try connectDatabase();
+    std.debug.print("查询数据...\n", .{});
+}
+
+pub fn main(init: std.process.Init.Minimal) void {
+    queryData() catch |err| {
+        std.debug.print("应用错误：{}\n", .{err});
+        return;
+    };
+    std.debug.print("操作成功！\n", .{});
+}
+</code></pre>
+<hr>
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../part1-basics/chapter-functions.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../part1-basics/chapter-build-system.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../part1-basics/chapter-functions.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../part1-basics/chapter-build-system.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-c2a407aa.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-362d1e8a.js"></script>
+        <script src="../book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

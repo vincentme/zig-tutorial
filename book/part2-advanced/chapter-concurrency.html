@@ -1,0 +1,1678 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>【draft】并发编程概述 - Zig 编程语言全面入门教程</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-2459343d.css">
+        <link rel="stylesheet" href="../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../theme/css/auto-numbering-66d94143.css">
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-22febf57.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-f48f4758.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Zig 编程语言全面入门教程</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/vincentme/zig-tutorial" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/vincentme/zig-tutorial/edit/main/src/part2-advanced/chapter-concurrency.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="draft并发编程概述"><a class="header" href="#draft并发编程概述">【draft】并发编程概述</a></h1>
+<blockquote>
+<p>💡 <strong>重要章节</strong>：并发编程是现代系统编程的核心技能，掌握它对于构建高性能、响应迅速的应用程序至关重要。</p>
+</blockquote>
+<h2 id="线程基础理论"><a class="header" href="#线程基础理论">线程基础理论</a></h2>
+<blockquote>
+<p>📖 <strong>内容来源</strong>：本节内容整合自 <a href="https://pedropark99.github.io/zig-book/Chapters/14-threads.html">Zig Book - Introducing threads and parallelism in Zig</a></p>
+</blockquote>
+<h1 id="什么是线程"><a class="header" href="#什么是线程">什么是线程？</a></h1>
+<p>线程（Thread）本质上是一个独立的执行上下文。我们使用线程在程序中引入并行性，在大多数情况下，这会使程序运行得更快，因为我们可以同时执行多个任务，彼此并行运行。</p>
+<p>程序默认是单线程的。这意味着每个程序通常在单个线程上运行，或者说，在单个执行上下文中运行。当我们只有一个线程运行时，就没有并行性。当没有并行性时，命令是按顺序执行的，也就是说，一次只执行一个命令，一个接一个。通过在程序中创建多个线程，我们开始同时执行多个命令。</p>
+<p><strong>实际应用场景</strong>：</p>
+<p>创建多线程的程序在实际中非常常见。因为许多不同类型的应用程序都非常适合并行处理。很好的例子包括：</p>
+<ol>
+<li><strong>视频和照片编辑应用</strong>（如 Adobe Photoshop 或 DaVinci Resolve）</li>
+<li><strong>游戏</strong>（如 The Witcher 3）</li>
+<li><strong>网页浏览器</strong>（如 Google Chrome、Firefox、Microsoft Edge 等）</li>
+</ol>
+<p>例如，在网页浏览器中，线程通常用于实现标签页。浏览器中的标签页通常作为主进程中的独立线程运行。也就是说，你在浏览器中打开的每个新标签页通常都在一个独立的执行线程上运行。</p>
+<p>通过在每个标签页的独立线程中运行，我们允许浏览器中所有打开的标签页同时运行，并且彼此独立。例如，你可能当前在某个标签页中打开了 YouTube 或 Spotify，正在收听播客，同时又在另一个标签页中工作，在 Google Docs 上写文章。即使你没有查看 YouTube 标签页，你仍然可以听到播客，正是因为这个 YouTube 标签页与运行 Google Docs 的另一个标签页并行运行。</p>
+<p><strong>为什么使用线程而不是进程？</strong></p>
+<p>如果没有线程，另一个选择是将每个标签页作为计算机中完全独立的进程运行。但这将是一个糟糕的选择，因为仅仅几个标签页就会消耗计算机过多的电力和资源。换句话说，与创建新的执行线程相比，创建一个全新的进程非常昂贵。此外，你在使用浏览器时遇到延迟和开销的可能性会很大。线程创建速度更快，而且它们消耗的计算机资源也少得多，特别是因为它们与主进程共享一些资源。</p>
+<p>因此，现代网页浏览器中线程的使用使你能够在 Google Docs 上写东西的同时听到播客。如果没有线程，网页浏览器可能仅限于一个标签页。</p>
+<h1 id="线程-vs-进程"><a class="header" href="#线程-vs-进程">线程 vs 进程</a></h1>
+<p>当我们运行程序时，该程序作为操作系统中的一个进程执行。这是一对一的关系，你执行的每个程序或应用程序都是操作系统中的一个独立进程。但每个程序或每个进程可以在其中创建和包含多个线程。因此，进程和线程具有一对多的关系。</p>
+<p>这也意味着我们创建的每个线程总是与计算机中的特定进程相关联。换句话说，线程始终是现有进程的子集（或子项）。所有线程共享与创建它们的进程相关联的一些资源。因为线程与进程共享资源，它们非常有利于使任务之间的通信更容易。</p>
+<p><strong>关键区别</strong>：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>特性</th><th>进程</th><th>线程</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>创建成本</strong></td><td>高（需要独立的内存空间）</td><td>低（共享进程资源）</td></tr>
+<tr><td><strong>资源占用</strong></td><td>独立的内存空间、文件描述符</td><td>共享进程的堆、全局数据、文件描述符</td></tr>
+<tr><td><strong>通信方式</strong></td><td>IPC（进程间通信）复杂</td><td>直接通过共享内存通信</td></tr>
+<tr><td><strong>上下文切换</strong></td><td>慢（需要切换内存映射）</td><td>快（只需切换栈和寄存器）</td></tr>
+<tr><td><strong>独立性</strong></td><td>高（一个进程崩溃不影响其他进程）</td><td>低（一个线程崩溃可能导致整个进程崩溃）</td></tr>
+<tr><td><strong>适用场景</strong></td><td>需要高度隔离的任务</td><td>需要频繁通信和共享数据的任务</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>线程的内存模型</strong>：</p>
+<p>更详细地说，你创建的每个线程都有一个单独的栈帧专门为该线程保留，这本质上意味着你在这个线程内创建的每个局部对象都是该线程局部的，即其他线程无法看到这个局部对象。除非你创建的这个对象是存储在堆上的对象。换句话说，如果与该对象关联的内存位于堆上，那么其他线程可能可以访问该对象。</p>
+<p>因此：</p>
+<ul>
+<li><strong>存储在栈上的对象</strong>是创建它们的线程局部的</li>
+<li><strong>存储在堆上的对象</strong>可能被其他线程访问</li>
+<li>每个线程都有自己的独立栈帧</li>
+<li>所有线程共享相同的堆、相同的标准文件描述符（意味着它们共享相同的 stdout、stdin、stderr）以及程序中相同的全局数据段</li>
+</ul>
+<h1 id="线程的实际应用餐厅点餐系统"><a class="header" href="#线程的实际应用餐厅点餐系统">线程的实际应用：餐厅点餐系统</a></h1>
+<p>线程也非常适合任何涉及服务请求或订单的场景。因为服务请求需要时间，通常涉及大量的“等待时间“。换句话说，我们花费大量时间处于空闲状态，等待某事完成。</p>
+<p>例如，考虑一家餐厅。在餐厅服务订单通常涉及以下步骤：</p>
+<ol>
+<li>从客户接收订单</li>
+<li>将订单传递给厨房，等待食物烹饪</li>
+<li>在厨房开始烹饪食物</li>
+<li>当食物完全煮熟后，将食物送到客户手中</li>
+</ol>
+<p>如果你思考上面的要点，你会注意到整个过程中存在一个大的等待时刻，那就是食物在厨房里烹饪的时候。在食物准备过程中，服务员和客户本人都在等待食物准备好并送达。</p>
+<p>如果我们编写一个程序来表示这家餐厅，更具体地说，一个单线程程序，那么这个程序将非常低效。因为程序会在“检查食物是否准备好“步骤上花费大量时间处于空闲等待状态。考虑下面可能代表这样一个程序的代码片段：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+const Order = struct {
+    name: []const u8,
+    quantity: u32,
+};
+
+fn serveOrder(order: Order) void {
+    std.debug.print("接收订单: {s} x {}\n", .{ order.name, order.quantity });
+    
+    // 等待食物烹饪（阻塞等待）
+    std.debug.print("等待厨房烹饪...\n", .{});
+    std.time.sleep(5 * std.time.ns_per_s);  // 模拟烹饪时间
+    
+    std.debug.print("食物已准备好，送餐到客户\n", .{});
+}
+
+pub fn main(init: std.process.Init.Minimal) void {
+    // 只能一次服务一个订单
+    serveOrder(.{ .name = "Pizza Margherita", .quantity = 1 });
+    // 第一个订单完成后才能服务第二个
+    serveOrder(.{ .name = "Pasta", .quantity = 2 });
+}
+</code></pre>
+<p>这个程序的问题在于它会花费大量时间在等待上，除了检查食物是否准备好之外什么都不做。这是时间的浪费。与其等待某事发生，服务员可以直接将订单发送到厨房，然后继续前进，继续从其他客户接收更多订单，并将更多订单发送到厨房，而不是什么都不做地等待食物准备好。</p>
+<p>这就是为什么线程非常适合这个程序。我们可以使用线程将服务员从他们的“等待职责“中解放出来，这样他们就可以继续进行其他任务，并接收更多订单。看看下一个示例，我已经将上面的程序重写为一个使用线程来烹饪和送餐订单的不同程序：</p>
+<pre><code class="language-zig">// ✅ 高效的多线程版本
+const std = @import("std");
+
+const Order = struct {
+    name: []const u8,
+    quantity: u32,
+};
+
+fn cookAndDeliver(order: Order) void {
+    const thread_id = std.Thread.getCurrentId();
+    std.debug.print("[线程 {}] 开始烹饪: {s}\n", .{ thread_id, order.name });
+    
+    // 模拟烹饪时间
+    std.time.sleep(5 * std.time.ns_per_s);
+    
+    std.debug.print("[线程 {}] 食物已准备好，送餐: {s}\n", .{ thread_id, order.name });
+}
+
+pub fn main(init: std.process.Init.Minimal) !void {
+    std.debug.print("=== 餐厅点餐系统（多线程版本）===\n", .{});
+    
+    // 可以同时服务多个订单
+    var threads: [3]std.Thread = undefined;
+    const orders = [_]Order{
+        .{ .name = "Pizza Margherita", .quantity = 1 },
+        .{ .name = "Pasta", .quantity = 2 },
+        .{ .name = "Salad", .quantity = 1 },
+    };
+    
+    // 为每个订单创建独立的线程
+    for (&amp;threads, orders) |*thread, order| {
+        std.debug.print("接收订单: {s} x {}\n", .{ order.name, order.quantity });
+        thread.* = try std.Thread.spawn(.{}, cookAndDeliver, .{order});
+    }
+    
+    // 等待所有订单完成
+    for (threads) |thread| {
+        thread.join();
+    }
+    
+    std.debug.print("所有订单已完成\n", .{});
+}
+</code></pre>
+<p><strong>关键改进</strong>：</p>
+<ol>
+<li><strong>并行处理</strong>：多个订单可以同时烹饪，不需要等待</li>
+<li><strong>资源利用</strong>：服务员（主线程）可以继续接收新订单</li>
+<li><strong>响应性</strong>：客户不需要等待前面的订单完成</li>
+<li><strong>效率提升</strong>：总时间从 15 秒（串行）降低到约 5 秒（并行）</li>
+</ol>
+<h2 id="并发编程概述"><a class="header" href="#并发编程概述">并发编程概述</a></h2>
+<h1 id="为什么需要并发编程"><a class="header" href="#为什么需要并发编程">为什么需要并发编程？</a></h1>
+<p>在实际编程中，我们经常遇到这样的问题：</p>
+<pre><code class="language-zig">// 串行执行：总时间 = 任务1时间 + 任务2时间
+// ⏪ 旧版本：0.11.0 已移除 async/await
+fn processData(data1: []const u8, data2: []const u8) !void {
+    try processTask1(data1);  // 耗时 100ms
+    try processTask2(data2);  // 耗时 100ms
+    // 总耗时：200ms
+}
+
+// 并发执行：总时间 ≈ max(任务1时间, 任务2时间)
+fn processDataConcurrent(io: *std.Io, data1: []const u8, data2: []const u8) !void {
+    var fut1 = io.async(processTask1, .{data1});
+    var fut2 = io.async(processTask2, .{data2});
+    try fut1.await(io);
+    try fut2.await(io);
+    // 总耗时：≈ 100ms（并行执行）
+}
+</code></pre>
+<p><strong>问题</strong>：</p>
+<ul>
+<li>串行执行效率低，无法充分利用多核CPU</li>
+<li>I/O操作阻塞整个程序，降低响应性</li>
+<li>难以处理大量并发请求</li>
+</ul>
+<p><strong>解决方案</strong>：使用并发编程，让多个任务同时执行，提高效率和响应性。</p>
+<h1 id="并发-vs-并行"><a class="header" href="#并发-vs-并行">并发 vs 并行</a></h1>
+<p><strong>并发（Concurrency）</strong>：</p>
+<ul>
+<li>多个任务在<strong>时间段上交替执行</strong></li>
+<li>单核CPU也可以实现并发（时间片轮转）</li>
+<li>关注的是<strong>结构</strong>：如何组织多个任务</li>
+</ul>
+<p><strong>并行（Parallelism）</strong>：</p>
+<ul>
+<li>多个任务在<strong>同一时刻同时执行</strong></li>
+<li>需要多核CPU才能真正并行</li>
+<li>关注的是<strong>执行</strong>：如何同时运行多个任务</li>
+</ul>
+<p><strong>关键区别</strong>：</p>
+<pre><code>并发：单线程处理多个任务（交替执行）
+┌─────────────────────────────────────┐
+│ Task A: ████░░░░░░░░████░░░░░░░░████ │
+│ Task B: ░░░░████░░░░░░░░████░░░░░░░░ │
+└─────────────────────────────────────┘
+
+并行：多线程同时执行多个任务
+┌─────────────────────────────────────┐
+│ Thread 1: ████████████████████████  │
+│ Thread 2: ████████████████████████  │
+└─────────────────────────────────────┘
+</code></pre>
+<h1 id="zig-的并发哲学"><a class="header" href="#zig-的并发哲学">Zig 的并发哲学</a></h1>
+<p>Zig 的并发设计遵循其核心理念：<strong>显式优于隐式</strong>。与 Go（goroutine）、Rust（async/await）不同，Zig 提供：</p>
+<ol>
+<li><strong>显式线程管理</strong>：线程创建、销毁都是显式的</li>
+<li><strong>无运行时调度器</strong>：没有隐藏的调度开销</li>
+<li><strong>低级原语</strong>：直接使用操作系统线程和同步原语</li>
+<li><strong>可预测性能</strong>：没有 GC 或运行时的不确定性</li>
+</ol>
+<p><strong>Zig 并发 vs 其他语言</strong>：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>特性</th><th>Go</th><th>Rust</th><th>Zig</th></tr>
+</thead>
+<tbody>
+<tr><td>并发模型</td><td>Goroutine + Channel</td><td>async/await + Future</td><td>系统线程</td></tr>
+<tr><td>调度器</td><td>运行时调度</td><td>异步运行时</td><td>无（直接使用 OS）</td></tr>
+<tr><td>内存模型</td><td>GC</td><td>所有权系统</td><td>手动管理</td></tr>
+<tr><td>学习曲线</td><td>平缓</td><td>陡峭</td><td>中等</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>适用场景</strong>：</p>
+<ul>
+<li><strong>适合</strong>：系统编程、嵌入式、高性能服务器</li>
+<li><strong>不适合</strong>：需要大量轻量级协程的场景（可考虑使用第三方库）</li>
+</ul>
+<h1 id="zig-的并发模型"><a class="header" href="#zig-的并发模型">Zig 的并发模型</a></h1>
+<p>Zig 提供了两种并发机制：</p>
+<ol>
+<li>
+<p><strong>线程模型</strong>：基于操作系统线程</p>
+<ul>
+<li><code>std.Thread</code>：创建和管理线程</li>
+<li><code>std.Thread.Mutex</code>：互斥锁</li>
+<li><code>std.Thread.Condition</code>：条件变量</li>
+<li>适合CPU密集型任务</li>
+</ul>
+</li>
+<li>
+<p><strong>异步 I/O 模型</strong>：基于事件循环</p>
+<ul>
+<li><code>std.Io</code>：异步I/O接口</li>
+<li><code>io.async()</code>：异步操作</li>
+<li><code>io.concurrent()</code>：并发操作</li>
+<li>适合I/O密集型任务</li>
+</ul>
+</li>
+</ol>
+<p><strong>选择依据</strong>：</p>
+<ul>
+<li>CPU密集型任务 → 使用线程</li>
+<li>I/O密集型任务 → 使用异步I/O</li>
+<li>混合型任务 → 结合使用</li>
+</ul>
+<h2 id="线程基础"><a class="header" href="#线程基础">线程基础</a></h2>
+<h1 id="创建和管理线程"><a class="header" href="#创建和管理线程">创建和管理线程</a></h1>
+<pre><code class="language-zig">const std = @import("std");
+
+// 示例：Zig 0.16.0-dev
+pub fn main(init: std.process.Init.Minimal) !void {
+    // 创建线程
+    const thread = try std.Thread.spawn(.{}, worker, .{42});
+    
+    std.debug.print("Main thread: waiting for worker\n", .{});
+    
+    // 等待线程完成
+    thread.join();
+    
+    std.debug.print("Main thread: worker finished\n", .{});
+}
+
+fn worker(id: u32) void {
+    std.debug.print("Worker thread {}: starting\n", .{id});
+    std.time.sleep(1 * std.time.ns_per_s);
+    std.debug.print("Worker thread {}: finished\n", .{id});
+}
+</code></pre>
+<p><strong>关键概念</strong>：</p>
+<ul>
+<li><code>std.Thread.spawn(.{}, func, .{args})</code>：创建新线程</li>
+<li><code>.join()</code>：等待线程完成</li>
+<li>线程函数可以是任意函数</li>
+</ul>
+<h1 id="线程返回机制join-和-detach"><a class="header" href="#线程返回机制join-和-detach">线程返回机制：join 和 detach</a></h1>
+<blockquote>
+<p>📖 <strong>内容来源</strong>：本节内容整合自 <a href="https://pedropark99.github.io/zig-book/Chapters/14-threads.html">Zig Book - Introducing threads and parallelism in Zig</a></p>
+</blockquote>
+<p>当我们创建线程后，需要决定如何处理线程的返回。Zig 提供了两种机制：<code>join()</code> 和 <code>detach()</code>。</p>
+<p><strong>join：等待线程完成</strong></p>
+<p>当你调用 <code>join()</code> 时，你本质上是在说：“嘿！请等待线程完成，然后再继续执行”。例如，在下面的代码中，我们在 <code>main()</code> 函数中创建了一个线程，并在最后调用了 <code>join()</code>。</p>
+<p>因为我们在 <code>main()</code> 的作用域内 join 这个新线程，这意味着 <code>main()</code> 函数的执行会暂时停止，等待线程的执行完成。也就是说，<code>main()</code> 的执行会在调用 <code>join()</code> 的那一行暂时停止，只有在线程完成其任务后才会继续。</p>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(init: std.process.Init.Minimal) !void {
+    const thread = try std.Thread.spawn(.{}, doSomeWork, .{});
+    
+    std.debug.print("主线程：等待工作线程完成\n", .{});
+    
+    // join 会阻塞主线程，直到工作线程完成
+    thread.join();
+    
+    std.debug.print("主线程：工作线程已完成\n", .{});
+}
+
+fn doSomeWork() void {
+    std.debug.print("工作线程：开始工作\n", .{});
+    std.time.sleep(2 * std.time.ns_per_s);
+    std.debug.print("工作线程：工作完成\n", .{});
+}
+</code></pre>
+<p><strong>输出示例</strong>：</p>
+<pre><code>主线程：等待工作线程完成
+工作线程：开始工作
+工作线程：工作完成
+主线程：工作线程已完成
+</code></pre>
+<p>因为我们在这个线程上调用了 <code>join()</code>，所以我们有保证这个新线程会在 <code>main()</code> 执行结束之前完成。因为 <code>main()</code> 会等待线程完成其任务。</p>
+<p><strong>detach：让线程独立运行</strong></p>
+<p>当你调用 <code>detach()</code> 时，与该线程关联的资源会自动释放回系统，而不需要另一个线程来 join 这个已终止的线程。</p>
+<p>换句话说，当你在线程上调用 <code>detach()</code> 时，就像你的孩子长大成人，变得独立于你。一个 detached 的线程会自我释放，当这个线程完成其任务时，它不会将结果报告给你。因此，你通常在线程不需要返回值，或者你不关心线程何时完成时，将线程标记为 detached。</p>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(init: std.process.Init.Minimal) !void {
+    const thread = try std.Thread.spawn(.{}, independentWork, .{});
+    
+    // detach 线程，让它独立运行
+    thread.detach();
+    
+    std.debug.print("主线程：继续执行，不等待工作线程\n", .{});
+    std.time.sleep(1 * std.time.ns_per_s);
+    std.debug.print("主线程：结束\n", .{});
+}
+
+fn independentWork() void {
+    std.debug.print("独立线程：开始工作\n", .{});
+    std.time.sleep(2 * std.time.ns_per_s);
+    std.debug.print("独立线程：工作完成\n", .{});
+}
+</code></pre>
+<p><strong>输出示例</strong>：</p>
+<pre><code>主线程：继续执行，不等待工作线程
+独立线程：开始工作
+主线程：结束
+独立线程：工作完成
+</code></pre>
+<p>注意，“独立线程：工作完成” 可能会在 “主线程：结束” 之后出现，因为主线程不会等待独立线程完成。</p>
+<p><strong>join vs detach 对比</strong>：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>特性</th><th>join</th><th>detach</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>行为</strong></td><td>阻塞当前线程，等待目标线程完成</td><td>让线程独立运行，不阻塞</td></tr>
+<tr><td><strong>资源释放</strong></td><td>线程完成后自动释放资源</td><td>线程完成后自动释放资源</td></tr>
+<tr><td><strong>结果获取</strong></td><td>可以获取线程的执行结果</td><td>无法获取线程的执行结果</td></tr>
+<tr><td><strong>使用场景</strong></td><td>需要等待线程完成或获取结果</td><td>后台任务、不需要结果的任务</td></tr>
+<tr><td><strong>生命周期</strong></td><td>线程必须在 join 之前完成</td><td>线程可以比主线程存活更长时间</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>重要规则</strong>：</p>
+<ol>
+<li><strong>每个线程必须被 join 或 detach</strong>：如果你不对线程调用 <code>join()</code> 或 <code>detach()</code>，会引入未定义行为</li>
+<li><strong>不能同时 join 和 detach</strong>：一个线程不能既是 joinable 又是 detached</li>
+<li><strong>只能调用一次</strong>：<code>join()</code> 和 <code>detach()</code> 都只能调用一次</li>
+</ol>
+<p><strong>实际应用示例</strong>：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(init: std.process.Init.Minimal) !void {
+    // 场景1：需要结果的线程 - 使用 join
+    const result_thread = try std.Thread.spawn(.{}, calculateResult, .{});
+    result_thread.join();
+    std.debug.print("计算线程已完成\n", .{});
+    
+    // 场景2：后台日志记录 - 使用 detach
+    const log_thread = try std.Thread.spawn(.{}, backgroundLogging, .{});
+    log_thread.detach();
+    std.debug.print("日志线程已启动，主线程继续\n", .{});
+    
+    std.debug.print("主线程继续执行其他任务\n", .{});
+}
+
+fn calculateResult() void {
+    std.debug.print("开始计算...\n", .{});
+    std.time.sleep(1 * std.time.ns_per_s);
+    std.debug.print("计算完成\n", .{});
+}
+
+fn backgroundLogging() void {
+    for (0..5) |i| {
+        std.debug.print("日志记录: {}\n", .{i});
+        std.time.sleep(500 * std.time.ns_per_ms);
+    }
+}
+</code></pre>
+<p><strong>最佳实践</strong>：</p>
+<ol>
+<li><strong>优先使用 join</strong>：在大多数情况下，使用 <code>join()</code> 更安全，可以确保线程正确完成</li>
+<li><strong>谨慎使用 detach</strong>：只在确定不需要等待线程完成时使用 <code>detach()</code></li>
+<li><strong>资源管理</strong>：确保 detached 线程不会访问已经释放的资源</li>
+<li><strong>错误处理</strong>：detached 线程中的错误需要在线程内部处理</li>
+</ol>
+<h1 id="线程安全的数据共享"><a class="header" href="#线程安全的数据共享">线程安全的数据共享</a></h1>
+<pre><code class="language-zig">const std = @import("std");
+
+// 示例：Zig 0.16.0-dev
+const Counter = struct {
+    mutex: std.Thread.Mutex,
+    value: i32,
+    
+    pub fn init() Counter {
+        return .{
+            .mutex = .{},
+            .value = 0,
+        };
+    }
+    
+    pub fn increment(self: *Counter) void {
+        self.mutex.lock();
+        defer self.mutex.unlock();
+        self.value += 1;
+    }
+    
+    pub fn get(self: *Counter) i32 {
+        self.mutex.lock();
+        defer self.mutex.unlock();
+        return self.value;
+    }
+};
+
+pub fn main(init: std.process.Init.Minimal) !void {
+    var counter = Counter.init();
+    
+    // 创建多个线程
+    var threads: [10]std.Thread = undefined;
+    for (&amp;threads, 0..) |*t, i| {
+        t.* = try std.Thread.spawn(.{}, incrementWorker, .{ &amp;counter, i });
+    }
+    
+    // 等待所有线程完成
+    for (threads) |t| {
+        t.join();
+    }
+    
+    std.debug.print("Final counter value: {}\n", .{counter.get()});
+}
+
+fn incrementWorker(counter: *Counter, id: usize) void {
+    for (0..1000) |i| {
+        counter.increment();
+        if (i % 100 == 0) {
+            std.debug.print("Thread {}: incrementing\n", .{id});
+        }
+    }
+}
+</code></pre>
+<p><strong>讲解要点</strong>：</p>
+<ul>
+<li><code>std.Thread.Mutex</code> 保护共享数据</li>
+<li><code>lock()</code> 和 <code>unlock()</code> 必须成对使用</li>
+<li><code>defer</code> 确保锁一定会释放</li>
+<li>多线程环境下必须同步访问共享数据</li>
+</ul>
+<h2 id="同步机制"><a class="header" href="#同步机制">同步机制</a></h2>
+<h1 id="为什么需要同步"><a class="header" href="#为什么需要同步">为什么需要同步？</a></h1>
+<p>多线程访问共享数据时，需要同步机制来避免数据竞争：</p>
+<ol>
+<li><strong>数据竞争</strong>：多个线程同时读写同一数据</li>
+<li><strong>竞态条件</strong>：结果依赖于线程执行顺序</li>
+<li><strong>内存可见性</strong>：一个线程的修改对其他线程不可见</li>
+</ol>
+<h1 id="互斥锁mutex"><a class="header" href="#互斥锁mutex">互斥锁（Mutex）</a></h1>
+<p>互斥锁确保同一时间只有一个线程可以访问共享数据：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+var counter: usize = 0;
+var mutex: std.Thread.Mutex = .{};
+
+fn incrementCounter() void {
+    for (0..1000) |_| {
+        mutex.lock();
+        defer mutex.unlock();
+        counter += 1;
+    }
+}
+
+pub fn main(init: std.process.Init.Minimal) !void {
+    const thread_count = 4;
+    var threads: [thread_count]std.Thread = undefined;
+    
+    for (0..thread_count) |i| {
+        threads[i] = try std.Thread.spawn(.{}, incrementCounter, .{});
+    }
+    
+    for (threads) |thread| {
+        thread.join();
+    }
+    
+    std.debug.print("计数器：{}\n", .{counter});
+}
+</code></pre>
+<h1 id="条件变量condition-variable"><a class="header" href="#条件变量condition-variable">条件变量（Condition Variable）</a></h1>
+<p>条件变量用于线程间的等待/通知机制：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+var counter: usize = 0;
+var mutex: std.Thread.Mutex = .{};
+var cond: std.Thread.Condition = .{};
+var done: bool = false;
+
+// 生产者：增加计数器
+fn producer() void {
+    for (0..10) |_| {
+        mutex.lock();
+        defer mutex.unlock();
+        
+        counter += 1;
+        std.debug.print("生产：counter = {}\n", .{counter});
+        
+        // 通知等待的消费者
+        cond.signal();
+        std.time.sleep(50 * std.time.ns_per_ms);
+    }
+    
+    // 标记完成
+    mutex.lock();
+    defer mutex.unlock();
+    done = true;
+    cond.signal();
+}
+
+// 消费者：减少计数器
+fn consumer() void {
+    while (true) {
+        mutex.lock();
+        defer mutex.unlock();
+        
+        // 等待条件：counter &gt; 0 或 done
+        while (counter == 0 and !done) {
+            cond.wait(&amp;mutex); // 释放锁并等待
+        }
+        
+        if (done and counter == 0) break;
+        
+        counter -= 1;
+        std.debug.print("消费：counter = {}\n", .{counter});
+    }
+}
+
+pub fn main(init: std.process.Init.Minimal) !void {
+    const producer_thread = try std.Thread.spawn(.{}, producer, .{});
+    const consumer_thread = try std.Thread.spawn(.{}, consumer, .{});
+    
+    producer_thread.join();
+    consumer_thread.join();
+    
+    std.debug.print("生产者-消费者完成\n", .{});
+}
+</code></pre>
+<p><strong>关键要点</strong>：</p>
+<ul>
+<li><code>cond.wait(&amp;mutex)</code> 会自动释放锁并等待通知</li>
+<li>收到通知后，会重新获取锁</li>
+<li>使用 <code>while</code> 循环检查条件，避免虚假唤醒</li>
+<li><code>signal()</code> 唤醒一个等待线程，<code>broadcast()</code> 唤醒所有等待线程</li>
+</ul>
+<h2 id="zig-0160-异步-io"><a class="header" href="#zig-0160-异步-io">Zig 0.16.0 异步 I/O</a></h2>
+<blockquote>
+<p>⚠️ <strong>重要说明</strong>：Zig 0.16.0 引入了全新的异步I/O设计，与旧版本的 <code>async</code>/<code>await</code> 关键字完全不同。</p>
+</blockquote>
+<h1 id="异步-io-的核心理念"><a class="header" href="#异步-io-的核心理念">异步 I/O 的核心理念</a></h1>
+<p><strong>关键概念</strong>：<strong>异步 ≠ 并发</strong></p>
+<ul>
+<li><code>async</code>：操作<strong>可以</strong>乱序执行（顺序等待也是有效的）</li>
+<li><code>concurrent</code>：操作<strong>必须</strong>同时执行（需要并行性）</li>
+</ul>
+<p><strong>设计哲学</strong>：</p>
+<ul>
+<li>将并发表达与执行模型解耦</li>
+<li>代码可以在同步、多线程、事件驱动环境中无缝工作</li>
+<li>没有函数着色问题</li>
+</ul>
+<h1 id="stdio-接口"><a class="header" href="#stdio-接口">std.Io 接口</a></h1>
+<pre><code class="language-zig">// ⏪ 旧版本：0.11.0 已移除 async/await
+const std = @import("std");
+
+// 示例：Zig 0.16.0-dev
+const Io = struct {
+    /// 生成异步工作（可能立即执行或被调度）
+    fn async(self: *Io, func: anytype, args: anytype) Future
+    
+    /// 生成并发工作（如果并行性不可用则失败）
+    fn concurrent(self: *Io, func: anytype, args: anytype) !Future
+    
+    /// 消息传递原语
+    fn Queue(comptime T: type) type
+};
+</code></pre>
+<h1 id="future-操作"><a class="header" href="#future-操作">Future 操作</a></h1>
+<pre><code class="language-zig">// ⏪ 旧版本：0.11.0 已移除 async/await
+const Future = struct {
+    /// 等待结果（幂等）
+    fn await(self: *Future, io: *Io) !T
+    
+    /// 取消并检索结果（幂等）
+    fn cancel(self: *Future, io: *Io) !T
+};
+</code></pre>
+<h1 id="基本异步操作"><a class="header" href="#基本异步操作">基本异步操作</a></h1>
+<pre><code class="language-zig">// ⏪ 旧版本：0.11.0 已移除 async/await
+const std = @import("std");
+
+// 示例：Zig 0.16.0-dev
+pub fn main(init: std.process.Init.Minimal) !void {
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+    
+    // 创建 I/O 上下文
+    var io = std.Io.Threaded.init(allocator);
+    defer io.deinit();
+    
+    // 异步文件操作
+    var fut1 = io.async(saveFile, .{ &amp;io, "file1.txt", "Hello" });
+    var fut2 = io.async(saveFile, .{ &amp;io, "file2.txt", "World" });
+    
+    // 等待结果
+    try fut1.await(&amp;io);
+    try fut2.await(&amp;io);
+    
+    std.debug.print("Files saved concurrently\n", .{});
+}
+
+fn saveFile(io: *std.Io, filename: []const u8, content: []const u8) !void {
+    _ = io;
+    const file = try std.fs.cwd().createFile(filename, .{});
+    defer file.close();
+    try file.writeAll(content);
+}
+</code></pre>
+<h1 id="资源管理模式"><a class="header" href="#资源管理模式">资源管理模式</a></h1>
+<pre><code class="language-zig">// ⏪ 旧版本：0.11.0 已移除 async/await
+const std = @import("std");
+
+// 示例：Zig 0.16.0-dev
+pub fn processWithCleanup(io: *std.Io) !void {
+    var future = io.async(longOperation, .{io});
+    
+    // 使用 defer 确保资源清理
+    defer if (future.cancel(io)) |result| {
+        cleanup(result);
+    } else |_| {}
+    
+    // 使用 future...
+    try future.await(io);
+}
+
+fn longOperation(io: *std.Io) !i32 {
+    _ = io;
+    // 模拟长时间操作
+    std.time.sleep(1 * std.time.ns_per_s);
+    return 42;
+}
+
+fn cleanup(result: i32) void {
+    std.debug.print("Cleaning up result: {}\n", .{result});
+}
+</code></pre>
+<p><strong>讲解要点</strong>：</p>
+<ul>
+<li><code>io.async()</code> 用于可能并发的操作</li>
+<li><code>future.await(io)</code> 等待结果</li>
+<li><code>defer</code> + <code>cancel()</code> 模式处理资源清理</li>
+<li>传递 <code>io</code> 参数就像传递 <code>allocator</code> 一样</li>
+</ul>
+<h1 id="async-vs-concurrent-的选择"><a class="header" href="#async-vs-concurrent-的选择">async vs concurrent 的选择</a></h1>
+<p><strong>使用 <code>io.async()</code> 当</strong>：</p>
+<ul>
+<li>操作可以以任何顺序进行</li>
+<li>顺序等待是可接受的</li>
+<li>想要与阻塞I/O实现一起工作</li>
+</ul>
+<p><strong>使用 <code>io.concurrent()</code> 当</strong>：</p>
+<ul>
+<li>操作必须同时运行</li>
+<li>解决生产者-消费者死锁</li>
+<li>需要真正的并行性</li>
+</ul>
+<pre><code class="language-zig">// ⏪ 旧版本：0.11.0 已移除 async/await
+const std = @import("std");
+
+// 示例：Zig 0.16.0-dev
+pub fn demonstrateAsyncVsConcurrent(io: *std.Io) !void {
+    // async: 操作可以顺序执行
+    var async_fut = io.async(task, .{io, "async task"});
+    
+    // concurrent: 操作必须并行执行
+    var concurrent_fut = try io.concurrent(task, .{io, "concurrent task"});
+    
+    try async_fut.await(io);
+    try concurrent_fut.await(io);
+}
+
+fn task(io: *std.Io, name: []const u8) !void {
+    _ = io;
+    std.debug.print("Executing: {s}\n", .{name});
+}
+</code></pre>
+<h2 id="原子操作"><a class="header" href="#原子操作">原子操作</a></h2>
+<h1 id="原子类型"><a class="header" href="#原子类型">原子类型</a></h1>
+<pre><code class="language-zig">const std = @import("std");
+
+// 示例：Zig 0.16.0-dev
+const AtomicCounter = struct {
+    value: std.atomic.Value(i32),
+    
+    pub fn init() AtomicCounter {
+        return .{
+            .value = std.atomic.Value(i32).init(0),
+        };
+    }
+    
+    pub fn increment(self: *AtomicCounter) void {
+        _ = self.value.fetchAdd(1, .monotonic);
+    }
+    
+    pub fn decrement(self: *AtomicCounter) void {
+        _ = self.value.fetchSub(1, .monotonic);
+    }
+    
+    pub fn get(self: *AtomicCounter) i32 {
+        return self.value.load(.monotonic);
+    }
+    
+    pub fn set(self: *AtomicCounter, new_value: i32) void {
+        self.value.store(new_value, .monotonic);
+    }
+};
+
+pub fn main(init: std.process.Init.Minimal) !void {
+    var counter = AtomicCounter.init();
+    
+    var threads: [10]std.Thread = undefined;
+    for (&amp;threads) |*t| {
+        t.* = try std.Thread.spawn(.{}, atomicIncrementWorker, .{&amp;counter});
+    }
+    
+    for (threads) |t| {
+        t.join();
+    }
+    
+    std.debug.print("Final atomic counter: {}\n", .{counter.get()});
+}
+
+fn atomicIncrementWorker(counter: *AtomicCounter) void {
+    for (0..1000) |_| {
+        counter.increment();
+    }
+}
+</code></pre>
+<h1 id="内存序"><a class="header" href="#内存序">内存序</a></h1>
+<p>Zig 支持多种内存序，影响可见性和性能：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+// 示例：Zig 0.16.0-dev
+const Data = struct {
+    ready: std.atomic.Value(bool),
+    value: i32,
+    
+    pub fn init() Data {
+        return .{
+            .ready = std.atomic.Value(bool).init(false),
+            .value = 0,
+        };
+    }
+    
+    // 写入者
+    pub fn write(self: *Data, v: i32) void {
+        self.value = v;
+        // Release: 确保前面的写入对其他线程可见
+        self.ready.store(true, .release);
+    }
+    
+    // 读取者
+    pub fn read(self: *Data) ?i32 {
+        // Acquire: 确保看到最新的写入
+        if (self.ready.load(.acquire)) {
+            return self.value;
+        }
+        return null;
+    }
+};
+</code></pre>
+<p><strong>内存序说明</strong>：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>内存序</th><th>说明</th><th>使用场景</th></tr>
+</thead>
+<tbody>
+<tr><td><code>.monotonic</code></td><td>最弱，只保证原子性</td><td>简单计数器</td></tr>
+<tr><td><code>.acquire</code></td><td>读操作，防止后续操作重排到前面</td><td>读取共享数据</td></tr>
+<tr><td><code>.release</code></td><td>写操作，防止前面操作重排到后面</td><td>写入共享数据</td></tr>
+<tr><td><code>.acq_rel</code></td><td>Acquire + Release</td><td>读-改-写操作</td></tr>
+<tr><td><code>.seq_cst</code></td><td>最强，全局顺序一致</td><td>需要严格顺序的场景</td></tr>
+</tbody>
+</table>
+</div>
+<h1 id="自旋锁实现"><a class="header" href="#自旋锁实现">自旋锁实现</a></h1>
+<pre><code class="language-zig">const std = @import("std");
+
+// 示例：Zig 0.16.0-dev
+const SpinLock = struct {
+    flag: std.atomic.Value(bool),
+    
+    pub fn init() SpinLock {
+        return .{
+            .flag = std.atomic.Value(bool).init(false),
+        };
+    }
+    
+    pub fn lock(self: *SpinLock) void {
+        // CAS 循环：尝试将 false 改为 true
+        while (self.flag.compareAndSwap(
+            false,  // 期望值
+            true,   // 新值
+            .acquire,  // 成功时的内存序
+            .monotonic, // 失败时的内存序
+        )) |_| {
+            // 自旋等待
+            std.Thread.spinLoopHint();
+        }
+    }
+    
+    pub fn unlock(self: *SpinLock) void {
+        // Release: 确保前面的操作对其他线程可见
+        self.flag.store(false, .release);
+    }
+};
+
+pub fn main(init: std.process.Init.Minimal) !void {
+    var spinlock = SpinLock.init();
+    var protected_value: i32 = 0;
+    
+    {
+        spinlock.lock();
+        defer spinlock.unlock();
+        protected_value = 42;
+        std.debug.print("Protected value: {}\n", .{protected_value});
+    }
+}
+</code></pre>
+<p><strong>讲解要点</strong>：</p>
+<ul>
+<li><code>compareAndSwap</code> 是 CAS 操作，用于无锁编程</li>
+<li><code>spinLoopHint()</code> 提示CPU优化自旋等待</li>
+<li>自旋锁适合短时间持有锁的场景</li>
+</ul>
+<h2 id="无锁数据结构"><a class="header" href="#无锁数据结构">无锁数据结构</a></h2>
+<h1 id="无锁栈"><a class="header" href="#无锁栈">无锁栈</a></h1>
+<pre><code class="language-zig">const std = @import("std");
+
+// 示例：Zig 0.16.0-dev
+fn LockFreeStack(comptime T: type) type {
+    return struct {
+        const Self = @This();
+        const Node = struct {
+            data: T,
+            next: ?*Node,
+        };
+        
+        head: std.atomic.Value(?*Node),
+        
+        pub fn init() Self {
+            return .{
+                .head = std.atomic.Value(?*Node).init(null),
+            };
+        }
+        
+        pub fn push(self: *Self, node: *Node) void {
+            var current = self.head.load(.monotonic);
+            while (true) {
+                node.next = current;
+                // CAS: 尝试更新 head
+                if (self.head.compareAndSwap(
+                    current,
+                    node,
+                    .release,
+                    .monotonic,
+                )) |new_current| {
+                    // CAS 失败，重试
+                    current = new_current;
+                } else {
+                    // CAS 成功
+                    break;
+                }
+            }
+        }
+        
+        pub fn pop(self: *Self) ?*Node {
+            var current = self.head.load(.monotonic);
+            while (current) |node| {
+                // CAS: 尝试更新 head
+                if (self.head.compareAndSwap(
+                    current,
+                    node.next,
+                    .acquire,
+                    .monotonic,
+                )) |_| {
+                    // CAS 成功
+                    return node;
+                } else |new_current| {
+                    // CAS 失败，重试
+                    current = new_current;
+                }
+            }
+            return null;
+        }
+    };
+}
+
+pub fn main(init: std.process.Init.Minimal) !void {
+    var stack = LockFreeStack(i32).init();
+    
+    var nodes: [10]LockFreeStack(i32).Node = undefined;
+    for (&amp;nodes, 0..) |*node, i| {
+        node.* = .{
+            .data = @intCast(i),
+            .next = null,
+        };
+        stack.push(node);
+    }
+    
+    while (stack.pop()) |node| {
+        std.debug.print("Popped: {}\n", .{node.data});
+    }
+}
+</code></pre>
+<p><strong>讲解要点</strong>：</p>
+<ul>
+<li>CAS 循环是无锁编程的核心模式</li>
+<li>无锁数据结构避免了锁的开销</li>
+<li>注意 ABA 问题：节点被释放后重新分配，CAS 可能误判</li>
+<li>内存回收是无锁数据结构的难点</li>
+</ul>
+<h2 id="自旋锁实现-1"><a class="header" href="#自旋锁实现-1">自旋锁实现</a></h2>
+<p>自旋锁是一种简单的锁机制，线程在获取锁失败时会循环等待（自旋），而不是阻塞。</p>
+<pre><code class="language-zig">const std = @import("std");
+
+const SpinLock = struct {
+    locked: std.atomic.Value(bool) = std.atomic.Value(bool).init(false),
+    
+    fn acquire(self: *SpinLock) void {
+        while (self.locked.cmpxchgWeak(
+            false,
+            true,
+            .acquire,
+            .relaxed,
+        ) != null) {
+            // 自旋等待
+            std.atomic.spinLoopHint();
+        }
+    }
+    
+    fn release(self: *SpinLock) void {
+        self.locked.store(false, .release);
+    }
+};
+
+pub fn main(init: std.process.Init.Minimal) !void {
+    var lock: SpinLock = .{};
+    var counter: usize = 0;
+    
+    const worker = struct {
+        fn work(l: *SpinLock, c: *usize) void {
+            for (0..1000) |_| {
+                l.acquire();
+                defer l.release();
+                c.* += 1;
+            }
+        }
+    }.work;
+    
+    const thread1 = try std.Thread.spawn(.{}, worker, .{ &amp;lock, &amp;counter });
+    const thread2 = try std.Thread.spawn(.{}, worker, .{ &amp;lock, &amp;counter });
+    
+    thread1.join();
+    thread2.join();
+    
+    std.debug.print("计数器：{}\n", .{counter});
+}
+</code></pre>
+<p><strong>自旋锁 vs 互斥锁</strong>：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>特性</th><th>自旋锁</th><th>互斥锁</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>等待方式</strong></td><td>忙等待（占用 CPU）</td><td>阻塞等待（释放 CPU）</td></tr>
+<tr><td><strong>上下文切换</strong></td><td>无</td><td>有</td></tr>
+<tr><td><strong>适用场景</strong></td><td>短时间持有锁</td><td>长时间持有锁</td></tr>
+<tr><td><strong>CPU 开销</strong></td><td>高（等待时占用 CPU）</td><td>低（等待时释放 CPU）</td></tr>
+<tr><td><strong>实现复杂度</strong></td><td>简单</td><td>复杂</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>使用建议</strong>：</p>
+<ul>
+<li>✅ <strong>适合</strong>：锁持有时间极短（&lt; 100 条指令）</li>
+<li>❌ <strong>不适合</strong>：锁持有时间较长，或竞争激烈</li>
+<li>⚠️ <strong>注意</strong>：在单核 CPU 上，自旋锁可能导致死锁</li>
+</ul>
+<h2 id="并发模式"><a class="header" href="#并发模式">并发模式</a></h2>
+<h1 id="生产者-消费者模式"><a class="header" href="#生产者-消费者模式">生产者-消费者模式</a></h1>
+<pre><code class="language-zig">const std = @import("std");
+
+// 示例：Zig 0.16.0-dev
+fn BoundedQueue(comptime T: type) type {
+    return struct {
+        mutex: std.Thread.Mutex,
+        not_empty: std.Thread.Condition,
+        not_full: std.Thread.Condition,
+        buffer: []T,
+        head: usize,
+        tail: usize,
+        count: usize,
+        
+        pub fn init(allocator: std.mem.Allocator, capacity: usize) !@This() {
+            return .{
+                .mutex = .{},
+                .not_empty = .{},
+                .not_full = .{},
+                .buffer = try allocator.alloc(T, capacity),
+                .head = 0,
+                .tail = 0,
+                .count = 0,
+            };
+        }
+        
+        pub fn deinit(self: *@This(), allocator: std.mem.Allocator) void {
+            allocator.free(self.buffer);
+        }
+        
+        pub fn enqueue(self: *@This(), item: T) void {
+            self.mutex.lock();
+            defer self.mutex.unlock();
+            
+            // 等待队列不满
+            while (self.count == self.buffer.len) {
+                self.not_full.wait(&amp;self.mutex);
+            }
+            
+            self.buffer[self.tail] = item;
+            self.tail = (self.tail + 1) % self.buffer.len;
+            self.count += 1;
+            
+            // 通知消费者
+            self.not_empty.signal();
+        }
+        
+        pub fn dequeue(self: *@This()) T {
+            self.mutex.lock();
+            defer self.mutex.unlock();
+            
+            // 等待队列不空
+            while (self.count == 0) {
+                self.not_empty.wait(&amp;self.mutex);
+            }
+            
+            const item = self.buffer[self.head];
+            self.head = (self.head + 1) % self.buffer.len;
+            self.count -= 1;
+            
+            // 通知生产者
+            self.not_full.signal();
+            
+            return item;
+        }
+    };
+}
+
+pub fn main(init: std.process.Init.Minimal) !void {
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+    
+    var queue = try BoundedQueue(i32).init(allocator, 10);
+    defer queue.deinit(allocator);
+    
+    // 生产者线程
+    const producer = try std.Thread.spawn(.{}, producerWorker, .{&amp;queue});
+    
+    // 消费者线程
+    const consumer = try std.Thread.spawn(.{}, consumerWorker, .{&amp;queue});
+    
+    producer.join();
+    consumer.join();
+}
+
+fn producerWorker(queue: *BoundedQueue(i32)) void {
+    for (0..20) |i| {
+        queue.enqueue(@intCast(i));
+        std.debug.print("Produced: {}\n", .{i});
+        std.time.sleep(100 * std.time.ns_per_ms);
+    }
+}
+
+fn consumerWorker(queue: *BoundedQueue(i32)) void {
+    for (0..20) |_| {
+        const item = queue.dequeue();
+        std.debug.print("Consumed: {}\n", .{item});
+        std.time.sleep(150 * std.time.ns_per_ms);
+    }
+}
+</code></pre>
+<p><strong>讲解要点</strong>：</p>
+<ul>
+<li>条件变量用于线程间通信</li>
+<li><code>wait()</code> 会释放锁并等待信号</li>
+<li><code>signal()</code> 唤醒等待的线程</li>
+<li>循环队列实现有界缓冲</li>
+</ul>
+<h1 id="使用-ioqueue-进行消息传递"><a class="header" href="#使用-ioqueue-进行消息传递">使用 Io.Queue 进行消息传递</a></h1>
+<pre><code class="language-zig">// ⏪ 旧版本：0.11.0 已移除 async/await
+const std = @import("std");
+
+// 示例：Zig 0.16.0-dev
+pub fn main(init: std.process.Init.Minimal) !void {
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+    
+    var io = std.Io.Threaded.init(allocator);
+    defer io.deinit();
+    
+    // 创建消息队列
+    var queue = io.Queue(i32).init();
+    
+    // 生产者
+    var producer = try io.concurrent(produce, .{ &amp;io, &amp;queue });
+    
+    // 消费者
+    var consumer = try io.concurrent(consume, .{ &amp;io, &amp;queue });
+    
+    try producer.await(&amp;io);
+    try consumer.await(&amp;io);
+}
+
+fn produce(io: *std.Io, queue: *std.Io.Queue(i32)) !void {
+    for (0..10) |i| {
+        try queue.write(io, @intCast(i));
+        std.debug.print("Produced: {}\n", .{i});
+    }
+}
+
+fn consume(io: *std.Io, queue: *std.Io.Queue(i32)) !void {
+    for (0..10) |_| {
+        const item = try queue.read(io);
+        std.debug.print("Consumed: {}\n", .{item});
+    }
+}
+</code></pre>
+<h2 id="实践练习"><a class="header" href="#实践练习">实践练习</a></h2>
+<h1 id="练习1基础练习难度简单"><a class="header" href="#练习1基础练习难度简单">练习1：基础练习（难度：简单）</a></h1>
+<p><strong>练习目标</strong>：掌握线程和互斥锁的使用</p>
+<pre><code class="language-zig">// 练习1.1：实现线程安全的计数器
+const ThreadSafeCounter = struct {
+    mutex: std.Thread.Mutex,
+    value: i32,
+    
+    // TODO: 实现 init, increment, decrement, get
+};
+
+// 练习1.2：实现线程安全的链表
+const ThreadSafeList = struct {
+    mutex: std.Thread.Mutex,
+    head: ?*Node,
+    
+    // TODO: 实现 insert, remove, find
+};
+
+// 练习1.3：实现线程安全的哈希表
+const ThreadSafeHashMap = struct {
+    mutex: std.Thread.Mutex,
+    buckets: []?Entry,
+    
+    // TODO: 实现 put, get, remove
+};
+</code></pre>
+<h1 id="练习2进阶练习难度中等"><a class="header" href="#练习2进阶练习难度中等">练习2：进阶练习（难度：中等）</a></h1>
+<p><strong>练习目标</strong>：掌握原子操作和无锁编程</p>
+<pre><code class="language-zig">// 练习2.1：实现自旋锁
+const SpinLock = struct {
+    flag: std.atomic.Value(bool),
+    
+    // TODO: 实现 lock, unlock
+};
+
+// 练习2.2：实现无锁队列
+const LockFreeQueue = struct {
+    head: std.atomic.Value(?*Node),
+    tail: std.atomic.Value(?*Node),
+    
+    // TODO: 实现 enqueue, dequeue
+};
+
+// 练习2.3：实现读写锁
+const ReadWriteLock = struct {
+    readers: std.atomic.Value(i32),
+    writer: std.atomic.Value(bool),
+    
+    // TODO: 实现 readLock, readUnlock, writeLock, writeUnlock
+};
+</code></pre>
+<h1 id="练习3高级练习难度困难"><a class="header" href="#练习3高级练习难度困难">练习3：高级练习（难度：困难）</a></h1>
+<p><strong>练习目标</strong>：掌握复杂并发模式</p>
+<pre><code class="language-zig">// 练习3.1：实现线程池
+const ThreadPool = struct {
+    workers: []std.Thread,
+    tasks: BoundedQueue(Task),
+    
+    // TODO: 实现 init, deinit, submit, shutdown
+};
+
+// 练习3.2：实现工作窃取调度器
+const WorkStealingScheduler = struct {
+    queues: []ThreadLocalQueue,
+    
+    // TODO: 实现 submit, steal, run
+};
+
+// 练习3.3：实现并发哈希表
+const ConcurrentHashMap = struct {
+    segments: []Segment,
+    
+    // TODO: 实现 put, get, remove（使用分段锁）
+};
+</code></pre>
+<h2 id="并发编程最佳实践"><a class="header" href="#并发编程最佳实践">并发编程最佳实践</a></h2>
+<h1 id="1-避免数据竞争"><a class="header" href="#1-避免数据竞争">1. 避免数据竞争</a></h1>
+<pre><code class="language-zig">// ✅ 好的做法：使用锁保护共享数据
+// ❌ 错误示例
+const SharedData = struct {
+    mutex: std.Thread.Mutex,
+    value: i32,
+    
+    pub fn update(self: *SharedData, new_value: i32) void {
+        self.mutex.lock();
+        defer self.mutex.unlock();
+        self.value = new_value;
+    }
+};
+
+// ❌ 不好的做法：直接访问共享数据
+const SharedData = struct {
+    value: i32,
+    
+    pub fn update(self: *SharedData, new_value: i32) void {
+        self.value = new_value;  // 数据竞争！
+    }
+};
+</code></pre>
+<h1 id="2-最小化锁的持有时间"><a class="header" href="#2-最小化锁的持有时间">2. 最小化锁的持有时间</a></h1>
+<pre><code class="language-zig">// ✅ 好的做法：减少锁的持有时间
+// ❌ 错误示例
+fn processData(data: *SharedData) !void {
+    // 先在锁外准备数据
+    const prepared = try prepareData();
+    
+    // 只在必要时持有锁
+    data.mutex.lock();
+    defer data.mutex.unlock();
+    data.value = prepared;
+}
+
+// ❌ 不好的做法：长时间持有锁
+fn processData(data: *SharedData) !void {
+    data.mutex.lock();
+    defer data.mutex.unlock();
+    
+    // 在锁内进行耗时操作
+    const prepared = try prepareData();  // 不应该在这里
+    data.value = prepared;
+}
+</code></pre>
+<h1 id="3-避免死锁"><a class="header" href="#3-避免死锁">3. 避免死锁</a></h1>
+<pre><code class="language-zig">// ✅ 好的做法：按固定顺序获取锁
+// ❌ 错误示例
+fn transfer(from: *Account, to: *Account, amount: i32) void {
+    const lock1 = if (@intFromPtr(from) &lt; @intFromPtr(to)) from else to;
+    const lock2 = if (@intFromPtr(from) &lt; @intFromPtr(to)) to else from;
+    
+    lock1.mutex.lock();
+    defer lock1.mutex.unlock();
+    lock2.mutex.lock();
+    defer lock2.mutex.unlock();
+    
+    from.balance -= amount;
+    to.balance += amount;
+}
+
+// ❌ 不好的做法：随机顺序获取锁（可能死锁）
+fn transfer(from: *Account, to: *Account, amount: i32) void {
+    from.mutex.lock();
+    defer from.mutex.unlock();
+    to.mutex.lock();  // 可能死锁！
+    defer to.mutex.unlock();
+    
+    from.balance -= amount;
+    to.balance += amount;
+}
+</code></pre>
+<h1 id="4-使用-defer-确保资源释放"><a class="header" href="#4-使用-defer-确保资源释放">4. 使用 defer 确保资源释放</a></h1>
+<pre><code class="language-zig">// ✅ 好的做法：使用 defer
+// ❌ 错误示例
+fn safeOperation(data: *SharedData) void {
+    data.mutex.lock();
+    defer data.mutex.unlock();  // 确保一定会释放
+    
+    // 可能提前返回的代码
+    if (data.value == 0) return;
+    
+    // 其他操作...
+}
+
+// ❌ 不好的做法：手动释放（容易忘记）
+fn unsafeOperation(data: *SharedData) void {
+    data.mutex.lock();
+    
+    if (data.value == 0) {
+        data.mutex.unlock();  // 容易忘记
+        return;
+    }
+    
+    // 其他操作...
+    data.mutex.unlock();  // 可能不会执行
+}
+</code></pre>
+<h1 id="5-选择合适的同步机制"><a class="header" href="#5-选择合适的同步机制">5. 选择合适的同步机制</a></h1>
+<pre><code class="language-zig">// 简单计数器 → 原子操作
+var counter = std.atomic.Value(i32).init(0);
+_ = counter.fetchAdd(1, .monotonic);
+
+// 复杂操作 → 互斥锁
+var data = struct {
+    mutex: std.Thread.Mutex,
+    map: std.StringHashMap(i32),
+}{ .mutex = .{}, .map = undefined };
+
+// 生产者-消费者 → 条件变量或 Io.Queue
+var queue = BoundedQueue(i32).init(allocator, 10);
+
+// 高性能场景 → 无锁数据结构
+var stack = LockFreeStack(i32).init();
+</code></pre>
+<h2 id="小结"><a class="header" href="#小结">小结</a></h2>
+<p>本章介绍了 Zig 的并发编程，包括：</p>
+<ol>
+<li>
+<p><strong>并发基础概念</strong>：</p>
+<ul>
+<li>并发 vs 并行</li>
+<li>Zig 的并发模型</li>
+<li>线程创建和管理</li>
+</ul>
+</li>
+<li>
+<p><strong>Zig 0.16.0 异步 I/O</strong>：</p>
+<ul>
+<li>std.Io 接口</li>
+<li>Future 操作</li>
+<li>async vs concurrent</li>
+<li>资源管理模式</li>
+</ul>
+</li>
+<li>
+<p><strong>原子操作</strong>：</p>
+<ul>
+<li>原子类型</li>
+<li>内存序</li>
+<li>CAS 操作</li>
+</ul>
+</li>
+<li>
+<p><strong>无锁数据结构</strong>：</p>
+<ul>
+<li>无锁栈</li>
+<li>CAS 循环模式</li>
+<li>ABA 问题</li>
+</ul>
+</li>
+<li>
+<p><strong>并发模式</strong>：</p>
+<ul>
+<li>生产者-消费者</li>
+<li>消息传递</li>
+</ul>
+</li>
+<li>
+<p><strong>最佳实践</strong>：</p>
+<ul>
+<li>避免数据竞争</li>
+<li>最小化锁持有时间</li>
+<li>避免死锁</li>
+<li>使用 defer</li>
+<li>选择合适的同步机制</li>
+</ul>
+</li>
+</ol>
+<p><strong>关键要点</strong>：</p>
+<ul>
+<li>Zig 提供线程和异步 I/O 两种并发机制</li>
+<li>Zig 0.16.0 的异步 I/O 解耦了并发表达和执行模型</li>
+<li>原子操作是无锁编程的基础</li>
+<li>内存序影响可见性和性能</li>
+<li>并发编程需要特别注意正确性</li>
+</ul>
+<p><strong>下一步学习</strong>：</p>
+<ul>
+<li>第十一章：指针与引用类型 - 深入理解指针</li>
+<li>第十二章：与 C 语言互操作 - 学习与 C 库交互</li>
+<li>第十三章：测试与基准测试 - 学习测试并发代码</li>
+</ul>
+<hr>
+<blockquote>
+<p>💡 <strong>章节过渡</strong>：从并发编程到指针与引用类型</p>
+<p>在<a href="chapter-concurrency.html">并发编程概述</a>中，我们学习了并发编程概述，掌握了线程、互斥锁、原子操作等基本概念。
+现在，我们将深入学习指针与引用类型，了解 Zig 如何通过指针类型系统保证内存安全。</p>
+<p><strong>为什么并发编程需要深入理解指针？</strong></p>
+<ol>
+<li><strong>共享内存</strong>：多线程访问同一数据需要通过指针</li>
+<li><strong>数据竞争</strong>：指针的不当使用会导致并发问题</li>
+<li><strong>原子操作</strong>：理解指针是理解原子操作的前提</li>
+<li><strong>无锁数据结构</strong>：高级并发模式需要指针操作</li>
+</ol>
+<p><strong>学习建议</strong>：</p>
+<ul>
+<li>确保你已经理解了并发编程的基本概念</li>
+<li>注意指针在并发环境下的安全问题</li>
+<li>理解不同指针类型的安全保证</li>
+</ul>
+</blockquote>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../part2-advanced/chapter-memory-management.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../part2-advanced/chapter-pointers.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../part2-advanced/chapter-memory-management.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../part2-advanced/chapter-pointers.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-c2a407aa.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-362d1e8a.js"></script>
+        <script src="../book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

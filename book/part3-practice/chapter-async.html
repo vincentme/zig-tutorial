@@ -3,8 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Page not found - Zig 编程语言全面入门教程</title>
-        <base href="/">
+        <title>【draft】实战案例5 - 异步IO编程（未来规划） - Zig 编程语言全面入门教程</title>
 
 
         <!-- Custom HTML head -->
@@ -13,34 +12,34 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
 
-        <link rel="icon" href="favicon-de23e50b.svg">
-        <link rel="shortcut icon" href="favicon-8114d1fc.png">
-        <link rel="stylesheet" href="css/variables-8adf115d.css">
-        <link rel="stylesheet" href="css/general-2459343d.css">
-        <link rel="stylesheet" href="css/chrome-ae938929.css">
-        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-2459343d.css">
+        <link rel="stylesheet" href="../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
 
         <!-- Fonts -->
-        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
 
         <!-- Highlight.js Stylesheets -->
-        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
-        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
-        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
 
         <!-- Custom theme stylesheets -->
-        <link rel="stylesheet" href="theme/css/auto-numbering-66d94143.css">
+        <link rel="stylesheet" href="../theme/css/auto-numbering-66d94143.css">
 
 
         <!-- Provide site root and default themes to javascript -->
         <script>
-            const path_to_root = "";
+            const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-22febf57.js";
+            window.path_to_searchindex_js = "../searchindex-22febf57.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-f48f4758.js"></script>
+        <script src="../toc-f48f4758.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -107,7 +106,7 @@
             <!-- populated by js -->
             <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
             <noscript>
-                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
             </noscript>
             <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
                 <div class="sidebar-resize-indicator"></div>
@@ -142,11 +141,14 @@
                     <h1 class="menu-title">Zig 编程语言全面入门教程</h1>
 
                     <div class="right-buttons">
-                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
                             <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
                         </a>
                         <a href="https://github.com/vincentme/zig-tutorial" title="Git repository" aria-label="Git repository">
                             <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/vincentme/zig-tutorial/edit/main/src/part3-practice/chapter-async.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
                         </a>
 
                     </div>
@@ -179,14 +181,217 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="document-not-found-404"><a class="header" href="#document-not-found-404">Document not found (404)</a></h1>
-<p>This URL is invalid, sorry. Please use the navigation bar or search to continue.</p>
+                        <h1 id="draft异步编程未来规划"><a class="header" href="#draft异步编程未来规划">【draft】异步编程（未来规划）</a></h1>
+<blockquote>
+<p>⚠️ <strong>重要说明：Zig 当前不支持异步编程</strong></p>
+<p><strong>关键事实</strong>：</p>
+<ul>
+<li><code>async</code>/<code>await</code> 关键字在 <strong>0.11.0 版本已完全移除</strong></li>
+<li>异步 I/O 功能<strong>尚未实现</strong>，仍在规划中</li>
+<li>当前推荐使用<strong>线程</strong>进行并发编程</li>
+<li><code>std.Io</code> 接口是统一的 I/O 抽象，<strong>不是异步功能</strong></li>
+</ul>
+<p><strong>历史背景</strong>：Zig 曾尝试将异步作为语言核心特性，但在实践中发现设计存在问题，因此在 0.11.0 版本移除。异步 I/O 支持计划在未来版本重新引入，但具体时间表未定。</p>
+</blockquote>
+<h2 id="zig-异步编程的现状"><a class="header" href="#zig-异步编程的现状">Zig 异步编程的现状</a></h2>
+<h1 id="为什么移除-asyncawait"><a class="header" href="#为什么移除-asyncawait">为什么移除 async/await？</a></h1>
+<p>Zig 团队移除 <code>async</code>/<code>await</code> 关键字的原因：</p>
+<ol>
+<li><strong>设计问题</strong>：原有的 async/await 设计在类型系统和错误处理方面存在根本性问题</li>
+<li><strong>实现复杂度</strong>：异步运行时的实现比预期复杂得多</li>
+<li><strong>更好的方案</strong>：团队正在探索更符合 Zig 哲学的异步解决方案</li>
+</ol>
+<h1 id="当前推荐的并发方案"><a class="header" href="#当前推荐的并发方案">当前推荐的并发方案</a></h1>
+<p>在异步功能重新引入之前，推荐使用以下方案：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>场景</th><th>推荐方案</th><th>说明</th></tr>
+</thead>
+<tbody>
+<tr><td>CPU 密集型任务</td><td><code>std.Thread</code></td><td>使用操作系统线程</td></tr>
+<tr><td>I/O 密集型任务</td><td><code>std.Thread</code> + 阻塞 I/O</td><td>每个连接一个线程</td></tr>
+<tr><td>高并发服务器</td><td>第三方库（如 zap）</td><td>使用事件循环或线程池</td></tr>
+<tr><td>未来异步 I/O</td><td>等待官方实现</td><td>关注官方路线图</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="使用线程进行并发编程"><a class="header" href="#使用线程进行并发编程">使用线程进行并发编程</a></h2>
+<h1 id="基本线程使用"><a class="header" href="#基本线程使用">基本线程使用</a></h1>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(init: std.process.Init.Minimal) !void {
+    // 创建线程
+    const thread = try std.Thread.spawn(.{}, worker, .{});
+    
+    // 等待线程完成
+    thread.join();
+    
+    std.debug.print("线程完成\n", .{});
+}
+
+fn worker() void {
+    for (0..5) |i| {
+        std.debug.print("工作：{}\n", .{i});
+        std.time.sleep(100 * std.time.ns_per_ms);
+    }
+}
+</code></pre>
+<h1 id="线程池模式"><a class="header" href="#线程池模式">线程池模式</a></h1>
+<p>对于 I/O 密集型任务，可以使用线程池：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(init: std.process.Init.Minimal) !void {
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
+    defer _ = gpa.deinit();
+    
+    // 创建线程池（需要手动实现或使用第三方库）
+    // 这里展示基本概念
+    const num_threads = 4;
+    var threads: [num_threads]std.Thread = undefined;
+    
+    for (0..num_threads) |i| {
+        threads[i] = try std.Thread.spawn(.{}, handleConnection, .{i});
+    }
+    
+    for (threads) |thread| {
+        thread.join();
+    }
+}
+
+fn handleConnection(id: usize) void {
+    std.debug.print("线程 {} 处理连接\n", .{id});
+    // 处理 I/O 操作...
+}
+</code></pre>
+<h2 id="stdio-接口说明"><a class="header" href="#stdio-接口说明">std.Io 接口说明</a></h2>
+<blockquote>
+<p>⚠️ <strong>注意</strong>：<code>std.Io</code> 是 Zig 0.16 引入的<strong>统一 I/O 接口</strong>，用于简化 I/O 操作，<strong>不是异步功能</strong>。</p>
+</blockquote>
+<h1 id="stdio-的作用"><a class="header" href="#stdio-的作用">std.Io 的作用</a></h1>
+<p><code>std.Io</code> 提供了统一的 I/O 抽象层：</p>
+<pre><code class="language-zig">// ✨ 新特性：std.Io 统一接口
+const std = @import("std");
+
+pub fn main(init: std.process.Init) !void {
+    // init.io 是预配置的 Io 实例
+    const io = init.io;
+    
+    // 使用统一的接口进行 I/O 操作
+    try std.Io.File.stdout().writeStreamingAll(io, "Hello\n");
+}
+</code></pre>
+<p><strong>关键点</strong>：</p>
+<ul>
+<li><code>std.Io</code> 统一了所有 I/O 操作的接口</li>
+<li>当前版本是<strong>阻塞式</strong>的</li>
+<li>未来可能支持异步操作，但当前不支持</li>
+</ul>
+<h2 id="第三方异步解决方案"><a class="header" href="#第三方异步解决方案">第三方异步解决方案</a></h2>
+<p>在官方异步功能实现之前，可以使用第三方库：</p>
+<h1 id="使用-zap-构建-http-服务器"><a class="header" href="#使用-zap-构建-http-服务器">使用 Zap 构建 HTTP 服务器</a></h1>
+<pre><code class="language-zig">const std = @import("std");
+const zap = @import("zap");
+
+pub fn main(init: std.process.Init.Minimal) !void {
+    var listener = zap.HttpListener.init(.{
+        .port = 3000,
+        .on_request = onRequest,
+        .log = true,
+    });
+    
+    try listener.listen();
+    
+    zap.start(.{
+        .threads = 2,
+        .workers = 2,
+    });
+}
+
+fn onRequest(r: zap.Request) void {
+    r.sendBody("Hello from Zap!\n") catch return;
+}
+</code></pre>
+<h2 id="未来展望"><a class="header" href="#未来展望">未来展望</a></h2>
+<p>Zig 团队计划在未来重新引入异步 I/O 支持，可能的方案包括：</p>
+<ol>
+<li><strong>基于 io_uring 的异步 I/O</strong>（Linux）</li>
+<li><strong>基于 GCD 的异步 I/O</strong>（macOS）</li>
+<li><strong>基于 IOCP 的异步 I/O</strong>（Windows）</li>
+</ol>
+<p><strong>关注官方进展</strong>：</p>
+<ul>
+<li>GitHub Issue: https://github.com/ziglang/zig/issues</li>
+<li>官方路线图: https://ziglang.org/learn/overview/</li>
+</ul>
+<h2 id="迁移指南"><a class="header" href="#迁移指南">迁移指南</a></h2>
+<p>如果您有使用 <code>async</code>/<code>await</code> 的旧代码，需要进行以下迁移：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>旧语法</th><th>新方案</th></tr>
+</thead>
+<tbody>
+<tr><td><code>async func()</code></td><td>直接调用函数或使用线程</td></tr>
+<tr><td><code>await handle</code></td><td>使用 <code>thread.join()</code></td></tr>
+<tr><td><code>suspend</code></td><td>不推荐使用（保留用于底层实现）</td></tr>
+<tr><td><code>resume</code></td><td>不推荐使用（保留用于底层实现）</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>示例迁移</strong>：</p>
+<pre><code class="language-zig">// 旧版本（0.10.x 及之前）
+// ⏪ 旧版本：0.11.0 已移除 async/await
+fn oldAsyncCode() void {
+    const handle = async fetchData();
+    const result = await handle;
+}
+
+// 新版本（0.11.x+）
+fn newThreadCode() !void {
+    const thread = try std.Thread.spawn(.{}, fetchData, .{});
+    thread.join();
+    // 结果通过共享内存或通道传递
+}
+</code></pre>
+<blockquote>
+<p>⚠️ <strong>重要提示</strong>：异步编程 API 仍在规划中。建议：</p>
+<ul>
+<li>生产环境使用线程或第三方库</li>
+<li>关注官方更新日志获取最新进展</li>
+<li>不要依赖 <code>suspend</code>/<code>resume</code>，它们可能在未来版本中变更</li>
+</ul>
+</blockquote>
+<hr>
+<blockquote>
+<p>💡 <strong>章节过渡</strong>：从异步编程到高级内存管理</p>
+<p>在<a href="chapter-advanced-memory.html">高级内存管理技巧</a>中，我们了解了异步编程的未来规划，理解了 Zig 并发编程的发展方向。
+现在，我们将学习高级内存管理技巧，深入理解内存优化和自定义分配器。</p>
+<p><strong>为什么异步编程需要高级内存管理？</strong></p>
+<ol>
+<li><strong>内存效率</strong>：异步任务需要高效的内存管理</li>
+<li><strong>生命周期</strong>：异步操作的内存生命周期更复杂</li>
+<li><strong>性能优化</strong>：自定义分配器可以针对特定场景优化</li>
+</ol>
+<p><strong>学习建议</strong>：</p>
+<ul>
+<li>回顾<a href="../part2-advanced/chapter-memory-management.html">内存管理模型</a>的内存管理基础知识</li>
+<li>理解不同分配器的适用场景</li>
+<li>准备实现自定义分配器</li>
+</ul>
+</blockquote>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../part3-practice/chapter-simd.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
 
+                            <a rel="next prefetch" href="../part3-practice/chapter-advanced-memory.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
 
                         <div style="clear: both"></div>
                     </nav>
@@ -194,7 +399,13 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../part3-practice/chapter-simd.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
 
+                    <a rel="next prefetch" href="../part3-practice/chapter-advanced-memory.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
             </nav>
 
         </div>
@@ -212,13 +423,13 @@
         </script>
 
 
-        <script src="elasticlunr-ef4e11c1.min.js"></script>
-        <script src="mark-09e88c2c.min.js"></script>
-        <script src="searcher-c2a407aa.js"></script>
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-c2a407aa.js"></script>
 
-        <script src="clipboard-1626706a.min.js"></script>
-        <script src="highlight-362d1e8a.js"></script>
-        <script src="book-a0b12cfe.js"></script>
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-362d1e8a.js"></script>
+        <script src="../book-a0b12cfe.js"></script>
 
         <!-- Custom JS scripts -->
 
