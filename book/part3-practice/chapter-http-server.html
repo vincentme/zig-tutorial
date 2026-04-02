@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>【draft】性能优化与调试 - Zig 编程语言全面入门教程</title>
+        <title>【draft】实战案例 - HTTP服务器开发 - Zig 编程语言全面入门教程</title>
 
 
         <!-- Custom HTML head -->
@@ -147,7 +147,7 @@
                         <a href="https://github.com/vincentme/zig-tutorial" title="Git repository" aria-label="Git repository">
                             <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
                         </a>
-                        <a href="https://github.com/vincentme/zig-tutorial/edit/main/src/part3-practice/chapter-optimization.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                        <a href="https://github.com/vincentme/zig-tutorial/edit/main/src/part3-practice/chapter-http-server.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
                             <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
                         </a>
 
@@ -181,260 +181,490 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="draft性能优化与调试"><a class="header" href="#draft性能优化与调试">【draft】性能优化与调试</a></h1>
-<h2 id="编译优化选项"><a class="header" href="#编译优化选项">编译优化选项</a></h2>
-<pre><code class="language-bash"># Debug 模式：无优化，包含调试信息
-zig build -Doptimize=Debug
-
-# ReleaseSafe：优化但保留安全检查
-zig build -Doptimize=ReleaseSafe
-
-# ReleaseFast：最大优化，移除安全检查
-zig build -Doptimize=ReleaseFast
-
-# ReleaseSmall：优化大小
-zig build -Doptimize=ReleaseSmall
-</code></pre>
-<h2 id="性能分析"><a class="header" href="#性能分析">性能分析</a></h2>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn main(init: std.process.Init.Minimal) !void {
-    const start = std.time.nanoTimestamp();
-    
-    // 要测试的代码
-    var sum: usize = 0;
-    for (0..1_000_000) |i| {
-        sum += i;
-    }
-    
-    const end = std.time.nanoTimestamp();
-    const elapsed_ns = end - start;
-    const elapsed_ms = @as(f64, @floatFromInt(elapsed_ns)) / std.time.ns_per_ms;
-    
-    std.debug.print("计算结果：{}\n", .{sum});
-    std.debug.print("耗时：{d:.3} ms\n", .{elapsed_ms});
-}
-</code></pre>
-<h2 id="调试技巧"><a class="header" href="#调试技巧">调试技巧</a></h2>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn main(init: std.process.Init.Minimal) void {
-    var value: i32 = 42;
-    
-    // 使用 std.debug.print 调试
-    std.debug.print("调试：value = {}\n", .{value});
-    
-    // 使用断言
-    std.debug.assert(value == 42);
-    
-    // 使用 panic 触发崩溃
-    if (value &lt; 0) {
-        @panic("value 不能为负数");
-    }
-    
-    // 使用 reachability 检查
-    const result = switch (value) {
-        0...10 =&gt; "小",
-        11...50 =&gt; "中",
-        51...100 =&gt; "大",
-        else =&gt; unreachable, // 编译器会优化掉其他分支
-    };
-    
-    std.debug.print("结果：{s}\n", .{result});
-}
-</code></pre>
-<hr>
-<h2 id="版本兼容性指南"><a class="header" href="#版本兼容性指南">版本兼容性指南</a></h2>
-<h1 id="zig版本演进概述"><a class="header" href="#zig版本演进概述">Zig版本演进概述</a></h1>
-<p>Zig语言目前处于快速开发阶段，每个版本都可能引入重大变更。本节帮助您理解不同版本之间的差异，并提供迁移指南。</p>
-<h1 id="版本命名规则"><a class="header" href="#版本命名规则">版本命名规则</a></h1>
-<p>Zig采用语义化版本号，但处于0.x阶段时不保证API稳定性：</p>
+                        <h1 id="draft实战案例---http服务器开发"><a class="header" href="#draft实战案例---http服务器开发">【draft】实战案例 - HTTP服务器开发</a></h1>
+<blockquote>
+<p>⚠️ <strong>网络 API 稳定性警告</strong>：本章使用的网络 API 正在快速演变。</p>
 <ul>
-<li><strong>稳定版本</strong>: 0.11.0, 0.12.0, 0.13.0等</li>
-<li><strong>开发版本</strong>: 0.14.0-dev.xxxx, 0.15.0-dev.xxxx等</li>
-<li><strong>本教程版本</strong>: 0.16.0-dev</li>
+<li><strong>模块迁移</strong>：<code>std.net</code> → <code>std.Io.net</code> 迁移仍在进行中</li>
+<li><strong>API 变化</strong>：网络相关函数签名可能继续调整</li>
+<li><strong>兼容性</strong>：示例代码基于 0.16.0-dev，可能需要适配</li>
+<li><strong>建议</strong>：关注官方 issue #25770 和社区讨论获取最新信息</li>
 </ul>
-<h1 id="重大变更时间线"><a class="header" href="#重大变更时间线">重大变更时间线</a></h1>
+</blockquote>
+<h1 id="2001-http协议基础"><a class="header" href="#2001-http协议基础">20.0.1 HTTP协议基础</a></h1>
+<h1 id="什么是http服务器"><a class="header" href="#什么是http服务器">什么是HTTP服务器？</a></h1>
+<p>HTTP服务器本质上是一个持续运行的程序，等待客户端连接并交换HTTP消息。可以将HTTP服务器想象成酒店的接待员：</p>
+<p><strong>酒店接待员比喻</strong>：</p>
+<ul>
+<li>接待员在酒店前台等待客人到达</li>
+<li>当客人到达时，接待员开始对话，询问住宿需求</li>
+<li>接待员查找可用房间，处理入住手续，交付钥匙</li>
+<li>完成后，接待员回到等待状态，等待下一位客人</li>
+</ul>
+<p>HTTP服务器的工作流程与此类似：</p>
+<ol>
+<li><strong>等待连接</strong>：服务器在指定端口监听，等待客户端连接</li>
+<li><strong>接受连接</strong>：客户端发起连接，服务器接受</li>
+<li><strong>处理请求</strong>：服务器读取并解析HTTP请求</li>
+<li><strong>发送响应</strong>：服务器执行请求操作，返回HTTP响应</li>
+<li><strong>关闭连接</strong>：完成通信后关闭连接</li>
+</ol>
+<h1 id="http请求格式"><a class="header" href="#http请求格式">HTTP请求格式</a></h1>
+<p>HTTP请求由三部分组成：</p>
+<pre><code>请求行
+请求头
+请求体（可选）
+</code></pre>
+<p><strong>示例</strong>：</p>
+<pre><code class="language-http">GET /index.html HTTP/1.1
+Host: www.example.com
+User-Agent: Mozilla/5.0
+Accept: text/html
+
+</code></pre>
+<p><strong>请求行解析</strong>：</p>
+<ul>
+<li><code>GET</code>：请求方法（GET、POST、PUT、DELETE等）</li>
+<li><code>/index.html</code>：请求路径</li>
+<li><code>HTTP/1.1</code>：HTTP协议版本</li>
+</ul>
+<h1 id="http响应格式"><a class="header" href="#http响应格式">HTTP响应格式</a></h1>
+<p>HTTP响应也由三部分组成：</p>
+<pre><code>状态行
+响应头
+响应体
+</code></pre>
+<p><strong>示例</strong>：</p>
+<pre><code class="language-http">HTTP/1.1 200 OK
+Content-Type: text/html
+Content-Length: 1234
+
+&lt;html&gt;
+  &lt;body&gt;
+    &lt;h1&gt;Hello, World!&lt;/h1&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p><strong>状态行解析</strong>：</p>
+<ul>
+<li><code>HTTP/1.1</code>：HTTP协议版本</li>
+<li><code>200</code>：状态码</li>
+<li><code>OK</code>：状态描述</li>
+</ul>
+<h1 id="常见状态码"><a class="header" href="#常见状态码">常见状态码</a></h1>
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th>版本</th><th>主要变更</th><th>影响范围</th></tr>
+<tr><th>状态码</th><th>含义</th><th>说明</th></tr>
 </thead>
 <tbody>
-<tr><td>0.11.0</td><td>新的错误处理语法</td><td>所有错误处理代码</td></tr>
-<tr><td>0.13.0</td><td>构建系统重构</td><td>build.zig文件</td></tr>
-<tr><td>0.15.0</td><td>分配器API变更</td><td>内存管理代码</td></tr>
-<tr><td>0.16.0-dev</td><td>I/O系统重构</td><td>所有I/O操作</td></tr>
+<tr><td>200</td><td>OK</td><td>请求成功</td></tr>
+<tr><td>404</td><td>Not Found</td><td>请求的资源不存在</td></tr>
+<tr><td>500</td><td>Internal Server Error</td><td>服务器内部错误</td></tr>
+<tr><td>400</td><td>Bad Request</td><td>请求格式错误</td></tr>
+<tr><td>403</td><td>Forbidden</td><td>禁止访问</td></tr>
 </tbody>
 </table>
 </div>
-<h1 id="0160-dev版本迁移指南"><a class="header" href="#0160-dev版本迁移指南">0.16.0-dev版本迁移指南</a></h1>
-<h1 id="io系统变更"><a class="header" href="#io系统变更">I/O系统变更</a></h1>
-<p><strong>旧版本 (0.15.x及之前)</strong>:</p>
-<pre><code class="language-zig">const stdout = std.io.getStdOut().writer();
-try stdout.print("Hello\n", .{});
+<h1 id="2002-socket编程基础"><a class="header" href="#2002-socket编程基础">20.0.2 Socket编程基础</a></h1>
+<h1 id="什么是socket"><a class="header" href="#什么是socket">什么是Socket？</a></h1>
+<p>Socket是网络通信的端点，可以理解为网络上的“插座“。就像电器通过插座连接电源一样，网络程序通过Socket连接网络。</p>
+<p><strong>Socket的工作流程</strong>：</p>
+<pre><code>服务器端：
+1. 创建Socket → socket()
+2. 绑定地址 → bind()
+3. 开始监听 → listen()
+4. 接受连接 → accept()
+5. 读写数据 → read()/write()
+6. 关闭连接 → close()
+
+客户端：
+1. 创建Socket → socket()
+2. 连接服务器 → connect()
+3. 读写数据 → read()/write()
+4. 关闭连接 → close()
 </code></pre>
-<p><strong>新版本 (0.16.0-dev)</strong>:</p>
+<h1 id="zig中的socket-api"><a class="header" href="#zig中的socket-api">Zig中的Socket API</a></h1>
+<p>在Zig 0.16.0-dev中，Socket相关的API位于<code>std.Io.net</code>模块：</p>
+<p><strong>关键类型</strong>：</p>
+<ul>
+<li><code>std.Io.net.Ip4Address</code>：IPv4地址</li>
+<li><code>std.Io.net.Ip6Address</code>：IPv6地址</li>
+<li><code>std.Io.net.IpAddress</code>：IP地址联合类型</li>
+<li><code>std.Io.net.Server</code>：TCP服务器</li>
+<li><code>std.Io.net.Stream</code>：网络流</li>
+</ul>
+<p><strong>关键函数</strong>：</p>
+<ul>
+<li><code>address.listen()</code>：开始监听</li>
+<li><code>server.accept()</code>：接受连接</li>
+<li><code>stream.read()</code>：读取数据</li>
+<li><code>stream.write()</code>：写入数据</li>
+</ul>
+<p><strong>注意</strong>：在0.16.0-dev版本中，所有I/O操作需要传递<code>io</code>参数。</p>
+<h2 id="项目需求分析与设计思路"><a class="header" href="#项目需求分析与设计思路">项目需求分析与设计思路</a></h2>
+<h1 id="项目目标"><a class="header" href="#项目目标">项目目标</a></h1>
+<p>构建一个简单的HTTP服务器，能够：</p>
+<ol>
+<li>监听指定端口，接受客户端连接</li>
+<li>解析HTTP请求（方法和路径）</li>
+<li>根据路径返回不同的响应</li>
+<li>支持HTML和JSON两种响应格式</li>
+</ol>
+<h1 id="技术选型"><a class="header" href="#技术选型">技术选型</a></h1>
+<p>本项目使用Zig标准库的网络模块：</p>
+<ul>
+<li><code>std.Io.net.Ip4Address</code>: IPv4网络地址处理（0.16.0-dev新API）</li>
+<li><code>std.Io.net.IpAddress</code>: IP地址联合类型（支持IPv4和IPv6）</li>
+<li><code>std.Io.net.listen</code>: TCP服务器监听函数</li>
+<li><code>std.mem</code>: 字符串处理</li>
+<li><code>std.fmt</code>: 格式化输出</li>
+</ul>
+<p><strong>注意</strong>: 在0.16.0-dev版本中，网络模块已从 <code>std.net</code> 迁移到 <code>std.Io.net</code>，且所有I/O操作需要通过 <code>init.io</code> 进行。</p>
+<h1 id="设计思路"><a class="header" href="#设计思路">设计思路</a></h1>
+<p><strong>架构设计</strong>：</p>
+<pre><code>Server (结构体)
+├── init() - 初始化服务器
+├── start() - 启动监听循环
+├── handleConnection() - 处理单个连接
+└── generateResponse() - 生成HTTP响应
+</code></pre>
+<p><strong>关键设计决策</strong>：</p>
+<ol>
+<li><strong>使用结构体封装</strong>: 将服务器状态和行为封装在一起</li>
+<li><strong>显式分配器传递</strong>: 内存分配由调用者控制</li>
+<li><strong>简单的请求解析</strong>: 仅解析方法和路径，不处理请求体</li>
+<li><strong>同步处理模型</strong>: 一次处理一个连接（生产环境应使用异步）</li>
+</ol>
+<h1 id="实现步骤"><a class="header" href="#实现步骤">实现步骤</a></h1>
+<ol>
+<li><strong>定义Server结构体</strong>: 包含地址和分配器</li>
+<li><strong>实现init方法</strong>: 创建监听地址</li>
+<li><strong>实现start方法</strong>: 接受连接循环</li>
+<li><strong>实现handleConnection</strong>: 读取请求，发送响应</li>
+<li><strong>实现generateResponse</strong>: 根据路径生成响应</li>
+</ol>
+<h1 id="预期效果"><a class="header" href="#预期效果">预期效果</a></h1>
+<p>运行服务器后：</p>
+<ul>
+<li>访问 <code>http://localhost:8080/</code> 返回欢迎页面</li>
+<li>访问 <code>http://localhost:8080/api</code> 返回JSON数据</li>
+<li>其他路径返回404错误</li>
+</ul>
+<h1 id="扩展方向"><a class="header" href="#扩展方向">扩展方向</a></h1>
+<p>完成基础版本后，可以考虑：</p>
+<ol>
+<li><strong>多线程处理</strong>: 使用线程池处理并发连接</li>
+<li><strong>异步I/O</strong>: 使用Zig的异步特性</li>
+<li><strong>路由系统</strong>: 实现更灵活的路由匹配</li>
+<li><strong>中间件</strong>: 添加日志、认证等中间件</li>
+<li><strong>静态文件服务</strong>: 支持文件系统访问</li>
+</ol>
+<h2 id="完整实现0160-dev-版本"><a class="header" href="#完整实现0160-dev-版本">完整实现（0.16.0-dev 版本）</a></h2>
+<p>让我们综合运用所学知识，构建一个简单的 HTTP 服务器。注意使用新的 <code>std.Io</code> API：</p>
 <pre><code class="language-zig">// ✨ 新特性：std.Io 统一接口
-pub fn main(init: std.process.Init) !void {
-    try std.Io.File.stdout().writeStreamingAll(init.io, "Hello\n");
-}
-</code></pre>
-<h1 id="分配器变更"><a class="header" href="#分配器变更">分配器变更</a></h1>
-<p><strong>旧版本</strong>:</p>
-<pre><code class="language-zig">// 🚫 已废弃：0.16.0，请使用 DebugAllocator
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-defer _ = gpa.deinit();
-</code></pre>
-<p><strong>新版本</strong>:</p>
-<pre><code class="language-zig">// ✨ 新特性：DebugAllocator
-var gpa: std.heap.DebugAllocator(.{}) = .init;
-defer _ = gpa.deinit();
-</code></pre>
-<h1 id="网络模块迁移"><a class="header" href="#网络模块迁移">网络模块迁移</a></h1>
-<p><strong>旧版本</strong>:</p>
-<pre><code class="language-zig">// 🚫 已废弃：0.16.0，请使用 std.Io.net
-const address = try std.net.Address.initIp4([4]u8{ 0, 0, 0, 0 }, port);
-</code></pre>
-<p><strong>新版本</strong>:</p>
-<pre><code class="language-zig">// 网络功能已迁移到 std.Io.net
-// 方式1：直接构造 Ip4Address 结构体
-// ✨ 新特性：std.Io 统一接口
-const address = std.Io.net.Ip4Address{
-    .bytes = [4]u8{ 0, 0, 0, 0 },
-    .port = port,
+const std = @import("std");
+
+const Server = struct {
+    address: std.Io.net.Ip4Address,  // 服务器监听地址
+    allocator: std.mem.Allocator,     // 内存分配器（显式传递）
+    io: std.Io,                       // I/O接口（0.16.0新增）
+
+    const Self = @This();
+
+    // 初始化服务器
+    // 参数：
+    //   - allocator: 内存分配器
+    //   - io: I/O接口（用于所有I/O操作）
+    //   - port: 监听端口号
+    // 返回：初始化后的Server实例
+    fn init(allocator: std.mem.Allocator, io: std.Io, port: u16) !Self {
+        // 创建IPv4地址（0.0.0.0表示监听所有网络接口）
+        const address = std.Io.net.Ip4Address{
+            .bytes = [4]u8{ 0, 0, 0, 0 },
+            .port = port,
+        };
+        return .{
+            .address = address,
+            .allocator = allocator,
+            .io = io,
+        };
+    }
+
+    // 启动服务器主循环
+    fn start(self: *Self) !void {
+        // 开始监听，启用端口重用
+        var server = try self.address.listen(.{
+            .reuse_port = true,
+        });
+        defer server.deinit();
+
+        std.debug.print("服务器启动在端口 {}\n", .{self.address.getPort()});
+
+        // 无限循环，持续接受连接
+        while (true) {
+            // 阻塞等待客户端连接
+            const connection = try server.accept();
+            // 处理连接（同步模式，一次处理一个连接）
+            try self.handleConnection(connection);
+        }
+    }
+
+    // 处理单个客户端连接
+    fn handleConnection(self: *Self, connection: std.Io.net.Server.Connection) !void {
+        // 确保连接在函数退出时关闭
+        defer connection.stream.close();
+
+        // 读取客户端请求
+        var buffer: [4096]u8 = undefined;
+        const bytes_read = try connection.stream.read(self.io, &amp;buffer);
+
+        // 如果没有数据，直接返回
+        if (bytes_read == 0) return;
+
+        const request = buffer[0..bytes_read];
+
+        // 解析HTTP请求行
+        // 格式：METHOD PATH HTTP/1.1
+        const method_end = std.mem.indexOf(u8, request, " ") orelse return;
+        const method = request[0..method_end];
+
+        const path_start = method_end + 1;
+        const path_end = std.mem.indexOf(u8, request[path_start..], " ") orelse return;
+        const path = request[path_start .. path_start + path_end];
+
+        // 生成HTTP响应
+        const response = try self.generateResponse(path);
+        defer self.allocator.free(response);
+
+        // 发送响应给客户端
+        _ = try connection.stream.write(self.io, response);
+    }
+
+    // 根据路径生成HTTP响应
+    fn generateResponse(self: *Self, path: []const u8) ![]u8 {
+        // 根据路径确定响应内容和状态码
+        const content = if (std.mem.eql(u8, path, "/"))
+            "&lt;h1&gt;Welcome to Zig HTTP Server!&lt;/h1&gt;"
+        else if (std.mem.eql(u8, path, "/api"))
+            "{\"message\": \"Hello from Zig API\"}"
+        else
+            "&lt;h1&gt;404 Not Found&lt;/h1&gt;";
+
+        const status = if (std.mem.eql(u8, path, "/") or std.mem.eql(u8, path, "/api"))
+            "200 OK"
+        else
+            "404 Not Found";
+
+        const content_type = if (std.mem.eql(u8, path, "/api"))
+            "application/json"
+        else
+            "text/html";
+
+        // 构建完整的HTTP响应
+        // 格式：HTTP/1.1 STATUS\r\nHeaders\r\n\r\nBody
+        return std.fmt.allocPrint(
+            self.allocator,
+            "HTTP/1.1 {s}\r\n" ++
+                "Content-Type: {s}\r\n" ++
+                "Content-Length: {}\r\n" ++
+                "Connection: close\r\n" ++
+                "\r\n" ++
+                "{s}",
+            .{ status, content_type, content.len, content },
+        );
+    }
 };
 
-// 方式2：使用 IpAddress 联合类型
-const ip_address: std.Io.net.IpAddress = .{ .ip4 = address };
+pub fn main(init: std.process.Init) !void {
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
 
-// 方式3：使用 parse 函数解析字符串
-const ip_address = try std.Io.net.IpAddress.parse("0.0.0.0", port);
-</code></pre>
-<h1 id="兼容性最佳实践"><a class="header" href="#兼容性最佳实践">兼容性最佳实践</a></h1>
-<h1 id="1-使用版本检测"><a class="header" href="#1-使用版本检测">1. 使用版本检测</a></h1>
-<pre><code class="language-zig">const builtin = @import("builtin");
-
-const zig_version = builtin.zig_version;
-
-comptime {
-    if (zig_version.major == 0 and zig_version.minor &lt; 16) {
-        @compileError("This code requires Zig 0.16.0 or later");
-    }
+    var server = try Server.init(allocator, init.io, 8080);
+    try server.start();
 }
 </code></pre>
-<h1 id="2-避免版本条件编译"><a class="header" href="#2-避免版本条件编译">2. 避免版本条件编译</a></h1>
-<p>Zig 不推荐使用条件编译来处理版本差异。建议：</p>
-<ul>
-<li>选择一个目标版本并坚持使用</li>
-<li>升级时一次性更新所有代码</li>
-<li>使用 Git 分支管理不同版本的代码</li>
-</ul>
-<h1 id="3-查阅官方迁移指南"><a class="header" href="#3-查阅官方迁移指南">3. 查阅官方迁移指南</a></h1>
-<p>每次重大版本发布时，官方会提供迁移指南：</p>
-<ul>
-<li>GitHub Release Notes: https://github.com/ziglang/zig/releases</li>
-<li>官方文档: https://ziglang.org/documentation/</li>
-</ul>
-<h1 id="常见迁移问题"><a class="header" href="#常见迁移问题">常见迁移问题</a></h1>
-<h1 id="问题1-编译错误function-signature-mismatch"><a class="header" href="#问题1-编译错误function-signature-mismatch">问题1: 编译错误“function signature mismatch“</a></h1>
-<p><strong>原因</strong>: 函数签名在新版本中已变更</p>
-<p><strong>解决</strong>: 查阅文档，更新函数调用方式</p>
-<h1 id="问题2-use-of-undeclared-identifier"><a class="header" href="#问题2-use-of-undeclared-identifier">问题2: “use of undeclared identifier”</a></h1>
-<p><strong>原因</strong>: 模块或函数已重命名/迁移</p>
-<p><strong>解决</strong>: 搜索标准库源码，找到新的位置</p>
-<h1 id="问题3-deprecated警告"><a class="header" href="#问题3-deprecated警告">问题3: “deprecated“警告</a></h1>
-<p><strong>原因</strong>: 使用了已废弃的API</p>
-<p><strong>解决</strong>: 按照警告提示，使用推荐的替代方案</p>
-<h1 id="保持代码可维护性"><a class="header" href="#保持代码可维护性">保持代码可维护性</a></h1>
+<h1 id="运行和测试"><a class="header" href="#运行和测试">运行和测试</a></h1>
+<p><strong>启动服务器</strong>：</p>
+<pre><code class="language-bash"># 方式1：直接运行
+zig run src/main.zig
+
+# 方式2：构建后运行
+zig build run
+</code></pre>
+<p><strong>测试服务器</strong>：</p>
+<pre><code class="language-bash"># 使用curl测试
+curl http://localhost:8080/
+curl http://localhost:8080/api
+curl http://localhost:8080/notfound
+
+# 使用浏览器测试
+# 在浏览器中打开 http://localhost:8080/
+</code></pre>
+<p><strong>预期输出</strong>：</p>
+<pre><code>服务器启动在端口 8080
+</code></pre>
+<p><strong>测试结果</strong>：</p>
+<pre><code># 访问 http://localhost:8080/
+&lt;h1&gt;Welcome to Zig HTTP Server!&lt;/h1&gt;
+
+# 访问 http://localhost:8080/api
+{"message": "Hello from Zig API"}
+
+# 访问 http://localhost:8080/notfound
+&lt;h1&gt;404 Not Found&lt;/h1&gt;
+</code></pre>
+<h1 id="关键变更说明"><a class="header" href="#关键变更说明">关键变更说明</a></h1>
 <ol>
-<li><strong>添加版本注释</strong>: 在使用特定版本特性时添加注释</li>
-<li><strong>编写测试</strong>: 确保升级后测试仍然通过</li>
-<li><strong>渐进式迁移</strong>: 不要一次性升级所有代码</li>
-<li><strong>关注变更日志</strong>: 定期查看官方变更日志</li>
+<li><strong>主函数签名</strong>: 从 <code>pub fn main() !void</code> 变更为 <code>pub fn main(init: std.process.Init) !void</code></li>
+<li><strong>网络模块</strong>: <code>std.net</code> → <code>std.Io.net</code></li>
+<li><strong>I/O 传递</strong>: 所有I/O操作需要通过 <code>init.io</code> 传递</li>
+<li><strong>Server 结构体</strong>: 新增 <code>io</code> 字段存储 I/O 接口</li>
+</ol>
+<h1 id="旧版本兼容代码015x"><a class="header" href="#旧版本兼容代码015x">旧版本兼容代码（0.15.x）</a></h1>
+<pre><code class="language-zig">// 🚫 已废弃：0.16.0，请使用 std.Io.net
+const std = @import("std");
+
+const Server = struct {
+    address: std.net.Address,  // 旧版本使用 std.net
+    allocator: std.mem.Allocator,
+
+    fn init(allocator: std.mem.Allocator, port: u16) !Self {
+        const address = try std.net.Address.initIp4([4]u8{ 0, 0, 0, 0 }, port);
+        // ...
+    }
+
+    fn handleConnection(self: *Self, connection: std.net.Server.Connection) !void {
+        // 旧版本不需要 io 参数
+        const bytes_read = try connection.stream.read(&amp;buffer);
+        _ = try connection.stream.write(response);
+    }
+};
+
+pub fn main(init: std.process.Init.Minimal) !void {  // 旧版本主函数签名
+    // ...
+}
+</code></pre>
+<h2 id="实践指导与调试技巧"><a class="header" href="#实践指导与调试技巧">实践指导与调试技巧</a></h2>
+<h1 id="常见问题排查"><a class="header" href="#常见问题排查">常见问题排查</a></h1>
+<p><strong>问题1：端口被占用</strong></p>
+<pre><code>error: Address already in use
+</code></pre>
+<p><strong>解决方案</strong>：</p>
+<ul>
+<li>检查端口是否被其他程序占用：<code>lsof -i :8080</code></li>
+<li>更换端口号</li>
+<li>使用 <code>reuse_port = true</code> 选项</li>
+</ul>
+<p><strong>问题2：连接超时</strong></p>
+<pre><code>error: Connection timed out
+</code></pre>
+<p><strong>解决方案</strong>：</p>
+<ul>
+<li>检查防火墙设置</li>
+<li>确认服务器正在运行</li>
+<li>验证IP地址和端口是否正确</li>
+</ul>
+<p><strong>问题3：请求解析错误</strong></p>
+<pre><code>error: Invalid request format
+</code></pre>
+<p><strong>解决方案</strong>：</p>
+<ul>
+<li>打印原始请求数据进行调试</li>
+<li>检查HTTP请求格式是否正确</li>
+<li>使用Wireshark抓包分析</li>
+</ul>
+<h1 id="性能优化建议"><a class="header" href="#性能优化建议">性能优化建议</a></h1>
+<ol>
+<li><strong>使用线程池处理并发连接</strong>：</li>
+</ol>
+<pre><code class="language-zig">// 创建线程池
+const num_threads = 4;
+var threads: [num_threads]std.Thread = undefined;
+
+// 每个线程处理一个连接
+for (0..num_threads) |i| {
+    threads[i] = try std.Thread.spawn(.{}, handleConnection, .{connection});
+}
+</code></pre>
+<ol start="2">
+<li><strong>使用Arena Allocator减少内存碎片</strong>：</li>
+</ol>
+<pre><code class="language-zig">var arena = std.heap.ArenaAllocator.init(allocator);
+defer arena.deinit();
+const arena_allocator = arena.allocator();
+</code></pre>
+<ol start="3">
+<li><strong>添加请求日志</strong>：</li>
+</ol>
+<pre><code class="language-zig">std.debug.print("[{s}] {s} {s}\n", .{ 
+    @tagName(method), 
+    path, 
+    status 
+});
+</code></pre>
+<h1 id="扩展练习"><a class="header" href="#扩展练习">扩展练习</a></h1>
+<ol>
+<li>
+<p><strong>练习1：添加POST请求支持</strong></p>
+<ul>
+<li>解析请求体</li>
+<li>实现表单数据处理</li>
+</ul>
+</li>
+<li>
+<p><strong>练习2：实现静态文件服务</strong></p>
+<ul>
+<li>读取文件系统</li>
+<li>根据文件扩展名设置Content-Type</li>
+</ul>
+</li>
+<li>
+<p><strong>练习3：添加并发处理</strong></p>
+<ul>
+<li>使用线程池</li>
+<li>实现连接队列</li>
+</ul>
+</li>
+<li>
+<p><strong>练习4：实现路由系统</strong></p>
+<ul>
+<li>支持路径参数</li>
+<li>支持中间件</li>
+</ul>
+</li>
 </ol>
 <hr>
-<h2 id="总结与最佳实践"><a class="header" href="#总结与最佳实践">总结与最佳实践</a></h2>
-<h1 id="zig-编程最佳实践"><a class="header" href="#zig-编程最佳实践">Zig 编程最佳实践</a></h1>
+<blockquote>
+<p>💡 <strong>章节过渡</strong>：从 HTTP 服务器到内存池实现</p>
+<p>在<a href="chapter-memory-pool.html">实战案例3 - 内存池实现</a>中，我们学习了 HTTP 服务器开发，了解了网络编程的基本概念。
+现在，我们将实现一个内存池，深入理解内存管理和泛型编程。</p>
+<p><strong>为什么 HTTP 服务器需要内存池？</strong></p>
 <ol>
-<li>
-<p><strong>内存管理</strong></p>
-<ul>
-<li>总是使用<code>defer</code>释放资源</li>
-<li>选择合适的分配器（GPA 用于调试，Arena 用于批量分配）</li>
-<li>使用<code>errdefer</code>处理错误时的资源清理</li>
-</ul>
-</li>
-<li>
-<p><strong>错误处理</strong></p>
-<ul>
-<li>定义明确的错误集合</li>
-<li>使用<code>try</code>传递错误，使用<code>catch</code>处理错误</li>
-<li>在可能失败的操作中使用<code>errdefer</code></li>
-</ul>
-</li>
-<li>
-<p><strong>性能优化</strong></p>
-<ul>
-<li>使用<code>comptime</code>进行编译期计算</li>
-<li>选择合适的优化级别</li>
-<li>使用基准测试验证性能</li>
-</ul>
-</li>
-<li>
-<p><strong>代码组织</strong></p>
-<ul>
-<li>使用结构体组织相关功能</li>
-<li>使用<code>const</code>声明不可变值</li>
-<li>编写清晰的测试</li>
-</ul>
-</li>
-<li>
-<p><strong>与 C 互操作</strong></p>
-<ul>
-<li>使用<code>@cImport</code>导入 C 头文件</li>
-<li>使用<code>export</code>导出 C ABI 函数</li>
-<li>注意类型映射和内存管理</li>
-</ul>
-</li>
+<li><strong>性能优化</strong>：减少频繁的内存分配和释放</li>
+<li><strong>内存碎片</strong>：内存池可以减少内存碎片</li>
+<li><strong>并发安全</strong>：内存池可以实现线程安全的内存管理</li>
 </ol>
-<h1 id="学习资源"><a class="header" href="#学习资源">学习资源</a></h1>
+<p><strong>学习建议</strong>：</p>
 <ul>
-<li><strong>官方文档</strong>：<a href="https://ziglang.org/documentation/master/">https://ziglang.org/documentation/master/</a></li>
-<li><strong>标准库文档</strong>：<a href="https://ziglang.org/documentation/master/std/">https://ziglang.org/documentation/master/std/</a></li>
-<li><strong>Zig 语言圣经</strong>：<a href="https://course.ziglang.cc/">https://course.ziglang.cc/</a></li>
-<li><strong>Zig Cookbook</strong>：<a href="https://cookbook.ziglang.cc/">https://cookbook.ziglang.cc/</a></li>
-<li><strong>社区资源</strong>：
-<ul>
-<li>Reddit: <a href="https://www.reddit.com/r/Zig/">https://www.reddit.com/r/Zig/</a></li>
-<li>Ziggit: <a href="https://ziggit.dev/">https://ziggit.dev/</a></li>
-<li>Discord/Slack: <a href="https://ziglang.org/community/">https://ziglang.org/community/</a></li>
+<li>回顾<a href="../part2-advanced/chapter-memory-management.html">内存管理模型</a>的内存管理知识</li>
+<li>理解<a href="../part2-advanced/chapter-generics.html">泛型编程</a>的泛型编程概念</li>
+<li>准备实现高性能的内存管理组件</li>
 </ul>
-</li>
-</ul>
-<hr>
-<h2 id="结语"><a class="header" href="#结语">结语</a></h2>
-<p>恭喜您完成了 Zig 编程语言的全面学习！通过本教程，您已经掌握了：</p>
-<ul>
-<li><strong>基础语法</strong>：变量、类型、控制流、函数</li>
-<li><strong>错误处理</strong>：错误集合、try/catch、errdefer</li>
-<li><strong>内存管理</strong>：分配器、栈与堆、内存安全</li>
-<li><strong>高级特性</strong>：comptime、泛型、类型反射</li>
-<li><strong>并发编程</strong>：线程、互斥锁、原子操作</li>
-<li><strong>C 互操作</strong>：导入导出、类型映射</li>
-<li><strong>测试</strong>：单元测试、基准测试</li>
-</ul>
-<p>Zig 是一门年轻但强大的语言，它的设计哲学“少即是多“使其成为系统编程的优秀选择。继续实践，阅读标准库源码，参与社区讨论，您将成为一名优秀的 Zig 程序员！</p>
-<p>祝您在 Zig 的世界里探索愉快！🚀</p>
+</blockquote>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../part3-practice/chapter-advanced-memory.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../part3-practice/chapter-cli-tool.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
+                            <a rel="next prefetch" href="../part3-practice/chapter-memory-pool.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
 
                         <div style="clear: both"></div>
                     </nav>
@@ -442,10 +672,13 @@ comptime {
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../part3-practice/chapter-advanced-memory.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../part3-practice/chapter-cli-tool.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
+                    <a rel="next prefetch" href="../part3-practice/chapter-memory-pool.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
             </nav>
 
         </div>
