@@ -527,145 +527,108 @@ const bool_val: bool = true;
 const char_val: u8 = 'A'; // 字符字面量是 u8 类型
 ```
 
-**类型转换：**
+## 类型转换
 
-## 为什么需要显式类型转换？
+### 为什么需要显式类型转换？
 
 Zig 的设计哲学是"显式优于隐式"，因此不进行隐式类型转换。这带来以下好处：
 1. **避免精度丢失**：所有类型转换都是明确的，不会意外丢失数据
 2. **提高代码可读性**：类型转换意图清晰可见
 3. **减少运行时错误**：编译期就能发现潜在的类型问题
 
-## Zig 的类型转换策略
+### Zig 的类型转换策略
 
 Zig 提供了多种类型转换方式，每种都有特定的用途和安全保证：
 
-| 转换方式        | 用途           | 安全性                                                                         | 示例          |
-| --------------- | -------------- | ------------------------------------------------------------------------------ | ------------- |
-| `@intCast`      | 整数类型间转换 | **运行时安全检查**（Debug/ReleaseSafe模式panic，ReleaseFast/ReleaseSmall为UB） | `u32` → `u8`  |
-| `@floatFromInt` | 整数转浮点     | 安全，可能丢失精度                                                             | `i32` → `f32` |
-| `@intFromFloat` | 浮点转整数     | **运行时安全检查**（Debug/ReleaseSafe模式panic，ReleaseFast/ReleaseSmall为UB） | `f64` → `i32` |
-| `@truncate`     | 截断高位       | **不安全**，明确意图（不检查范围）                                             | `i32` → `u8`  |
-| `@bitCast`      | 位模式重解释   | **不安全**，保持位模式                                                         | `f32` → `u32` |
+| 转换方式        | 用途           | 安全性                                                                                 | 示例          |
+| --------------- | -------------- | -------------------------------------------------------------------------------------- | ------------- |
+| `@intCast`      | 整数类型间转换 | **运行时安全检查**（Debug/ReleaseSafe模式panic，ReleaseFast/ReleaseSmall为未定义行为） | `u32` → `u8`  |
+| `@floatFromInt` | 整数转浮点     | 安全，可能丢失精度                                                                     | `i32` → `f32` |
+| `@intFromFloat` | 浮点转整数     | **运行时安全检查**（Debug/ReleaseSafe模式panic，ReleaseFast/ReleaseSmall为未定义行为） | `f64` → `i32` |
+| `@truncate`     | 截断高位       | **不安全**，明确意图（不检查范围）                                                     | `i32` → `u8`  |
+| `@bitCast`      | 位模式重解释   | **不安全**，保持位模式                                                                 | `f32` → `u32` |
 
 **详细代码示例：**
 
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     // ========================================
     // 1. @intCast - 安全的整数类型转换
     // ========================================
     std.debug.print("=== @intCast 示例 ===\n", .{});
-    
+
     const small: i32 = 100;
-    const small_u8: u8 = @intCast(small);  // ✅ OK: 100 在 u8 范围内
+    const small_u8: u8 = @intCast(small); // ✅ OK: 100 在 u8 范围内
     std.debug.print("i32({}) -> u8({})\n", .{ small, small_u8 });
-    
+
     // ⚠️ 以下代码在 Debug/ReleaseSafe 模式下会 panic
     // const large: i32 = 300;
     // const large_u8: u8 = @intCast(large);  // ❌ panic: 300 超出 u8 范围
-    
+
     // 在 ReleaseFast/ReleaseSmall 模式下，这是 UB（未定义行为）
     // 编译器不会检查，结果不可预测
-    
+
     // ========================================
     // 2. @floatFromInt - 整数转浮点
     // ========================================
     std.debug.print("\n=== @floatFromInt 示例 ===\n", .{});
-    
+
     const int_val: i32 = 42;
-    const float_val: f32 = @floatFromInt(int_val);  // ✅ OK: 42.0
+    const float_val: f32 = @floatFromInt(int_val); // ✅ OK: 42.0
     std.debug.print("i32({}) -> f32({})\n", .{ int_val, float_val });
-    
+
     // 大整数转浮点可能丢失精度
     const large_int: i64 = 12345678901234567;
     const large_float: f64 = @floatFromInt(large_int);
     std.debug.print("i64({}) -> f64({d:.2})\n", .{ large_int, large_float });
-    
+
     // ========================================
     // 3. @intFromFloat - 浮点转整数
     // ========================================
     std.debug.print("\n=== @intFromFloat 示例 ===\n", .{});
-    
+
     const float_num: f32 = 42.7;
-    const int_num: i32 = @intFromFloat(float_num);  // ✅ OK: 42（截断小数）
+    const int_num: i32 = @intFromFloat(float_num); // ✅ OK: 42（截断小数）
     std.debug.print("f32({}) -> i32({})\n", .{ float_num, int_num });
-    
+
     // ⚠️ 以下代码在 Debug/ReleaseSafe 模式下会 panic
     // const huge_float: f32 = 1e10;
     // const huge_int: i32 = @intFromFloat(huge_float);  // ❌ panic: 超出 i32 范围
-    
+
     // ========================================
     // 4. @truncate - 截断高位（不安全）
     // ========================================
     std.debug.print("\n=== @truncate 示例 ===\n", .{});
-    
-    const value: i32 = 300;
-    const truncated: u8 = @truncate(value);  // ✅ OK: 300 % 256 = 44
-    std.debug.print("i32({}) -> u8({}) [截断]\n", .{ value, truncated });
-    
-    // @truncate 不会检查范围，直接丢弃高位
-    // 用于需要明确丢弃高位数据的场景
-    const negative: i32 = -1;
-    const neg_truncated: u8 = @truncate(negative);  // ✅ OK: 255（二进制全1）
-    std.debug.print("i32({}) -> u8({}) [截断]\n", .{ negative, neg_truncated });
-    
+
+    const value: u32 = 300;
+    const truncated: u8 = @truncate(value); // ✅ OK: 300 % 256 = 44
+    std.debug.print("u32({}) -> u8({}) [截断]\n", .{ value, truncated });
+
     // ========================================
     // 5. @bitCast - 位模式重解释（不安全）
     // ========================================
     std.debug.print("\n=== @bitCast 示例 ===\n", .{});
-    
+
     const float_bits: f32 = 3.14159;
-    const bits: u32 = @bitCast(float_bits);  // ✅ OK: 保持位模式
+    const bits: u32 = @bitCast(float_bits); // ✅ OK: 保持位模式
     std.debug.print("f32({}) -> u32(0x{x})\n", .{ float_bits, bits });
-    
+
     // 反向转换
     const back_to_float: f32 = @bitCast(bits);
     std.debug.print("u32(0x{x}) -> f32({})\n", .{ bits, back_to_float });
-    
+
     // 注意：@bitCast 要求源类型和目标类型大小相同
     // const wrong: u64 = @bitCast(float_bits);  // ❌ 编译错误：大小不匹配
 }
-
-```zig
-const std = @import("std");
-
-pub fn main(init: std.process.Init.Minimal) void {
-    const a: i32 = 100;
-
-    // 显式类型转换
-    // 整数转浮点：安全转换
-    const b: f32 = @floatFromInt(a);
-
-    // @intCast：运行时安全检查
-    // 如果值超出目标类型范围，在 Debug/ReleaseSafe 模式下会 panic
-    const c: u32 = @intCast(a);
-
-    // @truncate：截断高位，不进行范围检查
-    // 用于需要丢弃高位数据的场景
-    const d: u8 = @truncate(a);
-
-    // 实际应用示例
-    const large_num: i32 = 300;
-    // @intCast(large_num) 会导致 panic（300 超出 u8 范围）
-    const e: u8 = @truncate(large_num); // 明确截断：300 % 256 = 44
-
-    std.debug.print("a: {}, b: {}, c: {}, d: {}, e: {}\n", .{ a, b, c, d, e });
-}
-```
-
-**预期输出：**
-```
-a: 100, b: 1e+02, c: 100, d: 100, e: 44
 ```
 
 **重要区分**：
 - `@intCast` 用于**安全转换**：值必须在目标类型范围内，否则 panic
 - `@truncate` 用于**不安全的截断**：直接丢弃高位，不检查范围
 
-##### 最佳实践
+### 最佳实践
 
 1. **优先使用安全转换**：`@intCast`、`@floatFromInt` 等有运行时检查的转换
 2. **明确不安全操作**：使用 `@truncate`、`@bitCast` 时添加注释说明意图
@@ -686,11 +649,22 @@ fn safeConvert(value: i32) !u8 {
 fn safeConvert2(value: i32) !u8 {
     return std.math.cast(u8, value) orelse error.OutOfRange;
 }
+
+pub fn main(_: std.process.Init.Minimal) !void {
+    const value: i32 = 300;
+    const safe: u8 = try safeConvert(value);
+    std.debug.print("safeConvert({}) -> u8({}) [安全]\n", .{ value, safe });
+
+    const value2: i32 = 300;
+    const safe2: u8 = try safeConvert2(value2);
+    std.debug.print("safeConvert2({}) -> u8({}) [安全]\n", .{ value2, safe2 });
+}
+
 ```
 
-#### 数组和切片
+## 数组和切片
 
-##### 数组 vs 切片：核心概念
+### 数组 vs 切片：核心概念
 
 在 Zig 中，数组和切片是两个重要但不同的概念：
 
