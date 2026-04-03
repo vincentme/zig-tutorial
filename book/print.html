@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Zig 编程语言全面入门教程</title>
+        <title>Zig 编程语言入门教程</title>
         <meta name="robots" content="noindex">
 
 
@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-4ee07ac3.js";
+            window.path_to_searchindex_js = "searchindex-9bde67e7.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-5fb88d48.js"></script>
@@ -139,7 +139,7 @@
                         </button>
                     </div>
 
-                    <h1 class="menu-title">Zig 编程语言全面入门教程</h1>
+                    <h1 class="menu-title">Zig 编程语言入门教程</h1>
 
                     <div class="right-buttons">
                         <a href="print.html" title="Print this book" aria-label="Print this book">
@@ -1107,7 +1107,6 @@ pub fn main(_: std.process.Init.Minimal) !void {
 <li><strong>安全</strong>：数组边界检查在编译期进行，切片在运行期检查</li>
 <li><strong>灵活性</strong>：切片可以引用数组的任意部分，更灵活</li>
 </ol>
-<p><strong>数组：</strong></p>
 <h3 id="数组的核心特性"><a class="header" href="#数组的核心特性">数组的核心特性</a></h3>
 <ol>
 <li><strong>大小固定</strong>：数组大小在编译期确定，不可改变</li>
@@ -1117,31 +1116,37 @@ pub fn main(_: std.process.Init.Minimal) !void {
 </ol>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     // 固定大小数组
     // 类型 [5]i32 表示：5个 i32 元素的数组
-    var array: [5]i32 = [_]i32{ 1, 2, 3, 4, 5 };
-    
+    const array: [5]i32 = [_]i32{ 1, 2, 3, 4, 5 };
+
     // 数组长度：编译期已知
     const len = array.len;
-    
+
     // 访问元素：边界检查在编译期或运行期进行
     const first = array[0];
     const last = array[array.len - 1];
-    
-    // 多维数组：数组的数组
-    var matrix: [3][3]i32 = [_][3]i32{
-        [_]i32{ 1, 2, 3 },
-        [_]i32{ 4, 5, 6 },
-        [_]i32{ 7, 8, 9 },
-    };
-    
+
     // 数组遍历
     for (array, 0..) |item, index| {
         std.debug.print("array[{}] = {}\n", .{ index, item });
     }
-    
+
     std.debug.print("array length: {}, first: {}, last: {}\n", .{ len, first, last });
+
+    // 多维数组：数组的数组
+    const matrix: [3][3]i32 = [_][3]i32{
+        [_]i32{ 1, 2, 3 },
+        [_]i32{ 4, 5, 6 },
+        [_]i32{ 7, 8, 9 },
+    };
+    // 多维数组遍历
+    for (matrix, 0..) |row, row_index| {
+        for (row, 0..) |item, col_index| {
+            std.debug.print("matrix[{}][{}] = {}\n", .{ row_index, col_index, item });
+        }
+    }
 }
 </code></pre>
 <p><strong>预期输出：</strong></p>
@@ -1151,8 +1156,17 @@ array[2] = 3
 array[3] = 4
 array[4] = 5
 array length: 5, first: 1, last: 5
+matrix[0][0] = 1
+matrix[0][1] = 2
+matrix[0][2] = 3
+matrix[1][0] = 4
+matrix[1][1] = 5
+matrix[1][2] = 6
+matrix[2][0] = 7
+matrix[2][1] = 8
+matrix[2][2] = 9
 </code></pre>
-<h5 id="数组的实际应用"><a class="header" href="#数组的实际应用">数组的实际应用</a></h5>
+<h3 id="数组的实际应用"><a class="header" href="#数组的实际应用">数组的实际应用</a></h3>
 <pre><code class="language-zig">// 场景1：编译期已知大小的数据
 const BUFFER_SIZE = 1024;
 var buffer: [BUFFER_SIZE]u8 = undefined;
@@ -1175,8 +1189,7 @@ fn matrixMultiply(a: [3][3]f32, b: [3][3]f32) [3][3]f32 {
     return result;
 }
 </code></pre>
-<p><strong>切片：</strong></p>
-<h5 id="切片的核心特性"><a class="header" href="#切片的核心特性">切片的核心特性</a></h5>
+<h3 id="切片的核心特性"><a class="header" href="#切片的核心特性">切片的核心特性</a></h3>
 <ol>
 <li><strong>动态大小</strong>：切片大小在运行期确定</li>
 <li><strong>胖指针</strong>：包含指针和长度两个字段</li>
@@ -1190,24 +1203,24 @@ fn matrixMultiply(a: [3][3]f32, b: [3][3]f32) [3][3]f32 {
 </ol>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     var array = [_]i32{ 1, 2, 3, 4, 5 };
-    
+
     // 创建切片：从数组中"切出"一部分
     // 切片类型 []i32 包含：指针 + 长度
     const slice: []i32 = array[1..4]; // 包含元素 2, 3, 4
-    
+
     // 切片长度：运行期可知
     std.debug.print("slice length: {}, first: {}\n", .{ slice.len, slice[0] });
-    
+
     // 切片指针：指向底层内存
     const ptr = slice.ptr;
-    std.debug.print("slice pointer: {}\n", .{ptr});
-    
+    std.debug.print("slice pointer: {any}\n", .{ptr});
+
     // 修改切片会影响原数组
     slice[0] = 99;
     std.debug.print("array[1] after modification: {}\n", .{array[1]});
-    
+
     // 切片可以重新切片
     const subslice = slice[0..2]; // 从切片中再切出
     std.debug.print("subslice length: {}\n", .{subslice.len});
@@ -1215,73 +1228,98 @@ pub fn main(init: std.process.Init.Minimal) void {
 </code></pre>
 <p><strong>预期输出：</strong></p>
 <pre><code>slice length: 3, first: 2
-slice pointer: [内存地址]
+slice pointer: i32@16f6f24c4
 array[1] after modification: 99
 subslice length: 2
 </code></pre>
 <p><strong>注意</strong>：<code>slice pointer</code> 的输出会因运行环境不同而变化，显示实际的内存地址。</p>
-<h5 id="切片的内存布局"><a class="header" href="#切片的内存布局">切片的内存布局</a></h5>
-<pre><code>切片结构（胖指针）：
-+--------+--------+
-|  ptr   |  len   |
-+--------+--------+
-   8字节    8字节    (64位系统)
-</code></pre>
-<h6 id="数组-vs-切片内存布局对比图"><a class="header" href="#数组-vs-切片内存布局对比图">数组 vs 切片：内存布局对比图</a></h6>
+<h3 id="切片的内存布局"><a class="header" href="#切片的内存布局">切片的内存布局</a></h3>
+<pre class="mermaid">graph LR
+    classDef ptrStyle fill:#fff9c4,stroke:#f57f17,stroke-width:2px
+    classDef lenStyle fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px
+    classDef container fill:#fafafa,stroke:#666,stroke-width:1px
+    
+    subgraph Slice["切片结构（胖指针）"]
+        direction LR
+        Ptr["ptr&lt;br/&gt;(指针)&lt;br/&gt;8 字节"]:::ptrStyle
+        Len["len&lt;br/&gt;(长度)&lt;br/&gt;8 字节"]:::lenStyle
+    end
+    
+    class Slice container
+</pre>
+
+<p><strong>64位系统下切片占用 16 字节</strong>（指针 8 字节 + 长度 8 字节）</p>
+<h3 id="数组-vs-切片内存布局对比图"><a class="header" href="#数组-vs-切片内存布局对比图">数组 vs 切片：内存布局对比图</a></h3>
 <p><strong>数组的内存布局</strong>：</p>
-<pre><code>声明：var array: [5]i32 = .{ 1, 2, 3, 4, 5 };
+<p>声明：<code>var array: [5]i32 = .{ 1, 2, 3, 4, 5 };</code></p>
+<pre class="mermaid">graph TB
+    classDef ptrStyle fill:#fff9c4,stroke:#f57f17,stroke-width:2px
+    classDef arrayElement fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+    classDef inactive fill:#f5f5f5,stroke:#999,stroke-dasharray: 5 5
+    classDef container fill:#fafafa,stroke:#666,stroke-width:1px
+    
+    subgraph Memory["栈内存或静态内存区"]
+        direction LR
+        A0["[0]&lt;br/&gt;值: 1"]:::arrayElement
+        A1["[1]&lt;br/&gt;值: 2"]:::arrayElement
+        A2["[2]&lt;br/&gt;值: 3"]:::arrayElement
+        A3["[3]&lt;br/&gt;值: 4"]:::arrayElement
+        A4["[4]&lt;br/&gt;值: 5"]:::arrayElement
+        Other["其他数据"]:::inactive
+    end
+    
+    Start["数组起始地址&lt;br/&gt;(编译期已知)"]:::ptrStyle -.-&gt; A0
+    
+    class Memory container
+</pre>
 
-内存布局（连续存储）：
-┌─────────────────────────────────────────┐
-│  栈内存或静态内存区                        │
-├─────┬─────┬─────┬─────┬─────┬───────────┤
-│  1  │  2  │  3  │  4  │  5  │  其他数据  │
-├─────┼─────┼─────┼─────┼─────┼───────────┤
-│ [0] │ [1] │ [2] │ [3] │ [4] │           │
-└─────┴─────┴─────┴─────┴─────┴───────────┘
-  ↑
-  数组起始地址（编译期已知）
-
-特点：
-✓ 大小固定：编译期确定，类型的一部分
-✓ 内存连续：所有元素在内存中连续存储
-✓ 栈分配：通常在栈上分配（除非使用 const 或 static）
-✓ 直接访问：通过索引直接访问，无间接寻址
-✓ 无元数据：不存储长度信息（编译期已知）
-</code></pre>
+<p><strong>特点</strong>：</p>
+<ul>
+<li>✓ 大小固定：编译期确定，类型的一部分</li>
+<li>✓ 内存连续：所有元素在内存中连续存储</li>
+<li>✓ 栈分配：通常在栈上分配（除非使用 const 或 static）</li>
+<li>✓ 直接访问：通过索引直接访问，无间接寻址</li>
+<li>✓ 无元数据：不存储长度信息（编译期已知）</li>
+</ul>
 <p><strong>切片的内存布局</strong>：</p>
-<pre><code>声明：const slice: []i32 = array[1..4];
+<p>声明：<code>const slice: []i32 = array[1..4];</code></p>
+<pre class="mermaid">graph TB
+    classDef ptrStyle fill:#fff9c4,stroke:#f57f17,stroke-width:2px
+    classDef lenStyle fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px
+    classDef arrayElement fill:#e1f5ff,stroke:#01579b,stroke-width:3px
+    classDef inactive fill:#f5f5f5,stroke:#999,stroke-dasharray: 5 5
+    classDef container fill:#fafafa,stroke:#666,stroke-width:1px
+    
+    subgraph SliceVar["切片变量（栈上）- 胖指针结构"]
+        direction LR
+        Ptr["ptr (指针)&lt;br/&gt;8 字节&lt;br/&gt;指向 array[1]"]:::ptrStyle
+        Len["len (长度)&lt;br/&gt;8 字节&lt;br/&gt;值: 3"]:::lenStyle
+    end
+    
+    subgraph Array["底层数组（array）"]
+        direction LR
+        A0["[0]&lt;br/&gt;值: 1"]:::inactive
+        A1["[1]&lt;br/&gt;值: 2"]:::arrayElement
+        A2["[2]&lt;br/&gt;值: 3"]:::arrayElement
+        A3["[3]&lt;br/&gt;值: 4"]:::arrayElement
+        A4["[4]&lt;br/&gt;值: 5"]:::inactive
+        Other["其他数据"]:::inactive
+    end
+    
+    Ptr -.-&gt;|指向| A1
+    
+    class SliceVar container
+    class Array container
+</pre>
 
-内存布局（胖指针结构）：
-┌─────────────────────────────────────────┐
-│  切片变量（栈上）                          │
-├───────────────────┬─────────────────────┤
-│   ptr (指针)       │   len (长度)        │
-│   8 字节           │   8 字节            │
-│   指向 array[1]    │   3                 │
-└───────────────────┴─────────────────────┘
-          │
-          │ 指向
-          ↓
-┌─────────────────────────────────────────┐
-│  底层数组（array）                        │
-├─────┬─────┬─────┬─────┬─────┬───────────┤
-│  1  │  2  │  3  │  4  │  5  │  其他数据  │
-├─────┼─────┼─────┼─────┼─────┼───────────┤
-│ [0] │ [1] │ [2] │ [3] │ [4] │           │
-└─────┴──┬──┴──┬──┴──┬──┴─────┴───────────┘
-         │     │     │
-         └─────┴─────┴── 切片引用的范围
-              ↑
-              切片指针指向这里
-
-特点：
-✓ 大小动态：运行期确定，存储在 len 字段中
-✓ 胖指针：包含指针和长度两个部分（共 16 字节）
-✓ 引用语义：不拥有数据，只是对底层数组的引用
-✓ 灵活性：可以指向数组的任意子区间
-✓ 边界检查：运行期进行边界检查，更安全
-</code></pre>
+<p><strong>特点</strong>：</p>
+<ul>
+<li>✓ 大小动态：运行期确定，存储在 len 字段中</li>
+<li>✓ 胖指针：包含指针和长度两个部分（共 16 字节）</li>
+<li>✓ 引用语义：不拥有数据，只是对底层数组的引用</li>
+<li>✓ 灵活性：可以指向数组的任意子区间</li>
+<li>✓ 边界检查：运行期进行边界检查，更安全</li>
+</ul>
 <p><strong>内存布局关键差异</strong>：</p>
 <div class="table-wrapper">
 <table>
@@ -22306,6 +22344,8 @@ comptime {
         <script src="book-a0b12cfe.js"></script>
 
         <!-- Custom JS scripts -->
+        <script src="mermaid-eefea253.min.js"></script>
+        <script src="mermaid-init-ccf746f1.js"></script>
 
         <script>
         window.addEventListener('load', function() {

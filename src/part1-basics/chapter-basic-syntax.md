@@ -731,9 +731,18 @@ array[2] = 3
 array[3] = 4
 array[4] = 5
 array length: 5, first: 1, last: 5
+matrix[0][0] = 1
+matrix[0][1] = 2
+matrix[0][2] = 3
+matrix[1][0] = 4
+matrix[1][1] = 5
+matrix[1][2] = 6
+matrix[2][0] = 7
+matrix[2][1] = 8
+matrix[2][2] = 9
 ```
 
-##### 数组的实际应用
+### 数组的实际应用
 
 ```zig
 // 场景1：编译期已知大小的数据
@@ -763,33 +772,31 @@ fn matrixMultiply(a: [3][3]f32, b: [3][3]f32) [3][3]f32 {
 
 1. **动态大小**：切片大小在运行期确定
 2. **胖指针**：包含指针和长度两个字段
-
 > 📖 **深入学习**：胖指针是 Zig 指针系统的重要组成部分，[指针与引用类型](../part2-advanced/chapter-pointers.md)将详细讲解各种指针类型及其应用场景。
-
 3. **引用语义**：切片是对底层内存的引用，不拥有数据
 4. **边界检查**：运行期进行边界检查，更安全
 
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     var array = [_]i32{ 1, 2, 3, 4, 5 };
-    
+
     // 创建切片：从数组中"切出"一部分
     // 切片类型 []i32 包含：指针 + 长度
     const slice: []i32 = array[1..4]; // 包含元素 2, 3, 4
-    
+
     // 切片长度：运行期可知
     std.debug.print("slice length: {}, first: {}\n", .{ slice.len, slice[0] });
-    
+
     // 切片指针：指向底层内存
     const ptr = slice.ptr;
-    std.debug.print("slice pointer: {}\n", .{ptr});
-    
+    std.debug.print("slice pointer: {any}\n", .{ptr});
+
     // 修改切片会影响原数组
     slice[0] = 99;
     std.debug.print("array[1] after modification: {}\n", .{array[1]});
-    
+
     // 切片可以重新切片
     const subslice = slice[0..2]; // 从切片中再切出
     std.debug.print("subslice length: {}\n", .{subslice.len});
@@ -799,82 +806,107 @@ pub fn main(init: std.process.Init.Minimal) void {
 **预期输出：**
 ```
 slice length: 3, first: 2
-slice pointer: [内存地址]
+slice pointer: i32@16f6f24c4
 array[1] after modification: 99
 subslice length: 2
 ```
 
 **注意**：`slice pointer` 的输出会因运行环境不同而变化，显示实际的内存地址。
 
-##### 切片的内存布局
+### 切片的内存布局
 
-```
-切片结构（胖指针）：
-+--------+--------+
-|  ptr   |  len   |
-+--------+--------+
-   8字节    8字节    (64位系统)
+```mermaid
+graph LR
+    classDef ptrStyle fill:#fff9c4,stroke:#f57f17,stroke-width:2px
+    classDef lenStyle fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px
+    classDef container fill:#fafafa,stroke:#666,stroke-width:1px
+    
+    subgraph Slice["切片结构（胖指针）"]
+        direction LR
+        Ptr["ptr<br/>(指针)<br/>8 字节"]:::ptrStyle
+        Len["len<br/>(长度)<br/>8 字节"]:::lenStyle
+    end
+    
+    class Slice container
 ```
 
-###### 数组 vs 切片：内存布局对比图
+**64位系统下切片占用 16 字节**（指针 8 字节 + 长度 8 字节）
+
+### 数组 vs 切片：内存布局对比图
 
 **数组的内存布局**：
-```
-声明：var array: [5]i32 = .{ 1, 2, 3, 4, 5 };
 
-内存布局（连续存储）：
-┌─────────────────────────────────────────┐
-│  栈内存或静态内存区                        │
-├─────┬─────┬─────┬─────┬─────┬───────────┤
-│  1  │  2  │  3  │  4  │  5  │  其他数据  │
-├─────┼─────┼─────┼─────┼─────┼───────────┤
-│ [0] │ [1] │ [2] │ [3] │ [4] │           │
-└─────┴─────┴─────┴─────┴─────┴───────────┘
-  ↑
-  数组起始地址（编译期已知）
+声明：`var array: [5]i32 = .{ 1, 2, 3, 4, 5 };`
 
-特点：
-✓ 大小固定：编译期确定，类型的一部分
-✓ 内存连续：所有元素在内存中连续存储
-✓ 栈分配：通常在栈上分配（除非使用 const 或 static）
-✓ 直接访问：通过索引直接访问，无间接寻址
-✓ 无元数据：不存储长度信息（编译期已知）
+```mermaid
+graph TB
+    classDef ptrStyle fill:#fff9c4,stroke:#f57f17,stroke-width:2px
+    classDef arrayElement fill:#e1f5ff,stroke:#01579b,stroke-width:2px
+    classDef inactive fill:#f5f5f5,stroke:#999,stroke-dasharray: 5 5
+    classDef container fill:#fafafa,stroke:#666,stroke-width:1px
+    
+    subgraph Memory["栈内存或静态内存区"]
+        direction LR
+        A0["[0]<br/>值: 1"]:::arrayElement
+        A1["[1]<br/>值: 2"]:::arrayElement
+        A2["[2]<br/>值: 3"]:::arrayElement
+        A3["[3]<br/>值: 4"]:::arrayElement
+        A4["[4]<br/>值: 5"]:::arrayElement
+        Other["其他数据"]:::inactive
+    end
+    
+    Start["数组起始地址<br/>(编译期已知)"]:::ptrStyle -.-> A0
+    
+    class Memory container
 ```
+
+**特点**：
+- ✓ 大小固定：编译期确定，类型的一部分
+- ✓ 内存连续：所有元素在内存中连续存储
+- ✓ 栈分配：通常在栈上分配（除非使用 const 或 static）
+- ✓ 直接访问：通过索引直接访问，无间接寻址
+- ✓ 无元数据：不存储长度信息（编译期已知）
 
 **切片的内存布局**：
-```
-声明：const slice: []i32 = array[1..4];
 
-内存布局（胖指针结构）：
-┌─────────────────────────────────────────┐
-│  切片变量（栈上）                          │
-├───────────────────┬─────────────────────┤
-│   ptr (指针)       │   len (长度)        │
-│   8 字节           │   8 字节            │
-│   指向 array[1]    │   3                 │
-└───────────────────┴─────────────────────┘
-          │
-          │ 指向
-          ↓
-┌─────────────────────────────────────────┐
-│  底层数组（array）                        │
-├─────┬─────┬─────┬─────┬─────┬───────────┤
-│  1  │  2  │  3  │  4  │  5  │  其他数据  │
-├─────┼─────┼─────┼─────┼─────┼───────────┤
-│ [0] │ [1] │ [2] │ [3] │ [4] │           │
-└─────┴──┬──┴──┬──┴──┬──┴─────┴───────────┘
-         │     │     │
-         └─────┴─────┴── 切片引用的范围
-              ↑
-              切片指针指向这里
+声明：`const slice: []i32 = array[1..4];`
 
-特点：
-✓ 大小动态：运行期确定，存储在 len 字段中
-✓ 胖指针：包含指针和长度两个部分（共 16 字节）
-✓ 引用语义：不拥有数据，只是对底层数组的引用
-✓ 灵活性：可以指向数组的任意子区间
-✓ 边界检查：运行期进行边界检查，更安全
+```mermaid
+graph TB
+    classDef ptrStyle fill:#fff9c4,stroke:#f57f17,stroke-width:2px
+    classDef lenStyle fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px
+    classDef arrayElement fill:#e1f5ff,stroke:#01579b,stroke-width:3px
+    classDef inactive fill:#f5f5f5,stroke:#999,stroke-dasharray: 5 5
+    classDef container fill:#fafafa,stroke:#666,stroke-width:1px
+    
+    subgraph SliceVar["切片变量（栈上）- 胖指针结构"]
+        direction LR
+        Ptr["ptr (指针)<br/>8 字节<br/>指向 array[1]"]:::ptrStyle
+        Len["len (长度)<br/>8 字节<br/>值: 3"]:::lenStyle
+    end
+    
+    subgraph Array["底层数组（array）"]
+        direction LR
+        A0["[0]<br/>值: 1"]:::inactive
+        A1["[1]<br/>值: 2"]:::arrayElement
+        A2["[2]<br/>值: 3"]:::arrayElement
+        A3["[3]<br/>值: 4"]:::arrayElement
+        A4["[4]<br/>值: 5"]:::inactive
+        Other["其他数据"]:::inactive
+    end
+    
+    Ptr -.->|指向| A1
+    
+    class SliceVar container
+    class Array container
 ```
+
+**特点**：
+- ✓ 大小动态：运行期确定，存储在 len 字段中
+- ✓ 胖指针：包含指针和长度两个部分（共 16 字节）
+- ✓ 引用语义：不拥有数据，只是对底层数组的引用
+- ✓ 灵活性：可以指向数组的任意子区间
+- ✓ 边界检查：运行期进行边界检查，更安全
 
 **内存布局关键差异**：
 
