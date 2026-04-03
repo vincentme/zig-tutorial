@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-9bde67e7.js";
+            window.path_to_searchindex_js = "searchindex-70c6b5de.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-5fb88d48.js"></script>
@@ -1340,29 +1340,29 @@ subslice length: 2
 <p><strong>实际应用示例</strong>：</p>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     var array: [5]i32 = .{ 1, 2, 3, 4, 5 };
-    
+
     std.debug.print("=== 数组 vs 切片内存布局 ===\n\n", .{});
-    
+
     std.debug.print("数组信息：\n", .{});
     std.debug.print("  类型：[5]i32\n", .{});
     std.debug.print("  大小：{} 字节\n", .{@sizeOf(@TypeOf(array))});
     std.debug.print("  元素数量：{}\n", .{array.len});
-    std.debug.print("  地址：{}\n\n", .{&amp;array});
-    
+    std.debug.print("  地址：{any}\n\n", .{&amp;array[0]});
+
     const slice: []i32 = array[1..4];
-    
+
     std.debug.print("切片信息：\n", .{});
     std.debug.print("  类型：[]i32\n", .{});
     std.debug.print("  大小：{} 字节（胖指针）\n", .{@sizeOf(@TypeOf(slice))});
     std.debug.print("  长度：{}\n", .{slice.len});
-    std.debug.print("  指针：{}\n", .{slice.ptr});
-    std.debug.print("  数据地址：{}\n\n", .{&amp;slice[0]});
-    
+    std.debug.print("  指针：{any}\n", .{slice.ptr});
+    std.debug.print("  数据地址：{any}\n\n", .{&amp;slice[0]});
+
     std.debug.print("内存关系：\n", .{});
-    std.debug.print("  数组起始地址：{}\n", .{&amp;array[0]});
-    std.debug.print("  切片起始地址：{}（偏移 1 个元素）\n", .{&amp;slice[0]});
+    std.debug.print("  数组起始地址：{any}\n", .{&amp;array[0]});
+    std.debug.print("  切片起始地址：{any}（偏移 1 个元素）\n", .{&amp;slice[0]});
     std.debug.print("  地址差：{} 字节 = {} 个元素\n", .{
         @intFromPtr(&amp;slice[0]) - @intFromPtr(&amp;array[0]),
         (@intFromPtr(&amp;slice[0]) - @intFromPtr(&amp;array[0])) / @sizeOf(i32),
@@ -1376,18 +1376,18 @@ pub fn main(init: std.process.Init.Minimal) void {
   类型：[5]i32
   大小：20 字节
   元素数量：5
-  地址：0x7ff...
+  地址：i32@16f0124d4
 
 切片信息：
   类型：[]i32
   大小：16 字节（胖指针）
   长度：3
-  指针：0x7ff...
-  数据地址：0x7ff...
+  指针：i32@16fc124d8
+  数据地址：i32@16fc124d8
 
 内存关系：
-  数组起始地址：0x7ff...
-  切片起始地址：0x7ff...（偏移 1 个元素）
+  数组起始地址：i32@16fc124d4
+  切片起始地址：i32@16fc124d8（偏移 1 个元素）
   地址差：4 字节 = 1 个元素
 </code></pre>
 <p><strong>关键要点</strong>：</p>
@@ -1398,7 +1398,7 @@ pub fn main(init: std.process.Init.Minimal) void {
 <li><strong>数组更高效</strong>：直接访问，无间接寻址开销</li>
 <li><strong>选择建议</strong>：函数参数用切片，局部变量用数组（如果大小已知）</li>
 </ol>
-<h5 id="切片的实际应用"><a class="header" href="#切片的实际应用">切片的实际应用</a></h5>
+<h3 id="切片的实际应用"><a class="header" href="#切片的实际应用">切片的实际应用</a></h3>
 <pre><code class="language-zig">// 场景1：函数参数（避免复制大数组）
 fn sumSlice(numbers: []const i32) i32 {
     var total: i32 = 0;
@@ -1428,7 +1428,7 @@ fn findSubstring(text: []const u8, pattern: []const u8) ?usize {
     return null;
 }
 </code></pre>
-<h5 id="数组-vs-切片选择指南"><a class="header" href="#数组-vs-切片选择指南">数组 vs 切片：选择指南</a></h5>
+<h3 id="数组-vs-切片选择指南"><a class="header" href="#数组-vs-切片选择指南">数组 vs 切片：选择指南</a></h3>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -1443,25 +1443,24 @@ fn findSubstring(text: []const u8, pattern: []const u8) ?usize {
 </tbody>
 </table>
 </div>
-<h5 id="哨兵终止数组sentinel-terminated-array"><a class="header" href="#哨兵终止数组sentinel-terminated-array">哨兵终止数组（Sentinel-Terminated Array）</a></h5>
-<h6 id="什么是哨兵终止数组"><a class="header" href="#什么是哨兵终止数组">什么是哨兵终止数组？</a></h6>
+<h2 id="哨兵终止数组sentinel-terminated-array"><a class="header" href="#哨兵终止数组sentinel-terminated-array">哨兵终止数组（Sentinel-Terminated Array）</a></h2>
+<h3 id="什么是哨兵终止数组"><a class="header" href="#什么是哨兵终止数组">什么是哨兵终止数组？</a></h3>
 <p>哨兵终止数组是一种特殊的数组类型，它在数组末尾添加一个特殊的“哨兵值“（sentinel value）来标记数组的结束。这是 C 语言字符串的经典实现方式。</p>
-<h6 id="为什么需要哨兵终止数组"><a class="header" href="#为什么需要哨兵终止数组">为什么需要哨兵终止数组？</a></h6>
+<h3 id="为什么需要哨兵终止数组"><a class="header" href="#为什么需要哨兵终止数组">为什么需要哨兵终止数组？</a></h3>
 <ol>
 <li><strong>C 语言兼容性</strong>：C 字符串以 null（0）结尾，哨兵数组可以直接与 C 代码互操作</li>
 <li><strong>无需存储长度</strong>：通过哨兵值判断结束，不需要单独存储长度信息</li>
 <li><strong>历史兼容</strong>：许多系统 API 使用哨兵终止字符串</li>
 </ol>
-<h6 id="语法说明"><a class="header" href="#语法说明">语法说明</a></h6>
+<h3 id="语法说明"><a class="header" href="#语法说明">语法说明</a></h3>
 <ul>
 <li><code>[N:T]</code>：长度为 N，哨兵值为 T 的数组</li>
 <li><code>[:T]</code>：未知长度，哨兵值为 T 的切片</li>
 <li>最常见的：<code>[:0]const u8</code> - C 风格字符串</li>
 </ul>
-<p>Zig 支持一种特殊的数组类型，以哨兵值结尾，常用于 C 字符串兼容：</p>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     // 哨兵终止数组：以 0 结尾的数组
     // 类型 [5:0]u8 表示：5个元素，哨兵值为0
     const message: [5:0]u8 = "hello".*;
@@ -1475,16 +1474,22 @@ pub fn main(init: std.process.Init.Minimal) void {
         std.debug.print("[{}] = {c} ({})\n", .{ index, byte, byte });
     }
 
-    // 转换为字符串切片（自动识别哨兵）
+    // 转换为哨兵终止切片（类型 [:0]const u8）
     const str: [:0]const u8 = &amp;message;
-    std.debug.print("字符串切片长度：{}\n", .{str.len});
-    
+    std.debug.print("哨兵终止切片长度：{}\n", .{str.len});
+
     // 实际应用：与 C 函数互操作
     // 可以直接传递给期望 const char* 的 C 函数
     // c_printf("%s\n", message.ptr);
 }
 </code></pre>
-<h6 id="哨兵终止数组-vs-普通数组"><a class="header" href="#哨兵终止数组-vs-普通数组">哨兵终止数组 vs 普通数组</a></h6>
+<p><strong>注意事项：</strong></p>
+<ol>
+<li><strong>哨兵值不在 <code>len</code> 中</strong>：<code>message.len</code> 返回 5，但实际占用 6 字节</li>
+<li><strong>访问哨兵</strong>：对于哨兵终止数组 <code>arr</code>，<code>arr[arr.len]</code> 返回哨兵值（本例中为 0）</li>
+<li><strong>编译期检查</strong>：Zig 会确保哨兵值正确设置</li>
+</ol>
+<h3 id="哨兵终止数组-vs-普通数组"><a class="header" href="#哨兵终止数组-vs-普通数组">哨兵终止数组 vs 普通数组</a></h3>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -1498,7 +1503,7 @@ pub fn main(init: std.process.Init.Minimal) void {
 </tbody>
 </table>
 </div>
-<h6 id="实际应用场景"><a class="header" href="#实际应用场景">实际应用场景</a></h6>
+<h3 id="实际应用场景"><a class="header" href="#实际应用场景">实际应用场景</a></h3>
 <pre><code class="language-zig">// 场景1：调用 C 标准库函数
 extern "c" fn puts(s: [*:0]const u8) c_int;
 
@@ -1515,12 +1520,6 @@ pub fn openFile(path: [:0]const u8) !std.fs.File {
     return std.fs.cwd().openFile(path, .{});
 }
 </code></pre>
-<h6 id="注意事项"><a class="header" href="#注意事项">注意事项</a></h6>
-<ol>
-<li><strong>哨兵值不在 <code>len</code> 中</strong>：<code>message.len</code> 返回 5，但实际占用 6 字节</li>
-<li><strong>访问哨兵</strong>：<code>message[message.len]</code> 返回哨兵值 0</li>
-<li><strong>编译期检查</strong>：Zig 会确保哨兵值正确设置</li>
-</ol>
 <p><strong>多维数组与哨兵结合：</strong></p>
 <pre><code class="language-zig">const std = @import("std");
 
@@ -1533,17 +1532,17 @@ pub fn main(init: std.process.Init.Minimal) void {
     }
 }
 </code></pre>
-<h4 id="枚举enum"><a class="header" href="#枚举enum">枚举（enum）</a></h4>
-<h5 id="什么是枚举"><a class="header" href="#什么是枚举">什么是枚举？</a></h5>
+<h2 id="枚举enum"><a class="header" href="#枚举enum">枚举（enum）</a></h2>
+<h3 id="什么是枚举"><a class="header" href="#什么是枚举">什么是枚举？</a></h3>
 <p>枚举（Enumeration）是一种用户定义的类型，它由一组命名的整数值组成。枚举用于表示一组相关的常量值，使代码更具可读性和类型安全性。</p>
-<h5 id="为什么使用枚举"><a class="header" href="#为什么使用枚举">为什么使用枚举？</a></h5>
+<h3 id="为什么使用枚举"><a class="header" href="#为什么使用枚举">为什么使用枚举？</a></h3>
 <ol>
 <li><strong>类型安全</strong>：编译器确保只使用有效的枚举值</li>
 <li><strong>代码可读性</strong>：使用有意义的名称代替魔法数字</li>
 <li><strong>穷尽性检查</strong>：switch 语句必须处理所有枚举值</li>
 <li><strong>命名空间</strong>：枚举值在枚举类型的命名空间内，避免冲突</li>
 </ol>
-<h5 id="zig-枚举的独特之处"><a class="header" href="#zig-枚举的独特之处">Zig 枚举的独特之处</a></h5>
+<h3 id="zig-枚举的独特之处"><a class="header" href="#zig-枚举的独特之处">Zig 枚举的独特之处</a></h3>
 <p>与其他语言不同，Zig 的枚举：</p>
 <ul>
 <li>可以指定底层整数类型</li>
@@ -1562,7 +1561,7 @@ const Color = enum {
     blue,   // 值为 2
 };
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     // 枚举字面量：使用 .语法
     const color: Color = .red;
 
@@ -1582,8 +1581,13 @@ pub fn main(init: std.process.Init.Minimal) void {
     std.debug.print("从整数创建：{}\n", .{green_value});
 }
 </code></pre>
-<p><strong>带整数类型的枚举：</strong></p>
-<h5 id="为什么指定整数类型"><a class="header" href="#为什么指定整数类型">为什么指定整数类型？</a></h5>
+<p>预期输出：</p>
+<pre><code>颜色：红色
+序值：0
+从整数创建：.green
+</code></pre>
+<h3 id="带整数类型的枚举"><a class="header" href="#带整数类型的枚举">带整数类型的枚举</a></h3>
+<p><strong>为什么指定整数类型？：</strong></p>
 <ol>
 <li><strong>与 C 互操作</strong>：匹配 C 枚举的大小</li>
 <li><strong>内存优化</strong>：使用更小的整数类型节省空间</li>
@@ -1600,7 +1604,7 @@ const Priority = enum(u8) {
     critical = 20,
 };
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     const p: Priority = .high;
     
     // 获取枚举名称（字符串）
@@ -1615,8 +1619,11 @@ pub fn main(init: std.process.Init.Minimal) void {
     // Zig 可以直接使用相同的值
 }
 </code></pre>
-<p><strong>枚举方法：</strong></p>
-<h5 id="枚举方法的强大之处"><a class="header" href="#枚举方法的强大之处">枚举方法的强大之处</a></h5>
+<p>预期输出：</p>
+<pre><code>优先级：high，值：10
+默认优先级值：5
+</code></pre>
+<h3 id="枚举方法"><a class="header" href="#枚举方法">枚举方法</a></h3>
 <p>Zig 允许在枚举中定义方法，这使得枚举不仅是数据，还包含行为：</p>
 <pre><code class="language-zig">const std = @import("std");
 
@@ -1653,7 +1660,7 @@ const Direction = enum(u4) {
     }
 };
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     const dir: Direction = .north;
     
     // 调用枚举方法
@@ -1665,7 +1672,12 @@ pub fn main(init: std.process.Init.Minimal) void {
     std.debug.print("所有方向数量：{}\n", .{all.len});
 }
 </code></pre>
-<h5 id="枚举的实际应用场景"><a class="header" href="#枚举的实际应用场景">枚举的实际应用场景</a></h5>
+<p>预期输出：</p>
+<pre><code>方向：北
+相反方向：南
+所有方向数量：4
+</code></pre>
+<h3 id="枚举的实际应用场景"><a class="header" href="#枚举的实际应用场景">枚举的实际应用场景</a></h3>
 <pre><code class="language-zig">// 场景1：状态机
 const State = enum {
     idle,
@@ -1714,50 +1726,47 @@ const NetworkError = enum {
     }
 }
 </code></pre>
-<h5 id="枚举最佳实践"><a class="header" href="#枚举最佳实践">枚举最佳实践</a></h5>
+<h3 id="枚举最佳实践"><a class="header" href="#枚举最佳实践">枚举最佳实践</a></h3>
 <ol>
-<li><strong>使用有意义的名称</strong>：<code>user_active</code> 而不是 <code>state1</code></li>
+<li><strong>使用有意义的名称</strong>：<code>UserActive</code> 而不是 <code>State1</code></li>
 <li><strong>添加方法</strong>：将相关逻辑封装在枚举中</li>
 <li><strong>穷尽 switch</strong>：利用编译器检查所有情况</li>
 <li><strong>文档注释</strong>：为枚举和枚举值添加说明</li>
 </ol>
-<pre><code>
-## 联合（union）和带标签联合（tagged union）
-
-## 什么是联合（Union）？
-
-联合（Union）是一种特殊的数据类型，它允许在同一内存位置存储不同类型的数据。联合的所有成员共享同一块内存，因此联合的大小等于其最大成员的大小。
-
-## 为什么需要联合？
-
-1. **内存效率**：多个数据类型共享同一内存空间，节省内存
-2. **类型转换**：可以安全地在不同类型之间重解释内存
-3. **多态实现**：带标签联合是实现多态的基础
-4. **C 兼容性**：与 C 语言的 union 完全兼容
-
-## Zig 联合的安全性
-
-与 C 语言不同，Zig 的联合设计注重安全性：
-
-| 特性       | C 语言               | Zig                  |
-| ---------- | -------------------- | -------------------- |
-| 类型安全   | 无（可访问任何成员） | 有（带标签联合）     |
-| 内存布局   | 未定义               | 明确（extern union） |
-| 运行时检查 | 无                   | 有（带标签联合）     |
-| 初始化     | 可能不安全           | 必须初始化一个成员   |
-
-**普通联合：**
-
-## 普通联合的核心概念
-
-普通联合（untagged union）是最基础的联合类型，所有成员共享同一内存：
-
-- **内存共享**：所有成员占用同一块内存
-- **大小计算**：联合大小 = max(成员大小)
-- **访问规则**：只能访问最后写入的成员（否则是未定义行为）
-
-```zig
-const std = @import("std");
+<h2 id="联合union和带标签联合tagged-union"><a class="header" href="#联合union和带标签联合tagged-union">联合（union）和带标签联合（tagged union）</a></h2>
+<h3 id="什么是联合union"><a class="header" href="#什么是联合union">什么是联合（Union）？</a></h3>
+<p>联合（Union）是一种特殊的数据类型，它允许在同一内存位置存储不同类型的数据。联合的所有成员共享同一块内存，因此联合的大小等于其最大成员的大小。</p>
+<h3 id="为什么需要联合"><a class="header" href="#为什么需要联合">为什么需要联合？</a></h3>
+<ol>
+<li><strong>内存效率</strong>：多个数据类型共享同一内存空间，节省内存</li>
+<li><strong>类型转换</strong>：可以安全地在不同类型之间重解释内存</li>
+<li><strong>多态实现</strong>：带标签联合是实现多态的基础</li>
+<li><strong>C 兼容性</strong>：与 C 语言的 union 完全兼容</li>
+</ol>
+<h3 id="zig-联合的安全性"><a class="header" href="#zig-联合的安全性">Zig 联合的安全性</a></h3>
+<p>与 C 语言不同，Zig 的联合设计注重安全性：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>特性</th><th>C 语言</th><th>Zig</th></tr>
+</thead>
+<tbody>
+<tr><td>类型安全</td><td>无（可访问任何成员）</td><td>有（带标签联合）</td></tr>
+<tr><td>内存布局</td><td>未定义</td><td>明确（extern union）</td></tr>
+<tr><td>运行时检查</td><td>无</td><td>有（带标签联合）</td></tr>
+<tr><td>初始化</td><td>可能不安全</td><td>必须初始化一个成员</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>普通联合：</strong></p>
+<h2 id="普通联合的核心概念"><a class="header" href="#普通联合的核心概念">普通联合的核心概念</a></h2>
+<p>普通联合（untagged union）是最基础的联合类型，所有成员共享同一内存：</p>
+<ul>
+<li><strong>内存共享</strong>：所有成员占用同一块内存</li>
+<li><strong>大小计算</strong>：联合大小 = max(成员大小)</li>
+<li><strong>访问规则</strong>：只能访问最后写入的成员（否则是未定义行为）</li>
+</ul>
+<pre><code class="language-zig">const std = @import("std");
 
 // extern union：与 C 语言兼容的内存布局
 const Data = extern union {
