@@ -984,7 +984,7 @@ pub fn main(_: std.process.Init.Minimal) void {
 4. **数组更高效**：直接访问，无间接寻址开销
 5. **选择建议**：函数参数用切片，局部变量用数组（如果大小已知）
 
-##### 切片的实际应用
+### 切片的实际应用
 
 ```zig
 // 场景1：函数参数（避免复制大数组）
@@ -1017,7 +1017,7 @@ fn findSubstring(text: []const u8, pattern: []const u8) ?usize {
 }
 ```
 
-##### 数组 vs 切片：选择指南
+### 数组 vs 切片：选择指南
 
 | 场景           | 推荐使用 | 原因                 |
 | -------------- | -------- | -------------------- |
@@ -1027,30 +1027,28 @@ fn findSubstring(text: []const u8, pattern: []const u8) ?usize {
 | 全局常量       | 数组     | 存储在静态内存       |
 | 动态大小       | 切片     | 唯一选择             |
 
-##### 哨兵终止数组（Sentinel-Terminated Array）
+## 哨兵终止数组（Sentinel-Terminated Array）
 
-###### 什么是哨兵终止数组？
+### 什么是哨兵终止数组？
 
 哨兵终止数组是一种特殊的数组类型，它在数组末尾添加一个特殊的"哨兵值"（sentinel value）来标记数组的结束。这是 C 语言字符串的经典实现方式。
 
-###### 为什么需要哨兵终止数组？
+### 为什么需要哨兵终止数组？
 
 1. **C 语言兼容性**：C 字符串以 null（0）结尾，哨兵数组可以直接与 C 代码互操作
 2. **无需存储长度**：通过哨兵值判断结束，不需要单独存储长度信息
 3. **历史兼容**：许多系统 API 使用哨兵终止字符串
 
-###### 语法说明
+### 语法说明
 
 - `[N:T]`：长度为 N，哨兵值为 T 的数组
 - `[:T]`：未知长度，哨兵值为 T 的切片
 - 最常见的：`[:0]const u8` - C 风格字符串
 
-Zig 支持一种特殊的数组类型，以哨兵值结尾，常用于 C 字符串兼容：
-
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     // 哨兵终止数组：以 0 结尾的数组
     // 类型 [5:0]u8 表示：5个元素，哨兵值为0
     const message: [5:0]u8 = "hello".*;
@@ -1064,10 +1062,10 @@ pub fn main(init: std.process.Init.Minimal) void {
         std.debug.print("[{}] = {c} ({})\n", .{ index, byte, byte });
     }
 
-    // 转换为字符串切片（自动识别哨兵）
+    // 转换为哨兵终止切片（类型 [:0]const u8）
     const str: [:0]const u8 = &message;
-    std.debug.print("字符串切片长度：{}\n", .{str.len});
-    
+    std.debug.print("哨兵终止切片长度：{}\n", .{str.len});
+
     // 实际应用：与 C 函数互操作
     // 可以直接传递给期望 const char* 的 C 函数
     // c_printf("%s\n", message.ptr);
