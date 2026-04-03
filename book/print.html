@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-70c6b5de.js";
+            window.path_to_searchindex_js = "searchindex-b54cf221.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-5fb88d48.js"></script>
@@ -1733,6 +1733,25 @@ const NetworkError = enum {
 <li><strong>穷尽 switch</strong>：利用编译器检查所有情况</li>
 <li><strong>文档注释</strong>：为枚举和枚举值添加说明</li>
 </ol>
+<h3 id="可选枚举值"><a class="header" href="#可选枚举值">可选枚举值</a></h3>
+<p>枚举可以与可选类型结合使用，表示枚举值可能不存在：</p>
+<pre><code class="language-zig">const Status = enum {
+    pending,
+    running,
+    completed,
+};
+
+fn getStatus() ?Status {
+    return .running; // 或返回 null
+}
+
+// 使用 if 解包
+if (getStatus()) |status| {
+    // status 是 Status 类型
+} else {
+    // 处理 null 情况
+}
+</code></pre>
 <h2 id="联合union和带标签联合tagged-union"><a class="header" href="#联合union和带标签联合tagged-union">联合（union）和带标签联合（tagged union）</a></h2>
 <h3 id="什么是联合union"><a class="header" href="#什么是联合union">什么是联合（Union）？</a></h3>
 <p>联合（Union）是一种特殊的数据类型，它允许在同一内存位置存储不同类型的数据。联合的所有成员共享同一块内存，因此联合的大小等于其最大成员的大小。</p>
@@ -1743,53 +1762,108 @@ const NetworkError = enum {
 <li><strong>多态实现</strong>：带标签联合是实现多态的基础</li>
 <li><strong>C 兼容性</strong>：与 C 语言的 union 完全兼容</li>
 </ol>
-<h3 id="zig-联合的安全性"><a class="header" href="#zig-联合的安全性">Zig 联合的安全性</a></h3>
-<p>与 C 语言不同，Zig 的联合设计注重安全性：</p>
+<h3 id="zig-联合的两大类别"><a class="header" href="#zig-联合的两大类别">Zig 联合的两大类别</a></h3>
+<p>Zig 将联合分为两大类：</p>
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th>特性</th><th>C 语言</th><th>Zig</th></tr>
+<tr><th>类别</th><th>特点</th><th>适用场景</th></tr>
 </thead>
 <tbody>
-<tr><td>类型安全</td><td>无（可访问任何成员）</td><td>有（带标签联合）</td></tr>
-<tr><td>内存布局</td><td>未定义</td><td>明确（extern union）</td></tr>
-<tr><td>运行时检查</td><td>无</td><td>有（带标签联合）</td></tr>
-<tr><td>初始化</td><td>可能不安全</td><td>必须初始化一个成员</td></tr>
+<tr><td><strong>无标签联合</strong></td><td>无类型标签，需手动跟踪</td><td>C 互操作、类型转换</td></tr>
+<tr><td><strong>带标签联合</strong></td><td>有类型标签，自动跟踪</td><td>类型安全的多态</td></tr>
 </tbody>
 </table>
 </div>
-<p><strong>普通联合：</strong></p>
-<h2 id="普通联合的核心概念"><a class="header" href="#普通联合的核心概念">普通联合的核心概念</a></h2>
-<p>普通联合（untagged union）是最基础的联合类型，所有成员共享同一内存：</p>
+<h3 id="无标签联合untagged-union"><a class="header" href="#无标签联合untagged-union">无标签联合（Untagged Union）</a></h3>
+<p>无标签联合没有类型标签，程序员需要自己跟踪当前活动的成员。根据内存布局的不同，又分为三种：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>类型</th><th>内存布局</th><th>访问非活动成员</th><th>主要用途</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>普通 union</strong></td><td>未定义</td><td>❌ 触发 panic</td><td>通用场景</td></tr>
+<tr><td><strong>extern union</strong></td><td>明确（C ABI）</td><td>✅ 允许</td><td>C 互操作、类型转换</td></tr>
+<tr><td><strong>packed union</strong></td><td>明确（位级）</td><td>✅ 允许</td><td>硬件编程、位操作</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="普通-union"><a class="header" href="#普通-union">普通 union</a></h3>
+<p>普通联合是最基础的联合类型，所有成员共享同一内存：</p>
 <ul>
 <li><strong>内存共享</strong>：所有成员占用同一块内存</li>
-<li><strong>大小计算</strong>：联合大小 = max(成员大小)</li>
-<li><strong>访问规则</strong>：只能访问最后写入的成员（否则是未定义行为）</li>
+<li><strong>内存布局</strong>：未定义，编译器可能添加填充字节</li>
+<li><strong>安全检查</strong>：访问非活动成员会触发运行时 panic</li>
 </ul>
 <pre><code class="language-zig">const std = @import("std");
 
-// extern union：与 C 语言兼容的内存布局
+const Data = union {
+    as_i32: i32,
+    as_f32: f32,
+    as_bytes: [4]u8,
+};
+
+pub fn main(_: std.process.Init.Minimal) void {
+    // 初始化联合：必须指定一个成员
+    var data: Data = .{ .as_i32 = 42 };
+
+    // 正确：访问活动成员
+    std.debug.print("as_i32: {}\n", .{data.as_i32});
+    
+    // 错误：访问非活动成员会触发 panic
+    // std.debug.print("as_f32: {}\n", .{data.as_f32}); // panic!
+    
+    // 修改活动成员
+    data = .{ .as_f32 = 3.14 };
+    std.debug.print("as_f32: {}\n", .{data.as_f32}); // 现在可以访问
+    
+    // 内存布局
+    std.debug.print("联合大小: {} 字节\n", .{@sizeOf(Data)});
+}
+</code></pre>
+<p>预期输出：</p>
+<pre><code>as_i32: 42
+as_f32: 3.14
+联合大小: 8 字节
+</code></pre>
+<p><strong>注意</strong>：虽然所有成员都是 4 字节，但普通 union 的大小是 8 字节。这是因为普通 union 的内存布局是未定义的，编译器可能会添加填充字节。相比之下，<code>extern union</code> 和 <code>packed union</code> 的大小会是 4 字节。</p>
+<h3 id="extern-union"><a class="header" href="#extern-union">extern union</a></h3>
+<p><code>extern union</code> 有明确定义的内存布局，与 C ABI 兼容。</p>
+<ul>
+<li><strong>内存布局</strong>：明确，遵循 C ABI</li>
+<li><strong>大小计算</strong>：联合大小 = max(成员大小)</li>
+<li><strong>类型转换</strong>：允许访问非活动成员</li>
+</ul>
+<pre><code class="language-zig">const std = @import("std");
+
 const Data = extern union {
     as_i32: i32,
     as_f32: f32,
     as_bytes: [4]u8,
 };
 
-pub fn main(init: std.process.Init.Minimal) void {
-    // 初始化联合：必须指定一个成员
-    var data: Data = .{ .as_i32 = 0x41424344 }; // "DCBA" in little-endian
+pub fn main(_: std.process.Init.Minimal) void {
+    const data: Data = .{ .as_i32 = 0x41424344 };
 
-    // 访问不同成员：它们共享同一内存
+    // 可以访问活动成员
     std.debug.print("as_i32: {}\n", .{data.as_i32});
+
+    // 也可以访问非活动成员（类型转换）
     std.debug.print("as_f32: {}\n", .{data.as_f32});
     std.debug.print("as_bytes: {s}\n", .{data.as_bytes});
-    
-    // 内存布局演示
+
+    // 内存布局
     std.debug.print("联合大小: {} 字节\n", .{@sizeOf(Data)});
-    // 输出: 4 字节（所有成员都是 4 字节）
 }
 </code></pre>
-<h2 id="普通联合的实际应用"><a class="header" href="#普通联合的实际应用">普通联合的实际应用</a></h2>
+<p>预期输出：</p>
+<pre><code>as_i32: 1094861636
+as_f32: 12.141422
+as_bytes: DCBA
+联合大小: 4 字节
+</code></pre>
+<p><strong>实际应用：</strong></p>
 <pre><code class="language-zig">// 场景1：网络协议解析
 const Packet = extern union {
     header: struct { version: u8, type: u8, length: u16 },
@@ -1809,17 +1883,84 @@ const Register = extern union {
     },
 };
 </code></pre>
-<p><strong>带标签联合（Tagged Union）：</strong></p>
-<h2 id="什么是带标签联合"><a class="header" href="#什么是带标签联合">什么是带标签联合？</a></h2>
-<p>带标签联合（Tagged Union）是联合和枚举的结合体。它在联合中添加一个“标签“（tag），用于标识当前存储的是哪种类型的值。这是 Zig 中实现安全多态的核心机制。</p>
-<h2 id="为什么使用带标签联合"><a class="header" href="#为什么使用带标签联合">为什么使用带标签联合？</a></h2>
+<h3 id="packed-union"><a class="header" href="#packed-union">packed union</a></h3>
+<p><code>packed union</code> 有明确定义的位级内存布局，所有成员必须有相同的位大小：</p>
+<ul>
+<li><strong>内存布局</strong>：明确，位级精确控制</li>
+<li><strong>大小计算</strong>：所有成员位大小相同，联合大小 = 成员大小</li>
+<li><strong>类型转换</strong>：允许访问非活动成员</li>
+<li><strong>成员限制</strong>：所有成员必须有相同的 <code>@bitSizeOf</code></li>
+<li><strong>特殊用途</strong>：可以嵌入 <code>packed struct</code> 中</li>
+</ul>
+<p><strong>为什么需要 packed union？</strong></p>
 <ol>
-<li><strong>类型安全</strong>：编译器和运行时都知道当前存储的类型</li>
+<li><strong>位级精确控制</strong>：当需要精确控制每一位的布局时</li>
+<li><strong>硬件寄存器映射</strong>：硬件寄存器通常需要位级精确布局</li>
+<li><strong>嵌入 packed struct</strong>：<code>extern union</code> 不能放在 <code>packed struct</code> 中，但 <code>packed union</code> 可以</li>
+<li><strong>类型转换</strong>：允许进行类型重解释</li>
+</ol>
+<pre><code class="language-zig">const std = @import("std");
+
+const Data = packed union {
+    as_u32: u32,
+    as_i32: i32,
+    as_f32: f32,
+};
+
+pub fn main(_: std.process.Init.Minimal) void {
+    const data: Data = .{ .as_u32 = 0x40490FDB }; // π 的 IEEE 754 表示
+    
+    std.debug.print("as_u32: 0x{X}\n", .{data.as_u32});
+    std.debug.print("as_f32: {}\n", .{data.as_f32}); // 3.14159...
+}
+</code></pre>
+<p><strong>实际应用：嵌入 packed struct</strong></p>
+<pre><code class="language-zig">// packed union 可以嵌入 packed struct
+const Register = packed struct {
+    control: packed union {
+        as_u32: u32,
+        bits: packed struct {
+            enable: u1,
+            mode: u3,
+            reserved: u28,
+        },
+    },
+    status: u32,
+};
+</code></pre>
+<h3 id="带标签联合tagged-union"><a class="header" href="#带标签联合tagged-union">带标签联合（Tagged Union）</a></h3>
+<p>带标签联合是联合和枚举的结合体，它在联合中添加一个“标签“（tag），用于标识当前存储的是哪种类型的值。这是 Zig 中实现安全多态的核心机制。</p>
+<h4 id="为什么使用带标签联合"><a class="header" href="#为什么使用带标签联合">为什么使用带标签联合？</a></h4>
+<ol>
+<li><strong>类型安全</strong>：通过标签自动跟踪活动成员，编译器确保只能访问当前类型的字段</li>
 <li><strong>模式匹配</strong>：switch 可以穷尽所有可能的情况</li>
 <li><strong>多态实现</strong>：实现类似面向对象的“多态“</li>
 <li><strong>内存效率</strong>：比接口/继承更高效</li>
 </ol>
-<p>带标签联合结合了枚举和联合的功能，是 Zig 中实现多态的重要方式：</p>
+<h4 id="两种定义方式"><a class="header" href="#两种定义方式">两种定义方式</a></h4>
+<p><strong>方式一：显式定义枚举类型（完整语法）</strong></p>
+<pre><code class="language-zig">// 先定义枚举类型
+const ShapeTag = enum {
+    circle,
+    rectangle,
+};
+
+// 再定义带标签联合，引用枚举类型
+const Shape = union(ShapeTag) {
+    circle: struct { radius: f32 },
+    rectangle: struct { width: f32, height: f32 },
+};
+</code></pre>
+<p><strong>方式二：匿名标记联合（简化语法，推荐）</strong></p>
+<p>使用 <code>union(enum)</code> 语法，编译器自动生成枚举类型：</p>
+<pre><code class="language-zig">// 编译器自动生成枚举标签
+const Shape = union(enum) {
+    circle: struct { radius: f32 },
+    rectangle: struct { width: f32, height: f32 },
+};
+</code></pre>
+<p><strong>推荐使用匿名标记联合</strong>，因为它更简洁，且功能完全相同。下面的示例都将使用这种方式。</p>
+<h4 id="基本用法"><a class="header" href="#基本用法">基本用法</a></h4>
 <pre><code class="language-zig">const std = @import("std");
 
 // 带标签联合：值可以是多种类型之一
@@ -1837,10 +1978,10 @@ const Shape = union(enum) {
     }
 };
 
-pub fn main(init: std.process.Init.Minimal) void {
-    var shapes: [3]Shape = .{
+pub fn main(_: std.process.Init.Minimal) void {
+    const shapes: [3]Shape = .{
         Shape{ .circle = .{ .radius = 1.0 } },
-        Shape{ .rectangle = .{ .width = 3.0, .height = 4.0 } },
+        Shape{ .rectangle = .{ .width = 3.0, .height = 5.0 } },
         Shape{ .triangle = .{ .base = 6.0, .height = 4.0 } },
     };
 
@@ -1849,8 +1990,12 @@ pub fn main(init: std.process.Init.Minimal) void {
     }
 }
 </code></pre>
-<p><strong>带标签联合的方法：</strong></p>
-<h2 id="为什么带标签联合可以有方法"><a class="header" href="#为什么带标签联合可以有方法">为什么带标签联合可以有方法？</a></h2>
+<p>预期输出</p>
+<pre><code>形状 0 面积：3.14
+形状 1 面积：15.00
+形状 2 面积：12.00
+</code></pre>
+<h4 id="带标签联合的方法"><a class="header" href="#带标签联合的方法">带标签联合的方法</a></h4>
 <p>带标签联合可以包含方法，这使其不仅是数据容器，还包含行为。方法内部通过 switch 来处理不同的变体，实现类型安全的操作。</p>
 <pre><code class="language-zig">const std = @import("std");
 
@@ -1883,7 +2028,7 @@ const Value = union(enum) {
     }
 };
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     // 创建不同类型的值
     const values: [4]Value = .{
         Value{ .integer = 42 },
@@ -1905,7 +2050,13 @@ pub fn main(init: std.process.Init.Minimal) void {
     }
 }
 </code></pre>
-<h2 id="带标签联合的实际应用场景"><a class="header" href="#带标签联合的实际应用场景">带标签联合的实际应用场景</a></h2>
+<p>预期输出：</p>
+<pre><code>整数 = 42
+浮点数 = 3.14
+布尔值 = true
+字符串 = hello
+</code></pre>
+<h4 id="带标签联合的实际应用场景"><a class="header" href="#带标签联合的实际应用场景">带标签联合的实际应用场景</a></h4>
 <pre><code class="language-zig">// 场景1：JSON 值类型
 const JsonValue = union(enum) {
     null: void,
@@ -1931,68 +2082,36 @@ const Message = union(enum) {
     heartbeat: void,
 };
 </code></pre>
-<p><strong>可空枚举和 switch：</strong></p>
-<h2 id="可空枚举的使用场景"><a class="header" href="#可空枚举的使用场景">可空枚举的使用场景</a></h2>
-<p>可空枚举（<code>?Enum</code>）用于表示枚举值可能不存在的情况，这在处理可选状态时非常有用：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-const Status = enum {
-    pending,
-    running,
-    completed,
-    failed,
-};
-
-// 返回可选枚举值的函数
-fn getStatus() ?Status {
-    // 可能返回 null，表示状态未知
-    return .running;
-}
-
-pub fn main(init: std.process.Init.Minimal) void {
-    const status = getStatus();
-
-    // 处理可空枚举：先解包，再 switch
-    if (status) |s| {
-        // s 是 Status 类型，不是 ?Status
-        switch (s) {
-            .pending =&gt; std.debug.print("待处理\n", .{}),
-            .running =&gt; std.debug.print("运行中\n", .{}),
-            .completed =&gt; std.debug.print("已完成\n", .{}),
-            .failed =&gt; std.debug.print("失败\n", .{}),
-        }
-    } else {
-        std.debug.print("状态未知\n", .{});
-    }
-    
-    // 使用 orelse 提供默认值
-    const s = status orelse .pending;
-}
-</code></pre>
-<h2 id="最佳实践-1"><a class="header" href="#最佳实践-1">最佳实践</a></h2>
+<h4 id="最佳实践-1"><a class="header" href="#最佳实践-1">最佳实践</a></h4>
 <ol>
 <li><strong>优先使用带标签联合</strong>：比普通联合更安全</li>
 <li><strong>穷尽 switch</strong>：让编译器帮助检查所有情况</li>
 <li><strong>添加方法</strong>：将相关逻辑封装在联合中</li>
 <li><strong>文档注释</strong>：说明每个变体的用途</li>
 </ol>
-<h2 id="联合的高级特性"><a class="header" href="#联合的高级特性">联合的高级特性</a></h2>
-<p><strong>编译时初始化联合</strong>：</p>
-<h2 id="什么是-unioninit"><a class="header" href="#什么是-unioninit">什么是 @unionInit？</a></h2>
-<p><code>@unionInit</code> 是一个编译时内置函数，用于在编译期初始化联合。它比普通的初始化语法更灵活，特别是在泛型代码中。</p>
+<h3 id="联合的高级特性"><a class="header" href="#联合的高级特性">联合的高级特性</a></h3>
+<h4 id="编译时初始化联合"><a class="header" href="#编译时初始化联合">编译时初始化联合</a></h4>
+<p><code>@unionInit</code> 是一个编译时内置函数，用于在编译期初始化联合。它的主要用途是在<strong>泛型代码</strong>中，当字段名是编译期参数时，无法使用普通的初始化语法。</p>
 <blockquote>
 <p>📖 <strong>相关章节</strong>：更多编译期技巧请参考<a href="#draft编译期计算与元编程">编译期计算与元编程</a>和<a href="#draft泛型编程">泛型编程</a>。</p>
 </blockquote>
-<h2 id="为什么使用-unioninit"><a class="header" href="#为什么使用-unioninit">为什么使用 @unionInit？</a></h2>
-<ol>
-<li><strong>编译期初始化</strong>：在编译时确定联合的值</li>
-<li><strong>泛型代码</strong>：字段名可以是编译期变量</li>
-<li><strong>动态选择</strong>：根据条件选择不同的变体</li>
-</ol>
-<p>使用 <code>@unionInit</code> 可以在编译时初始化联合：</p>
+<h5 id="为什么需要-unioninit"><a class="header" href="#为什么需要-unioninit">为什么需要 @unionInit？</a></h5>
+<p><strong>问题：普通初始化语法的限制</strong></p>
+<pre><code class="language-zig">const MyUnion = union {
+    int: i32,
+    float: f64,
+};
+
+// 普通初始化：字段名必须是字面量
+const u1 = MyUnion{ .int = 42 };  // ✅ 正确
+
+// 错误：字段名不能是变量
+const field_name = "int";
+// const u2 = MyUnion{ .field_name = 42 };  // ❌ 编译错误
+</code></pre>
+<p><strong>解决：使用 @unionInit</strong></p>
 <pre><code class="language-zig">const std = @import("std");
 
-// 普通联合（非带标签）
 const MyUnion = union {
     int: i32,
     float: f64,
@@ -2000,11 +2119,10 @@ const MyUnion = union {
 };
 
 pub fn main(init: std.process.Init.Minimal) void {
-    // 普通语法初始化
+    // 普通初始化
     const u1 = MyUnion{ .int = 42 };
     
-    // 使用 @unionInit 初始化
-    // 参数：联合类型、字段名（编译期字符串）、值
+    // 使用 @unionInit：字段名可以是编译期字符串
     const u2 = @unionInit(MyUnion, "float", 3.14);
     const u3 = @unionInit(MyUnion, "string", "hello");
     
@@ -2013,14 +2131,20 @@ pub fn main(init: std.process.Init.Minimal) void {
     std.debug.print("u3: {s}\n", .{u3.string});
 }
 </code></pre>
-<h2 id="unioninit-的实际应用"><a class="header" href="#unioninit-的实际应用">@unionInit 的实际应用</a></h2>
-<pre><code class="language-zig">// 在泛型代码中使用
-fn initUnion(comptime T: type, comptime field: []const u8, value: anytype) MyUnion {
+<h5 id="unioninit-的实际应用"><a class="header" href="#unioninit-的实际应用">@unionInit 的实际应用</a></h5>
+<p><strong>场景1：泛型函数中动态选择字段</strong></p>
+<pre><code class="language-zig">// 根据编译期参数选择字段
+fn initUnion(comptime field: []const u8, value: anytype) MyUnion {
+    // 字段名是编译期参数，必须用 @unionInit
     return @unionInit(MyUnion, field, value);
 }
 
-// 根据运行时条件选择编译期字段
-fn createValue(is_int: bool) MyUnion {
+const u1 = initUnion("int", 42);
+const u2 = initUnion("float", 3.14);
+</code></pre>
+<p><strong>场景2：根据条件选择变体</strong></p>
+<pre><code class="language-zig">fn createValue(is_int: bool) MyUnion {
+    // 根据运行时条件选择编译期字段名
     if (is_int) {
         return @unionInit(MyUnion, "int", 42);
     } else {
@@ -2028,44 +2152,13 @@ fn createValue(is_int: bool) MyUnion {
     }
 }
 </code></pre>
-<p><strong>匿名标记联合</strong>：</p>
-<h2 id="什么是匿名标记联合"><a class="header" href="#什么是匿名标记联合">什么是匿名标记联合？</a></h2>
-<p>匿名标记联合使用 <code>union(enum)</code> 语法定义，枚举标签由编译器自动生成。这是定义带标签联合最简洁的方式。</p>
-<p>定义联合时直接使用 <code>union(enum)</code> 创建匿名标记联合：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-// 匿名标记联合：编译器自动生成枚举标签
-const Value = union(enum) {
-    int: i32,
-    float: f64,
-    string: []const u8,
-    none, // 无数据的变体（void 类型）
-    
-    fn describe(self: Value) []const u8 {
-        return switch (self) {
-            .int =&gt; "整数",
-            .float =&gt; "浮点数",
-            .string =&gt; "字符串",
-            .none =&gt; "无值",
-        };
-    }
-};
-
-pub fn main(init: std.process.Init.Minimal) void {
-    // 创建不同类型的值
-    const v1 = Value{ .int = 42 };
-    const v2 = Value{ .float = 3.14 };
-    const v3 = Value{ .string = "hello" };
-    const v4 = Value.none;  // 无数据变体直接使用
-    
-    std.debug.print("v1: {s}\n", .{v1.describe()});
-    std.debug.print("v2: {s}\n", .{v2.describe()});
-    std.debug.print("v3: {s}\n", .{v3.describe()});
-    std.debug.print("v4: {s}\n", .{v4.describe()});
+<p><strong>场景3：序列化/反序列化</strong></p>
+<pre><code class="language-zig">// 从字符串字段名初始化联合（常见于 JSON 解析）
+fn parseField(comptime U: type, comptime field_name: []const u8, value: anytype) U {
+    return @unionInit(U, field_name, value);
 }
 </code></pre>
-<p><strong>获取联合的标签名</strong>：</p>
-<h2 id="什么是-tagname"><a class="header" href="#什么是-tagname">什么是 @tagName？</a></h2>
+<h4 id="获取联合的标签名"><a class="header" href="#获取联合的标签名">获取联合的标签名</a></h4>
 <p><code>@tagName</code> 是一个内置函数，用于获取带标签联合当前变体的名称字符串。这在日志记录、调试和序列化时非常有用。</p>
 <p>使用 <code>@tagName</code> 获取当前联合变体的名称：</p>
 <pre><code class="language-zig">const std = @import("std");
@@ -2075,7 +2168,7 @@ const Result = union(enum) {
     failure: []const u8,
 };
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     const r1 = Result{ .success = 100 };
     const r2 = Result{ .failure = "连接失败" };
     
@@ -2090,7 +2183,7 @@ pub fn main(init: std.process.Init.Minimal) void {
     }
 }
 </code></pre>
-<h2 id="tagname-的实际应用"><a class="header" href="#tagname-的实际应用">@tagName 的实际应用</a></h2>
+<h5 id="tagname-的实际应用"><a class="header" href="#tagname-的实际应用">@tagName 的实际应用</a></h5>
 <pre><code class="language-zig">// 场景1：日志记录
 fn logResult(result: Result) void {
     std.log.info("Result type: {s}", .{@tagName(result)});
@@ -2116,7 +2209,6 @@ fn debugValue(val: Value) void {
     }
 }
 </code></pre>
-<hr>
 <h2 id="结构体struct"><a class="header" href="#结构体struct">结构体（struct）</a></h2>
 <h2 id="什么是结构体"><a class="header" href="#什么是结构体">什么是结构体？</a></h2>
 <p>结构体（Struct）是 Zig 中定义复合类型的主要方式，它将多个相关的数据字段组合成一个单一的逻辑单元。结构体可以包含字段（数据）和方法（行为），是 Zig 程序组织代码的基础构建块。</p>
@@ -2604,7 +2696,7 @@ pub fn main(init: std.process.Init.Minimal) void {
 </tbody>
 </table>
 </div>
-<h2 id="基本用法"><a class="header" href="#基本用法">基本用法</a></h2>
+<h2 id="基本用法-1"><a class="header" href="#基本用法-1">基本用法</a></h2>
 <pre><code class="language-zig">const std = @import("std");
 
 pub fn main(init: std.process.Init.Minimal) void {
