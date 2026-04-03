@@ -933,7 +933,7 @@ pub fn main(_: std.process.Init.Minimal) void {
     std.debug.print("  类型：[5]i32\n", .{});
     std.debug.print("  大小：{} 字节\n", .{@sizeOf(@TypeOf(array))});
     std.debug.print("  元素数量：{}\n", .{array.len});
-    std.debug.print("  地址：{any}\n\n", .{&array});
+    std.debug.print("  地址：{any}\n\n", .{&array[0]});
 
     const slice: []i32 = array[1..4];
 
@@ -962,7 +962,7 @@ pub fn main(_: std.process.Init.Minimal) void {
   类型：[5]i32
   大小：20 字节
   元素数量：5
-  地址：{ 1, 2, 3, 4, 5 }
+  地址：i32@16f0124d4
 
 切片信息：
   类型：[]i32

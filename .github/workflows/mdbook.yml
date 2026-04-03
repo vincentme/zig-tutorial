@@ -44,8 +44,8 @@ jobs:
       # 3. 安装指定版本的mdbook和mdbook-mermaid
       - name: 安装 mdBook 和 mdbook-mermaid
         run: |
-          cargo install --version ${MDBOOK_VERSION} mdbook
-          cargo install --version ${MDBOOK_MERMAID_VERSION} mdbook-mermaid
+          cargo install --version ${MDBOOK_VERSION} mdbook --force
+          cargo install --version ${MDBOOK_MERMAID_VERSION} mdbook-mermaid --force
 
       # 4. 配置并构建mdBook
       - name: Setup Pages
