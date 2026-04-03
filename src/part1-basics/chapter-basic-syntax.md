@@ -924,29 +924,29 @@ graph TB
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     var array: [5]i32 = .{ 1, 2, 3, 4, 5 };
-    
+
     std.debug.print("=== 数组 vs 切片内存布局 ===\n\n", .{});
-    
+
     std.debug.print("数组信息：\n", .{});
     std.debug.print("  类型：[5]i32\n", .{});
     std.debug.print("  大小：{} 字节\n", .{@sizeOf(@TypeOf(array))});
     std.debug.print("  元素数量：{}\n", .{array.len});
-    std.debug.print("  地址：{}\n\n", .{&array});
-    
+    std.debug.print("  地址：{any}\n\n", .{&array});
+
     const slice: []i32 = array[1..4];
-    
+
     std.debug.print("切片信息：\n", .{});
     std.debug.print("  类型：[]i32\n", .{});
     std.debug.print("  大小：{} 字节（胖指针）\n", .{@sizeOf(@TypeOf(slice))});
     std.debug.print("  长度：{}\n", .{slice.len});
-    std.debug.print("  指针：{}\n", .{slice.ptr});
-    std.debug.print("  数据地址：{}\n\n", .{&slice[0]});
-    
+    std.debug.print("  指针：{any}\n", .{slice.ptr});
+    std.debug.print("  数据地址：{any}\n\n", .{&slice[0]});
+
     std.debug.print("内存关系：\n", .{});
-    std.debug.print("  数组起始地址：{}\n", .{&array[0]});
-    std.debug.print("  切片起始地址：{}（偏移 1 个元素）\n", .{&slice[0]});
+    std.debug.print("  数组起始地址：{any}\n", .{&array[0]});
+    std.debug.print("  切片起始地址：{any}（偏移 1 个元素）\n", .{&slice[0]});
     std.debug.print("  地址差：{} 字节 = {} 个元素\n", .{
         @intFromPtr(&slice[0]) - @intFromPtr(&array[0]),
         (@intFromPtr(&slice[0]) - @intFromPtr(&array[0])) / @sizeOf(i32),
@@ -962,18 +962,18 @@ pub fn main(init: std.process.Init.Minimal) void {
   类型：[5]i32
   大小：20 字节
   元素数量：5
-  地址：0x7ff...
+  地址：{ 1, 2, 3, 4, 5 }
 
 切片信息：
   类型：[]i32
   大小：16 字节（胖指针）
   长度：3
-  指针：0x7ff...
-  数据地址：0x7ff...
+  指针：i32@16fc124d8
+  数据地址：i32@16fc124d8
 
 内存关系：
-  数组起始地址：0x7ff...
-  切片起始地址：0x7ff...（偏移 1 个元素）
+  数组起始地址：i32@16fc124d4
+  切片起始地址：i32@16fc124d8（偏移 1 个元素）
   地址差：4 字节 = 1 个元素
 ```
 
