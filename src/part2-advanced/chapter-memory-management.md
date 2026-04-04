@@ -454,6 +454,152 @@ pub fn main(init: std.process.Init.Minimal) !void {
 }
 ```
 
+## 分配器传递模式
+
+Zig 的内存管理遵循一个重要原则：**显式传递分配器**。这是避免内存泄漏、提高代码可测试性和灵活性的关键。
+
+### 核心原则
+
+1. **永远不要使用全局状态**：避免使用全局分配器
+2. **总是将分配器作为参数传递**：让调用者决定内存分配策略
+3. **明确所有权**：谁分配，谁释放
+
+### 为什么这样设计？
+
+- **灵活性**：调用者可以选择最合适的分配器（栈分配器、堆分配器、竞技场分配器等）
+- **可测试性**：测试时可以使用自定义分配器跟踪内存使用
+- **可组合性**：函数可以轻松组合，不会因为全局状态产生冲突
+- **性能**：可以根据场景选择最优的分配策略
+
+### 正确示例
+
+**方式1：函数参数传递**
+
+```zig
+const std = @import("std");
+
+// ✅ 正确：分配器作为参数传递
+fn processData(allocator: std.mem.Allocator, data: []const u8) ![]u8 {
+    const buffer = try allocator.alloc(u8, data.len);
+    @memcpy(buffer, data);
+    return buffer;
+}
+
+pub fn main(init: std.process.Init.Minimal) !void {
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
+    defer _ = gpa.deinit();
+    
+    const result = try processData(gpa.allocator(), "hello");
+    defer gpa.allocator().free(result);
+}
+```
+
+**方式2：结构体存储分配器**
+
+```zig
+const std = @import("std");
+
+// ✅ 正确：结构体存储分配器
+const DataProcessor = struct {
+    allocator: std.mem.Allocator,
+    
+    fn init(allocator: std.mem.Allocator) DataProcessor {
+        return .{ .allocator = allocator };
+    }
+    
+    fn process(self: *DataProcessor, data: []const u8) ![]u8 {
+        return try self.allocator.alloc(u8, data.len);
+    }
+};
+
+pub fn main(init: std.process.Init.Minimal) !void {
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
+    defer _ = gpa.deinit();
+    
+    var processor = DataProcessor.init(gpa.allocator());
+    const result = try processor.process("world");
+    defer gpa.allocator().free(result);
+}
+```
+
+### 错误示例
+
+**❌ 错误1：使用全局分配器**
+
+```zig
+const std = @import("std");
+
+// ❌ 错误：使用全局分配器
+fn processDataBad(data: []const u8) ![]u8 {
+    var buffer = try std.heap.page_allocator.alloc(u8, data.len);
+    @memcpy(buffer, data);
+    return buffer;
+}
+```
+
+**问题**：
+- 调用者无法选择分配器
+- 测试时无法跟踪内存使用
+- 可能与其他使用 page_allocator 的代码冲突
+
+**❌ 错误2：硬编码分配器**
+
+```zig
+// ❌ 错误：硬编码分配器
+fn processDataAlsoBad(data: []const u8) ![]u8 {
+    var gpa = std.heap.DebugAllocator(.{}){};
+    var buffer = try gpa.allocator().alloc(u8, data.len);
+    @memcpy(buffer, data);
+    return buffer;
+}
+```
+
+**问题**：
+- 每次调用都创建新的分配器，效率低下
+- 无法控制内存分配策略
+
+**❌ 错误3：使用静态变量**
+
+```zig
+// ❌ 错误：使用静态变量存储分配器
+var global_allocator: ?std.mem.Allocator = null;
+
+fn setAllocator(allocator: std.mem.Allocator) void {
+    global_allocator = allocator;
+}
+
+fn processDataWithGlobal(data: []const u8) ![]u8 {
+    const allocator = global_allocator orelse return error.NoAllocator;
+    return try allocator.alloc(u8, data.len);
+}
+```
+
+**问题**：
+- 全局状态导致测试困难
+- 并发问题
+- 隐式依赖，难以理解
+
+### 分配器传递的标准模式
+
+| 模式       | 使用场景       | 示例                                          |
+| ---------- | -------------- | --------------------------------------------- |
+| 函数参数   | 一次性操作     | `fn foo(allocator: Allocator) !void`          |
+| 结构体字段 | 长期存在的对象 | `const Foo = struct { allocator: Allocator }` |
+| 方法接收器 | 对象方法       | `fn method(self: *Self) !void`                |
+
+**选择指南**：
+- **函数参数**：适用于简单的、一次性的操作
+- **结构体字段**：适用于需要多次分配的对象
+- **方法接收器**：适用于对象的生命周期管理
+
+### 实践建议
+
+1. **始终显式传递分配器**：不要依赖全局状态
+2. **在 init 函数中接收分配器**：对象创建时确定分配策略
+3. **使用 defer 确保释放**：避免内存泄漏
+4. **文档化所有权**：明确谁负责释放内存
+5. **测试时使用跟踪分配器**：验证内存管理正确性
+
 ## 内存安全机制
 
 Zig 提供了一些内存安全机制：

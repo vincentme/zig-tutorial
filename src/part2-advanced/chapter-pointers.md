@@ -289,6 +289,220 @@ pub fn main(init: std.process.Init.Minimal) void {
 }
 ```
 
+## 从字段指针获取结构体指针
+
+使用 `@fieldParentPtr` 可以从字段的指针反推出整个结构体的指针。这是一个高级指针操作技巧，常用于实现侵入式数据结构。
+
+### 基本用法
+
+```zig
+const std = @import("std");
+
+const Creature = struct {
+    health: f32,
+    mana: u32,
+    stamina: u32,
+};
+
+fn boostMana(mana_ptr: *u32, amount: u32) void {
+    // 从 mana 字段的指针，反推出整个 Creature 的指针
+    const creature_ptr: *Creature = @fieldParentPtr("mana", mana_ptr);
+    creature_ptr.mana += amount;
+    
+    // 也可以修改其他字段
+    creature_ptr.health -= 1.0;
+}
+
+pub fn main(init: std.process.Init.Minimal) void {
+    var elf = Creature{
+        .health = 150.0,
+        .mana = 10,
+        .stamina = 100,
+    };
+    
+    std.debug.print("强化前 - 生命: {}, 法力: {}\n", .{ elf.health, elf.mana });
+    
+    boostMana(&elf.mana, 40);
+    
+    std.debug.print("强化后 - 生命: {}, 法力: {}\n", .{ elf.health, elf.mana });
+}
+```
+
+### 工作原理
+
+`@fieldParentPtr` 通过以下步骤工作：
+
+1. **编译期计算偏移量**：编译器知道字段在结构体中的偏移量
+2. **指针算术**：从字段指针减去偏移量，得到结构体起始地址
+3. **类型转换**：返回结构体指针类型
+
+```zig
+const std = @import("std");
+
+const Node = struct {
+    value: i32,
+    next: ?*Node,
+};
+
+pub fn main(init: std.process.Init.Minimal) void {
+    var node = Node{ .value = 42, .next = null };
+    
+    // 获取字段指针
+    const value_ptr: *i32 = &node.value;
+    
+    // 从字段指针获取结构体指针
+    const node_ptr: *Node = @fieldParentPtr("value", value_ptr);
+    
+    std.debug.print("节点值：{}\n", .{node_ptr.value});
+    std.debug.print("偏移量：{} 字节\n", .{@offsetOf(Node, "value")});
+}
+```
+
+### 实际应用：侵入式链表
+
+侵入式链表是 `@fieldParentPtr` 的经典应用场景：
+
+```zig
+const std = @import("std");
+
+// 侵入式链表节点（不包含数据，只包含指针）
+const IntrusiveNode = struct {
+    prev: ?*IntrusiveNode,
+    next: ?*IntrusiveNode,
+};
+
+// 实际数据结构
+const Task = struct {
+    node: IntrusiveNode,  // 嵌入链表节点
+    id: u32,
+    name: []const u8,
+};
+
+const TaskList = struct {
+    head: ?*IntrusiveNode,
+    
+    fn init() TaskList {
+        return .{ .head = null };
+    }
+    
+    fn push(self: *TaskList, task: *Task) void {
+        task.node.prev = null;
+        task.node.next = self.head;
+        if (self.head) |head| {
+            head.prev = &task.node;
+        }
+        self.head = &task.node;
+    }
+    
+    fn iterate(self: *TaskList) void {
+        var current = self.head;
+        while (current) |node| {
+            // 从链表节点指针获取 Task 指针
+            const task: *Task = @fieldParentPtr("node", node);
+            std.debug.print("任务 {}: {s}\n", .{ task.id, task.name });
+            current = node.next;
+        }
+    }
+};
+
+pub fn main(init: std.process.Init.Minimal) void {
+    var list = TaskList.init();
+    
+    var task1 = Task{ .node = .{ .prev = null, .next = null }, .id = 1, .name = "初始化" };
+    var task2 = Task{ .node = .{ .prev = null, .next = null }, .id = 2, .name = "处理数据" };
+    var task3 = Task{ .node = .{ .prev = null, .next = null }, .id = 3, .name = "清理资源" };
+    
+    list.push(&task1);
+    list.push(&task2);
+    list.push(&task3);
+    
+    list.iterate();
+}
+```
+
+### 安全性注意事项
+
+**1. 必须确保字段指针有效**
+
+```zig
+const std = @import("std");
+
+const Point = struct { x: f32, y: f32 };
+
+pub fn main(init: std.process.Init.Minimal) void {
+    var point = Point{ .x = 1.0, .y = 2.0 };
+    
+    // ✅ 正确：字段指针有效
+    const x_ptr = &point.x;
+    const point_ptr: *Point = @fieldParentPtr("x", x_ptr);
+    std.debug.print("点：({}, {})\n", .{ point_ptr.x, point_ptr.y });
+    
+    // ❌ 危险：野指针会导致未定义行为
+    // var dangling: *f32 = undefined;
+    // const bad_ptr: *Point = @fieldParentPtr("x", dangling);
+}
+```
+
+**2. 字段名必须在编译期已知**
+
+```zig
+const std = @import("std");
+
+const Point = struct { x: f32, y: f32 };
+
+pub fn main(init: std.process.Init.Minimal) void {
+    var point = Point{ .x = 1.0, .y = 2.0 };
+    
+    // ✅ 正确：字段名是编译期常量
+    const ptr1: *Point = @fieldParentPtr("x", &point.x);
+    
+    // ❌ 错误：字段名不能是运行时变量
+    // const field_name = "x";
+    // const ptr2: *Point = @fieldParentPtr(field_name, &point.x);
+}
+```
+
+**3. 指针必须指向结构体的字段**
+
+```zig
+const std = @import("std");
+
+const Point = struct { x: f32, y: f32 };
+
+pub fn main(init: std.process.Init.Minimal) void {
+    var point = Point{ .x = 1.0, .y = 2.0 };
+    var standalone: f32 = 3.0;
+    
+    // ✅ 正确：指向结构体字段
+    const ptr1: *Point = @fieldParentPtr("x", &point.x);
+    
+    // ❌ 错误：指向独立变量，会导致未定义行为
+    // const ptr2: *Point = @fieldParentPtr("x", &standalone);
+}
+```
+
+### 应用场景
+
+| 场景               | 说明                         | 优势           |
+| ------------------ | ---------------------------- | -------------- |
+| **侵入式数据结构** | 链表、树、图等数据结构       | 零额外内存分配 |
+| **回调函数上下文** | 将用户数据传递给回调函数     | 避免全局变量   |
+| **内存池管理**     | 从对象指针获取内存池元数据   | 高效的内存管理 |
+| **事件系统**       | 从事件处理器指针获取对象指针 | 灵活的事件处理 |
+
+### 性能考虑
+
+- **编译期计算**：偏移量在编译期计算，运行时无开销
+- **指针算术**：只是简单的指针减法，非常高效
+- **类型安全**：编译器确保类型正确
+
+### 最佳实践
+
+1. **优先使用更简单的方法**：如果能直接传递结构体指针，就不要使用 `@fieldParentPtr`
+2. **文档化使用**：明确说明为什么需要使用这个技巧
+3. **确保指针有效**：只在确定指针有效的情况下使用
+4. **用于特定场景**：主要用于侵入式数据结构等高级场景
+
 ## Alignment 对齐系统
 
 # 什么是 Alignment？

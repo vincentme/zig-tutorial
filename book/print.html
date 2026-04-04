@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-b54cf221.js";
+            window.path_to_searchindex_js = "searchindex-85eb4332.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-5fb88d48.js"></script>
@@ -472,7 +472,9 @@ zig build-exe src/main.zig
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="draft基础语法"><a class="header" href="#draft基础语法">【draft】基础语法</a></h1>
 <p>本章将介绍Zig的基本语法元素，包括变量声明、数据类型、数组、切片、枚举、联合和结构体。这些是构建Zig程序的基础。</p>
-<h2 id="变量声明"><a class="header" href="#变量声明">变量声明</a></h2>
+<h2 id="zig-编程基础"><a class="header" href="#zig-编程基础">Zig 编程基础</a></h2>
+<p>本节介绍 Zig 编程的基础概念，包括变量声明、命名规范、作用域规则等。这些是编写 Zig 程序的基本要素。</p>
+<h3 id="变量声明"><a class="header" href="#变量声明">变量声明</a></h3>
 <h3 id="类型系统特点"><a class="header" href="#类型系统特点">类型系统特点</a></h3>
 <p>Zig采用强类型系统，但支持类型推断。与C/C++不同，Zig明确区分：</p>
 <ul>
@@ -515,9 +517,9 @@ pub fn main(init: std.process.Init.Minimal) void {
 <p><strong>预期输出：</strong></p>
 <pre><code>constant: 42, mutable: 30
 </code></pre>
-<h2 id="命名规范"><a class="header" href="#命名规范">命名规范</a></h2>
+<h3 id="命名规范"><a class="header" href="#命名规范">命名规范</a></h3>
 <p>Zig 遵循明确的命名规范，确保代码风格一致且易于理解。</p>
-<h3 id="变量命名"><a class="header" href="#变量命名">变量命名</a></h3>
+<h4 id="变量命名"><a class="header" href="#变量命名">变量命名</a></h4>
 <p><strong>蛇形命名法（snake_case）</strong>：用于变量名</p>
 <pre><code class="language-zig">// ✅ 正确示例
 var user_name: []const u8 = undefined;
@@ -528,7 +530,7 @@ var is_active: bool = false;
 var userName: []const u8 = undefined;
 var CurrentScore: i32 = 0;
 </code></pre>
-<h3 id="函数命名"><a class="header" href="#函数命名">函数命名</a></h3>
+<h4 id="函数命名"><a class="header" href="#函数命名">函数命名</a></h4>
 <p><strong>驼峰命名法（camelCase）</strong>：用于函数名</p>
 <pre><code class="language-zig">// ✅ 正确示例
 fn calculateTotal() i32 { }
@@ -539,7 +541,7 @@ fn isValidEmail(email: []const u8) bool { }
 fn calculate_total() i32 { }      // 错误：函数应使用驼峰命名
 fn CalculateTotal() i32 { }       // 错误：首字母应小写
 </code></pre>
-<h3 id="类型命名"><a class="header" href="#类型命名">类型命名</a></h3>
+<h4 id="类型命名"><a class="header" href="#类型命名">类型命名</a></h4>
 <ul>
 <li><strong>结构体、枚举、联合的类型名</strong>使用 PascalCase</li>
 <li><strong>枚举成员名</strong>使用 PascalCase</li>
@@ -597,7 +599,7 @@ const Status = enum {
     in_progress,    // 错误：枚举成员应使用帕斯卡命名
 };
 </code></pre>
-<h3 id="常量命名"><a class="header" href="#常量命名">常量命名</a></h3>
+<h4 id="常量命名"><a class="header" href="#常量命名">常量命名</a></h4>
 <p><strong>蛇形命名（snake_case）</strong>：用于常量，遵循既有约定时使用全大写</p>
 <pre><code class="language-zig">// ✅ 正确示例 - 常量使用 snake_case
 const max_size = 1024;
@@ -615,7 +617,7 @@ const SIGINT = 2;                // 信号常量
 const maxSize = 1024;            // 错误：应使用蛇形命名
 const MAX_SIZE = 1024;           // 不推荐：普通常量不需要全大写
 </code></pre>
-<h3 id="泛型类型参数命名"><a class="header" href="#泛型类型参数命名">泛型类型参数命名</a></h3>
+<h4 id="泛型类型参数命名"><a class="header" href="#泛型类型参数命名">泛型类型参数命名</a></h4>
 <p>泛型参数使用<strong>单个大写字母或描述性名称</strong>。</p>
 <pre><code class="language-zig">// ✅ 正确示例 - 单个字母
 fn Stack(comptime T: type) type {
@@ -642,7 +644,7 @@ fn Queue(comptime Element: type) type {
 fn Stack(comptime t: type) type { }  // 错误：类型参数应大写
 fn Stack(comptime TYPE: type) type { } // 错误：不应全大写
 </code></pre>
-<h3 id="命名规范总结表"><a class="header" href="#命名规范总结表">命名规范总结表</a></h3>
+<h4 id="命名规范总结表"><a class="header" href="#命名规范总结表">命名规范总结表</a></h4>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -660,7 +662,7 @@ fn Stack(comptime TYPE: type) type { } // 错误：不应全大写
 </tbody>
 </table>
 </div>
-<h3 id="命名最佳实践"><a class="header" href="#命名最佳实践">命名最佳实践</a></h3>
+<h4 id="命名最佳实践"><a class="header" href="#命名最佳实践">命名最佳实践</a></h4>
 <ol>
 <li>
 <p><strong>使用有意义的名称</strong>：名称应清楚表达用途</p>
@@ -709,7 +711,7 @@ fn data(value: i32) void { }   // 含义不明确
 </code></pre>
 </li>
 </ol>
-<h2 id="变量遮蔽规则"><a class="header" href="#变量遮蔽规则">变量遮蔽规则</a></h2>
+<h3 id="变量遮蔽规则"><a class="header" href="#变量遮蔽规则">变量遮蔽规则</a></h3>
 <p>Zig <strong>完全禁止</strong>变量遮蔽（Shadowing）。标识符永远不允许使用相同的名称来“隐藏“其他标识符。这意味着：</p>
 <ul>
 <li><strong>嵌套作用域不能声明同名变量</strong>：内部作用域不能重新声明外部作用域已有的变量名</li>
@@ -745,7 +747,7 @@ test "separate scopes" {
 <li>编译器能够更早发现潜在的命名冲突</li>
 <li>一个标识符在其定义的作用域内始终保持相同的含义</li>
 </ul>
-<h2 id="解包赋值"><a class="header" href="#解包赋值">解包赋值</a></h2>
+<h3 id="解包赋值"><a class="header" href="#解包赋值">解包赋值</a></h3>
 <p>Zig 支持解包赋值，可以从元组、向量或数组中一次性提取多个值：</p>
 <pre><code class="language-zig">const std = @import("std");
 
@@ -787,115 +789,21 @@ pub fn main(_: std.process.Init.Minimal) void {
 数组解包：p=4, q=5, r=6
 混合声明：10, 25, 30
 </code></pre>
-<h2 id="分配器传递模式"><a class="header" href="#分配器传递模式">分配器传递模式</a></h2>
-<p>Zig 的内存管理遵循一个重要原则：<strong>显式传递分配器</strong>。这意味着：</p>
+<h3 id="内存管理原则"><a class="header" href="#内存管理原则">内存管理原则</a></h3>
+<p>Zig 采用手动内存管理，没有垃圾回收器。理解内存管理原则对编写高效、安全的 Zig 程序至关重要。</p>
+<p><strong>核心原则</strong>：</p>
 <ol>
-<li><strong>永远不要使用全局状态</strong>：避免使用全局分配器</li>
-<li><strong>总是将分配器作为参数传递</strong>：让调用者决定内存分配策略</li>
-<li><strong>明确所有权</strong>：谁分配，谁释放</li>
+<li><strong>显式分配</strong>：明确指定内存分配的位置和方式</li>
+<li><strong>明确所有权</strong>：谁分配内存，谁负责释放</li>
+<li><strong>避免全局状态</strong>：分配器作为参数传递，而不是使用全局变量</li>
 </ol>
 <p><strong>为什么这样设计？</strong></p>
-<ol>
+<ul>
 <li><strong>灵活性</strong>：调用者可以选择最合适的分配器（栈分配器、堆分配器、竞技场分配器等）</li>
 <li><strong>可测试性</strong>：测试时可以使用自定义分配器跟踪内存使用</li>
 <li><strong>可组合性</strong>：函数可以轻松组合，不会因为全局状态产生冲突</li>
 <li><strong>性能</strong>：可以根据场景选择最优的分配策略</li>
-</ol>
-<p><strong>正确示例</strong>：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-// ✅ 正确：分配器作为参数传递
-fn processData(allocator: std.mem.Allocator, data: []const u8) ![]u8 {
-    // 使用传入的分配器
-    const buffer = try allocator.alloc(u8, data.len);
-    @memcpy(buffer, data);
-    return buffer;
-}
-
-// ✅ 正确：结构体存储分配器
-const DataProcessor = struct {
-    allocator: std.mem.Allocator,
-    
-    fn init(allocator: std.mem.Allocator) DataProcessor {
-        return .{
-            .allocator = allocator,
-        };
-    }
-    
-    fn process(self: *DataProcessor, data: []const u8) ![]u8 {
-        // 使用存储的分配器
-        return try self.allocator.alloc(u8, data.len);
-    }
-};
-
-pub fn main(init: std.process.Init.Minimal) !void {
-    var gpa: std.heap.DebugAllocator(.{}) = .init;
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
-    
-    // 传递分配器
-    const result = try processData(allocator, "hello");
-    defer allocator.free(result);
-    
-    // 或者使用结构体
-    var processor = DataProcessor.init(allocator);
-    const result2 = try processor.process("world");
-    defer allocator.free(result2);
-}
-</code></pre>
-<p><strong>错误示例</strong>：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-// ❌ 错误：使用全局分配器
-fn processDataBad(data: []const u8) ![]u8 {
-    // 不要这样做！
-    var buffer = try std.heap.page_allocator.alloc(u8, data.len);
-    @memcpy(buffer, data);
-    return buffer;
-}
-
-// ❌ 错误：硬编码分配器
-fn processDataAlsoBad(data: []const u8) ![]u8 {
-    var gpa = std.heap.DebugAllocator(.{}){};
-    // 每次调用都创建新的分配器，效率低下
-    var buffer = try gpa.allocator().alloc(u8, data.len);
-    @memcpy(buffer, data);
-    return buffer;
-}
-
-// ❌ 错误：使用静态变量存储分配器
-var global_allocator: ?std.mem.Allocator = null;
-
-fn setAllocator(allocator: std.mem.Allocator) void {
-    global_allocator = allocator;
-}
-
-fn processDataWithGlobal(data: []const u8) ![]u8 {
-    // 全局状态会导致测试困难和并发问题
-    const allocator = global_allocator orelse return error.NoAllocator;
-    return try allocator.alloc(u8, data.len);
-}
-</code></pre>
-<p><strong>分配器传递的标准模式</strong>：</p>
-<pre><code class="language-zig">// 1. 函数参数传递
-fn function(allocator: std.mem.Allocator, ...) !ReturnType {
-    // 使用 allocator
-}
-
-// 2. 结构体存储
-const MyStruct = struct {
-    allocator: std.mem.Allocator,
-    
-    fn init(allocator: std.mem.Allocator) MyStruct {
-        return .{ .allocator = allocator };
-    }
-};
-
-// 3. 方法接收器
-fn method(self: *MyStruct, ...) !ReturnType {
-    // 使用 self.allocator
-}
-</code></pre>
+</ul>
 <p><strong>常见分配器类型</strong>：</p>
 <div class="table-wrapper">
 <table>
@@ -911,7 +819,7 @@ fn method(self: *MyStruct, ...) !ReturnType {
 </table>
 </div>
 <blockquote>
-<p>📖 <strong>相关章节</strong>：内存管理的详细讲解请参考<a href="#draft内存管理模型">内存管理模型</a>。</p>
+<p>📖 <strong>深入学习</strong>：内存管理的详细实践（包括分配器传递模式、自定义分配器）请参考<a href="#draft内存管理模型">内存管理模型</a>。</p>
 </blockquote>
 <h2 id="基本数据类型"><a class="header" href="#基本数据类型">基本数据类型</a></h2>
 <p><strong>整数类型：</strong></p>
@@ -957,15 +865,15 @@ pub fn main(init: std.process.Init.Minimal) void {
 <pre><code class="language-zig">const bool_val: bool = true;
 const char_val: u8 = 'A'; // 字符字面量是 u8 类型
 </code></pre>
-<h2 id="类型转换"><a class="header" href="#类型转换">类型转换</a></h2>
-<h3 id="为什么需要显式类型转换"><a class="header" href="#为什么需要显式类型转换">为什么需要显式类型转换？</a></h3>
+<h3 id="基本类型转换"><a class="header" href="#基本类型转换">基本类型转换</a></h3>
+<h4 id="为什么需要显式类型转换"><a class="header" href="#为什么需要显式类型转换">为什么需要显式类型转换？</a></h4>
 <p>Zig 的设计哲学是“显式优于隐式“，因此不进行隐式类型转换。这带来以下好处：</p>
 <ol>
 <li><strong>避免精度丢失</strong>：所有类型转换都是明确的，不会意外丢失数据</li>
 <li><strong>提高代码可读性</strong>：类型转换意图清晰可见</li>
 <li><strong>减少运行时错误</strong>：编译期就能发现潜在的类型问题</li>
 </ol>
-<h3 id="zig-的类型转换策略"><a class="header" href="#zig-的类型转换策略">Zig 的类型转换策略</a></h3>
+<h4 id="基本类型转换策略"><a class="header" href="#基本类型转换策略">基本类型转换策略</a></h4>
 <p>Zig 提供了多种类型转换方式，每种都有特定的用途和安全保证：</p>
 <div class="table-wrapper">
 <table>
@@ -1059,7 +967,7 @@ pub fn main(_: std.process.Init.Minimal) void {
 <li><code>@intCast</code> 用于<strong>安全转换</strong>：值必须在目标类型范围内，否则 panic</li>
 <li><code>@truncate</code> 用于<strong>不安全的截断</strong>：直接丢弃高位，不检查范围</li>
 </ul>
-<h3 id="最佳实践"><a class="header" href="#最佳实践">最佳实践</a></h3>
+<h4 id="最佳实践"><a class="header" href="#最佳实践">最佳实践</a></h4>
 <ol>
 <li><strong>优先使用安全转换</strong>：<code>@intCast</code>、<code>@floatFromInt</code> 等有运行时检查的转换</li>
 <li><strong>明确不安全操作</strong>：使用 <code>@truncate</code>、<code>@bitCast</code> 时添加注释说明意图</li>
@@ -2210,16 +2118,16 @@ fn debugValue(val: Value) void {
 }
 </code></pre>
 <h2 id="结构体struct"><a class="header" href="#结构体struct">结构体（struct）</a></h2>
-<h2 id="什么是结构体"><a class="header" href="#什么是结构体">什么是结构体？</a></h2>
+<h3 id="什么是结构体"><a class="header" href="#什么是结构体">什么是结构体？</a></h3>
 <p>结构体（Struct）是 Zig 中定义复合类型的主要方式，它将多个相关的数据字段组合成一个单一的逻辑单元。结构体可以包含字段（数据）和方法（行为），是 Zig 程序组织代码的基础构建块。</p>
-<h2 id="为什么需要结构体"><a class="header" href="#为什么需要结构体">为什么需要结构体？</a></h2>
+<h3 id="为什么需要结构体"><a class="header" href="#为什么需要结构体">为什么需要结构体？</a></h3>
 <ol>
 <li><strong>数据封装</strong>：将相关的数据组合在一起，提高代码可读性</li>
 <li><strong>类型抽象</strong>：创建自定义类型，表达业务领域概念</li>
 <li><strong>代码复用</strong>：通过方法实现行为的复用</li>
 <li><strong>内存控制</strong>：精确控制数据的内存布局</li>
 </ol>
-<h2 id="zig-结构体的特点"><a class="header" href="#zig-结构体的特点">Zig 结构体的特点</a></h2>
+<h3 id="zig-结构体的特点"><a class="header" href="#zig-结构体的特点">Zig 结构体的特点</a></h3>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -2234,8 +2142,7 @@ fn debugValue(val: Value) void {
 </tbody>
 </table>
 </div>
-<p><strong>基本结构体：</strong></p>
-<h2 id="结构体的核心概念"><a class="header" href="#结构体的核心概念">结构体的核心概念</a></h2>
+<h3 id="结构体的核心概念"><a class="header" href="#结构体的核心概念">结构体的核心概念</a></h3>
 <p>结构体由字段和方法组成：</p>
 <ul>
 <li><strong>字段</strong>：存储数据的变量，可以有默认值</li>
@@ -2278,7 +2185,7 @@ const Rectangle = struct {
     }
 };
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     // 创建结构体实例：使用 .{} 语法
     var rect = Rectangle{
         .width = 10.0,
@@ -2297,7 +2204,12 @@ pub fn main(init: std.process.Init.Minimal) void {
     std.debug.print("正方形面积: {d:.2}\n", .{sq.area()});
 }
 </code></pre>
-<h2 id="结构体的实际应用场景"><a class="header" href="#结构体的实际应用场景">结构体的实际应用场景</a></h2>
+<p>预期输出：</p>
+<pre><code>面积: 50.00
+放大后面积: 200.00
+正方形面积: 16.00
+</code></pre>
+<h3 id="结构体的实际应用场景"><a class="header" href="#结构体的实际应用场景">结构体的实际应用场景</a></h3>
 <pre><code class="language-zig">// 场景1：配置管理
 const Config = struct {
     host: []const u8 = "localhost",
@@ -2342,68 +2254,38 @@ const File = struct {
     }
 };
 </code></pre>
-<p><strong>泛型结构体：</strong></p>
-<h2 id="什么是泛型结构体"><a class="header" href="#什么是泛型结构体">什么是泛型结构体？</a></h2>
-<p>泛型结构体允许创建类型参数化的结构体，在编译时生成具体类型。Zig 使用 <code>comptime</code> 参数实现泛型，这是一种编译期多态。</p>
-<blockquote>
-<p>📖 <strong>相关章节</strong>：更多泛型编程技巧请参考<a href="#draft泛型编程">泛型编程</a>，编译期计算的深入讲解请参考<a href="#draft编译期计算与元编程">编译期计算与元编程</a>。</p>
-</blockquote>
-<h2 id="为什么使用泛型"><a class="header" href="#为什么使用泛型">为什么使用泛型？</a></h2>
-<ol>
-<li><strong>代码复用</strong>：同一套代码适用于多种类型</li>
-<li><strong>类型安全</strong>：编译期检查，避免运行时错误</li>
-<li><strong>性能优化</strong>：编译期特化，无运行时开销</li>
-</ol>
-<pre><code class="language-zig">const std = @import("std");
-
-// 使用 comptime 参数创建泛型结构体
-// 这是一个返回结构体类型的函数
-fn Vector(comptime T: type) type {
-    return struct {
-        x: T,
-        y: T,
-        z: T,
-
-        // 使用 @This() 获取当前类型
-        const Self = @This();
-
-        // 泛型方法
-        fn add(self: Self, other: Self) Self {
-            return Self{
-                .x = self.x + other.x,
-                .y = self.y + other.y,
-                .z = self.z + other.z,
-            };
-        }
-
-        fn dot(self: Self, other: Self) T {
-            return self.x * other.x + self.y * other.y + self.z * other.z;
-        }
-    };
-}
-
-pub fn main(init: std.process.Init.Minimal) void {
-    // 创建 f32 类型的向量
-    // Vector(f32) 在编译时生成具体类型
-    const Vec3f = Vector(f32);
-    const v1 = Vec3f{ .x = 1.0, .y = 2.0, .z = 3.0 };
-    const v2 = Vec3f{ .x = 4.0, .y = 5.0, .z = 6.0 };
-
-    const v3 = v1.add(v2);
-    std.debug.print("v1 + v2 = ({d:.1}, {d:.1}, {d:.1})\n", .{ v3.x, v3.y, v3.z });
-    std.debug.print("v1 · v2 = {d:.1}\n", .{v1.dot(v2)});
-
-    // 创建 i32 类型的向量
-    // Vector(i32) 生成另一个具体类型
-    const Vec3i = Vector(i32);
-    const vi1 = Vec3i{ .x = 1, .y = 2, .z = 3 };
-    const vi2 = Vec3i{ .x = 4, .y = 5, .z = 6 };
-    std.debug.print("整数向量点积: {d}\n", .{vi1.dot(vi2)});
-}
-</code></pre>
-<p><strong>嵌套结构体：</strong></p>
-<h2 id="什么是嵌套结构体"><a class="header" href="#什么是嵌套结构体">什么是嵌套结构体？</a></h2>
+<h3 id="嵌套结构体"><a class="header" href="#嵌套结构体">嵌套结构体</a></h3>
 <p>嵌套结构体是指一个结构体包含另一个结构体作为字段，用于表达复杂的数据层次关系。</p>
+<h4 id="为什么使用嵌套结构体"><a class="header" href="#为什么使用嵌套结构体">为什么使用嵌套结构体？</a></h4>
+<ol>
+<li><strong>逻辑分组</strong>：将相关的数据组织在一起，形成清晰的数据结构</li>
+<li><strong>类型抽象</strong>：将复杂的概念抽象为独立的类型组合和嵌套，提高代码可读性</li>
+<li><strong>组合关系</strong>：表达“整体-部分“的关系，内层结构体是外层的一部分</li>
+</ol>
+<p><strong>示例对比</strong>：</p>
+<pre><code class="language-zig">// ❌ 不使用嵌套：字段分散，难以理解
+const Person = struct {
+    name: []const u8,
+    age: u32,
+    street: []const u8,      // 地址字段分散
+    city: []const u8,
+    zip_code: []const u8,
+};
+
+// ✅ 使用嵌套：逻辑清晰，地址是一个整体
+const Address = struct {
+    street: []const u8,
+    city: []const u8,
+    zip_code: []const u8,
+};
+
+const Person = struct {
+    name: []const u8,
+    age: u32,
+    address: Address,  // 地址作为一个整体
+};
+</code></pre>
+<h4 id="基本用法-1"><a class="header" href="#基本用法-1">基本用法</a></h4>
 <pre><code class="language-zig">const std = @import("std");
 
 // 内层结构体
@@ -2429,7 +2311,7 @@ const Person = struct {
     }
 };
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     // 创建嵌套结构体实例
     const person = Person{
         .name = "张三",
@@ -2444,53 +2326,23 @@ pub fn main(init: std.process.Init.Minimal) void {
     person.describe();
 }
 </code></pre>
-<p><strong>结构体布局：</strong></p>
-<h2 id="为什么需要控制结构体布局"><a class="header" href="#为什么需要控制结构体布局">为什么需要控制结构体布局？</a></h2>
-<p>不同的布局方式影响：</p>
+<p>预期输出：</p>
+<pre><code>张三, 30 岁
+地址: 中山路 123 号, 北京, 100000
+</code></pre>
+<h3 id="结构体布局"><a class="header" href="#结构体布局">结构体布局</a></h3>
+<p>结构体布局（Struct Layout）是指结构体字段在内存中的排列方式，包括字段的顺序、对齐方式和填充字节。Zig 提供了三种布局方式，让开发者可以根据需求在性能、内存效率和兼容性之间做出选择。</p>
+<p>结构体不同的布局方式影响：</p>
 <ul>
 <li><strong>内存大小</strong>：packed 结构体更紧凑</li>
 <li><strong>对齐方式</strong>：影响访问效率和兼容性</li>
 <li><strong>C 兼容性</strong>：extern 布局与 C 语言兼容</li>
 </ul>
-<pre><code class="language-zig">const std = @import("std");
-
-// 默认布局（自动优化）
-// 编译器会重新排列字段以优化对齐
-const AutoLayout = struct {
-    a: u8,   // 1 字节
-    b: u32,  // 4 字节（需要 4 字节对齐）
-    c: u16,  // 2 字节
-    // 编译器可能会插入填充字节
-};
-
-// packed 布局：紧凑存储，无填充
-// 字段按声明顺序紧密排列
-const PackedStruct = packed struct {
-    a: u8,   // 8 位
-    b: u32,  // 32 位
-    c: u16,  // 16 位
-    // 总共 56 位 = 7 字节
-};
-
-// extern 布局：与 C 语言兼容
-// 遵循 C 的 ABI 规则
-const ExternStruct = extern struct {
-    a: u8,
-    b: u32,
-    c: u16,
-};
-
-pub fn main(init: std.process.Init.Minimal) void {
-    std.debug.print("AutoLayout 大小: {} 字节\n", .{@sizeOf(AutoLayout)});
-    std.debug.print("PackedStruct 大小: {} 字节\n", .{@sizeOf(PackedStruct)});
-    std.debug.print("ExternStruct 大小: {} 字节\n", .{@sizeOf(ExternStruct)});
-}
-</code></pre>
-<h2 id="布局选择指南"><a class="header" href="#布局选择指南">布局选择指南</a></h2>
+<p><strong>布局选择指南</strong></p>
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th>布局类型</th><th>使用场景</th><th>特点</th></tr>
+<tr><th>布局方式</th><th>使用场景</th><th>特点</th></tr>
 </thead>
 <tbody>
 <tr><td>默认</td><td>大多数情况</td><td>编译器优化，可能重排字段</td></tr>
@@ -2499,56 +2351,100 @@ pub fn main(init: std.process.Init.Minimal) void {
 </tbody>
 </table>
 </div>
-<h2 id="匿名结构体与-this"><a class="header" href="#匿名结构体与-this">匿名结构体与 @This</a></h2>
-<p>在泛型结构体中，可以使用 <code>@This()</code> 获取当前类型：</p>
 <pre><code class="language-zig">const std = @import("std");
 
-// 泛型链表
-fn List(comptime T: type) type {
-    return struct {
-        const Self = @This(); // 获取当前结构体类型
-        
-        items: []T,
-        allocator: std.mem.Allocator,
-        
-        fn init(allocator: std.mem.Allocator) Self {
-            return .{
-                .items = &amp;[_]T{},
-                .allocator = allocator,
-            };
-        }
-        
-        fn deinit(self: *Self) void {
-            self.allocator.free(self.items);
-        }
-        
-        fn length(self: Self) usize {
-            return self.items.len;
-        }
-        
-        fn append(self: *Self, item: T) !void {
-            const new_items = try self.allocator.realloc(self.items, self.items.len + 1);
-            new_items[new_items.len - 1] = item;
-            self.items = new_items;
-        }
-    };
-}
+// 编译器可重排字段优化布局: b(4) + c(2) + a(1) + pad(1) = 8字节
+const AutoLayout = struct {
+    a: u8,
+    b: u32,
+    c: u16,
+};
 
-pub fn main(init: std.process.Init.Minimal) !void {
-    var gpa: std.heap.DebugAllocator(.{}) = .init;
-    defer _ = gpa.deinit();
-    
-    var int_list = List(i32).init(gpa.allocator());
-    defer int_list.deinit();
-    
-    try int_list.append(10);
-    try int_list.append(20);
-    
-    std.debug.print("列表长度: {}\n", .{int_list.length()});
+// @bitSizeOf=56位(7字节), 但@sizeOf需满足u32的4字节对齐 → 8字节
+const PackedStruct = packed struct {
+    a: u8,
+    b: u32,
+    c: u16,
+};
+
+// C ABI按声明顺序: a(1)+pad(3)+b(4)+c(2)+pad(2) = 12字节
+const ExternStruct = extern struct {
+    a: u8,
+    b: u32,
+    c: u16,
+};
+
+pub fn main(_: std.process.Init.Minimal) void {
+    std.debug.print("AutoLayout 大小: {} 字节\n", .{@sizeOf(AutoLayout)});
+    std.debug.print("PackedStruct 大小: {} 字节\n", .{@sizeOf(PackedStruct)});
+    std.debug.print("ExternStruct 大小: {} 字节\n", .{@sizeOf(ExternStruct)});
 }
 </code></pre>
-<h2 id="结果位置语义"><a class="header" href="#结果位置语义">结果位置语义</a></h2>
-<p>Zig 的“结果位置语义“允许在类型可推断时简写结构体初始化：</p>
+<p>预期输出：</p>
+<pre><code>AutoLayout 大小: 8 字节
+PackedStruct 大小: 8 字节
+ExternStruct 大小: 12 字节
+</code></pre>
+<h3 id="匿名结构体"><a class="header" href="#匿名结构体">匿名结构体</a></h3>
+<p>匿名结构体是没有类型名称的结构体，使用 <code>.{}</code> 语法直接创建实例，类型由编译器推断。</p>
+<h4 id="匿名结构体-vs-命名结构体"><a class="header" href="#匿名结构体-vs-命名结构体">匿名结构体 vs 命名结构体</a></h4>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>特性</th><th>命名结构体</th><th>匿名结构体</th></tr>
+</thead>
+<tbody>
+<tr><td>类型名称</td><td>有（如 <code>Point</code>）</td><td>无</td></tr>
+<tr><td>定义方式</td><td><code>const Name = struct {}</code></td><td>直接使用 <code>.{}</code></td></tr>
+<tr><td>可复用性</td><td>高，可在多处使用</td><td>低，通常一次性使用</td></tr>
+<tr><td>类型检查</td><td>编译期检查</td><td>编译期推断</td></tr>
+</tbody>
+</table>
+</div>
+<h4 id="匿名结构体-vs-元组"><a class="header" href="#匿名结构体-vs-元组">匿名结构体 vs 元组</a></h4>
+<ul>
+<li><strong>匿名结构体</strong>：字段有名称，如 <code>.{ .x = 1, .y = 2 }</code></li>
+<li><strong>元组</strong>：字段无名称，用索引访问，如 <code>.{ 1, 2 }</code></li>
+</ul>
+<h4 id="基本用法-2"><a class="header" href="#基本用法-2">基本用法</a></h4>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(_: std.process.Init.Minimal) void {
+    // 匿名结构体：字段有名称
+    const point = .{ .x = 10, .y = 20 };
+    std.debug.print("点坐标: ({}, {})\n", .{ point.x, point.y });
+
+    // 类型推断：编译器自动推断字段类型
+    const person = .{ .name = "Alice", .age = 30 };
+    std.debug.print("{s} 的年龄是 {}\n", .{ person.name, person.age });
+}
+</code></pre>
+<h3 id="结果位置语义"><a class="header" href="#结果位置语义">结果位置语义</a></h3>
+<p>Zig 的“结果位置语义“（Result Location Semantics）是一种类型推断机制，当目标类型已知时，可以省略匿名结构体的类型名。</p>
+<h4 id="核心概念"><a class="header" href="#核心概念">核心概念</a></h4>
+<p><strong>工作原理</strong>：编译器根据上下文（变量类型、函数参数、返回值）推断匿名结构体的类型。</p>
+<p><strong>对比示例</strong>：</p>
+<pre><code class="language-zig">// ❌ 冗长：类型重复出现
+const point: Point = Point{ .x = 1.0, .y = 2.0 };
+
+// ✅ 简洁：结果位置语义
+const point: Point = .{ .x = 1.0, .y = 2.0 };
+</code></pre>
+<h4 id="适用场景"><a class="header" href="#适用场景">适用场景</a></h4>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>场景</th><th>说明</th><th>示例</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>变量声明</strong></td><td>类型注解提供了结果位置</td><td><code>const p: Point = .{ .x = 1.0, .y = 2.0 };</code></td></tr>
+<tr><td><strong>函数参数</strong></td><td>函数签名提供了结果位置</td><td><code>printPoint(.{ .x = 1.0, .y = 2.0 });</code></td></tr>
+<tr><td><strong>返回值</strong></td><td>返回类型提供了结果位置</td><td><code>return .{ .x = 0.0, .y = 0.0 };</code></td></tr>
+<tr><td><strong>嵌套结构体</strong></td><td>外层字段的类型已知，内层可以省略</td><td><code>.top_left = .{ .x = 0.0, .y = 0.0 }</code></td></tr>
+</tbody>
+</table>
+</div>
+<h4 id="完整示例"><a class="header" href="#完整示例">完整示例</a></h4>
 <pre><code class="language-zig">const std = @import("std");
 
 const Point = struct {
@@ -2561,26 +2457,28 @@ const Rectangle = struct {
     bottom_right: Point,
 };
 
-pub fn main(init: std.process.Init.Minimal) void {
+fn printPoint(p: Point) void {
+    std.debug.print("Point({}, {})\n", .{ p.x, p.y });
+}
+
+pub fn main(_: std.process.Init.Minimal) void {
     // 完整写法
     const p1 = Point{ .x = 1.0, .y = 2.0 };
-    
+    printPoint(p1);
+
     // 结果位置语义：类型已知时可以省略类型名
     const p2: Point = .{ .x = 3.0, .y = 4.0 };
-    
+    printPoint(p2);
+
     // 函数参数中的简写
-    fn printPoint(p: Point) void {
-        std.debug.print("Point({}, {})\n", .{ p.x, p.y });
-    }
-    
     printPoint(.{ .x = 5.0, .y = 6.0 });
-    
+
     // 嵌套结构体的简写
     const rect: Rectangle = .{
         .top_left = .{ .x = 0.0, .y = 0.0 },
         .bottom_right = .{ .x = 10.0, .y = 10.0 },
     };
-    
+
     std.debug.print("矩形: ({}, {}) 到 ({}, {})\n", .{
         rect.top_left.x,
         rect.top_left.y,
@@ -2589,19 +2487,95 @@ pub fn main(init: std.process.Init.Minimal) void {
     });
 }
 </code></pre>
-<h2 id="字段默认值"><a class="header" href="#字段默认值">字段默认值</a></h2>
-<p>结构体字段可以定义默认值：</p>
-<pre><code class="language-zig">const std = @import("std");
+<p>预期输出：</p>
+<pre><code>Point(1, 2)
+Point(3, 4)
+Point(5, 6)
+矩形: (0, 0) 到 (10, 10)
+</code></pre>
+<h4 id="注意事项"><a class="header" href="#注意事项">注意事项</a></h4>
+<p><strong>1. 类型必须明确</strong></p>
+<pre><code class="language-zig">const Point = struct { x: f32, y: f32 };
+const Vec2 = struct { x: f32, y: f32 };
 
-const Config = struct {
+// ❌ 错误：类型不明确，编译器无法推断
+// const p = .{ .x = 1.0, .y = 2.0 };
+
+// ✅ 正确：类型注解明确
+const p1: Point = .{ .x = 1.0, .y = 2.0 };
+const p2: Vec2 = .{ .x = 1.0, .y = 2.0 };
+</code></pre>
+<p><strong>2. 字段名必须匹配</strong></p>
+<pre><code class="language-zig">const Point = struct { x: f32, y: f32 };
+
+// ❌ 错误：字段名不匹配
+// const p: Point = .{ .a = 1.0, .b = 2.0 };
+
+// ✅ 正确：字段名匹配
+const p: Point = .{ .x = 1.0, .y = 2.0 };
+</code></pre>
+<p><strong>3. 所有必填字段必须提供</strong></p>
+<pre><code class="language-zig">const Point = struct { x: f32, y: f32 };
+
+// ❌ 错误：缺少字段 y
+// const p: Point = .{ .x = 1.0 };
+
+// ✅ 正确：提供所有必填字段
+const p: Point = .{ .x = 1.0, .y = 2.0 };
+</code></pre>
+<h4 id="优势总结"><a class="header" href="#优势总结">优势总结</a></h4>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>优势</th><th>说明</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>减少冗余</strong></td><td>避免类型名重复，代码更简洁</td></tr>
+<tr><td><strong>提高可读性</strong></td><td>关注数据本身，而非类型声明</td></tr>
+<tr><td><strong>类型安全</strong></td><td>编译器仍然进行完整的类型检查</td></tr>
+<tr><td><strong>重构友好</strong></td><td>修改类型名时，不需要修改所有初始化代码</td></tr>
+</tbody>
+</table>
+</div>
+<h4 id="最佳实践-2"><a class="header" href="#最佳实践-2">最佳实践</a></h4>
+<ol>
+<li><strong>优先使用简写</strong>：当类型明确时，使用 <code>.{}</code> 语法</li>
+<li><strong>保持一致性</strong>：在同一代码库中统一使用风格</li>
+<li><strong>避免歧义</strong>：如果类型不明确，显式写出类型名</li>
+<li><strong>利用嵌套</strong>：嵌套结构体时，内层类型也可以省略</li>
+</ol>
+<h3 id="字段默认值"><a class="header" href="#字段默认值">字段默认值</a></h3>
+<p>结构体字段可以定义默认值，简化初始化过程，提高代码可读性。</p>
+<h4 id="基本语法-1"><a class="header" href="#基本语法-1">基本语法</a></h4>
+<p>在字段定义时直接赋值：</p>
+<pre><code class="language-zig">const Config = struct {
     host: []const u8 = "localhost",
     port: u16 = 8080,
     timeout: u32 = 30,
     debug: bool = false,
 };
-
-// 默认值常量模式
-const Threshold = struct {
+</code></pre>
+<h4 id="使用方式"><a class="header" href="#使用方式">使用方式</a></h4>
+<p><strong>1. 部分指定，其余使用默认值</strong></p>
+<pre><code class="language-zig">const cfg1 = Config{
+    .host = "example.com",
+    // port, timeout, debug 自动使用默认值
+};
+</code></pre>
+<p><strong>2. 全部使用默认值</strong></p>
+<pre><code class="language-zig">const cfg2 = Config{};
+</code></pre>
+<p><strong>3. 覆盖所有默认值</strong></p>
+<pre><code class="language-zig">const cfg3 = Config{
+    .host = "example.com",
+    .port = 443,
+    .timeout = 60,
+    .debug = true,
+};
+</code></pre>
+<h4 id="默认实例模式"><a class="header" href="#默认实例模式">默认实例模式</a></h4>
+<p>对于需要共享的默认配置，可以定义默认实例常量：</p>
+<pre><code class="language-zig">const Threshold = struct {
     minimum: f32,
     maximum: f32,
     
@@ -2612,16 +2586,37 @@ const Threshold = struct {
     };
 };
 
+// 使用默认实例
+const threshold: Threshold = .default;
+</code></pre>
+<h4 id="完整示例-1"><a class="header" href="#完整示例-1">完整示例</a></h4>
+<pre><code class="language-zig">const std = @import("std");
+
+const Config = struct {
+    host: []const u8 = "localhost",
+    port: u16 = 8080,
+    timeout: u32 = 30,
+    debug: bool = false,
+};
+
+const Threshold = struct {
+    minimum: f32,
+    maximum: f32,
+    
+    const default: Threshold = .{
+        .minimum = 0.25,
+        .maximum = 0.75,
+    };
+};
+
 pub fn main(init: std.process.Init.Minimal) void {
-    // 使用部分默认值
+    // 部分指定
     const cfg1 = Config{
         .host = "example.com",
-        // port, timeout, debug 使用默认值
     };
-    
     std.debug.print("配置: {s}:{}\n", .{ cfg1.host, cfg1.port });
     
-    // 全部使用默认值
+    // 全部默认
     const cfg2 = Config{};
     std.debug.print("默认端口: {}\n", .{cfg2.port});
     
@@ -2630,59 +2625,121 @@ pub fn main(init: std.process.Init.Minimal) void {
     std.debug.print("阈值范围: {} - {}\n", .{ threshold.minimum, threshold.maximum });
 }
 </code></pre>
-<h2 id="从字段指针获取结构体指针"><a class="header" href="#从字段指针获取结构体指针">从字段指针获取结构体指针</a></h2>
-<p>使用 <code>@fieldParentPtr</code> 可以从字段的指针反推出整个结构体的指针：</p>
-<blockquote>
-<p>📖 <strong>深入学习</strong>：这是指针操作的高级技巧，<a href="#draft指针与引用类型">指针与引用类型</a>将详细讲解指针的各种操作和安全使用方法。</p>
-</blockquote>
-<pre><code class="language-zig">const std = @import("std");
+<p>预期输出：</p>
+<pre><code>配置: example.com:8080
+默认端口: 8080
+阈值范围: 0.25 - 0.75
+</code></pre>
+<h4 id="注意事项-1"><a class="header" href="#注意事项-1">注意事项</a></h4>
+<p><strong>1. 默认值必须是编译期常量</strong></p>
+<pre><code class="language-zig">// ❌ 错误：运行时值不能作为默认值
+// fn getDefaultValue() u32 { return 42; }
+// const Config = struct {
+//     value: u32 = getDefaultValue(),
+// };
 
-const Creature = struct {
-    health: f32,
-    mana: u32,
-    stamina: u32,
+// ✅ 正确：编译期常量
+const Config = struct {
+    value: u32 = 42,
+};
+</code></pre>
+<p><strong>2. 没有默认值的字段必须显式提供</strong></p>
+<pre><code class="language-zig">const Point = struct {
+    x: f32,
+    y: f32,
 };
 
-fn boostMana(mana_ptr: *u32, amount: u32) void {
-    // 从 mana 字段的指针，反推出整个 Creature 的指针
-    const creature_ptr: *Creature = @fieldParentPtr("mana", mana_ptr);
-    creature_ptr.mana += amount;
-    
-    // 也可以修改其他字段
-    creature_ptr.health -= 1.0;
+// ❌ 错误：缺少字段 y
+// const p = Point{ .x = 1.0 };
+
+// ✅ 正确：提供所有字段
+const p = Point{ .x = 1.0, .y = 2.0 };
+</code></pre>
+<p><strong>3. 默认实例模式 vs 字段默认值</strong></p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>方式</th><th>适用场景</th><th>优点</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>字段默认值</strong></td><td>每个字段有独立的默认值</td><td>灵活，可部分覆盖</td></tr>
+<tr><td><strong>默认实例</strong></td><td>需要共享一组相关的默认值</td><td>一致性，便于维护</td></tr>
+</tbody>
+</table>
+</div>
+<h4 id="字段默认值的优势"><a class="header" href="#字段默认值的优势">字段默认值的优势</a></h4>
+<ul>
+<li><strong>简化初始化</strong>：避免重复填写相同的值</li>
+<li><strong>提高可读性</strong>：只关注重要的配置项</li>
+<li><strong>便于维护</strong>：修改默认值只需改一处</li>
+<li><strong>向后兼容</strong>：添加新字段时提供默认值，不影响现有代码</li>
+</ul>
+<h3 id="泛型结构体"><a class="header" href="#泛型结构体">泛型结构体</a></h3>
+<p>Zig 支持泛型结构体，允许创建类型参数化的结构体，在编译时生成具体类型。这是实现代码复用和类型安全的重要机制。</p>
+<blockquote>
+<p>📖 <strong>深入学习</strong>：泛型结构体的完整实现、高级用法和更多示例请参考<a href="#draft泛型编程">泛型编程</a>章节。</p>
+</blockquote>
+<h4 id="为什么使用泛型结构体"><a class="header" href="#为什么使用泛型结构体">为什么使用泛型结构体？</a></h4>
+<ol>
+<li><strong>代码复用</strong>：同一套代码适用于多种类型</li>
+<li><strong>类型安全</strong>：编译期检查，避免运行时错误</li>
+<li><strong>性能优化</strong>：编译期特化，无运行时开销</li>
+</ol>
+<h4 id="this-函数"><a class="header" href="#this-函数">@This() 函数</a></h4>
+<p>在定义泛型结构体时，经常需要引用当前正在定义的类型。Zig 提供了 <code>@This()</code> 函数来获取当前类型：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+// 泛型结构体：返回结构体类型的函数
+fn Vector(comptime T: type) type {
+    return struct {
+        x: T,
+        y: T,
+        z: T,
+
+        // 使用 @This() 获取当前类型
+        const Self = @This();
+
+        // 泛型方法
+        fn add(self: Self, other: Self) Self {
+            return .{
+                .x = self.x + other.x,
+                .y = self.y + other.y,
+                .z = self.z + other.z,
+            };
+        }
+    };
 }
 
-pub fn main(init: std.process.Init.Minimal) void {
-    var elf = Creature{
-        .health = 150.0,
-        .mana = 10,
-        .stamina = 100,
-    };
-    
-    std.debug.print("强化前 - 生命: {}, 法力: {}\n", .{ elf.health, elf.mana });
-    
-    boostMana(&amp;elf.mana, 40);
-    
-    std.debug.print("强化后 - 生命: {}, 法力: {}\n", .{ elf.health, elf.mana });
+pub fn main(_: std.process.Init.Minimal) void {
+    // 创建 f32 类型的向量
+    const Vec3f = Vector(f32);
+    const v1 = Vec3f{ .x = 1.0, .y = 2.0, .z = 3.0 };
+    const v2 = Vec3f{ .x = 4.0, .y = 5.0, .z = 6.0 };
+
+    const v3 = v1.add(v2);
+    std.debug.print("v1 + v2 = ({d:.1}, {d:.1}, {d:.1})\n", .{ v3.x, v3.y, v3.z });
 }
 </code></pre>
-<p><strong>应用场景</strong>：</p>
-<ul>
-<li>实现侵入式数据结构（如链表、树）</li>
-<li>回调函数中获取上下文</li>
-<li>内存池管理</li>
-</ul>
+<p>预期输出：</p>
+<pre><code>v1 + v2 = (5.0, 7.0, 9.0)
+</code></pre>
+<p><strong>为什么需要 @This()？</strong></p>
+<ol>
+<li><strong>匿名结构体</strong>：泛型函数返回的结构体没有名称，需要用 <code>@This()</code> 引用</li>
+<li><strong>递归类型</strong>：定义引用自身的类型（如链表节点）</li>
+<li><strong>代码清晰</strong>：用 <code>Self</code> 代替具体类型名，提高可读性</li>
+</ol>
 <h2 id="元组tuple"><a class="header" href="#元组tuple">元组（Tuple）</a></h2>
-<h2 id="什么是元组"><a class="header" href="#什么是元组">什么是元组？</a></h2>
+<h3 id="什么是元组"><a class="header" href="#什么是元组">什么是元组？</a></h3>
 <p>元组（Tuple）是一种特殊的匿名结构体，其字段没有名称，而是使用数字索引（0, 1, 2…）访问。元组可以包含不同类型的元素，是 Zig 中处理异构数据集合的轻量级方式。</p>
-<h2 id="为什么使用元组"><a class="header" href="#为什么使用元组">为什么使用元组？</a></h2>
+<h3 id="为什么使用元组"><a class="header" href="#为什么使用元组">为什么使用元组？</a></h3>
 <ol>
 <li><strong>临时数据组合</strong>：不需要定义专门的结构体</li>
 <li><strong>多返回值</strong>：函数可以返回多个值</li>
 <li><strong>类型安全</strong>：编译期检查每个位置的元素类型</li>
 <li><strong>简洁语法</strong>：使用 <code>.{}</code> 快速创建</li>
 </ol>
-<h2 id="元组-vs-结构体-vs-数组"><a class="header" href="#元组-vs-结构体-vs-数组">元组 vs 结构体 vs 数组</a></h2>
+<h3 id="元组-vs-结构体-vs-数组"><a class="header" href="#元组-vs-结构体-vs-数组">元组 vs 结构体 vs 数组</a></h3>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -2696,7 +2753,7 @@ pub fn main(init: std.process.Init.Minimal) void {
 </tbody>
 </table>
 </div>
-<h2 id="基本用法-1"><a class="header" href="#基本用法-1">基本用法</a></h2>
+<h3 id="基本用法-3"><a class="header" href="#基本用法-3">基本用法</a></h3>
 <pre><code class="language-zig">const std = @import("std");
 
 pub fn main(init: std.process.Init.Minimal) void {
@@ -2723,7 +2780,7 @@ pub fn main(init: std.process.Init.Minimal) void {
     std.debug.print("元组类型: {}\n", .{TupleType});
 }
 </code></pre>
-<h2 id="元组的高级用法"><a class="header" href="#元组的高级用法">元组的高级用法</a></h2>
+<h3 id="元组的高级用法"><a class="header" href="#元组的高级用法">元组的高级用法</a></h3>
 <pre><code class="language-zig">const std = @import("std");
 
 // 场景1：函数返回多个值
@@ -2751,7 +2808,7 @@ fn printPerson(person: anytype) void {
     }
 }
 </code></pre>
-<h2 id="元组的特点"><a class="header" href="#元组的特点">元组的特点</a></h2>
+<h3 id="元组的特点"><a class="header" href="#元组的特点">元组的特点</a></h3>
 <ul>
 <li>字段名是数字索引（0, 1, 2…）</li>
 <li>可以包含不同类型的元素</li>
@@ -2761,7 +2818,7 @@ fn printPerson(person: anytype) void {
 </ul>
 <h2 id="块表达式"><a class="header" href="#块表达式">块表达式</a></h2>
 <p>在 Zig 中，块（Block）不仅是作用域，还可以作为表达式返回值。</p>
-<h2 id="基本概念"><a class="header" href="#基本概念">基本概念</a></h2>
+<h3 id="基本概念"><a class="header" href="#基本概念">基本概念</a></h3>
 <ul>
 <li><strong>块是花括号包起来的作用域</strong></li>
 <li><strong>块可以是表达式</strong>：可以返回值</li>
@@ -2843,8 +2900,8 @@ pub fn main(init: std.process.Init.Minimal) void {
 <li>需要平台支持 TLS</li>
 <li>在单线程程序中，行为与普通全局变量相同</li>
 </ul>
-<h2 id="字符和字符串详解"><a class="header" href="#字符和字符串详解">字符和字符串详解</a></h2>
-<h2 id="unicode-码位字面量"><a class="header" href="#unicode-码位字面量">Unicode 码位字面量</a></h2>
+<h2 id="字符和字符串"><a class="header" href="#字符和字符串">字符和字符串</a></h2>
+<h3 id="unicode-码位字面量"><a class="header" href="#unicode-码位字面量">Unicode 码位字面量</a></h3>
 <p>单引号用于字符字面量，得到 Unicode 码位：</p>
 <pre><code class="language-zig">const std = @import("std");
 
@@ -2867,7 +2924,7 @@ pub fn main(init: std.process.Init.Minimal) void {
     std.debug.print("comptime_int 值: {}\n", .{char_value});
 }
 </code></pre>
-<h2 id="字符串字面量"><a class="header" href="#字符串字面量">字符串字面量</a></h2>
+<h3 id="字符串字面量"><a class="header" href="#字符串字面量">字符串字面量</a></h3>
 <p>双引号用于字符串字面量，类型是 <code>*const [N:0]u8</code>（以 null 结尾的数组指针）：</p>
 <pre><code class="language-zig">const std = @import("std");
 
@@ -2882,7 +2939,7 @@ pub fn main(init: std.process.Init.Minimal) void {
     std.debug.print("哨兵值: {}\n", .{str[str.len]}); // 输出: 0
 }
 </code></pre>
-<h2 id="多行字符串字面量"><a class="header" href="#多行字符串字面量">多行字符串字面量</a></h2>
+<h3 id="多行字符串字面量"><a class="header" href="#多行字符串字面量">多行字符串字面量</a></h3>
 <p>多行字符串以 <code>\\</code> 开头，不执行任何转义，不包含最后一行的换行符：</p>
 <pre><code class="language-zig">const std = @import("std");
 
@@ -2912,9 +2969,9 @@ pub fn main(init: std.process.Init.Minimal) void {
 <li>不包含最后的换行符</li>
 <li>适合嵌入代码、JSON、XML 等文本</li>
 </ul>
-<h2 id="可选类型操作符"><a class="header" href="#可选类型操作符">可选类型操作符</a></h2>
+<h2 id="可选类型optional"><a class="header" href="#可选类型optional">可选类型（Optional）</a></h2>
 <p>Zig 的可选类型（Optional）使用 <code>?T</code> 表示，提供了多种操作方式。</p>
-<h2 id="基本操作"><a class="header" href="#基本操作">基本操作</a></h2>
+<h3 id="基本操作"><a class="header" href="#基本操作">基本操作</a></h3>
 <pre><code class="language-zig">const std = @import("std");
 
 pub fn main(init: std.process.Init.Minimal) void {
@@ -2944,7 +3001,7 @@ pub fn main(init: std.process.Init.Minimal) void {
     std.debug.print("orelse 表达式: {}\n", .{value3});
 }
 </code></pre>
-<h2 id="orelse-与--的区别"><a class="header" href="#orelse-与--的区别">orelse 与 .? 的区别</a></h2>
+<h3 id="orelse-与--的区别"><a class="header" href="#orelse-与--的区别">orelse 与 .? 的区别</a></h3>
 <pre><code class="language-zig">const std = @import("std");
 
 fn riskyOperation() ?i32 {
@@ -2970,7 +3027,10 @@ pub fn main(init: std.process.Init.Minimal) void {
 <li><strong>使用 <code>.?</code></strong>：确定值不为 null，否则是编程错误</li>
 <li><strong>使用 <code>orelse</code></strong>：需要为 null 提供合理的默认值</li>
 </ul>
-<h2 id="可选类型与错误联合类型的关联"><a class="header" href="#可选类型与错误联合类型的关联">可选类型与错误联合类型的关联</a></h2>
+<h3 id="可选类型与错误联合类型的关联"><a class="header" href="#可选类型与错误联合类型的关联">可选类型与错误联合类型的关联</a></h3>
+<blockquote>
+<p>📖 <strong>深入学习</strong>：错误联合类型的详细用法将在<a href="#draft错误处理基础">错误处理基础</a>中讲解。</p>
+</blockquote>
 <p>可选类型 <code>?T</code> 和错误联合类型 <code>!T</code> 都用于表示“可能失败“的值，但用途不同：</p>
 <div class="table-wrapper">
 <table>
@@ -3000,12 +3060,9 @@ fn readFile(path: []const u8) ![]u8 {
     // ...
 }
 </code></pre>
-<blockquote>
-<p>📖 <strong>深入学习</strong>：错误联合类型的详细用法将在<a href="#draft错误处理基础">错误处理基础</a>中讲解。</p>
-</blockquote>
 <hr>
 <h2 id="章节练习题"><a class="header" href="#章节练习题">章节练习题</a></h2>
-<h2 id="基础题"><a class="header" href="#基础题">基础题</a></h2>
+<h3 id="基础题"><a class="header" href="#基础题">基础题</a></h3>
 <p><strong>题目1</strong>：编写一个程序，计算 1 到 100 的和。</p>
 <p><strong>要求</strong>：</p>
 <ul>
@@ -3146,7 +3203,7 @@ pub fn main(init: std.process.Init.Minimal) void {
 
 对角线元素和：15
 </code></pre>
-<h2 id="进阶题"><a class="header" href="#进阶题">进阶题</a></h2>
+<h3 id="进阶题"><a class="header" href="#进阶题">进阶题</a></h3>
 <p><strong>题目1</strong>：实现一个程序，演示数组与切片的区别和联系。</p>
 <p><strong>要求</strong>：</p>
 <ul>
@@ -3300,7 +3357,7 @@ pub fn main(init: std.process.Init.Minimal) void {
   最高分：赵六 (95 分)
   最低分：王五 (78 分)
 </code></pre>
-<h2 id="挑战题"><a class="header" href="#挑战题">挑战题</a></h2>
+<h3 id="挑战题"><a class="header" href="#挑战题">挑战题</a></h3>
 <p><strong>题目</strong>：实现一个简单的位图（BitMap）数据结构，使用数组和位操作。</p>
 <p><strong>要求</strong>：</p>
 <ul>
@@ -4794,7 +4851,7 @@ fn safeDivide(a: i32, b: i32) MathError!i32 {
     return @divTrunc(a, b);
 }
 </code></pre>
-<h1 id="使用方式"><a class="header" href="#使用方式">使用方式</a></h1>
+<h1 id="使用方式-1"><a class="header" href="#使用方式-1">使用方式</a></h1>
 <pre><code class="language-zig">pub fn main(init: std.process.Init.Minimal) void {
     // 方式1：使用 catch 处理错误，提供默认值
     const result1 = safeDivide(10, 2) catch 0;
@@ -10245,7 +10302,7 @@ fn max_f64(a: f64, b: f64) f64 {
 <li>类型错误在编译期发现</li>
 </ul>
 <h2 id="泛型函数"><a class="header" href="#泛型函数">泛型函数</a></h2>
-<h1 id="基本语法-1"><a class="header" href="#基本语法-1">基本语法</a></h1>
+<h1 id="基本语法-2"><a class="header" href="#基本语法-2">基本语法</a></h1>
 <p><strong>最简单的泛型函数</strong>：</p>
 <pre><code class="language-zig">const std = @import("std");
 
@@ -10362,7 +10419,7 @@ pub fn main(init: std.process.Init.Minimal) void {
 <li>约束可以是类型特征，不仅仅是类型本身</li>
 </ul>
 <h2 id="泛型数据结构"><a class="header" href="#泛型数据结构">泛型数据结构</a></h2>
-<h1 id="泛型结构体"><a class="header" href="#泛型结构体">泛型结构体</a></h1>
+<h1 id="泛型结构体-1"><a class="header" href="#泛型结构体-1">泛型结构体</a></h1>
 <p><strong>基本语法</strong>：</p>
 <pre><code class="language-zig">const std = @import("std");
 
@@ -10932,7 +10989,7 @@ pub fn main(init: std.process.Init.Minimal) !void {
 }
 </code></pre>
 <h2 id="泛型与内存管理"><a class="header" href="#泛型与内存管理">泛型与内存管理</a></h2>
-<h1 id="分配器传递模式-1"><a class="header" href="#分配器传递模式-1">分配器传递模式</a></h1>
+<h1 id="分配器传递模式"><a class="header" href="#分配器传递模式">分配器传递模式</a></h1>
 <p><strong>最佳实践</strong>：显式传递分配器</p>
 <pre><code class="language-zig">const std = @import("std");
 
@@ -12333,7 +12390,7 @@ pub fn main() void {
                   ├─ 是 → 使用委托模式封装
                   └─ 否 → 使用基本组合
 </code></pre>
-<h3 id="最佳实践-2"><a class="header" href="#最佳实践-2">最佳实践</a></h3>
+<h3 id="最佳实践-3"><a class="header" href="#最佳实践-3">最佳实践</a></h3>
 <p><strong>1. 优先使用组合而非继承</strong></p>
 <pre><code class="language-zig">// ❌ 其他语言的继承方式（Zig 不支持）
 // class Player extends GameObject { ... }
@@ -13215,6 +13272,142 @@ pub fn main(init: std.process.Init.Minimal) !void {
     std.debug.print("线程安全分配器分配了 {} 字节\n", .{memory.len});
 }
 </code></pre>
+<h2 id="分配器传递模式-1"><a class="header" href="#分配器传递模式-1">分配器传递模式</a></h2>
+<p>Zig 的内存管理遵循一个重要原则：<strong>显式传递分配器</strong>。这是避免内存泄漏、提高代码可测试性和灵活性的关键。</p>
+<h3 id="核心原则"><a class="header" href="#核心原则">核心原则</a></h3>
+<ol>
+<li><strong>永远不要使用全局状态</strong>：避免使用全局分配器</li>
+<li><strong>总是将分配器作为参数传递</strong>：让调用者决定内存分配策略</li>
+<li><strong>明确所有权</strong>：谁分配，谁释放</li>
+</ol>
+<h3 id="为什么这样设计-1"><a class="header" href="#为什么这样设计-1">为什么这样设计？</a></h3>
+<ul>
+<li><strong>灵活性</strong>：调用者可以选择最合适的分配器（栈分配器、堆分配器、竞技场分配器等）</li>
+<li><strong>可测试性</strong>：测试时可以使用自定义分配器跟踪内存使用</li>
+<li><strong>可组合性</strong>：函数可以轻松组合，不会因为全局状态产生冲突</li>
+<li><strong>性能</strong>：可以根据场景选择最优的分配策略</li>
+</ul>
+<h3 id="正确示例"><a class="header" href="#正确示例">正确示例</a></h3>
+<p><strong>方式1：函数参数传递</strong></p>
+<pre><code class="language-zig">const std = @import("std");
+
+// ✅ 正确：分配器作为参数传递
+fn processData(allocator: std.mem.Allocator, data: []const u8) ![]u8 {
+    const buffer = try allocator.alloc(u8, data.len);
+    @memcpy(buffer, data);
+    return buffer;
+}
+
+pub fn main(init: std.process.Init.Minimal) !void {
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
+    defer _ = gpa.deinit();
+    
+    const result = try processData(gpa.allocator(), "hello");
+    defer gpa.allocator().free(result);
+}
+</code></pre>
+<p><strong>方式2：结构体存储分配器</strong></p>
+<pre><code class="language-zig">const std = @import("std");
+
+// ✅ 正确：结构体存储分配器
+const DataProcessor = struct {
+    allocator: std.mem.Allocator,
+    
+    fn init(allocator: std.mem.Allocator) DataProcessor {
+        return .{ .allocator = allocator };
+    }
+    
+    fn process(self: *DataProcessor, data: []const u8) ![]u8 {
+        return try self.allocator.alloc(u8, data.len);
+    }
+};
+
+pub fn main(init: std.process.Init.Minimal) !void {
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
+    defer _ = gpa.deinit();
+    
+    var processor = DataProcessor.init(gpa.allocator());
+    const result = try processor.process("world");
+    defer gpa.allocator().free(result);
+}
+</code></pre>
+<h3 id="错误示例"><a class="header" href="#错误示例">错误示例</a></h3>
+<p><strong>❌ 错误1：使用全局分配器</strong></p>
+<pre><code class="language-zig">const std = @import("std");
+
+// ❌ 错误：使用全局分配器
+fn processDataBad(data: []const u8) ![]u8 {
+    var buffer = try std.heap.page_allocator.alloc(u8, data.len);
+    @memcpy(buffer, data);
+    return buffer;
+}
+</code></pre>
+<p><strong>问题</strong>：</p>
+<ul>
+<li>调用者无法选择分配器</li>
+<li>测试时无法跟踪内存使用</li>
+<li>可能与其他使用 page_allocator 的代码冲突</li>
+</ul>
+<p><strong>❌ 错误2：硬编码分配器</strong></p>
+<pre><code class="language-zig">// ❌ 错误：硬编码分配器
+fn processDataAlsoBad(data: []const u8) ![]u8 {
+    var gpa = std.heap.DebugAllocator(.{}){};
+    var buffer = try gpa.allocator().alloc(u8, data.len);
+    @memcpy(buffer, data);
+    return buffer;
+}
+</code></pre>
+<p><strong>问题</strong>：</p>
+<ul>
+<li>每次调用都创建新的分配器，效率低下</li>
+<li>无法控制内存分配策略</li>
+</ul>
+<p><strong>❌ 错误3：使用静态变量</strong></p>
+<pre><code class="language-zig">// ❌ 错误：使用静态变量存储分配器
+var global_allocator: ?std.mem.Allocator = null;
+
+fn setAllocator(allocator: std.mem.Allocator) void {
+    global_allocator = allocator;
+}
+
+fn processDataWithGlobal(data: []const u8) ![]u8 {
+    const allocator = global_allocator orelse return error.NoAllocator;
+    return try allocator.alloc(u8, data.len);
+}
+</code></pre>
+<p><strong>问题</strong>：</p>
+<ul>
+<li>全局状态导致测试困难</li>
+<li>并发问题</li>
+<li>隐式依赖，难以理解</li>
+</ul>
+<h3 id="分配器传递的标准模式"><a class="header" href="#分配器传递的标准模式">分配器传递的标准模式</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>模式</th><th>使用场景</th><th>示例</th></tr>
+</thead>
+<tbody>
+<tr><td>函数参数</td><td>一次性操作</td><td><code>fn foo(allocator: Allocator) !void</code></td></tr>
+<tr><td>结构体字段</td><td>长期存在的对象</td><td><code>const Foo = struct { allocator: Allocator }</code></td></tr>
+<tr><td>方法接收器</td><td>对象方法</td><td><code>fn method(self: *Self) !void</code></td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>选择指南</strong>：</p>
+<ul>
+<li><strong>函数参数</strong>：适用于简单的、一次性的操作</li>
+<li><strong>结构体字段</strong>：适用于需要多次分配的对象</li>
+<li><strong>方法接收器</strong>：适用于对象的生命周期管理</li>
+</ul>
+<h3 id="实践建议"><a class="header" href="#实践建议">实践建议</a></h3>
+<ol>
+<li><strong>始终显式传递分配器</strong>：不要依赖全局状态</li>
+<li><strong>在 init 函数中接收分配器</strong>：对象创建时确定分配策略</li>
+<li><strong>使用 defer 确保释放</strong>：避免内存泄漏</li>
+<li><strong>文档化所有权</strong>：明确谁负责释放内存</li>
+<li><strong>测试时使用跟踪分配器</strong>：验证内存管理正确性</li>
+</ol>
 <h2 id="内存安全机制"><a class="header" href="#内存安全机制">内存安全机制</a></h2>
 <p>Zig 提供了一些内存安全机制：</p>
 <p><strong>边界检查：</strong></p>
@@ -15200,6 +15393,203 @@ pub fn main(init: std.process.Init.Minimal) void {
     std.debug.print("接收到：{}\n", .{received});
 }
 </code></pre>
+<h2 id="从字段指针获取结构体指针"><a class="header" href="#从字段指针获取结构体指针">从字段指针获取结构体指针</a></h2>
+<p>使用 <code>@fieldParentPtr</code> 可以从字段的指针反推出整个结构体的指针。这是一个高级指针操作技巧，常用于实现侵入式数据结构。</p>
+<h3 id="基本用法-4"><a class="header" href="#基本用法-4">基本用法</a></h3>
+<pre><code class="language-zig">const std = @import("std");
+
+const Creature = struct {
+    health: f32,
+    mana: u32,
+    stamina: u32,
+};
+
+fn boostMana(mana_ptr: *u32, amount: u32) void {
+    // 从 mana 字段的指针，反推出整个 Creature 的指针
+    const creature_ptr: *Creature = @fieldParentPtr("mana", mana_ptr);
+    creature_ptr.mana += amount;
+    
+    // 也可以修改其他字段
+    creature_ptr.health -= 1.0;
+}
+
+pub fn main(init: std.process.Init.Minimal) void {
+    var elf = Creature{
+        .health = 150.0,
+        .mana = 10,
+        .stamina = 100,
+    };
+    
+    std.debug.print("强化前 - 生命: {}, 法力: {}\n", .{ elf.health, elf.mana });
+    
+    boostMana(&amp;elf.mana, 40);
+    
+    std.debug.print("强化后 - 生命: {}, 法力: {}\n", .{ elf.health, elf.mana });
+}
+</code></pre>
+<h3 id="工作原理"><a class="header" href="#工作原理">工作原理</a></h3>
+<p><code>@fieldParentPtr</code> 通过以下步骤工作：</p>
+<ol>
+<li><strong>编译期计算偏移量</strong>：编译器知道字段在结构体中的偏移量</li>
+<li><strong>指针算术</strong>：从字段指针减去偏移量，得到结构体起始地址</li>
+<li><strong>类型转换</strong>：返回结构体指针类型</li>
+</ol>
+<pre><code class="language-zig">const std = @import("std");
+
+const Node = struct {
+    value: i32,
+    next: ?*Node,
+};
+
+pub fn main(init: std.process.Init.Minimal) void {
+    var node = Node{ .value = 42, .next = null };
+    
+    // 获取字段指针
+    const value_ptr: *i32 = &amp;node.value;
+    
+    // 从字段指针获取结构体指针
+    const node_ptr: *Node = @fieldParentPtr("value", value_ptr);
+    
+    std.debug.print("节点值：{}\n", .{node_ptr.value});
+    std.debug.print("偏移量：{} 字节\n", .{@offsetOf(Node, "value")});
+}
+</code></pre>
+<h3 id="实际应用侵入式链表"><a class="header" href="#实际应用侵入式链表">实际应用：侵入式链表</a></h3>
+<p>侵入式链表是 <code>@fieldParentPtr</code> 的经典应用场景：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+// 侵入式链表节点（不包含数据，只包含指针）
+const IntrusiveNode = struct {
+    prev: ?*IntrusiveNode,
+    next: ?*IntrusiveNode,
+};
+
+// 实际数据结构
+const Task = struct {
+    node: IntrusiveNode,  // 嵌入链表节点
+    id: u32,
+    name: []const u8,
+};
+
+const TaskList = struct {
+    head: ?*IntrusiveNode,
+    
+    fn init() TaskList {
+        return .{ .head = null };
+    }
+    
+    fn push(self: *TaskList, task: *Task) void {
+        task.node.prev = null;
+        task.node.next = self.head;
+        if (self.head) |head| {
+            head.prev = &amp;task.node;
+        }
+        self.head = &amp;task.node;
+    }
+    
+    fn iterate(self: *TaskList) void {
+        var current = self.head;
+        while (current) |node| {
+            // 从链表节点指针获取 Task 指针
+            const task: *Task = @fieldParentPtr("node", node);
+            std.debug.print("任务 {}: {s}\n", .{ task.id, task.name });
+            current = node.next;
+        }
+    }
+};
+
+pub fn main(init: std.process.Init.Minimal) void {
+    var list = TaskList.init();
+    
+    var task1 = Task{ .node = .{ .prev = null, .next = null }, .id = 1, .name = "初始化" };
+    var task2 = Task{ .node = .{ .prev = null, .next = null }, .id = 2, .name = "处理数据" };
+    var task3 = Task{ .node = .{ .prev = null, .next = null }, .id = 3, .name = "清理资源" };
+    
+    list.push(&amp;task1);
+    list.push(&amp;task2);
+    list.push(&amp;task3);
+    
+    list.iterate();
+}
+</code></pre>
+<h3 id="安全性注意事项"><a class="header" href="#安全性注意事项">安全性注意事项</a></h3>
+<p><strong>1. 必须确保字段指针有效</strong></p>
+<pre><code class="language-zig">const std = @import("std");
+
+const Point = struct { x: f32, y: f32 };
+
+pub fn main(init: std.process.Init.Minimal) void {
+    var point = Point{ .x = 1.0, .y = 2.0 };
+    
+    // ✅ 正确：字段指针有效
+    const x_ptr = &amp;point.x;
+    const point_ptr: *Point = @fieldParentPtr("x", x_ptr);
+    std.debug.print("点：({}, {})\n", .{ point_ptr.x, point_ptr.y });
+    
+    // ❌ 危险：野指针会导致未定义行为
+    // var dangling: *f32 = undefined;
+    // const bad_ptr: *Point = @fieldParentPtr("x", dangling);
+}
+</code></pre>
+<p><strong>2. 字段名必须在编译期已知</strong></p>
+<pre><code class="language-zig">const std = @import("std");
+
+const Point = struct { x: f32, y: f32 };
+
+pub fn main(init: std.process.Init.Minimal) void {
+    var point = Point{ .x = 1.0, .y = 2.0 };
+    
+    // ✅ 正确：字段名是编译期常量
+    const ptr1: *Point = @fieldParentPtr("x", &amp;point.x);
+    
+    // ❌ 错误：字段名不能是运行时变量
+    // const field_name = "x";
+    // const ptr2: *Point = @fieldParentPtr(field_name, &amp;point.x);
+}
+</code></pre>
+<p><strong>3. 指针必须指向结构体的字段</strong></p>
+<pre><code class="language-zig">const std = @import("std");
+
+const Point = struct { x: f32, y: f32 };
+
+pub fn main(init: std.process.Init.Minimal) void {
+    var point = Point{ .x = 1.0, .y = 2.0 };
+    var standalone: f32 = 3.0;
+    
+    // ✅ 正确：指向结构体字段
+    const ptr1: *Point = @fieldParentPtr("x", &amp;point.x);
+    
+    // ❌ 错误：指向独立变量，会导致未定义行为
+    // const ptr2: *Point = @fieldParentPtr("x", &amp;standalone);
+}
+</code></pre>
+<h3 id="应用场景-1"><a class="header" href="#应用场景-1">应用场景</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>场景</th><th>说明</th><th>优势</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>侵入式数据结构</strong></td><td>链表、树、图等数据结构</td><td>零额外内存分配</td></tr>
+<tr><td><strong>回调函数上下文</strong></td><td>将用户数据传递给回调函数</td><td>避免全局变量</td></tr>
+<tr><td><strong>内存池管理</strong></td><td>从对象指针获取内存池元数据</td><td>高效的内存管理</td></tr>
+<tr><td><strong>事件系统</strong></td><td>从事件处理器指针获取对象指针</td><td>灵活的事件处理</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="性能考虑"><a class="header" href="#性能考虑">性能考虑</a></h3>
+<ul>
+<li><strong>编译期计算</strong>：偏移量在编译期计算，运行时无开销</li>
+<li><strong>指针算术</strong>：只是简单的指针减法，非常高效</li>
+<li><strong>类型安全</strong>：编译器确保类型正确</li>
+</ul>
+<h3 id="最佳实践-4"><a class="header" href="#最佳实践-4">最佳实践</a></h3>
+<ol>
+<li><strong>优先使用更简单的方法</strong>：如果能直接传递结构体指针，就不要使用 <code>@fieldParentPtr</code></li>
+<li><strong>文档化使用</strong>：明确说明为什么需要使用这个技巧</li>
+<li><strong>确保指针有效</strong>：只在确定指针有效的情况下使用</li>
+<li><strong>用于特定场景</strong>：主要用于侵入式数据结构等高级场景</li>
+</ol>
 <h2 id="alignment-对齐系统"><a class="header" href="#alignment-对齐系统">Alignment 对齐系统</a></h2>
 <h1 id="什么是-alignment"><a class="header" href="#什么是-alignment">什么是 Alignment？</a></h1>
 <p>每种类型都有一个 <strong>alignment</strong>（对齐值）——一个字节数，当该类型的值从内存加载或存储到内存时，内存地址必须能被这个数字整除。可以使用 <code>[@alignOf](#alignOf)</code> 获取任何类型的对齐值。</p>
@@ -17846,7 +18236,7 @@ pub fn build(b: *std.Build) void {
         └── my-app/
             └── README.md
 </code></pre>
-<h3 id="最佳实践-3"><a class="header" href="#最佳实践-3">最佳实践</a></h3>
+<h3 id="最佳实践-5"><a class="header" href="#最佳实践-5">最佳实践</a></h3>
 <p><strong>1. 使用标准选项</strong>：</p>
 <pre><code class="language-zig">// ✅ 推荐：使用标准选项
 // ❌ 错误示例
