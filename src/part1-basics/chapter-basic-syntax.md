@@ -2472,7 +2472,7 @@ v1 + v2 = (5.0, 7.0, 9.0)
 
 元组（Tuple）是一种特殊的匿名结构体，其字段没有名称，而是使用数字索引（0, 1, 2...）访问。元组可以包含不同类型的元素，是 Zig 中处理异构数据集合的轻量级方式。
 
-### 为什么使用元组？
+### 为什么要使用元组？
 
 1. **临时数据组合**：不需要定义专门的结构体
 2. **多返回值**：函数可以返回多个值
@@ -2493,60 +2493,42 @@ v1 + v2 = (5.0, 7.0, 9.0)
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     // 创建元组：使用 .{} 语法
     // 元组可以包含不同类型的元素
     const tuple = .{ 1, "hello", 3.14, true };
-    
+
     // 访问元素（从 0 开始索引）
     std.debug.print("第一个元素: {}\n", .{tuple[0]});
     std.debug.print("第二个元素: {s}\n", .{tuple[1]});
     std.debug.print("第三个元素: {}\n", .{tuple[2]});
-    
+
     // 获取元组长度：编译期已知
     std.debug.print("元组长度: {}\n", .{tuple.len});
-    
+
     // 遍历元组：必须使用 inline for
     // 因为每个元素的类型可能不同
     inline for (tuple, 0..) |item, index| {
-        std.debug.print("tuple[{}] = {}\n", .{ index, item });
+        std.debug.print("tuple[{}] = {any}\n", .{ index, item });
     }
-    
+
     // 元组类型：显示每个字段的类型
     const TupleType = @TypeOf(tuple);
     std.debug.print("元组类型: {}\n", .{TupleType});
 }
 ```
 
-### 元组的高级用法
-
-```zig
-const std = @import("std");
-
-// 场景1：函数返回多个值
-fn divide(a: i32, b: i32) ?struct { i32, i32 } {
-    if (b == 0) return null;
-    return .{ @divTrunc(a, b), @rem(a, b) };
-}
-
-pub fn main(init: std.process.Init.Minimal) void {
-    // 场景2：解包赋值
-    const coords = .{ 10, 20, 30 };
-    const x, const y, const z = coords;
-    std.debug.print("坐标: x={}, y={}, z={}\n", .{ x, y, z });
-    
-    // 场景3：元组作为函数参数
-    const data = .{ "Alice", 30, true };
-    printPerson(data);
-}
-
-// 元组作为函数参数
-fn printPerson(person: anytype) void {
-    const info = @typeInfo(@TypeOf(person));
-    inline for (info.@"struct".fields, 0..) |field, i| {
-        std.debug.print("[{}]: {}\n", .{ i, @field(person, field.name) });
-    }
-}
+预期输出：
+```
+第一个元素: 1
+第二个元素: hello
+第三个元素: 3.14
+元组长度: 4
+tuple[0] = 1
+tuple[1] = { 104, 101, 108, 108, 111 }
+tuple[2] = 3.14
+tuple[3] = true
+元组类型: struct { comptime comptime_int = 1, comptime *const [5:0]u8 = "hello", comptime comptime_float = 3.14, comptime bool = true }
 ```
 
 ### 元组的特点
@@ -2557,96 +2539,149 @@ fn printPerson(person: anytype) void {
 - 支持解包赋值
 - 与结构体共享底层实现，只是字段名为数字
 
-## 块表达式
+## 块表达式（Block Expression）
 
-在 Zig 中，块（Block）不仅是作用域，还可以作为表达式返回值。
+在 Zig 中，块（Block）不仅是作用域，还可以作为表达式返回值，但**必须使用标签**。
 
-### 基本概念
+### 基本语法
 
-- **块是花括号包起来的作用域**
-- **块可以是表达式**：可以返回值
-- **块标签**：块开始处可以有标签，内部用 `break` 返回值
+```zig
+const result = blk: {
+    const a = 10;
+    const b = 20;
+    break :blk a + b;  // 使用 break :label 返回值
+};
+```
+
+**要点**：
+- 块开始处必须有标签（如 `blk:`）
+- 使用 `break :label value` 返回值
+- 不带标签的块不能返回值，只是一个作用域
+- **所有分支的返回值类型必须一致**
+
+### 类型一致性要求
+
+块表达式的所有退出路径必须返回相同类型的值：
+
+```zig
+// ❌ 错误：不同分支返回不同类型
+const result = blk: {
+    if (condition) {
+        break :blk 42;      // i32
+    } else {
+        break :blk "hello"; // 编译错误：类型不匹配
+    }
+};
+
+// ✅ 正确：所有分支返回相同类型
+const result = blk: {
+    if (value < 10) break :blk "小";
+    if (value < 20) break :blk "中";
+    break :blk "大";  // 所有分支都返回 []const u8
+};
+```
+
+### 完整示例
 
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
-    // 块作为表达式
+pub fn main(_: std.process.Init.Minimal) void {
+    // 基本用法：计算并返回值
     const result = blk: {
         const a = 10;
         const b = 20;
-        break :blk a + b; // 使用 break 返回值
+        break :blk a + b;
     };
-    
     std.debug.print("块表达式结果: {}\n", .{result});
-    
-    // 带条件的块表达式
+
+    // 条件返回：在条件分支中提前退出
     const value: i32 = 15;
     const category = blk: {
-        if (value < 10) {
-            break :blk "小";
-        } else if (value < 20) {
-            break :blk "中";
-        } else {
-            break :blk "大";
-        }
+        if (value < 10) break :blk "小";
+        if (value < 20) break :blk "中";
+        break :blk "大";
     };
-    
     std.debug.print("值 {} 的类别: {s}\n", .{ value, category });
-    
-    // 嵌套块
+
+    // 嵌套块：使用不同标签区分层级
     const nested = outer: {
         const inner = inner: {
             break :inner 5;
         };
         break :outer inner * 2;
     };
-    
     std.debug.print("嵌套块结果: {}\n", .{nested});
 }
 ```
 
-**应用场景**：
-- 复杂的初始化逻辑
-- 避免创建临时变量
-- 提高代码可读性
+预期输出：
+```
+块表达式结果: 30
+值 15 的类别: 中
+嵌套块结果: 10
+```
 
-## 线程局部变量
+## 字符和字符串
 
-Zig 支持线程局部存储（Thread-Local Storage, TLS），使用 `threadlocal` 关键字声明。
+Zig 提供了强大的字符和字符串支持，原生支持 Unicode，并且字符串字面量具有独特的类型安全特性。
+
+### 核心概念
+
+- **字符**：Unicode 码位，类型为 `comptime_int`
+- **字符串**：以 null 结尾的字节数组指针，类型为 `*const [N:0]u8`
+- **多行字符串**：使用 `\\` 语法，不处理转义
+
+> 📖 **深入学习**：字符串格式化（如 `{s}`, `{c}`, `{d}` 等格式说明符）的详细用法请参考[标准库常用模块](../part2-advanced/chapter-standard-library.md#字符串格式化)中的格式化输出部分。
+
+### Unicode 码位与 UTF-8 编码
+
+**核心概念**：
+- **Unicode 码位**：字符的唯一标识符，32 位无符号整数[^1]（如 '我' = 0x6211）
+- **UTF-8 编码**：不定长编码方式，一个码位对应 1-4 个字节（如 '我' = E6 88 91，3字节）
+
+[^1]: Unicode 码位的实际范围是 0x0000 到 0x10FFFF（21 位），通常用 32 位类型存储以方便处理。
+
+**UTF-8 编码长度规则**：
+- 1 字节：ASCII 字符（0x00-0x7F），如 'A' = 0x41
+- 2 字节：部分欧洲字符（0x80-0x7FF）
+- 3 字节：大部分常用字符，包括中文（0x800-0xFFFF）
+- 4 字节：辅助平面字符，如部分表情符号（0x10000-0x10FFFF）
+
+**Zig 的处理方式**：
+- **字符字面量**（`'我'`）：存储为 Unicode 码位，类型是 `comptime_int`
+- **字符串字面量**（`"我"`）：存储为 UTF-8 编码的字节序列，类型是 `*const [N:0]u8`
+
+**示例：字符 vs 字符串**
 
 ```zig
 const std = @import("std");
 
-// 线程局部变量：每个线程有独立的副本
-threadlocal var counter: i32 = 0;
+pub fn main(_: std.process.Init.Minimal) void {
+    // 字符：Unicode 码位
+    const ch = '我';
+    std.debug.print("字符码位: 0x{x}\n", .{ch});  // 0x6211
 
-fn incrementCounter() void {
-    counter += 1;
-    std.debug.print("计数器值: {}\n", .{counter});
-}
+    // 字符串：UTF-8 编码
+    const str = "我";
+    std.debug.print("字符串长度: {} 字节\n", .{str.len});  // 3 字节
 
-pub fn main(init: std.process.Init.Minimal) void {
-    // 主线程
-    incrementCounter(); // 输出: 1
-    incrementCounter(); // 输出: 2
-    
-    // 注意：在多线程环境中，每个线程都有自己的 counter 副本
-    // 这里仅演示语法，实际多线程示例见[并发编程模型](../part2-advanced/chapter-c-interop.md)
+    // 注意：str[0] 是第一个字节，不是第一个字符！
+    std.debug.print("第一个字节: 0x{x}\n", .{str[0]});  // 0xE6
 }
 ```
 
-**特点**：
-- 每个线程拥有独立的变量副本
-- 避免多线程竞争
-- 适用于线程特定的状态管理
+预期输出：
+```
+字符码位: 0x6211
+字符串长度: 3 字节
+第一个字节: 0xe6
+```
 
-**注意事项**：
-- 线程局部变量的初始化在第一次访问时发生
-- 需要平台支持 TLS
-- 在单线程程序中，行为与普通全局变量相同
-
-## 字符和字符串
+**重要提示**：
+- 字符串的 `len` 是字节数，不是字符数
+- 字符串索引访问的是字节，不是字符
+- 遍历 Unicode 字符串需要使用标准库的迭代器
 
 ### Unicode 码位字面量
 
@@ -2655,24 +2690,32 @@ pub fn main(init: std.process.Init.Minimal) void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     // ASCII 字符
     const letter = 'A';
     std.debug.print("字符: {c}, 码位: {}\n", .{ letter, letter });
-    
+
     // Unicode 字符（中文）
     const me_zh = '我';
     std.debug.print("字符: {0u} = 码位: 0x{0x}\n", .{me_zh});
     // 输出: 我 = 0x6211
-    
+
     // 表情符号
     const emoji = '☔';
     std.debug.print("表情: {0u}, 码位: 0x{0x}\n", .{emoji});
-    
+
     // 类型是 comptime_int
     const char_value: comptime_int = 'Z';
     std.debug.print("comptime_int 值: {}\n", .{char_value});
 }
+```
+
+预期输出：
+```
+字符: A, 码位: 65
+字符: 我 = 码位: 0x6211
+表情: ☔, 码位: 0x2614
+comptime_int 值: 90
 ```
 
 ### 字符串字面量
@@ -2682,7 +2725,7 @@ pub fn main(init: std.process.Init.Minimal) void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     const str = "Hello, Zig!";
     
     // 类型是 *const [12:0]u8
@@ -2692,6 +2735,13 @@ pub fn main(init: std.process.Init.Minimal) void {
     // 字符串以 null 结尾（哨兵值）
     std.debug.print("哨兵值: {}\n", .{str[str.len]}); // 输出: 0
 }
+```
+
+预期输出：
+```
+字符串: Hello, Zig!
+长度（不含哨兵）: 11
+哨兵值: 0
 ```
 
 ### 多行字符串字面量
@@ -2722,6 +2772,21 @@ pub fn main(init: std.process.Init.Minimal) void {
 }
 ```
 
+预期输出：
+```
+多行字符串:
+第一行
+第二行
+第三行
+代码:
+fn main() void {
+    const x = "字符串";
+    std.debug.print("{s}\n", .{x});
+}
+```
+
+
+
 **特点**：
 - 不处理转义序列
 - 不包含最后的换行符
@@ -2729,39 +2794,78 @@ pub fn main(init: std.process.Init.Minimal) void {
 
 ## 可选类型（Optional）
 
-Zig 的可选类型（Optional）使用 `?T` 表示，提供了多种操作方式。
+Zig 的可选类型使用 `?T` 表示，用于表示值可能存在或不存在的情况，是 Zig 类型系统的重要组成部分。
+
+### 核心概念
+
+- **可选类型**：表示值可能存在（`T`）或不存在（`null`）
+- **语法**：`?T` 表示类型 `T` 或 `null`
+- **内存布局**：额外存储一个标志位，指示值是否存在
+
+### 为什么需要可选类型？
+
+**问题场景**：
+- 查找操作可能找不到结果
+- 配置项可能未设置
+- 资源可能未初始化
+
+**传统解决方案的问题**：
+- C 语言：使用特殊值（如 `-1`、`NULL`）表示"不存在"，容易出错
+- Java：使用 `null` 引用，导致 `NullPointerException`
+- Zig：使用可选类型，编译期强制处理"不存在"的情况
+
+### Zig 的设计理念
+
+**类型安全**：
+- 编译期强制处理 `null` 情况
+- 不能直接使用可选值，必须先解包
+- 避免空指针异常
+
+**显式处理**：
+- 使用 `if`、`orelse`、`.?` 等操作显式处理
+- 代码意图清晰，易于理解
+- 错误处理逻辑显式可见
 
 ### 基本操作
 
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     const maybe_number: ?i32 = 42;
-    
+
     // 方式1：使用 if 解包
     if (maybe_number) |number| {
         std.debug.print("值: {}\n", .{number});
     } else {
         std.debug.print("null\n", .{});
     }
-    
+
     // 方式2：使用 .? 操作符（如果是 null 则 panic）
     const value1 = maybe_number.?;
     std.debug.print(".? 操作符: {}\n", .{value1});
-    
+
     // 方式3：使用 orelse 提供默认值
     const maybe_null: ?i32 = null;
     const value2 = maybe_null orelse 0;
     std.debug.print("orelse 默认值: {}\n", .{value2});
-    
+
     // orelse 可以接表达式
-    const value3 = maybe_null orelse {
+    const value3 = maybe_null orelse blk: {
         std.debug.print("遇到 null，计算默认值\n", .{});
-        break :blk 100;
+        break :blk 100; // ✅ 正确：使用 break 返回值
     };
     std.debug.print("orelse 表达式: {}\n", .{value3});
 }
+```
+
+预期输出：
+```
+值: 42
+.? 操作符: 42
+orelse 默认值: 0
+遇到 null，计算默认值
+orelse 表达式: 100
 ```
 
 ### orelse 与 .? 的区别
@@ -2805,7 +2909,6 @@ pub fn main(init: std.process.Init.Minimal) void {
 
 ```zig
 // 可选类型：查找操作可能找不到结果
-// ❌ 错误示例
 fn findUser(id: u32) ?User {
     if (database.has(id)) {
         return database.get(id);
@@ -2821,459 +2924,3 @@ fn readFile(path: []const u8) ![]u8 {
     // ...
 }
 ```
-
----
-
-## 章节练习题
-
-### 基础题
-
-**题目1**：编写一个程序，计算 1 到 100 的和。
-
-**要求**：
-- 使用变量声明和基本运算
-- 输出最终结果
-- 预期输出：5050
-
-**解题思路**：
-1. 使用 `var` 声明可变变量 `sum` 存储累加结果
-2. 使用循环遍历 1 到 100
-3. 在循环中累加每个数字
-4. 最后输出结果
-
-**参考答案**：
-```zig
-const std = @import("std");
-
-pub fn main(init: std.process.Init.Minimal) void {
-    var sum: u32 = 0;
-    var i: u32 = 1;
-    
-    while (i <= 100) : (i += 1) {
-        sum += i;
-    }
-    
-    std.debug.print("1 到 100 的和：{}\n", .{sum});
-}
-```
-
-**预期输出**：
-```
-1 到 100 的和：5050
-```
-
-**题目2**：编写一个程序，演示不同整数类型的范围和溢出行为。
-
-**要求**：
-- 声明 `u8`、`i8`、`u16`、`i16` 类型的变量
-- 输出每种类型的最大值和最小值
-- 演示溢出时的行为（使用 `@wrappingAdd` 等操作）
-
-**解题思路**：
-1. 使用 `std.math.maxInt` 和 `std.math.minInt` 获取范围
-2. 使用 `@wrappingAdd` 进行溢出安全的加法
-3. 观察溢出后的结果
-
-**参考答案**：
-```zig
-const std = @import("std");
-
-pub fn main(init: std.process.Init.Minimal) void {
-    std.debug.print("=== 整数类型范围演示 ===\n\n", .{});
-    
-    std.debug.print("u8 范围：{} 到 {}\n", .{
-        std.math.minInt(u8),
-        std.math.maxInt(u8),
-    });
-    
-    std.debug.print("i8 范围：{} 到 {}\n", .{
-        std.math.minInt(i8),
-        std.math.maxInt(i8),
-    });
-    
-    std.debug.print("u16 范围：{} 到 {}\n", .{
-        std.math.minInt(u16),
-        std.math.maxInt(u16),
-    });
-    
-    std.debug.print("i16 范围：{} 到 {}\n\n", .{
-        std.math.minInt(i16),
-        std.math.maxInt(i16),
-    });
-    
-    std.debug.print("=== 溢出行为演示 ===\n", .{});
-    var a: u8 = 255;
-    std.debug.print("u8 最大值：{}\n", .{a});
-    const overflow_result = @addWithOverflow(a, 1);
-    std.debug.print("255 + 1 (溢出) = {}\n", .{overflow_result});
-}
-```
-
-**预期输出**：
-```
-=== 整数类型范围演示 ===
-
-u8 范围：0 到 255
-i8 范围：-128 到 127
-u16 范围：0 到 65535
-i16 范围：-32768 到 32767
-
-=== 溢出行为演示 ===
-u8 最大值：255
-255 + 1 (溢出) = 0
-```
-
-**题目3**：编写一个程序，创建并操作多维数组。
-
-**要求**：
-- 创建一个 3x3 的二维数组
-- 初始化数组元素
-- 计算对角线元素的和
-- 输出数组和计算结果
-
-**解题思路**：
-1. 声明 `[3][3]i32` 类型的二维数组
-2. 使用嵌套循环初始化元素
-3. 计算对角线元素（`[0][0]`、`[1][1]`、`[2][2]`）的和
-4. 输出结果
-
-**参考答案**：
-```zig
-const std = @import("std");
-
-pub fn main(init: std.process.Init.Minimal) void {
-    var matrix: [3][3]i32 = [_][3]i32{
-        [_]i32{ 1, 2, 3 },
-        [_]i32{ 4, 5, 6 },
-        [_]i32{ 7, 8, 9 },
-    };
-    
-    std.debug.print("=== 3x3 矩阵 ===\n", .{});
-    for (matrix, 0..) |row, i| {
-        std.debug.print("行 {}：", .{i});
-        for (row) |elem| {
-            std.debug.print("{:3} ", .{elem});
-        }
-        std.debug.print("\n", .{});
-    }
-    
-    var diagonal_sum: i32 = 0;
-    var i: usize = 0;
-    while (i < 3) : (i += 1) {
-        diagonal_sum += matrix[i][i];
-    }
-    
-    std.debug.print("\n对角线元素和：{}\n", .{diagonal_sum});
-}
-```
-
-**预期输出**：
-```
-=== 3x3 矩阵 ===
-行 0：  1   2   3 
-行 1：  4   5   6 
-行 2：  7   8   9 
-
-对角线元素和：15
-```
-
-### 进阶题
-
-**题目1**：实现一个程序，演示数组与切片的区别和联系。
-
-**要求**：
-- 创建一个固定大小的数组
-- 从数组创建多个切片
-- 修改切片元素，观察对原数组的影响
-- 输出内存地址，验证切片是指向数组的视图
-
-**解题思路**：
-1. 声明数组并初始化
-2. 使用 `[start..end]` 语法创建切片
-3. 修改切片元素
-4. 输出数组和切片的地址和内容
-
-**参考答案**：
-```zig
-const std = @import("std");
-
-pub fn main(init: std.process.Init.Minimal) void {
-    std.debug.print("=== 数组与切片演示 ===\n\n", .{});
-    
-    var array: [5]i32 = [_]i32{ 10, 20, 30, 40, 50 };
-    
-    std.debug.print("原始数组：", .{});
-    for (array) |elem| {
-        std.debug.print("{} ", .{elem});
-    }
-    std.debug.print("\n", .{});
-    std.debug.print("数组地址：{}\n\n", .{&array});
-    
-    var slice1: []i32 = array[1..4];
-    std.debug.print("切片1 (array[1..4])：", .{});
-    for (slice1) |elem| {
-        std.debug.print("{} ", .{elem});
-    }
-    std.debug.print("\n", .{});
-    std.debug.print("切片1 地址：{}\n", .{slice1.ptr});
-    std.debug.print("切片1 长度：{}\n\n", .{slice1.len});
-    
-    std.debug.print("修改切片1[0] = 99\n", .{});
-    slice1[0] = 99;
-    
-    std.debug.print("修改后的数组：", .{});
-    for (array) |elem| {
-        std.debug.print("{} ", .{elem});
-    }
-    std.debug.print("\n\n", .{});
-    
-    var slice2: []i32 = array[0..2];
-    std.debug.print("切片2 (array[0..2])：", .{});
-    for (slice2) |elem| {
-        std.debug.print("{} ", .{elem});
-    }
-    std.debug.print("\n", .{});
-    std.debug.print("切片2 地址：{}\n", .{slice2.ptr});
-}
-```
-
-**预期输出**：
-```
-=== 数组与切片演示 ===
-
-原始数组：10 20 30 40 50 
-数组地址：*const [5]i32@...
-
-切片1 (array[1..4])：20 30 40 
-切片1 地址：*i32@...
-切片1 长度：3
-
-修改切片1[0] = 99
-修改后的数组：10 99 30 40 50 
-
-切片2 (array[0..2])：10 99 
-切片2 地址：*i32@...
-```
-
-**题目2**：实现一个简单的学生成绩管理系统，使用结构体和数组。
-
-**要求**：
-- 定义 `Student` 结构体，包含姓名和成绩
-- 创建学生数组
-- 计算平均成绩、最高分和最低分
-- 输出统计结果
-
-**解题思路**：
-1. 定义 `Student` 结构体
-2. 创建学生数组并初始化
-3. 遍历数组计算统计数据
-4. 输出结果
-
-**参考答案**：
-```zig
-const std = @import("std");
-
-const Student = struct {
-    name: []const u8,
-    score: u32,
-};
-
-pub fn main(init: std.process.Init.Minimal) void {
-    const students: [5]Student = [_]Student{
-        .{ .name = "张三", .score = 85 },
-        .{ .name = "李四", .score = 92 },
-        .{ .name = "王五", .score = 78 },
-        .{ .name = "赵六", .score = 95 },
-        .{ .name = "钱七", .score = 88 },
-    };
-    
-    std.debug.print("=== 学生成绩管理系统 ===\n\n", .{});
-    
-    std.debug.print("学生列表：\n", .{});
-    for (students) |student| {
-        std.debug.print("  {s}: {} 分\n", .{ student.name, student.score });
-    }
-    
-    var total: u32 = 0;
-    var max_score: u32 = 0;
-    var min_score: u32 = 100;
-    var max_name: []const u8 = "";
-    var min_name: []const u8 = "";
-    
-    for (students) |student| {
-        total += student.score;
-        if (student.score > max_score) {
-            max_score = student.score;
-            max_name = student.name;
-        }
-        if (student.score < min_score) {
-            min_score = student.score;
-            min_name = student.name;
-        }
-    }
-    
-    const average = @as(f32, @floatFromInt(total)) / @as(f32, @floatFromInt(students.len));
-    
-    std.debug.print("\n统计结果：\n", .{});
-    std.debug.print("  平均分：{d:.2}\n", .{average});
-    std.debug.print("  最高分：{s} ({} 分)\n", .{ max_name, max_score });
-    std.debug.print("  最低分：{s} ({} 分)\n", .{ min_name, min_score });
-}
-```
-
-**预期输出**：
-```
-=== 学生成绩管理系统 ===
-
-学生列表：
-  张三: 85 分
-  李四: 92 分
-  王五: 78 分
-  赵六: 95 分
-  钱七: 88 分
-
-统计结果：
-  平均分：87.60
-  最高分：赵六 (95 分)
-  最低分：王五 (78 分)
-```
-
-### 挑战题
-
-**题目**：实现一个简单的位图（BitMap）数据结构，使用数组和位操作。
-
-**要求**：
-- 使用 `[]u8` 存储位数据
-- 实现设置位、清除位、检查位的函数
-- 演示位图的使用场景（如标记已使用/未使用的状态）
-- 输出操作过程和结果
-
-**解题思路**：
-1. 计算需要的字节数（bits / 8）
-2. 使用位操作设置、清除和检查位
-3. 使用 `|` 运算符设置位
-4. 使用 `& ~` 运算符清除位
-5. 使用 `&` 运算符检查位
-
-**参考答案**：
-```zig
-const std = @import("std");
-
-const BitMap = struct {
-    data: []u8,
-    
-    fn init(allocator: std.mem.Allocator, num_bits: usize) !BitMap {
-        const num_bytes = (num_bits + 7) / 8;
-        const data = try allocator.alloc(u8, num_bytes);
-        @memset(data, 0);
-        return BitMap{ .data = data };
-    }
-    
-    fn deinit(self: *BitMap, allocator: std.mem.Allocator) void {
-        allocator.free(self.data);
-    }
-    
-    fn set(self: *BitMap, bit_index: usize) void {
-        const byte_index = bit_index / 8;
-        const bit_offset = @as(u3, @intCast(bit_index % 8));
-        self.data[byte_index] |= (@as(u8, 1) << bit_offset);
-    }
-    
-    fn clear(self: *BitMap, bit_index: usize) void {
-        const byte_index = bit_index / 8;
-        const bit_offset = @as(u3, @intCast(bit_index % 8));
-        self.data[byte_index] &= ~(@as(u8, 1) << bit_offset);
-    }
-    
-    fn isSet(self: *const BitMap, bit_index: usize) bool {
-        const byte_index = bit_index / 8;
-        const bit_offset = @as(u3, @intCast(bit_index % 8));
-        return (self.data[byte_index] & (@as(u8, 1) << bit_offset)) != 0;
-    }
-};
-
-pub fn main(init: std.process.Init.Minimal) !void {
-    var gpa: std.heap.DebugAllocator(.{}) = .init;
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
-    
-    var bitmap = try BitMap.init(allocator, 16);
-    defer bitmap.deinit(allocator);
-    
-    std.debug.print("=== 位图演示 ===\n\n", .{});
-    
-    std.debug.print("初始状态（所有位为 0）：\n", .{});
-    for (0..16) |i| {
-        std.debug.print("位 {}：{}  ", .{ i, bitmap.isSet(i) });
-        if ((i + 1) % 4 == 0) std.debug.print("\n", .{});
-    }
-    
-    std.debug.print("\n设置位 0, 3, 7, 15：\n", .{});
-    bitmap.set(0);
-    bitmap.set(3);
-    bitmap.set(7);
-    bitmap.set(15);
-    
-    for (0..16) |i| {
-        std.debug.print("位 {}：{}  ", .{ i, bitmap.isSet(i) });
-        if ((i + 1) % 4 == 0) std.debug.print("\n", .{});
-    }
-    
-    std.debug.print("\n清除位 3：\n", .{});
-    bitmap.clear(3);
-    
-    for (0..16) |i| {
-        std.debug.print("位 {}：{}  ", .{ i, bitmap.isSet(i) });
-        if ((i + 1) % 4 == 0) std.debug.print("\n", .{});
-    }
-    
-    std.debug.print("\n字节表示：", .{});
-    for (bitmap.data) |byte| {
-        std.debug.print("{b:0>8} ", .{byte});
-    }
-    std.debug.print("\n", .{});
-}
-```
-
-**预期输出**：
-```
-=== 位图演示 ===
-
-初始状态（所有位为 0）：
-位 0：false  位 1：false  位 2：false  位 3：false  
-位 4：false  位 5：false  位 6：false  位 7：false  
-位 8：false  位 9：false  位 10：false  位 11：false  
-位 12：false  位 13：false  位 14：false  位 15：false  
-
-设置位 0, 3, 7, 15：
-位 0：true  位 1：false  位 2：false  位 3：true  
-位 4：false  位 5：false  位 6：false  位 7：true  
-位 8：false  位 9：false  位 10：false  位 11：false  
-位 12：false  位 13：false  位 14：false  位 15：true  
-
-清除位 3：
-位 0：true  位 1：false  位 2：false  位 3：false  
-位 4：false  位 5：false  位 6：false  位 7：true  
-位 8：false  位 9：false  位 10：false  位 11：false  
-位 12：false  位 13：false  位 14：false  位 15：true  
-
-字节表示：10001001 10000000 
-```
-
----
-
-> 💡 **章节过渡**：从基本语法到控制流语句
-> 
-> 在[基本语法结构](chapter-basic-syntax.md)中，我们学习了 Zig 的基本语法结构，包括变量、数据类型、数组、切片、枚举、联合和结构体。
-> 现在，我们将学习控制流语句，掌握如何控制程序的执行流程。
-> 
-> **为什么基本语法是控制流的基础？**
-> 
-> 1. **数据与逻辑**：基本语法提供了数据结构，控制流提供逻辑处理
-> 2. **类型系统**：控制流语句（如 if）可以处理可选类型和错误联合类型
-> 3. **表达式特性**：Zig 的控制流语句是表达式，可以返回值
-> 
-> **学习建议**：
-> - 回顾可选类型（?T）和错误联合类型（!T）的用法
-> - 理解 Zig 的显式设计哲学
-> - 准备学习 Zig 独特的控制流特性

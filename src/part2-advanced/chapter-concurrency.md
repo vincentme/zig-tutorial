@@ -487,6 +487,105 @@ fn incrementWorker(counter: *Counter, id: usize) void {
 - `defer` 确保锁一定会释放
 - 多线程环境下必须同步访问共享数据
 
+# 线程局部变量（Thread-Local Storage, TLS）
+
+除了使用互斥锁保护共享数据，另一种避免数据竞争的方法是使用线程局部变量，让每个线程拥有独立的数据副本。
+
+### 基本语法
+
+使用 `threadlocal` 关键字声明线程局部变量：
+
+```zig
+const std = @import("std");
+
+// 线程局部变量：每个线程有独立的副本
+threadlocal var counter: i32 = 0;
+
+fn incrementCounter() void {
+    counter += 1;
+    std.debug.print("计数器值: {}\n", .{counter});
+}
+
+pub fn main(init: std.process.Init.Minimal) void {
+    // 主线程
+    incrementCounter(); // 输出: 1
+    incrementCounter(); // 输出: 2
+}
+```
+
+### 多线程示例
+
+```zig
+const std = @import("std");
+
+threadlocal var thread_id: usize = 0;
+
+fn worker(id: usize) void {
+    thread_id = id;  // 每个线程设置自己的 ID
+    
+    for (0..3) |i| {
+        std.debug.print("线程 {}: 第 {} 次执行\n", .{ thread_id, i });
+        std.time.sleep(100 * std.time.ns_per_ms);
+    }
+}
+
+pub fn main(init: std.process.Init.Minimal) !void {
+    var threads: [3]std.Thread = undefined;
+    
+    for (&threads, 0..) |*t, i| {
+        t.* = try std.Thread.spawn(.{}, worker, .{i});
+    }
+    
+    for (threads) |t| {
+        t.join();
+    }
+}
+```
+
+**预期输出**：
+```
+线程 0: 第 0 次执行
+线程 1: 第 0 次执行
+线程 2: 第 0 次执行
+线程 0: 第 1 次执行
+线程 1: 第 1 次执行
+线程 2: 第 1 次执行
+...
+```
+
+### 线程局部变量 vs 互斥锁
+
+| 特性           | 线程局部变量                     | 互斥锁                       |
+| -------------- | -------------------------------- | ---------------------------- |
+| **数据共享**   | 每个线程独立副本                 | 线程间共享                   |
+| **同步开销**   | 无                               | 有（锁竞争）                 |
+| **适用场景**   | 线程特定状态、避免竞争           | 需要线程间共享数据           |
+| **内存占用**   | 每个线程一份                     | 只有一份                     |
+
+### 实际应用场景
+
+1. **线程特定的日志缓冲区**：
+   ```zig
+   threadlocal var log_buffer: [1024]u8 = undefined;
+   ```
+
+2. **随机数生成器**：
+   ```zig
+   threadlocal var rng: std.Random.DefaultPrng = undefined;
+   ```
+
+3. **线程 ID 或状态**：
+   ```zig
+   threadlocal var thread_local_id: usize = 0;
+   ```
+
+### 注意事项
+
+- 线程局部变量的初始化在第一次访问时发生
+- 需要平台支持 TLS
+- 在单线程程序中，行为与普通全局变量相同
+- 不能用于需要线程间共享的数据
+
 ## 同步机制
 
 # 为什么需要同步？
