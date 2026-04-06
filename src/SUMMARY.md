@@ -6,8 +6,8 @@
 
 - [Zig 语言介绍](part1-basics/chapter-introduction.md)
 - [开发环境搭建](part1-basics/chapter-setup.md)
-- [【draft】基础语法](part1-basics/chapter-basic-syntax.md)
-- [【draft】控制流](part1-basics/chapter-control-flow.md)
+- [【draft】基础语法（上）- 基本类型与复合类型](part1-basics/chapter-basic-types.md)
+- [【draft】基础语法（下）- 控制流与资源管理](part1-basics/chapter-control-flow.md)
 - [【draft】函数](part1-basics/chapter-functions.md)
 - [【draft】错误处理](part1-basics/chapter-error-handling.md)
 - [【draft】构建系统](part1-basics/chapter-build-system.md)

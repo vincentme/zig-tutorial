@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-77c78143.js";
+            window.path_to_searchindex_js = "../searchindex-4958c3a4.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-5fb88d48.js"></script>
+        <script src="../toc-cf9e32e7.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -1507,6 +1507,300 @@ const ConcurrentHashMap = struct {
     
     // TODO: 实现 put, get, remove（使用分段锁）
 };
+</code></pre>
+<h2 id="线程安全的数据结构"><a class="header" href="#线程安全的数据结构">线程安全的数据结构</a></h2>
+<p>在实际项目中，经常需要线程安全的数据结构。以下是线程安全计数器的实现：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+const ThreadSafeCounter = struct {
+    value: std.atomic.Value(usize),
+    mutex: std.Thread.Mutex,
+    
+    fn init() ThreadSafeCounter {
+        return .{
+            .value = std.atomic.Value(usize).init(0),
+            .mutex = .{},
+        };
+    }
+    
+    fn increment(self: *ThreadSafeCounter) void {
+        _ = self.value.fetchAdd(1, .monotonic);
+    }
+    
+    fn incrementComplex(self: *ThreadSafeCounter) void {
+        self.mutex.lock();
+        defer self.mutex.unlock();
+        const current = self.value.load(.monotonic);
+        self.value.store(current + 1, .monotonic);
+    }
+    
+    fn get(self: *const ThreadSafeCounter) usize {
+        return self.value.load(.monotonic);
+    }
+};
+
+pub fn main(init: std.process.Init.Minimal) !void {
+    var counter = ThreadSafeCounter.init();
+    
+    const worker = struct {
+        fn work(c: *ThreadSafeCounter) void {
+            for (0..1000) |_| {
+                c.increment();
+            }
+        }
+    }.work;
+    
+    var threads: [10]std.Thread = undefined;
+    for (&amp;threads, 0..) |*thread, i| {
+        _ = i;
+        thread.* = try std.Thread.spawn(.{}, worker, .{&amp;counter});
+    }
+    
+    for (threads) |thread| {
+        thread.join();
+    }
+    
+    std.debug.print("最终计数：{}\n", .{counter.get()});
+}
+</code></pre>
+<p><strong>选择同步原语的原则</strong>：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>场景</th><th>推荐方案</th><th>原因</th></tr>
+</thead>
+<tbody>
+<tr><td>简单计数器</td><td>原子操作</td><td>性能最优，无锁</td></tr>
+<tr><td>复杂临界区</td><td>互斥锁</td><td>保证互斥访问</td></tr>
+<tr><td>读多写少</td><td>读写锁</td><td>提高并发度</td></tr>
+<tr><td>等待条件</td><td>条件变量</td><td>高效等待</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>线程安全检查清单</strong>：</p>
+<ol>
+<li>✅ <strong>识别共享数据</strong>：明确哪些数据会被多个线程访问</li>
+<li>✅ <strong>选择同步原语</strong>：根据访问模式选择合适的锁或原子操作</li>
+<li>✅ <strong>最小化临界区</strong>：锁的范围越小越好</li>
+<li>✅ <strong>避免嵌套锁</strong>：防止死锁</li>
+<li>✅ <strong>使用 defer 确保释放</strong>：确保锁一定会释放</li>
+</ol>
+<h2 id="常见并发陷阱"><a class="header" href="#常见并发陷阱">常见并发陷阱</a></h2>
+<h1 id="死锁deadlock"><a class="header" href="#死锁deadlock">死锁（Deadlock）</a></h1>
+<p>死锁是指两个或多个线程互相等待对方释放资源，导致所有线程都无法继续执行。</p>
+<p><strong>死锁示例</strong>：</p>
+<pre><code class="language-zig">// ❌ 错误示例
+fn deadlockExample() void {
+    var mutex1: std.Thread.Mutex = .{};
+    var mutex2: std.Thread.Mutex = .{};
+    
+    // 线程1：先锁 mutex1，再锁 mutex2
+    const thread1 = std.Thread.spawn(.{}, struct {
+        fn work(m1: *std.Thread.Mutex, m2: *std.Thread.Mutex) void {
+            m1.lock();
+            defer m1.unlock();
+            
+            std.time.sleep(100 * std.time.ns_per_ms);
+            
+            m2.lock();
+            defer m2.unlock();
+        }
+    }.work, .{ &amp;mutex1, &amp;mutex2 });
+    
+    // 线程2：先锁 mutex2，再锁 mutex1（相反顺序）
+    const thread2 = std.Thread.spawn(.{}, struct {
+        fn work(m1: *std.Thread.Mutex, m2: *std.Thread.Mutex) void {
+            m2.lock();
+            defer m2.unlock();
+            
+            std.time.sleep(100 * std.time.ns_per_ms);
+            
+            m1.lock();
+            defer m1.unlock();
+        }
+    }.work, .{ &amp;mutex1, &amp;mutex2 });
+    
+    thread1.join();
+    thread2.join();
+}
+</code></pre>
+<p><strong>避免死锁的方法</strong>：</p>
+<pre><code class="language-zig">// ✅ 方法1：统一加锁顺序
+fn noDeadlockMethod1() void {
+    var mutex1: std.Thread.Mutex = .{};
+    var mutex2: std.Thread.Mutex = .{};
+    
+    mutex1.lock();
+    defer mutex1.unlock();
+    
+    mutex2.lock();
+    defer mutex2.unlock();
+}
+
+// ✅ 方法2：使用 tryLock 避免阻塞
+fn noDeadlockMethod2() void {
+    var mutex1: std.Thread.Mutex = .{};
+    var mutex2: std.Thread.Mutex = .{};
+    
+    mutex1.lock();
+    errdefer mutex1.unlock();
+    
+    if (mutex2.tryLock()) {
+        defer mutex2.unlock();
+    } else {
+        mutex1.unlock();
+    }
+}
+</code></pre>
+<h1 id="竞态条件race-condition"><a class="header" href="#竞态条件race-condition">竞态条件（Race Condition）</a></h1>
+<p>竞态条件是指多个线程访问共享数据，且至少有一个线程在写入，导致结果依赖于执行顺序。</p>
+<pre><code class="language-zig">// ❌ 错误示例
+var counter: usize = 0;
+
+fn unsafeIncrement() void {
+    for (0..1000) |_| {
+        counter += 1;
+    }
+}
+
+// ✅ 正确做法：使用原子操作
+var safe_counter: std.atomic.Value(usize) = std.atomic.Value(usize).init(0);
+
+fn safeIncrement() void {
+    for (0..1000) |_| {
+        _ = safe_counter.fetchAdd(1, .monotonic);
+    }
+}
+</code></pre>
+<h1 id="活锁livelock"><a class="header" href="#活锁livelock">活锁（Livelock）</a></h1>
+<p>活锁是指线程不断改变状态但无法取得进展，类似于两个人在走廊里互相让路。</p>
+<pre><code class="language-zig">// ❌ 错误示例：立即重试可能导致活锁
+fn livelockExample() void {
+    var mutex: std.Thread.Mutex = .{};
+    var should_retry = true;
+    
+    while (should_retry) {
+        if (mutex.tryLock()) {
+            defer mutex.unlock();
+            should_retry = false;
+        }
+    }
+}
+
+// ✅ 正确做法：添加退避策略
+fn noLivelock() void {
+    var mutex: std.Thread.Mutex = .{};
+    var retry_count: usize = 0;
+    
+    while (retry_count &lt; 10) : (retry_count += 1) {
+        if (mutex.tryLock()) {
+            defer mutex.unlock();
+            break;
+        }
+        std.time.sleep(std.time.ns_per_ms * @as(u64, 1) &lt;&lt; @intCast(retry_count));
+    }
+}
+</code></pre>
+<h2 id="性能优化建议"><a class="header" href="#性能优化建议">性能优化建议</a></h2>
+<h1 id="1-减少锁竞争"><a class="header" href="#1-减少锁竞争">1. 减少锁竞争</a></h1>
+<pre><code class="language-zig">// ❌ 错误示例：整个操作都在临界区内
+fn inefficientLock(data: *Data) void {
+    var mutex: std.Thread.Mutex = .{};
+    mutex.lock();
+    defer mutex.unlock();
+    
+    processData(data);
+    saveResult(data);
+}
+
+// ✅ 最小化临界区
+fn efficientLock(data: *Data) void {
+    var mutex: std.Thread.Mutex = .{};
+    
+    mutex.lock();
+    const local_copy = data.value;
+    mutex.unlock();
+    
+    const result = processData(local_copy);
+    
+    mutex.lock();
+    data.result = result;
+    mutex.unlock();
+}
+</code></pre>
+<h1 id="2-使用无锁数据结构"><a class="header" href="#2-使用无锁数据结构">2. 使用无锁数据结构</a></h1>
+<p>对于简单操作，优先使用原子操作：</p>
+<pre><code class="language-zig">const LockFreeCounter = struct {
+    value: std.atomic.Value(usize),
+    
+    fn increment(self: *LockFreeCounter) void {
+        _ = self.value.fetchAdd(1, .monotonic);
+    }
+    
+    fn get(self: *const LockFreeCounter) usize {
+        return self.value.load(.monotonic);
+    }
+};
+</code></pre>
+<h1 id="3-避免伪共享false-sharing"><a class="header" href="#3-避免伪共享false-sharing">3. 避免伪共享（False Sharing）</a></h1>
+<p>伪共享是指多个线程访问同一缓存行的不同变量，导致缓存频繁失效。</p>
+<pre><code class="language-zig">// ❌ 错误示例
+const Data = struct {
+    counter1: usize,
+    counter2: usize,
+};
+
+// ✅ 使用缓存行对齐
+const CACHE_LINE_SIZE = 64;
+
+const AlignedData = struct {
+    counter1: usize align(CACHE_LINE_SIZE),
+    counter2: usize align(CACHE_LINE_SIZE),
+};
+</code></pre>
+<h1 id="4-性能对比"><a class="header" href="#4-性能对比">4. 性能对比</a></h1>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>同步方式</th><th>性能</th><th>适用场景</th></tr>
+</thead>
+<tbody>
+<tr><td>无锁（原子操作）</td><td>⭐⭐⭐⭐⭐</td><td>简单计数、标志位</td></tr>
+<tr><td>自旋锁</td><td>⭐⭐⭐⭐</td><td>短临界区、低竞争</td></tr>
+<tr><td>互斥锁</td><td>⭐⭐⭐</td><td>长临界区、高竞争</td></tr>
+<tr><td>读写锁</td><td>⭐⭐⭐</td><td>读多写少</td></tr>
+</tbody>
+</table>
+</div>
+<h1 id="5-性能测试建议"><a class="header" href="#5-性能测试建议">5. 性能测试建议</a></h1>
+<pre><code class="language-zig">const std = @import("std");
+
+fn benchmarkMutex(allocator: std.mem.Allocator) !void {
+    var mutex: std.Thread.Mutex = .{};
+    var counter: usize = 0;
+    
+    const start = std.time.nanoTimestamp();
+    
+    var threads: [4]std.Thread = undefined;
+    for (&amp;threads) |*thread| {
+        thread.* = try std.Thread.spawn(.{}, struct {
+            fn work(m: *std.Thread.Mutex, c: *usize) void {
+                for (0..100000) |_| {
+                    m.lock();
+                    defer m.unlock();
+                    c.* += 1;
+                }
+            }
+        }.work, .{ &amp;mutex, &amp;counter });
+    }
+    
+    for (threads) |thread| thread.join();
+    
+    const end = std.time.nanoTimestamp();
+    const elapsed = @as(f64, @floatFromInt(end - start)) / 1_000_000.0;
+    
+    std.debug.print("互斥锁耗时：{d:.2}ms\n", .{elapsed});
+}
 </code></pre>
 <h2 id="并发编程最佳实践"><a class="header" href="#并发编程最佳实践">并发编程最佳实践</a></h2>
 <h1 id="1-避免数据竞争"><a class="header" href="#1-避免数据竞争">1. 避免数据竞争</a></h1>

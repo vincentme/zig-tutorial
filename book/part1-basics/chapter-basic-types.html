@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>【draft】基础语法 - Zig 编程语言入门教程</title>
+        <title>【draft】基础语法（上）- 基本类型与复合类型 - Zig 编程语言入门教程</title>
 
 
         <!-- Custom HTML head -->
@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-77c78143.js";
+            window.path_to_searchindex_js = "../searchindex-4958c3a4.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-5fb88d48.js"></script>
+        <script src="../toc-cf9e32e7.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -147,7 +147,7 @@
                         <a href="https://github.com/vincentme/zig-tutorial" title="Git repository" aria-label="Git repository">
                             <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
                         </a>
-                        <a href="https://github.com/vincentme/zig-tutorial/edit/main/src/part1-basics/chapter-basic-syntax.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                        <a href="https://github.com/vincentme/zig-tutorial/edit/main/src/part1-basics/chapter-basic-types.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
                             <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
                         </a>
 
@@ -181,205 +181,57 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="draft基础语法"><a class="header" href="#draft基础语法">【draft】基础语法</a></h1>
-<p>本章将介绍 Zig 的基本语法元素，包括变量声明、数据类型、数组、切片、枚举、联合和结构体。这些是构建 Zig 程序的基础。</p>
+                        <h1 id="draft基础语法上--基本类型与复合类型"><a class="header" href="#draft基础语法上--基本类型与复合类型">【draft】基础语法（上）- 基本类型与复合类型</a></h1>
+<p>本章介绍 Zig 的基本类型和复合类型，包括变量声明、基本数据类型、数组、切片、枚举、联合、结构体和元组。</p>
+<p>Zig 的类型系统分为两个层次：<strong>基本类型</strong>（整数、浮点数、布尔值等）是构建程序的最小单元，<strong>复合类型</strong>（数组、结构体、枚举等）则将基本类型组合成更复杂的数据结构。理解这些类型是学习 Zig 的第一步，后续章节将在此基础上介绍控制流、错误处理和内存管理等核心概念。</p>
 <h2 id="zig-编程基础"><a class="header" href="#zig-编程基础">Zig 编程基础</a></h2>
-<p>本节介绍 Zig 编程的基础概念，包括变量声明、命名规范、作用域规则等。这些是编写 Zig 程序的基本要素。</p>
 <h3 id="变量声明"><a class="header" href="#变量声明">变量声明</a></h3>
-<h3 id="类型系统特点"><a class="header" href="#类型系统特点">类型系统特点</a></h3>
-<p>Zig采用强类型系统，但支持类型推断。与C/C++不同，Zig明确区分：</p>
-<ul>
-<li><strong>常量（const）</strong>: 编译期或运行期不可变值</li>
-<li><strong>变量（var）</strong>: 可在运行期修改的值</li>
-<li><strong>编译期常量（comptime）</strong>: 在编译期计算并内联的值</li>
-</ul>
-<h3 id="设计理念"><a class="header" href="#设计理念">设计理念</a></h3>
-<ol>
-<li><strong>显式优于隐式</strong>: 明确区分可变与不可变，减少意外修改</li>
-<li><strong>编译期优化</strong>: 编译期常量可以被完全优化</li>
-<li><strong>内存安全</strong>: 不可变性防止并发问题</li>
-<li><strong>代码可读性</strong>: 一眼就能看出变量是否会被修改</li>
-</ol>
-<h3 id="应用场景"><a class="header" href="#应用场景">应用场景</a></h3>
-<ul>
-<li><strong>配置参数</strong>：使用<code>const</code>，防止意外修改</li>
-<li><strong>循环计数器</strong>：使用<code>var</code>，允许递增</li>
-<li><strong>数学常量</strong>：使用<code>comptime</code>，编译期计算</li>
-</ul>
-<h3 id="基本语法"><a class="header" href="#基本语法">基本语法</a></h3>
-<p>Zig 是强类型语言，支持类型推断：</p>
+<p>Zig 是强类型语言，支持类型推断。变量声明使用 <code>const</code>（常量）或 <code>var</code>（变量）：</p>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
-    // 常量声明（不可变）
-    const constant: i32 = 42;
-    const inferred_const = 100; // 类型推断为 comptime_int
+pub fn main(_: std.process.Init.Minimal) void {
+    const constant: i32 = 42;    // 常量：不可变
+    var mutable: i32 = 10;       // 变量：可变
     
-    // 变量声明（可变）
-    var mutable: i32 = 10;
-    var inferred_var = 20; // 类型推断为 i32
-    
-    mutable = 30; // 合法
-    // constant = 50; // 编译错误：常量不可修改
+    mutable = 30;                 // 合法
+    // constant = 50;             // 编译错误：常量不可修改
     
     std.debug.print("constant: {}, mutable: {}\n", .{ constant, mutable });
 }
 </code></pre>
-<p><strong>预期输出：</strong></p>
+<p>预期输出：</p>
 <pre><code>constant: 42, mutable: 30
 </code></pre>
 <h3 id="命名规范"><a class="header" href="#命名规范">命名规范</a></h3>
-<p>Zig 遵循明确的命名规范，确保代码风格一致且易于理解。</p>
-<h4 id="变量命名"><a class="header" href="#变量命名">变量命名</a></h4>
-<p><strong>蛇形命名法（snake_case）</strong>：用于变量名</p>
-<pre><code class="language-zig">// ✅ 正确示例
-var user_name: []const u8 = undefined;
-var current_score: i32 = 0;
-var is_active: bool = false;
-
-// ❌ 错误示例
-var userName: []const u8 = undefined;
-var CurrentScore: i32 = 0;
-</code></pre>
-<h4 id="函数命名"><a class="header" href="#函数命名">函数命名</a></h4>
-<p><strong>驼峰命名法（camelCase）</strong>：用于函数名</p>
-<pre><code class="language-zig">// ✅ 正确示例
-fn calculateTotal() i32 { }
-fn processUserData(data: []const u8) void { }
-fn isValidEmail(email: []const u8) bool { }
-
-// ❌ 错误示例
-fn calculate_total() i32 { }      // 错误：函数应使用驼峰命名
-fn CalculateTotal() i32 { }       // 错误：首字母应小写
-</code></pre>
-<h4 id="类型命名"><a class="header" href="#类型命名">类型命名</a></h4>
-<ul>
-<li><strong>结构体、枚举、联合的类型名</strong>使用 PascalCase</li>
-<li><strong>枚举成员名</strong>使用 PascalCase</li>
-<li><strong>结构体和联合的字段名</strong>使用 snake_case
-<ul>
-<li><strong>私有字段和方法</strong>使用下划线前缀</li>
-</ul>
-</li>
-</ul>
-<pre><code class="language-zig">// ✅ 正确示例
-const Person = struct {
+<p>Zig 遵循明确的命名规范，确保代码风格一致：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>标识符类型</th><th>命名规范</th><th>示例</th></tr>
+</thead>
+<tbody>
+<tr><td>变量、常量</td><td>snake_case</td><td><code>user_name</code>, <code>max_size</code></td></tr>
+<tr><td>函数</td><td>camelCase</td><td><code>calculateTotal</code>, <code>isValid</code></td></tr>
+<tr><td>类型（结构体、枚举、联合）</td><td>PascalCase</td><td><code>Person</code>, <code>Status</code></td></tr>
+<tr><td>枚举成员</td><td>PascalCase</td><td><code>Pending</code>, <code>InProgress</code></td></tr>
+<tr><td>私有字段和方法</td><td>下划线前缀</td><td><code>_count</code>, <code>_validate</code></td></tr>
+</tbody>
+</table>
+</div>
+<pre><code class="language-zig">const Person = struct {
     name: []const u8,
     age: u32,
-};
-
-const StudentRecord = struct {
-    student_id: usize,
-    grades: []f32,
+    _internal_id: usize,  // 私有字段
 };
 
 const Status = enum {
     Pending,
     InProgress,
     Completed,
-    Failed,
 };
 
-const Result = union {
-    success: []const u8,
-    error: ErrorType,
-};
-
-const Counter = struct {
-    _count: usize,              // 私有字段
-    
-    pub fn init() Counter {
-        return .{ ._count = 0 };
-    }
-    
-    pub fn increment(self: *Counter) void {
-        self._count += 1;
-    }
-    
-    fn _validate(self: *const Counter) bool {  // 私有方法
-        return self._count &lt; 1000;
-    }
-};
-
-// ❌ 错误示例
-const person = struct { };         // 错误：类型名应首字母大写
-const student_record = struct { }; // 错误：应使用帕斯卡命名
-
-const Status = enum {
-    pending,        // 错误：枚举成员应使用帕斯卡命名
-    in_progress,    // 错误：枚举成员应使用帕斯卡命名
-};
+fn calculateTotal() i32 { }
 </code></pre>
-<h4 id="常量命名"><a class="header" href="#常量命名">常量命名</a></h4>
-<p><strong>蛇形命名（snake_case）</strong>：用于常量，遵循既有约定时使用全大写</p>
-<pre><code class="language-zig">// ✅ 正确示例 - 常量使用 snake_case
-const max_size = 1024;
-const default_timeout = 30;
-const buffer_size = 4096;
-const max_connections = 100;
-const version = "1.0.0";
-
-// ✅ 正确示例 - 遵循既有约定时使用 SCREAMING_SNAKE_CASE
-const PI = 3.14159;              // 数学常量
-const ENOENT = error.FileNotFound; // POSIX 约定
-const SIGINT = 2;                // 信号常量
-
-// ❌ 错误示例
-const maxSize = 1024;            // 错误：应使用蛇形命名
-const MAX_SIZE = 1024;           // 不推荐：普通常量不需要全大写
-</code></pre>
-<h4 id="泛型类型参数命名"><a class="header" href="#泛型类型参数命名">泛型类型参数命名</a></h4>
-<p>泛型参数使用<strong>单个大写字母或描述性名称</strong>。</p>
-<pre><code class="language-zig">// ✅ 正确示例 - 单个字母
-fn Stack(comptime T: type) type {
-    return struct {
-        items: []T,
-    };
-}
-
-fn HashMap(comptime K: type, comptime V: type) type {
-    return struct {
-        keys: []K,
-        values: []V,
-    };
-}
-
-// ✅ 正确示例 - 描述性名称
-fn Queue(comptime Element: type) type {
-    return struct {
-        elements: []Element,
-    };
-}
-
-// ❌ 错误示例
-fn Stack(comptime t: type) type { }  // 错误：类型参数应大写
-fn Stack(comptime TYPE: type) type { } // 错误：不应全大写
-</code></pre>
-<h4 id="命名规范总结表"><a class="header" href="#命名规范总结表">命名规范总结表</a></h4>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>标识符类型</th><th>命名规范</th><th>示例</th><th>说明</th></tr>
-</thead>
-<tbody>
-<tr><td>变量</td><td>snake_case</td><td><code>user_name</code>, <code>current_score</code></td><td>单词间用下划线分隔，全小写</td></tr>
-<tr><td>函数</td><td>camelCase</td><td><code>calculateTotal</code>, <code>isValid</code></td><td>首字母小写，后续单词首字母大写</td></tr>
-<tr><td>结构体、枚举、联合的类型</td><td>PascalCase</td><td><code>Person</code>, <code>StudentRecord</code></td><td>每个单词首字母大写</td></tr>
-<tr><td>结构体和联合的字段</td><td>snake_case</td><td><code>student_id</code>, <code>age</code></td><td>单词间用下划线分隔，全小写</td></tr>
-<tr><td>枚举成员</td><td>PascalCase</td><td><code>Red</code>, <code>InProgress</code></td><td>每个单词首字母大写</td></tr>
-<tr><td>常量</td><td>snake_case</td><td><code>max_size</code>, <code>buffer_size</code></td><td>特殊约定可用 SCREAMING_SNAKE_CASE</td></tr>
-<tr><td>泛型参数</td><td>单个大写字母</td><td><code>T</code>, <code>K</code>, <code>V</code></td><td>或使用描述性名称如 <code>Element</code></td></tr>
-<tr><td>私有字段和方法</td><td>_snake_case _camelCase</td><td><code>_count</code>, <code>_validateInput</code></td><td>下划线前缀</td></tr>
-</tbody>
-</table>
-</div>
-<h4 id="命名最佳实践"><a class="header" href="#命名最佳实践">命名最佳实践</a></h4>
-<ol>
-<li><strong>使用有意义的名称</strong>：<code>user_count</code> 而非 <code>x</code></li>
-<li><strong>避免缩写</strong>：<code>error_message</code> 而非 <code>err_msg</code></li>
-<li><strong>布尔值使用 is/has/can 前缀</strong>：<code>is_valid</code> 而非 <code>valid</code></li>
-<li><strong>函数名使用动词</strong>：<code>getName()</code> 而非 <code>name()</code></li>
-</ol>
 <h3 id="变量遮蔽规则"><a class="header" href="#变量遮蔽规则">变量遮蔽规则</a></h3>
 <p>Zig <strong>完全禁止</strong>变量遮蔽（Shadowing）。标识符永远不允许使用相同的名称来“隐藏“其他标识符。这意味着：</p>
 <ul>
@@ -589,6 +441,9 @@ pub fn main(_: std.process.Init.Minimal) void {
 <li><strong>明确不安全操作</strong>：使用 <code>@truncate</code>、<code>@bitCast</code> 时添加注释说明意图</li>
 <li><strong>处理可能的错误</strong>：对于可能失败的转换，先检查范围再使用 <code>@intCast</code>，或使用 <code>std.math.cast</code></li>
 </ol>
+<blockquote>
+<p>📖 <strong>相关章节</strong>：类型转换失败时的错误处理机制将在<a href="chapter-error-handling.html">错误处理基础</a>中详细讲解。</p>
+</blockquote>
 <h2 id="数组和切片"><a class="header" href="#数组和切片">数组和切片</a></h2>
 <h3 id="数组-vs-切片核心概念"><a class="header" href="#数组-vs-切片核心概念">数组 vs 切片：核心概念</a></h3>
 <p>在 Zig 中，数组和切片是两个重要但不同的概念：</p>
@@ -664,6 +519,9 @@ matrix[2][0] = 7
 matrix[2][1] = 8
 matrix[2][2] = 9
 </code></pre>
+<blockquote>
+<p>📖 <strong>相关章节</strong>：数组遍历使用的 <code>for</code> 循环将在<a href="chapter-control-flow.html">控制流与资源管理</a>中详细讲解。</p>
+</blockquote>
 <h3 id="数组的实际应用"><a class="header" href="#数组的实际应用">数组的实际应用</a></h3>
 <pre><code class="language-zig">// 场景1：编译期已知大小的数据
 const BUFFER_SIZE = 1024;
@@ -867,7 +725,7 @@ pub fn main(_: std.process.Init.Minimal) void {
     });
 }
 </code></pre>
-<p><strong>预期输出</strong>：</p>
+<p>预期输出：</p>
 <pre><code>=== 数组 vs 切片内存布局 ===
 
 数组信息：
@@ -950,6 +808,9 @@ fn findSubstring(text: []const u8, pattern: []const u8) ?usize {
 <li><strong>无需存储长度</strong>：通过哨兵值判断结束，不需要单独存储长度信息</li>
 <li><strong>历史兼容</strong>：许多系统 API 使用哨兵终止字符串</li>
 </ol>
+<blockquote>
+<p>📖 <strong>相关章节</strong>：哨兵终止数组主要用于 C 互操作，详细内容请参考 <a href="../part2-advanced/chapter-c-interop.html">C 互操作</a>。</p>
+</blockquote>
 <h3 id="语法说明"><a class="header" href="#语法说明">语法说明</a></h3>
 <ul>
 <li><code>[N:T]</code>：长度为 N，哨兵值为 T 的数组</li>
@@ -1031,22 +892,13 @@ pub fn main(init: std.process.Init.Minimal) void {
 }
 </code></pre>
 <h2 id="枚举enum"><a class="header" href="#枚举enum">枚举（enum）</a></h2>
-<h3 id="什么是枚举"><a class="header" href="#什么是枚举">什么是枚举？</a></h3>
-<p>枚举（Enumeration）是一种用户定义的类型，它由一组命名的整数值组成。枚举用于表示一组相关的常量值，使代码更具可读性和类型安全性。</p>
-<h3 id="为什么使用枚举"><a class="header" href="#为什么使用枚举">为什么使用枚举？</a></h3>
-<ol>
-<li><strong>类型安全</strong>：编译器确保只使用有效的枚举值</li>
-<li><strong>代码可读性</strong>：使用有意义的名称代替魔法数字</li>
-<li><strong>穷尽性检查</strong>：switch 语句必须处理所有枚举值</li>
-<li><strong>命名空间</strong>：枚举值在枚举类型的命名空间内，避免冲突</li>
-</ol>
-<h3 id="zig-枚举的独特之处"><a class="header" href="#zig-枚举的独特之处">Zig 枚举的独特之处</a></h3>
-<p>与其他语言不同，Zig 的枚举：</p>
+<p>枚举用于定义一组命名的整数值，提供类型安全和代码可读性。</p>
+<p><strong>Zig 枚举的特点</strong>：</p>
 <ul>
 <li>可以指定底层整数类型</li>
 <li>可以包含方法</li>
-<li>支持编译期计算</li>
 <li>与 C 枚举完全兼容</li>
+<li>switch 语句必须穷尽所有枚举值</li>
 </ul>
 <p>枚举用于定义一组命名的整数值：</p>
 <pre><code class="language-zig">const std = @import("std");
@@ -1084,6 +936,9 @@ pub fn main(_: std.process.Init.Minimal) void {
 序值：0
 从整数创建：.green
 </code></pre>
+<blockquote>
+<p>📖 <strong>相关章节</strong>：枚举与 <code>switch</code> 语句配合使用时，编译器会强制穷尽性检查，详见<a href="chapter-control-flow.html">控制流与资源管理</a>。</p>
+</blockquote>
 <h3 id="带整数类型的枚举"><a class="header" href="#带整数类型的枚举">带整数类型的枚举</a></h3>
 <p><strong>为什么指定整数类型？：</strong></p>
 <ol>
@@ -1451,6 +1306,9 @@ const Register = packed struct {
 <li><strong>多态实现</strong>：实现类似面向对象的“多态“</li>
 <li><strong>内存效率</strong>：比接口/继承更高效</li>
 </ol>
+<blockquote>
+<p>📖 <strong>相关章节</strong>：带标签联合与 <code>switch</code> 语句配合使用时，编译器会自动推断活动变体，详见<a href="chapter-control-flow.html">控制流与资源管理</a>。</p>
+</blockquote>
 <h4 id="两种定义方式"><a class="header" href="#两种定义方式">两种定义方式</a></h4>
 <p><strong>方式一：显式定义枚举类型（完整语法）</strong></p>
 <pre><code class="language-zig">// 先定义枚举类型
@@ -2086,7 +1944,7 @@ const p: Point = .{ .x = 1.0, .y = 2.0 };
 </ol>
 <h3 id="字段默认值"><a class="header" href="#字段默认值">字段默认值</a></h3>
 <p>结构体字段可以定义默认值，简化初始化过程，提高代码可读性。</p>
-<h4 id="基本语法-1"><a class="header" href="#基本语法-1">基本语法</a></h4>
+<h4 id="基本语法"><a class="header" href="#基本语法">基本语法</a></h4>
 <p>在字段定义时直接赋值：</p>
 <pre><code class="language-zig">const Config = struct {
     host: []const u8 = "localhost",
@@ -2339,76 +2197,6 @@ tuple[3] = true
 <li>支持解包赋值</li>
 <li>与结构体共享底层实现，只是字段名为数字</li>
 </ul>
-<h2 id="块表达式block-expression"><a class="header" href="#块表达式block-expression">块表达式（Block Expression）</a></h2>
-<p>在 Zig 中，块（Block）不仅是作用域，还可以作为表达式返回值，但<strong>必须使用标签</strong>。</p>
-<h3 id="基本语法-2"><a class="header" href="#基本语法-2">基本语法</a></h3>
-<pre><code class="language-zig">const result = blk: {
-    const a = 10;
-    const b = 20;
-    break :blk a + b;  // 使用 break :label 返回值
-};
-</code></pre>
-<p><strong>要点</strong>：</p>
-<ul>
-<li>块开始处必须有标签（如 <code>blk:</code>）</li>
-<li>使用 <code>break :label value</code> 返回值</li>
-<li>不带标签的块不能返回值，只是一个作用域</li>
-<li><strong>所有分支的返回值类型必须一致</strong></li>
-</ul>
-<h3 id="类型一致性要求"><a class="header" href="#类型一致性要求">类型一致性要求</a></h3>
-<p>块表达式的所有退出路径必须返回相同类型的值：</p>
-<pre><code class="language-zig">// ❌ 错误：不同分支返回不同类型
-const result = blk: {
-    if (condition) {
-        break :blk 42;      // i32
-    } else {
-        break :blk "hello"; // 编译错误：类型不匹配
-    }
-};
-
-// ✅ 正确：所有分支返回相同类型
-const result = blk: {
-    if (value &lt; 10) break :blk "小";
-    if (value &lt; 20) break :blk "中";
-    break :blk "大";  // 所有分支都返回 []const u8
-};
-</code></pre>
-<h3 id="完整示例-1"><a class="header" href="#完整示例-1">完整示例</a></h3>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn main(_: std.process.Init.Minimal) void {
-    // 基本用法：计算并返回值
-    const result = blk: {
-        const a = 10;
-        const b = 20;
-        break :blk a + b;
-    };
-    std.debug.print("块表达式结果: {}\n", .{result});
-
-    // 条件返回：在条件分支中提前退出
-    const value: i32 = 15;
-    const category = blk: {
-        if (value &lt; 10) break :blk "小";
-        if (value &lt; 20) break :blk "中";
-        break :blk "大";
-    };
-    std.debug.print("值 {} 的类别: {s}\n", .{ value, category });
-
-    // 嵌套块：使用不同标签区分层级
-    const nested = outer: {
-        const inner = inner: {
-            break :inner 5;
-        };
-        break :outer inner * 2;
-    };
-    std.debug.print("嵌套块结果: {}\n", .{nested});
-}
-</code></pre>
-<p>预期输出：</p>
-<pre><code>块表达式结果: 30
-值 15 的类别: 中
-嵌套块结果: 10
-</code></pre>
 <h2 id="字符和字符串"><a class="header" href="#字符和字符串">字符和字符串</a></h2>
 <p>Zig 提供了强大的字符和字符串支持，原生支持 Unicode，并且字符串字面量具有独特的类型安全特性。</p>
 <h3 id="核心概念-1"><a class="header" href="#核心概念-1">核心概念</a></h3>
@@ -2555,182 +2343,6 @@ fn main() void {
 <li>不包含最后的换行符</li>
 <li>适合嵌入代码、JSON、XML 等文本</li>
 </ul>
-<h2 id="可选类型optional"><a class="header" href="#可选类型optional">可选类型（Optional）</a></h2>
-<p>Zig 的可选类型使用 <code>?T</code> 表示，用于表示值可能存在或不存在的情况，是 Zig 类型系统的重要组成部分。</p>
-<h3 id="核心概念-2"><a class="header" href="#核心概念-2">核心概念</a></h3>
-<ul>
-<li><strong>可选类型</strong>：表示值可能存在（<code>T</code>）或不存在（<code>null</code>）</li>
-<li><strong>语法</strong>：<code>?T</code> 表示类型 <code>T</code> 或 <code>null</code></li>
-<li><strong>内存布局</strong>：额外存储一个标志位，指示值是否存在</li>
-</ul>
-<h3 id="为什么需要可选类型"><a class="header" href="#为什么需要可选类型">为什么需要可选类型？</a></h3>
-<p><strong>问题场景</strong>：</p>
-<ul>
-<li>查找操作可能找不到结果</li>
-<li>配置项可能未设置</li>
-<li>资源可能未初始化</li>
-</ul>
-<p><strong>传统解决方案的问题</strong>：</p>
-<ul>
-<li>C 语言：使用特殊值（如 <code>-1</code>、<code>NULL</code>）表示“不存在“，容易出错</li>
-<li>Java：使用 <code>null</code> 引用，导致 <code>NullPointerException</code></li>
-<li>Zig：使用可选类型，编译期强制处理“不存在“的情况</li>
-</ul>
-<h3 id="zig-的设计理念"><a class="header" href="#zig-的设计理念">Zig 的设计理念</a></h3>
-<p><strong>类型安全</strong>：</p>
-<ul>
-<li>编译期强制处理 <code>null</code> 情况</li>
-<li>不能直接使用可选值，必须先解包</li>
-<li>避免空指针异常</li>
-</ul>
-<p><strong>显式处理</strong>：</p>
-<ul>
-<li>使用 <code>if</code>、<code>orelse</code>、<code>.?</code> 等操作显式处理</li>
-<li>代码意图清晰，易于理解</li>
-<li>错误处理逻辑显式可见</li>
-</ul>
-<h3 id="解包操作"><a class="header" href="#解包操作">解包操作</a></h3>
-<p>Zig 提供了三种解包可选类型的方式：<code>if</code> 模式匹配、<code>.?</code> 操作符和 <code>orelse</code> 表达式。</p>
-<h4 id="if-模式匹配"><a class="header" href="#if-模式匹配">if 模式匹配</a></h4>
-<p>Zig 的 if 可以直接解构可选类型，这是 Zig 的重要特性：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn main(_: std.process.Init.Minimal) void {
-    const maybe_number: ?i32 = 42;
-
-    // 模式匹配：自动解包可选类型
-    // 如果 maybe_number 不为 null，number 绑定到内部值
-    if (maybe_number) |number| {
-        std.debug.print("数字是：{}\n", .{number});
-        // number 的类型是 i32，不是 ?i32
-    } else {
-        std.debug.print("没有数字 (null)\n", .{});
-    }
-
-    // 捕获指针：可以修改值
-    var mutable_number: ?i32 = 10;
-    if (mutable_number) |*num| {
-        num.* += 5; // 修改内部值
-    }
-    std.debug.print("修改后：{any}\n", .{mutable_number});
-}
-</code></pre>
-<p>预期输出：</p>
-<pre><code>数字是：42
-修改后：15
-</code></pre>
-<h4 id="-操作符"><a class="header" href="#-操作符">.? 操作符</a></h4>
-<p><code>.?</code> 操作符用于解包可选类型，如果值为 <code>null</code> 则触发 panic：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn main(_: std.process.Init.Minimal) void {
-    const maybe_number: ?i32 = 42;
-    
-    // 使用 .? 操作符（确定不为 null）
-    const value = maybe_number.?;
-    std.debug.print(".? 操作符: {}\n", .{value});
-    
-    // ⚠️ 如果为 null 会 panic
-    // const maybe_null: ?i32 = null;
-    // const bad = maybe_null.?; // 运行时错误：attempt to use null value
-}
-</code></pre>
-<p>预期输出：</p>
-<pre><code>.? 操作符: 42
-</code></pre>
-<p><strong>适用场景</strong>：确定值不为 <code>null</code>，否则是编程错误。</p>
-<h4 id="orelse-表达式"><a class="header" href="#orelse-表达式">orelse 表达式</a></h4>
-<p><code>orelse</code> 用于为 <code>null</code> 提供默认值：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn main(_: std.process.Init.Minimal) void {
-    const maybe_null: ?i32 = null;
-    
-    // 使用 orelse 提供默认值
-    const value1 = maybe_null orelse 0;
-    std.debug.print("orelse 默认值: {}\n", .{value1});
-    
-    // orelse 可以接表达式
-    const value2 = maybe_null orelse blk: {
-        std.debug.print("遇到 null，计算默认值\n", .{});
-        break :blk 100;
-    };
-    std.debug.print("orelse 表达式: {}\n", .{value2});
-    
-    // orelse 可以接块表达式（提前返回）
-    const value3 = maybe_null orelse {
-        std.debug.print("值为 null，提前返回\n", .{});
-        return;
-    };
-    _ = value3;
-}
-</code></pre>
-<p><strong>适用场景</strong>：需要为 <code>null</code> 提供合理的默认值。</p>
-<h4 id="三种方式的对比"><a class="header" href="#三种方式的对比">三种方式的对比</a></h4>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>方式</th><th>用途</th><th>安全性</th><th>适用场景</th></tr>
-</thead>
-<tbody>
-<tr><td><code>if</code></td><td>条件处理 null 和非 null</td><td>高</td><td>需要区分 null 和非 null 的逻辑</td></tr>
-<tr><td><code>.?</code></td><td>确定不为 null 时使用</td><td>低</td><td>确定值不为 null，否则是编程错误</td></tr>
-<tr><td><code>orelse</code></td><td>提供 null 时的默认值</td><td>高</td><td>需要为 null 提供合理的默认值</td></tr>
-</tbody>
-</table>
-</div>
-<h4 id="实际应用场景-1"><a class="header" href="#实际应用场景-1">实际应用场景</a></h4>
-<pre><code class="language-zig">// 场景1：安全的配置读取
-const Config = struct {
-    timeout: ?u32,
-    max_retries: ?u32,
-};
-
-fn getTimeout(config: Config) u32 {
-    // 如果配置中有值，使用配置值；否则使用默认值
-    return if (config.timeout) |t| t else 30;
-}
-
-// 场景2：错误处理
-fn readFile(path: []const u8) ?[]const u8 {
-    // 可能返回 null
-    return null;
-}
-
-fn processFile(path: []const u8) void {
-    if (readFile(path)) |content| {
-        std.debug.print("文件内容：{s}\n", .{content});
-    } else {
-        std.debug.print("无法读取文件\n", .{});
-    }
-}
-
-// 场景3：链式可选值处理
-fn getNestedValue(data: ?*const Data) ?i32 {
-    if (data) |d| {
-        if (d.value) |v| {
-            return v * 2;
-        }
-    }
-    return null;
-}
-</code></pre>
-<h3 id="可选类型与错误联合类型的关联"><a class="header" href="#可选类型与错误联合类型的关联">可选类型与错误联合类型的关联</a></h3>
-<blockquote>
-<p>📖 <strong>深入学习</strong>：错误联合类型的详细用法将在<a href="chapter-error-handling.html">错误处理基础</a>中讲解。</p>
-</blockquote>
-<p>可选类型 <code>?T</code> 和错误联合类型 <code>!T</code> 都用于表示“可能失败“的值，但用途不同：</p>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>类型</th><th>含义</th><th>使用场景</th></tr>
-</thead>
-<tbody>
-<tr><td><code>?T</code></td><td>值可能存在或不存在</td><td>查找操作、可选配置</td></tr>
-<tr><td><code>!T</code></td><td>操作可能成功或失败</td><td>可能出错的操作</td></tr>
-</tbody>
-</table>
-</div>
 <hr>
 <ol class="footnote-definition">
 <li id="footnote-1">

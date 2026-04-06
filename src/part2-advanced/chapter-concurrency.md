@@ -1407,6 +1407,326 @@ const ConcurrentHashMap = struct {
 };
 ```
 
+## 线程安全的数据结构
+
+在实际项目中，经常需要线程安全的数据结构。以下是线程安全计数器的实现：
+
+```zig
+const std = @import("std");
+
+const ThreadSafeCounter = struct {
+    value: std.atomic.Value(usize),
+    mutex: std.Thread.Mutex,
+    
+    fn init() ThreadSafeCounter {
+        return .{
+            .value = std.atomic.Value(usize).init(0),
+            .mutex = .{},
+        };
+    }
+    
+    fn increment(self: *ThreadSafeCounter) void {
+        _ = self.value.fetchAdd(1, .monotonic);
+    }
+    
+    fn incrementComplex(self: *ThreadSafeCounter) void {
+        self.mutex.lock();
+        defer self.mutex.unlock();
+        const current = self.value.load(.monotonic);
+        self.value.store(current + 1, .monotonic);
+    }
+    
+    fn get(self: *const ThreadSafeCounter) usize {
+        return self.value.load(.monotonic);
+    }
+};
+
+pub fn main(init: std.process.Init.Minimal) !void {
+    var counter = ThreadSafeCounter.init();
+    
+    const worker = struct {
+        fn work(c: *ThreadSafeCounter) void {
+            for (0..1000) |_| {
+                c.increment();
+            }
+        }
+    }.work;
+    
+    var threads: [10]std.Thread = undefined;
+    for (&threads, 0..) |*thread, i| {
+        _ = i;
+        thread.* = try std.Thread.spawn(.{}, worker, .{&counter});
+    }
+    
+    for (threads) |thread| {
+        thread.join();
+    }
+    
+    std.debug.print("最终计数：{}\n", .{counter.get()});
+}
+```
+
+**选择同步原语的原则**：
+
+| 场景       | 推荐方案 | 原因           |
+| ---------- | -------- | -------------- |
+| 简单计数器 | 原子操作 | 性能最优，无锁 |
+| 复杂临界区 | 互斥锁   | 保证互斥访问   |
+| 读多写少   | 读写锁   | 提高并发度     |
+| 等待条件   | 条件变量 | 高效等待       |
+
+**线程安全检查清单**：
+
+1. ✅ **识别共享数据**：明确哪些数据会被多个线程访问
+2. ✅ **选择同步原语**：根据访问模式选择合适的锁或原子操作
+3. ✅ **最小化临界区**：锁的范围越小越好
+4. ✅ **避免嵌套锁**：防止死锁
+5. ✅ **使用 defer 确保释放**：确保锁一定会释放
+
+## 常见并发陷阱
+
+# 死锁（Deadlock）
+
+死锁是指两个或多个线程互相等待对方释放资源，导致所有线程都无法继续执行。
+
+**死锁示例**：
+
+```zig
+// ❌ 错误示例
+fn deadlockExample() void {
+    var mutex1: std.Thread.Mutex = .{};
+    var mutex2: std.Thread.Mutex = .{};
+    
+    // 线程1：先锁 mutex1，再锁 mutex2
+    const thread1 = std.Thread.spawn(.{}, struct {
+        fn work(m1: *std.Thread.Mutex, m2: *std.Thread.Mutex) void {
+            m1.lock();
+            defer m1.unlock();
+            
+            std.time.sleep(100 * std.time.ns_per_ms);
+            
+            m2.lock();
+            defer m2.unlock();
+        }
+    }.work, .{ &mutex1, &mutex2 });
+    
+    // 线程2：先锁 mutex2，再锁 mutex1（相反顺序）
+    const thread2 = std.Thread.spawn(.{}, struct {
+        fn work(m1: *std.Thread.Mutex, m2: *std.Thread.Mutex) void {
+            m2.lock();
+            defer m2.unlock();
+            
+            std.time.sleep(100 * std.time.ns_per_ms);
+            
+            m1.lock();
+            defer m1.unlock();
+        }
+    }.work, .{ &mutex1, &mutex2 });
+    
+    thread1.join();
+    thread2.join();
+}
+```
+
+**避免死锁的方法**：
+
+```zig
+// ✅ 方法1：统一加锁顺序
+fn noDeadlockMethod1() void {
+    var mutex1: std.Thread.Mutex = .{};
+    var mutex2: std.Thread.Mutex = .{};
+    
+    mutex1.lock();
+    defer mutex1.unlock();
+    
+    mutex2.lock();
+    defer mutex2.unlock();
+}
+
+// ✅ 方法2：使用 tryLock 避免阻塞
+fn noDeadlockMethod2() void {
+    var mutex1: std.Thread.Mutex = .{};
+    var mutex2: std.Thread.Mutex = .{};
+    
+    mutex1.lock();
+    errdefer mutex1.unlock();
+    
+    if (mutex2.tryLock()) {
+        defer mutex2.unlock();
+    } else {
+        mutex1.unlock();
+    }
+}
+```
+
+# 竞态条件（Race Condition）
+
+竞态条件是指多个线程访问共享数据，且至少有一个线程在写入，导致结果依赖于执行顺序。
+
+```zig
+// ❌ 错误示例
+var counter: usize = 0;
+
+fn unsafeIncrement() void {
+    for (0..1000) |_| {
+        counter += 1;
+    }
+}
+
+// ✅ 正确做法：使用原子操作
+var safe_counter: std.atomic.Value(usize) = std.atomic.Value(usize).init(0);
+
+fn safeIncrement() void {
+    for (0..1000) |_| {
+        _ = safe_counter.fetchAdd(1, .monotonic);
+    }
+}
+```
+
+# 活锁（Livelock）
+
+活锁是指线程不断改变状态但无法取得进展，类似于两个人在走廊里互相让路。
+
+```zig
+// ❌ 错误示例：立即重试可能导致活锁
+fn livelockExample() void {
+    var mutex: std.Thread.Mutex = .{};
+    var should_retry = true;
+    
+    while (should_retry) {
+        if (mutex.tryLock()) {
+            defer mutex.unlock();
+            should_retry = false;
+        }
+    }
+}
+
+// ✅ 正确做法：添加退避策略
+fn noLivelock() void {
+    var mutex: std.Thread.Mutex = .{};
+    var retry_count: usize = 0;
+    
+    while (retry_count < 10) : (retry_count += 1) {
+        if (mutex.tryLock()) {
+            defer mutex.unlock();
+            break;
+        }
+        std.time.sleep(std.time.ns_per_ms * @as(u64, 1) << @intCast(retry_count));
+    }
+}
+```
+
+## 性能优化建议
+
+# 1. 减少锁竞争
+
+```zig
+// ❌ 错误示例：整个操作都在临界区内
+fn inefficientLock(data: *Data) void {
+    var mutex: std.Thread.Mutex = .{};
+    mutex.lock();
+    defer mutex.unlock();
+    
+    processData(data);
+    saveResult(data);
+}
+
+// ✅ 最小化临界区
+fn efficientLock(data: *Data) void {
+    var mutex: std.Thread.Mutex = .{};
+    
+    mutex.lock();
+    const local_copy = data.value;
+    mutex.unlock();
+    
+    const result = processData(local_copy);
+    
+    mutex.lock();
+    data.result = result;
+    mutex.unlock();
+}
+```
+
+# 2. 使用无锁数据结构
+
+对于简单操作，优先使用原子操作：
+
+```zig
+const LockFreeCounter = struct {
+    value: std.atomic.Value(usize),
+    
+    fn increment(self: *LockFreeCounter) void {
+        _ = self.value.fetchAdd(1, .monotonic);
+    }
+    
+    fn get(self: *const LockFreeCounter) usize {
+        return self.value.load(.monotonic);
+    }
+};
+```
+
+# 3. 避免伪共享（False Sharing）
+
+伪共享是指多个线程访问同一缓存行的不同变量，导致缓存频繁失效。
+
+```zig
+// ❌ 错误示例
+const Data = struct {
+    counter1: usize,
+    counter2: usize,
+};
+
+// ✅ 使用缓存行对齐
+const CACHE_LINE_SIZE = 64;
+
+const AlignedData = struct {
+    counter1: usize align(CACHE_LINE_SIZE),
+    counter2: usize align(CACHE_LINE_SIZE),
+};
+```
+
+# 4. 性能对比
+
+| 同步方式         | 性能  | 适用场景         |
+| ---------------- | ----- | ---------------- |
+| 无锁（原子操作） | ⭐⭐⭐⭐⭐ | 简单计数、标志位 |
+| 自旋锁           | ⭐⭐⭐⭐  | 短临界区、低竞争 |
+| 互斥锁           | ⭐⭐⭐   | 长临界区、高竞争 |
+| 读写锁           | ⭐⭐⭐   | 读多写少         |
+
+# 5. 性能测试建议
+
+```zig
+const std = @import("std");
+
+fn benchmarkMutex(allocator: std.mem.Allocator) !void {
+    var mutex: std.Thread.Mutex = .{};
+    var counter: usize = 0;
+    
+    const start = std.time.nanoTimestamp();
+    
+    var threads: [4]std.Thread = undefined;
+    for (&threads) |*thread| {
+        thread.* = try std.Thread.spawn(.{}, struct {
+            fn work(m: *std.Thread.Mutex, c: *usize) void {
+                for (0..100000) |_| {
+                    m.lock();
+                    defer m.unlock();
+                    c.* += 1;
+                }
+            }
+        }.work, .{ &mutex, &counter });
+    }
+    
+    for (threads) |thread| thread.join();
+    
+    const end = std.time.nanoTimestamp();
+    const elapsed = @as(f64, @floatFromInt(end - start)) / 1_000_000.0;
+    
+    std.debug.print("互斥锁耗时：{d:.2}ms\n", .{elapsed});
+}
+```
+
 ## 并发编程最佳实践
 
 # 1. 避免数据竞争

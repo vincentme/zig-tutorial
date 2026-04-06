@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>【draft】控制流 - Zig 编程语言入门教程</title>
+        <title>【draft】基础语法（下）- 控制流与资源管理 - Zig 编程语言入门教程</title>
 
 
         <!-- Custom HTML head -->
@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-77c78143.js";
+            window.path_to_searchindex_js = "../searchindex-4958c3a4.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-5fb88d48.js"></script>
+        <script src="../toc-cf9e32e7.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -181,14 +181,191 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="draft控制流语句"><a class="header" href="#draft控制流语句">【draft】控制流语句</a></h1>
-<p>本章介绍 Zig 的控制流语句，包括条件判断、循环和分支选择。Zig 的控制流设计强调显式性和安全性。</p>
-<h2 id="if-语句"><a class="header" href="#if-语句">if 语句</a></h2>
-<p>在 Zig 中，if 不仅是语句，还是表达式。这意味着：</p>
+                        <h1 id="draft基础语法下--控制流与资源管理"><a class="header" href="#draft基础语法下--控制流与资源管理">【draft】基础语法（下）- 控制流与资源管理</a></h1>
+<p>本章介绍 Zig 的控制流语句和资源管理机制，包括可选类型、条件判断 if、循环（for 和 while）、分支选择 switch、资源管理 defer 和块表达式。与许多语言不同，Zig 的所有控制流语句都是表达式，可以返回值，结合穷尽性检查和编译期验证，确保代码的安全性和可维护性。资源管理方面，Zig 通过 defer 和 errdefer 机制确保资源的正确释放，避免内存泄漏和资源泄漏问题。</p>
+<h2 id="可选类型optional"><a class="header" href="#可选类型optional">可选类型（Optional）</a></h2>
+<p>Zig 的可选类型使用 <code>?T</code> 表示，用于表示值可能存在或不存在的情况，是 Zig 类型系统的重要组成部分。</p>
+<h3 id="核心概念"><a class="header" href="#核心概念">核心概念</a></h3>
 <ul>
-<li>if 可以返回值</li>
-<li>必须保证所有分支都返回相同类型的值</li>
-<li>最后一个表达式就是返回值</li>
+<li><strong>可选类型</strong>：表示值可能存在（<code>T</code>）或不存在（<code>null</code>）</li>
+<li><strong>语法</strong>：<code>?T</code> 表示类型 <code>T</code> 或 <code>null</code></li>
+<li><strong>内存布局</strong>：额外存储一个标志位，指示值是否存在</li>
+</ul>
+<h3 id="为什么需要可选类型"><a class="header" href="#为什么需要可选类型">为什么需要可选类型？</a></h3>
+<p><strong>问题场景</strong>：</p>
+<ul>
+<li>查找操作可能找不到结果</li>
+<li>配置项可能未设置</li>
+<li>资源可能未初始化</li>
+</ul>
+<p><strong>传统解决方案的问题</strong>：</p>
+<ul>
+<li>C 语言：使用特殊值（如 <code>-1</code>、<code>NULL</code>）表示“不存在“，容易出错</li>
+<li>Java：使用 <code>null</code> 引用，导致 <code>NullPointerException</code></li>
+<li>Zig：使用可选类型，编译期强制处理“不存在“的情况</li>
+</ul>
+<h3 id="zig-的设计理念"><a class="header" href="#zig-的设计理念">Zig 的设计理念</a></h3>
+<p><strong>类型安全</strong>：</p>
+<ul>
+<li>编译期强制处理 <code>null</code> 情况</li>
+<li>不能直接使用可选值，必须先解包</li>
+<li>避免空指针异常</li>
+</ul>
+<p><strong>显式处理</strong>：</p>
+<ul>
+<li>使用 <code>if</code>、<code>orelse</code>、<code>.?</code> 等操作显式处理</li>
+<li>代码意图清晰，易于理解</li>
+<li>错误处理逻辑显式可见</li>
+</ul>
+<h3 id="解包操作"><a class="header" href="#解包操作">解包操作</a></h3>
+<p>Zig 提供了三种解包可选类型的方式：<code>if</code> 模式匹配、<code>.?</code> 操作符和 <code>orelse</code> 表达式。</p>
+<h4 id="if-模式匹配"><a class="header" href="#if-模式匹配">if 模式匹配</a></h4>
+<p>Zig 的 if 可以直接解构可选类型，这是 Zig 的重要特性：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(_: std.process.Init.Minimal) void {
+    const maybe_number: ?i32 = 42;
+
+    // 模式匹配：自动解包可选类型
+    // 如果 maybe_number 不为 null，number 绑定到内部值
+    if (maybe_number) |number| {
+        std.debug.print("数字是：{}\n", .{number});
+        // number 的类型是 i32，不是 ?i32
+    } else {
+        std.debug.print("没有数字 (null)\n", .{});
+    }
+
+    // 捕获指针：可以修改值
+    var mutable_number: ?i32 = 10;
+    if (mutable_number) |*num| {
+        num.* += 5; // 修改内部值
+    }
+    std.debug.print("修改后：{any}\n", .{mutable_number});
+}
+</code></pre>
+<p>预期输出：</p>
+<pre><code>数字是：42
+修改后：15
+</code></pre>
+<h4 id="-操作符"><a class="header" href="#-操作符">.? 操作符</a></h4>
+<p><code>.?</code> 操作符用于解包可选类型，如果值为 <code>null</code> 则触发 panic：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(_: std.process.Init.Minimal) void {
+    const maybe_number: ?i32 = 42;
+    
+    // 使用 .? 操作符（确定不为 null）
+    const value = maybe_number.?;
+    std.debug.print(".? 操作符: {}\n", .{value});
+    
+    // ⚠️ 如果为 null 会 panic
+    // const maybe_null: ?i32 = null;
+    // const bad = maybe_null.?; // 运行时错误：attempt to use null value
+}
+</code></pre>
+<p>预期输出：</p>
+<pre><code>.? 操作符: 42
+</code></pre>
+<p><strong>适用场景</strong>：确定值不为 <code>null</code>，否则是编程错误。</p>
+<h4 id="orelse-表达式"><a class="header" href="#orelse-表达式">orelse 表达式</a></h4>
+<p><code>orelse</code> 用于为 <code>null</code> 提供默认值：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(_: std.process.Init.Minimal) void {
+    const maybe_null: ?i32 = null;
+    
+    // 使用 orelse 提供默认值
+    const value1 = maybe_null orelse 0;
+    std.debug.print("orelse 默认值: {}\n", .{value1});
+    
+    // orelse 可以接表达式
+    const value2 = maybe_null orelse blk: {
+        std.debug.print("遇到 null，计算默认值\n", .{});
+        break :blk 100;
+    };
+    std.debug.print("orelse 表达式: {}\n", .{value2});
+    
+    // orelse 可以接块表达式（提前返回）
+    const value3 = maybe_null orelse {
+        std.debug.print("值为 null，提前返回\n", .{});
+        return;
+    };
+    _ = value3;
+}
+</code></pre>
+<p><strong>适用场景</strong>：需要为 <code>null</code> 提供合理的默认值。</p>
+<h4 id="三种方式的对比"><a class="header" href="#三种方式的对比">三种方式的对比</a></h4>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>方式</th><th>用途</th><th>安全性</th><th>适用场景</th></tr>
+</thead>
+<tbody>
+<tr><td><code>if</code></td><td>条件处理 null 和非 null</td><td>高</td><td>需要区分 null 和非 null 的逻辑</td></tr>
+<tr><td><code>.?</code></td><td>确定不为 null 时使用</td><td>低</td><td>确定值不为 null，否则是编程错误</td></tr>
+<tr><td><code>orelse</code></td><td>提供 null 时的默认值</td><td>高</td><td>需要为 null 提供合理的默认值</td></tr>
+</tbody>
+</table>
+</div>
+<h4 id="实际应用场景"><a class="header" href="#实际应用场景">实际应用场景</a></h4>
+<pre><code class="language-zig">// 场景1：安全的配置读取
+const Config = struct {
+    timeout: ?u32,
+    max_retries: ?u32,
+};
+
+fn getTimeout(config: Config) u32 {
+    // 如果配置中有值，使用配置值；否则使用默认值
+    return if (config.timeout) |t| t else 30;
+}
+
+// 场景2：错误处理
+fn readFile(path: []const u8) ?[]const u8 {
+    // 可能返回 null
+    return null;
+}
+
+fn processFile(path: []const u8) void {
+    if (readFile(path)) |content| {
+        std.debug.print("文件内容：{s}\n", .{content});
+    } else {
+        std.debug.print("无法读取文件\n", .{});
+    }
+}
+
+// 场景3：链式可选值处理
+fn getNestedValue(data: ?*const Data) ?i32 {
+    if (data) |d| {
+        if (d.value) |v| {
+            return v * 2;
+        }
+    }
+    return null;
+}
+</code></pre>
+<h3 id="可选类型与错误联合类型的关联"><a class="header" href="#可选类型与错误联合类型的关联">可选类型与错误联合类型的关联</a></h3>
+<blockquote>
+<p>📖 <strong>深入学习</strong>：错误联合类型的详细用法将在<a href="chapter-error-handling.html">错误处理基础</a>中讲解。</p>
+</blockquote>
+<p>可选类型 <code>?T</code> 和错误联合类型 <code>!T</code> 都用于表示“可能失败“的值，但用途不同：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>类型</th><th>含义</th><th>使用场景</th></tr>
+</thead>
+<tbody>
+<tr><td><code>?T</code></td><td>值可能存在或不存在</td><td>查找操作、可选配置</td></tr>
+<tr><td><code>!T</code></td><td>操作可能成功或失败</td><td>可能出错的操作</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="if-语句"><a class="header" href="#if-语句">if 语句</a></h2>
+<p>可选类型部分介绍了如何使用 <code>if</code> 进行模式匹配来解包可选值，这里将进一步介绍 <code>if</code> 语句的其他特性。Zig 的 if 语句相对于其他语言，具有以下特性：</p>
+<ul>
+<li><strong>模式匹配</strong>：可以解包可选类型和错误联合类型</li>
+<li><strong>指针捕获</strong>：使用 <code>|*val|</code> 捕获指针，允许在分支内修改值</li>
+<li><strong>类型安全</strong>：所有分支必须返回相同类型的值</li>
+<li><strong>编译期执行</strong>：支持 comptime if，在编译期进行条件判断</li>
 </ul>
 <pre><code class="language-zig">const std = @import("std");
 
@@ -234,27 +411,13 @@ pub fn main(_: std.process.Init.Minimal) void {
 const abs_value = if (x &gt;= 0) x else -x;
 const max = if (a &gt; b) a else b;
 </code></pre>
-<h3 id="可选类型的模式匹配"><a class="header" href="#可选类型的模式匹配">可选类型的模式匹配</a></h3>
-<p>Zig 的 if 可以直接解构可选类型，这是 Zig 的重要特性。详细用法请参考<a href="chapter-basic-syntax.html#解包操作">基础语法 - 可选类型的解包操作</a>。</p>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn main(_: std.process.Init.Minimal) void {
-    const maybe_number: ?i32 = 42;
-    
-    // 模式匹配：自动解包可选类型
-    if (maybe_number) |number| {
-        std.debug.print("数字是：{}\n", .{number});
-    } else {
-        std.debug.print("没有数字 (null)\n", .{});
-    }
-}
-</code></pre>
 <h2 id="while-循环"><a class="header" href="#while-循环">while 循环</a></h2>
+<p>前面介绍的 if 语句用于条件判断，而 while 循环则用于重复执行代码块。与 if 类似，while 也支持可选类型解包和作为表达式使用。</p>
 <p>Zig 的 while 循环支持：</p>
 <ul>
 <li><strong>continue 表达式</strong>：每次迭代后执行的表达式</li>
-<li><strong>可选类型解包</strong>：自动处理可选值</li>
-<li><strong>标签</strong>：支持带标签的 break/continue 控制嵌套循环，以及让 while 作为表达式返回值</li>
+<li><strong>可选类型解包</strong>：while 可直接处理可选类型，自动解包并在值为 null 时退出</li>
+<li><strong>标签</strong>：支持带标签的 break/continue 控制嵌套循环</li>
 </ul>
 <pre><code class="language-zig">const std = @import("std");
 
@@ -295,7 +458,7 @@ pub fn main(_: std.process.Init.Minimal) void {
         // 当 numbers[index] 为 null 时，循环自动结束
     }
 
-    std.debug.print("---\n", .{});
+    std.debug.print("--\n", .{});
 
     // 方式2：使用 if 在 while 内部处理（跳过 null 继续）
     index = 0;
@@ -305,7 +468,7 @@ pub fn main(_: std.process.Init.Minimal) void {
         }
     }
 
-    std.debug.print("---\n", .{});
+    std.debug.print("--\n", .{});
 
     // 标签和带标签的 break/continue
     // 用于控制嵌套循环
@@ -336,11 +499,11 @@ k = 1
 k = 2
 有效数字：1
 有效数字：2
----
+--
 有效数字：1
 有效数字：2
 有效数字：4
----
+--
 outer=0, inner=0
 outer=0, inner=1
 outer=1, inner=0
@@ -350,34 +513,38 @@ outer=2, inner=1
 outer=2, inner=2
 </code></pre>
 <h3 id="while-作为表达式"><a class="header" href="#while-作为表达式">while 作为表达式</a></h3>
-<p>while 循环也可以作为表达式返回值，需要使用带标签的 break：</p>
+<p>while 循环支持 <code>else</code> 分支，在循环正常结束（没有 <code>break</code>）时执行：</p>
 <pre><code class="language-zig">const std = @import("std");
 
 pub fn main(_: std.process.Init.Minimal) void {
     // while 作为表达式返回值
-    const result = while_loop: while (true) {
-        var i: usize = 0;
-        while (i &lt; 10) : (i += 1) {
-            if (i == 5) break :while_loop i * 2;  // 返回 10
-        }
-        break :while_loop 0;
-    };
+    var i: usize = 0;
+    const result = while (i &lt; 10) : (i += 1) {
+        if (i == 5) break i * 2;  // 找到后返回 10
+    } else 0;  // else 分支：循环正常结束时执行（没有 break）
     
     std.debug.print("结果: {}\n", .{result});  // 输出：结果: 10
     
     // 实际应用：查找第一个满足条件的元素
     const items = [_]i32{ 1, 3, 5, 7, 9 };
-    const found = find: {
-        var i: usize = 0;
-        while (i &lt; items.len) : (i += 1) {
-            if (items[i] &gt; 6) break :find items[i];
-        }
-        break :find -1;
-    };
+    var index: usize = 0;
+    const found = while (index &lt; items.len) : (index += 1) {
+        if (items[index] &gt; 6) break items[index];
+    } else -1;
     
     std.debug.print("找到的元素: {}\n", .{found});  // 输出：找到的元素: 7
 }
 </code></pre>
+<p>预期输出：</p>
+<pre><code>结果: 10
+找到的元素: 7
+</code></pre>
+<p><strong>关键点</strong>：</p>
+<ul>
+<li>while 循环的 <code>else</code> 分支在循环<strong>正常结束</strong>（没有 <code>break</code>）时执行</li>
+<li>使用 <code>break value</code> 可以提前退出并返回值</li>
+<li>所有退出路径（break 和 else）必须返回相同类型的值</li>
+</ul>
 <h3 id="while-循环的实际应用"><a class="header" href="#while-循环的实际应用">while 循环的实际应用</a></h3>
 <pre><code class="language-zig">// 场景1：读取直到结束
 fn readUntilEnd(reader: anytype) !void {
@@ -415,45 +582,52 @@ fn Iterator(comptime T: type) type {
 }
 </code></pre>
 <h2 id="for-循环"><a class="header" href="#for-循环">for 循环</a></h2>
+<p>while 循环适合处理不确定次数的迭代，而 for 循环则更适合遍历已知长度的序列。for 循环提供了更简洁的语法来处理数组、切片等数据结构。</p>
 <p>Zig 的 for 循环支持：</p>
 <ul>
-<li><strong>单元素遍历</strong>：遍历数组、切片等</li>
-<li><strong>带索引遍历</strong>：同时获取元素和索引</li>
-<li><strong>多序列并行遍历</strong>：同时遍历多个序列</li>
-<li><strong>范围遍历</strong>：遍历数字范围</li>
+<li><strong>单元素遍历</strong>：直接遍历数组、切片、元组等序列的元素，无需手动管理索引</li>
+<li><strong>带索引遍历</strong>：使用 <code>0..</code> 语法同时获取元素和索引，避免手动计数</li>
+<li><strong>多序列并行遍历</strong>：同时遍历多个序列，自动处理长度不一致的情况</li>
+<li><strong>范围遍历</strong>：使用 <code>start..end</code> 语法遍历数字范围，简洁直观</li>
+<li><strong>指针捕获</strong>：使用 <code>|*item|</code> 捕获指针，允许在循环中修改元素</li>
 </ul>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     const array = [_]i32{ 1, 2, 3, 4, 5 };
-    
+
     // 遍历数组：只获取元素
     for (array) |item| {
         std.debug.print("item = {}\n", .{item});
     }
-    
+
     // 带索引的遍历：使用 0.. 获取索引
     for (array, 0..) |item, index| {
         std.debug.print("array[{}] = {}\n", .{ index, item });
     }
-    
+
     // 多数组并行遍历：同时遍历两个数组
     const array2 = [_]i32{ 10, 20, 30, 40, 50 };
     for (array, array2) |a, b| {
         std.debug.print("{} + {} = {}\n", .{ a, b, a + b });
     }
-    
+
     // 修改元素：使用指针捕获
     var mutable_array = [_]i32{ 1, 2, 3, 4, 5 };
     for (&amp;mutable_array) |*item| {
         item.* *= 2; // 每个元素乘以 2
     }
-    
+
+    // 遍历修改后的数组
+    for (mutable_array) |item| {
+        std.debug.print("double item = {}\n", .{item});
+    }
+
     // 范围遍历：遍历数字范围
     for (0..5) |i| {
         std.debug.print("i = {}\n", .{i});
     }
-    
+
     // 标签和 break/continue
     outer: for (0..3) |i| {
         for (0..3) |j| {
@@ -463,40 +637,112 @@ pub fn main(init: std.process.Init.Minimal) void {
     }
 }
 </code></pre>
-<h1 id="for-循环的实际应用"><a class="header" href="#for-循环的实际应用">for 循环的实际应用</a></h1>
-<pre><code class="language-zig">// 场景1：数据处理管道
-fn processBatch(data: []const u8) void {
-    for (data) |byte| {
-        // 处理每个字节
-        _ = byte;
+<p>预期输出：</p>
+<pre><code>item = 1
+item = 2
+item = 3
+item = 4
+item = 5
+array[0] = 1
+array[1] = 2
+array[2] = 3
+array[3] = 4
+array[4] = 5
+1 + 10 = 11
+2 + 20 = 22
+3 + 30 = 33
+4 + 40 = 44
+5 + 50 = 55
+double item = 2
+double item = 4
+double item = 6
+double item = 8
+double item = 10
+i = 0
+i = 1
+i = 2
+i = 3
+i = 4
+(0, 0)
+(0, 1)
+(0, 2)
+(1, 0)
+</code></pre>
+<h3 id="for-作为表达式"><a class="header" href="#for-作为表达式">for 作为表达式</a></h3>
+<p>for 循环可以使用 <code>else</code> 分支处理循环正常结束的情况：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(_: std.process.Init.Minimal) void {
+    // for 作为表达式：查找第一个满足条件的元素
+    const items = [_]i32{ 1, 3, 5, 7, 9 };
+    
+    // 方式1：for 循环直接作为表达式
+    const found = for (items) |item| {
+        if (item &gt; 6) break item;
+    } else -1;  // else 分支：循环正常结束时执行（没有 break）
+    
+    std.debug.print("找到的元素: {}\n", .{found});  // 输出：找到的元素: 7
+    
+    // 方式2：带标签的 for 循环作为表达式
+    const index = search: for (items, 0..) |item, i| {
+        if (item &gt; 6) break :search i;
+    } else null;
+    
+    if (index) |i| {
+        std.debug.print("找到索引: {}\n", .{i});  // 输出：找到索引: 3
     }
 }
-
-// 场景2：查找和过滤
-fn findFirst(items: []const i32, target: i32) ?usize {
+</code></pre>
+<p>预期输出：</p>
+<pre><code>找到的元素: 7
+找到索引: 3
+</code></pre>
+<p><strong>关键点</strong>：</p>
+<ul>
+<li><code>break value</code> 可以提前退出并返回值</li>
+<li>带标签的 for 循环可以更清晰地控制返回</li>
+</ul>
+<h3 id="for-循环的实际应用"><a class="header" href="#for-循环的实际应用">for 循环的实际应用</a></h3>
+<pre><code class="language-zig">// 场景1：查找元素
+fn findItem(items: []const i32, target: i32) ?usize {
     for (items, 0..) |item, index| {
         if (item == target) return index;
     }
     return null;
 }
 
-// 场景3：矩阵操作
-fn matrixAdd(a: [][]f32, b: [][]f32, result: [][]f32) void {
-    for (a, b, result) |row_a, row_b, row_result| {
-        for (row_a, row_b, row_result) |val_a, val_b, *val_result| {
-            val_result.* = val_a + val_b;
-        }
+// 场景2：计算聚合值
+fn sum(items: []const i32) i32 {
+    var total: i32 = 0;
+    for (items) |item| {
+        total += item;
+    }
+    return total;
+}
+
+// 场景3：数据转换
+fn doubleAll(items: []i32) void {
+    for (items) |*item| {
+        item.* *= 2;
+    }
+}
+
+// 场景4：并行处理
+fn zipWith(a: []const i32, b: []const i32, result: []i32) void {
+    for (a, b, result) |x, y, *r| {
+        r.* = x + y;
     }
 }
 </code></pre>
 <h2 id="switch-语句"><a class="header" href="#switch-语句">switch 语句</a></h2>
-<h1 id="switch-的强大功能"><a class="header" href="#switch-的强大功能">switch 的强大功能</a></h1>
+<p>前面介绍的 if 语句适合处理简单的条件判断，而 switch 语句则更适合处理多分支选择。switch 提供了更强大的模式匹配能力，并且编译器会强制要求处理所有可能的情况。</p>
 <p>Zig 的 switch 语句非常强大：</p>
 <ul>
-<li><strong>穷尽性检查</strong>：必须处理所有可能的情况</li>
-<li><strong>模式匹配</strong>：支持范围、多值匹配</li>
-<li><strong>表达式</strong>：可以返回值</li>
-<li><strong>编译期检查</strong>：确保所有分支都被处理</li>
+<li><strong>穷尽性检查</strong>：编译器强制要求处理所有可能的情况，避免遗漏分支导致的运行时错误</li>
+<li><strong>模式匹配</strong>：支持范围匹配（<code>1...10</code>）、多值匹配（<code>1, 2, 3</code>）、枚举匹配等高级模式</li>
+<li><strong>表达式</strong>：可以返回值，支持函数式编程风格</li>
+<li><strong>编译期检查</strong>：编译器在编译期验证所有分支是否被处理，提前发现错误</li>
+<li><strong>无隐式 fallthrough</strong>：每个 case 自动 break，不会意外执行到下一个分支</li>
 </ul>
 <pre><code class="language-zig">const std = @import("std");
 
@@ -535,7 +781,12 @@ pub fn main(init: std.process.Init.Minimal) void {
     std.debug.print("是元音：{}\n", .{is_vowel});
 }
 </code></pre>
-<h1 id="switch-的高级用法"><a class="header" href="#switch-的高级用法">switch 的高级用法</a></h1>
+<p>预期输出：</p>
+<pre><code>结果：二
+等级：B
+是元音：true
+</code></pre>
+<h3 id="switch-的高级用法"><a class="header" href="#switch-的高级用法">switch 的高级用法</a></h3>
 <pre><code class="language-zig">// 场景1：枚举匹配（编译器确保穷尽）
 const Color = enum {
     red,
@@ -576,16 +827,18 @@ fn doublePositive(numbers: []i32) void {
 }
 </code></pre>
 <h2 id="defer-语句"><a class="header" href="#defer-语句">defer 语句</a></h2>
-<h1 id="什么是-defer"><a class="header" href="#什么是-defer">什么是 defer？</a></h1>
+<p>前面介绍的 if、while、for、switch 等控制流语句用于控制代码的执行路径，而 <code>defer</code> 则用于确保代码在作用域结束时执行，无论控制流如何跳转。这种机制与控制流紧密配合，确保资源的正确管理。</p>
+<h3 id="什么是-defer"><a class="header" href="#什么是-defer">什么是 defer？</a></h3>
 <p><code>defer</code> 是 Zig 的资源管理核心机制，它确保指定的代码在当前作用域结束时执行。这类似于其他语言的 RAII（资源获取即初始化）模式。</p>
-<h1 id="为什么使用-defer"><a class="header" href="#为什么使用-defer">为什么使用 defer？</a></h1>
+<h3 id="为什么使用-defer"><a class="header" href="#为什么使用-defer">为什么使用 defer？</a></h3>
 <ol>
 <li><strong>资源安全释放</strong>：确保文件、内存等资源被正确释放</li>
 <li><strong>异常安全</strong>：即使发生错误，defer 代码也会执行</li>
 <li><strong>代码清晰</strong>：资源获取和释放代码放在一起，更易理解</li>
 <li><strong>减少错误</strong>：避免忘记释放资源</li>
 </ol>
-<p><code>defer</code>用于确保代码在作用域结束时执行，常用于资源清理：</p>
+<h3 id="基本用法"><a class="header" href="#基本用法">基本用法</a></h3>
+<p><code>defer</code> 用于确保代码在作用域结束时执行，常用于资源清理：</p>
 <pre><code class="language-zig">const std = @import("std");
 
 pub fn main(init: std.process.Init.Minimal) void {
@@ -606,7 +859,7 @@ pub fn main(init: std.process.Init.Minimal) void {
 // 作用域结束
 // 结束
 </code></pre>
-<h1 id="defer-的实际应用"><a class="header" href="#defer-的实际应用">defer 的实际应用</a></h1>
+<h3 id="实际应用场景-1"><a class="header" href="#实际应用场景-1">实际应用场景</a></h3>
 <pre><code class="language-zig">// 场景1：文件操作
 fn readFile(path: []const u8) !void {
     const file = try std.fs.cwd().openFile(path, .{});
@@ -635,8 +888,7 @@ fn protectedOperation(mutex: *std.Thread.Mutex) void {
     // 即使发生 panic，锁也会被释放
 }
 </code></pre>
-<p><strong>多个 defer 的执行顺序：</strong></p>
-<h1 id="lifo后进先出原则"><a class="header" href="#lifo后进先出原则">LIFO（后进先出）原则</a></h1>
+<h3 id="lifo后进先出原则"><a class="header" href="#lifo后进先出原则">LIFO（后进先出）原则</a></h3>
 <p>多个 defer 按照后进先出的顺序执行，这确保了资源的正确释放顺序：</p>
 <pre><code class="language-zig">const std = @import("std");
 
@@ -654,7 +906,7 @@ pub fn main(init: std.process.Init.Minimal) void {
 // 第二个 defer
 // 第一个 defer
 </code></pre>
-<h1 id="defer-vs-errdefer"><a class="header" href="#defer-vs-errdefer">defer vs errdefer</a></h1>
+<h3 id="defer-vs-errdefer"><a class="header" href="#defer-vs-errdefer">defer vs errdefer</a></h3>
 <p>Zig 还提供了 <code>errdefer</code>，只在发生错误时执行：</p>
 <pre><code class="language-zig">fn allocateAndInit(allocator: std.mem.Allocator) !*Resource {
     const resource = try allocator.create(Resource);
@@ -684,748 +936,87 @@ pub fn main(init: std.process.Init.Minimal) !void {
     const buffer = try allocator.alloc(u8, 1024);
     defer allocator.free(buffer); // 确保内存被释放
     
-    // 使用资源。..
+    // 使用资源...
     std.debug.print("资源已分配\n", .{});
 }
 </code></pre>
-<h2 id="线程安全的最佳实践"><a class="header" href="#线程安全的最佳实践">线程安全的最佳实践</a></h2>
-<h1 id="线程安全的数据结构"><a class="header" href="#线程安全的数据结构">线程安全的数据结构</a></h1>
-<p>在实际项目中，经常需要线程安全的数据结构。以下是线程安全计数器的实现：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-const ThreadSafeCounter = struct {
-    value: std.atomic.Value(usize),
-    mutex: std.Thread.Mutex,
-    
-    fn init() ThreadSafeCounter {
-        return .{
-            .value = std.atomic.Value(usize).init(0),
-            .mutex = .{},
-        };
-    }
-    
-    fn increment(self: *ThreadSafeCounter) void {
-        // 方式1：使用原子操作（推荐，性能更好）
-        _ = self.value.fetchAdd(1, .monotonic);
-    }
-    
-    fn incrementComplex(self: *ThreadSafeCounter) void {
-        // 方式2：使用互斥锁（复杂操作）
-        self.mutex.lock();
-        defer self.mutex.unlock();
-        // 执行复杂操作...
-        const current = self.value.load(.monotonic);
-        // 可以进行更复杂的逻辑
-        self.value.store(current + 1, .monotonic);
-    }
-    
-    fn get(self: *const ThreadSafeCounter) usize {
-        return self.value.load(.monotonic);
-    }
+<h2 id="块表达式block-expression"><a class="header" href="#块表达式block-expression">块表达式（Block Expression）</a></h2>
+<p>前面介绍的 if、while、for 等控制流语句都可以作为表达式返回值，而块表达式则提供了另一种创建表达式的方式。块表达式可以包含复杂的逻辑和控制流，最终返回一个值，这在需要计算复杂表达式的场景中非常有用。</p>
+<p>在 Zig 中，块（Block）不仅是作用域，还可以作为表达式返回值，但<strong>必须使用标签</strong>。</p>
+<h3 id="基本语法"><a class="header" href="#基本语法">基本语法</a></h3>
+<pre><code class="language-zig">const result = blk: {
+    const a = 10;
+    const b = 20;
+    break :blk a + b;  // 使用 break :label 返回值
 };
-
-pub fn main(init: std.process.Init.Minimal) !void {
-    var counter = ThreadSafeCounter.init();
-    
-    const worker = struct {
-        fn work(c: *ThreadSafeCounter) void {
-            for (0..1000) |_| {
-                c.increment();
-            }
-        }
-    }.work;
-    
-    var threads: [10]std.Thread = undefined;
-    for (&amp;threads, 0..) |*thread, i| {
-        _ = i;
-        thread.* = try std.Thread.spawn(.{}, worker, .{&amp;counter});
-    }
-    
-    for (threads) |thread| {
-        thread.join();
-    }
-    
-    std.debug.print("最终计数：{}\n", .{counter.get()});
-}
 </code></pre>
-<h1 id="选择同步原语的原则"><a class="header" href="#选择同步原语的原则">选择同步原语的原则</a></h1>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>场景</th><th>推荐方案</th><th>原因</th></tr>
-</thead>
-<tbody>
-<tr><td>简单计数器</td><td>原子操作</td><td>性能最优，无锁</td></tr>
-<tr><td>复杂临界区</td><td>互斥锁</td><td>保证互斥访问</td></tr>
-<tr><td>读多写少</td><td>读写锁</td><td>提高并发度</td></tr>
-<tr><td>等待条件</td><td>条件变量</td><td>高效等待</td></tr>
-</tbody>
-</table>
-</div>
-<h1 id="线程安全检查清单"><a class="header" href="#线程安全检查清单">线程安全检查清单</a></h1>
-<ol>
-<li>✅ <strong>识别共享数据</strong>：明确哪些数据会被多个线程访问</li>
-<li>✅ <strong>选择同步原语</strong>：根据访问模式选择合适的锁或原子操作</li>
-<li>✅ <strong>最小化临界区</strong>：锁的范围越小越好</li>
-<li>✅ <strong>避免嵌套锁</strong>：防止死锁</li>
-<li>✅ <strong>使用 RAII 模式</strong>：确保锁一定会释放</li>
-</ol>
-<h2 id="常见并发陷阱"><a class="header" href="#常见并发陷阱">常见并发陷阱</a></h2>
-<h1 id="死锁deadlock"><a class="header" href="#死锁deadlock">死锁（Deadlock）</a></h1>
-<p>死锁是指两个或多个线程互相等待对方释放资源，导致所有线程都无法继续执行。</p>
-<p><strong>死锁示例</strong>：</p>
-<pre><code class="language-zig">// ❌ 错误示例
-fn deadlockExample() void {
-    var mutex1: std.Thread.Mutex = .{};
-    var mutex2: std.Thread.Mutex = .{};
-    
-    // 线程1：先锁 mutex1，再锁 mutex2
-    const thread1 = std.Thread.spawn(.{}, struct {
-        fn work(m1: *std.Thread.Mutex, m2: *std.Thread.Mutex) void {
-            m1.lock();
-            defer m1.unlock();
-            
-            std.time.sleep(100 * std.time.ns_per_ms);  // 模拟工作
-            
-            m2.lock();  // 可能死锁
-            defer m2.unlock();
-        }
-    }.work, .{ &amp;mutex1, &amp;mutex2 });
-    
-    // 线程2：先锁 mutex2，再锁 mutex1（相反顺序）
-    const thread2 = std.Thread.spawn(.{}, struct {
-        fn work(m1: *std.Thread.Mutex, m2: *std.Thread.Mutex) void {
-            m2.lock();
-            defer m2.unlock();
-            
-            std.time.sleep(100 * std.time.ns_per_ms);
-            
-            m1.lock();  // 死锁发生
-            defer m1.unlock();
-        }
-    }.work, .{ &amp;mutex1, &amp;mutex2 });
-    
-    thread1.join();
-    thread2.join();
-}
-</code></pre>
-<p><strong>避免死锁的方法</strong>：</p>
-<pre><code class="language-zig">// ✅ 方法1：统一加锁顺序
-// 💡 最佳实践
-fn noDeadlockMethod1() void {
-    var mutex1: std.Thread.Mutex = .{};
-    var mutex2: std.Thread.Mutex = .{};
-    
-    // 所有线程按相同顺序加锁
-    mutex1.lock();
-    defer mutex1.unlock();
-    
-    mutex2.lock();
-    defer mutex2.unlock();
-    
-    // 执行操作...
-}
-
-// ✅ 方法2：使用 tryLock 避免阻塞
-fn noDeadlockMethod2() void {
-    var mutex1: std.Thread.Mutex = .{};
-    var mutex2: std.Thread.Mutex = .{};
-    
-    mutex1.lock();
-    errdefer mutex1.unlock();
-    
-    if (mutex2.tryLock()) {
-        defer mutex2.unlock();
-        // 成功获取两个锁
+<p><strong>要点</strong>：</p>
+<ul>
+<li>块开始处必须有标签（如 <code>blk:</code>）</li>
+<li>使用 <code>break :label value</code> 返回值</li>
+<li>不带标签的块不能返回值，只是一个作用域</li>
+<li><strong>所有分支的返回值类型必须一致</strong></li>
+</ul>
+<h3 id="类型一致性要求"><a class="header" href="#类型一致性要求">类型一致性要求</a></h3>
+<p>块表达式的所有退出路径必须返回相同类型的值：</p>
+<pre><code class="language-zig">// ❌ 错误：不同分支返回不同类型
+const result = blk: {
+    if (condition) {
+        break :blk 42;      // i32
     } else {
-        // 无法获取第二个锁，释放第一个锁
-        mutex1.unlock();
-        // 重试或返回错误
-    }
-}
-</code></pre>
-<h1 id="竞态条件race-condition"><a class="header" href="#竞态条件race-condition">竞态条件（Race Condition）</a></h1>
-<p>竞态条件是指多个线程访问共享数据，且至少有一个线程在写入，导致结果依赖于执行顺序。</p>
-<pre><code class="language-zig">// ❌ 错误示例
-var counter: usize = 0;
-
-fn unsafeIncrement() void {
-    for (0..1000) |_| {
-        counter += 1;  // 非原子操作，存在竞态
-    }
-}
-
-// ✅ 正确做法：使用原子操作
-var safe_counter: std.atomic.Value(usize) = std.atomic.Value(usize).init(0);
-
-fn safeIncrement() void {
-    for (0..1000) |_| {
-        _ = safe_counter.fetchAdd(1, .monotonic);
-    }
-}
-</code></pre>
-<h1 id="活锁livelock"><a class="header" href="#活锁livelock">活锁（Livelock）</a></h1>
-<p>活锁是指线程不断改变状态但无法取得进展，类似于两个人在走廊里互相让路。</p>
-<pre><code class="language-zig">// 💡 最佳实践
-fn livelockExample() void {
-    var mutex: std.Thread.Mutex = .{};
-    var should_retry = true;
-    
-    while (should_retry) {
-        if (mutex.tryLock()) {
-            defer mutex.unlock();
-            // 执行操作
-            should_retry = false;
-        } else {
-            // 立即重试，可能导致活锁
-            // 应该添加退避策略
-        }
-    }
-}
-
-// ✅ 正确做法：添加退避策略
-fn noLivelock() void {
-    var mutex: std.Thread.Mutex = .{};
-    var retry_count: usize = 0;
-    
-    while (retry_count &lt; 10) : (retry_count += 1) {
-        if (mutex.tryLock()) {
-            defer mutex.unlock();
-            // 执行操作
-            break;
-        }
-        // 指数退避
-        std.time.sleep(std.time.ns_per_ms * @as(u64, 1) &lt;&lt; @intCast(retry_count));
-    }
-}
-</code></pre>
-<h2 id="性能优化建议"><a class="header" href="#性能优化建议">性能优化建议</a></h2>
-<h1 id="1-减少锁竞争"><a class="header" href="#1-减少锁竞争">1. 减少锁竞争</a></h1>
-<pre><code class="language-zig">// ❌ 错误示例
-fn inefficientLock(data: *Data) void {
-    var mutex: std.Thread.Mutex = .{};
-    mutex.lock();
-    defer mutex.unlock();
-    
-    // 整个操作都在临界区内
-    processData(data);  // 耗时操作
-    saveResult(data);   // 耗时操作
-}
-
-// ✅ 最小化临界区
-fn efficientLock(data: *Data) void {
-    var mutex: std.Thread.Mutex = .{};
-    
-    // 只在必要时加锁
-    mutex.lock();
-    const local_copy = data.value;
-    mutex.unlock();
-    
-    // 在锁外处理
-    const result = processData(local_copy);
-    
-    // 只在写回时加锁
-    mutex.lock();
-    data.result = result;
-    mutex.unlock();
-}
-</code></pre>
-<h1 id="2-使用无锁数据结构"><a class="header" href="#2-使用无锁数据结构">2. 使用无锁数据结构</a></h1>
-<p>对于简单操作，优先使用原子操作：</p>
-<pre><code class="language-zig">// ✅ 无锁计数器
-// 💡 最佳实践
-const LockFreeCounter = struct {
-    value: std.atomic.Value(usize),
-    
-    fn increment(self: *LockFreeCounter) void {
-        _ = self.value.fetchAdd(1, .monotonic);
-    }
-    
-    fn get(self: *const LockFreeCounter) usize {
-        return self.value.load(.monotonic);
+        break :blk "hello"; // 编译错误：类型不匹配
     }
 };
-</code></pre>
-<h1 id="3-避免伪共享false-sharing"><a class="header" href="#3-避免伪共享false-sharing">3. 避免伪共享（False Sharing）</a></h1>
-<p>伪共享是指多个线程访问同一缓存行的不同变量，导致缓存频繁失效。</p>
-<pre><code class="language-zig">// ❌ 错误示例
-const Data = struct {
-    counter1: usize,  // 线程1访问
-    counter2: usize,  // 线程2访问
-};
 
-// ✅ 使用缓存行对齐
-const CACHE_LINE_SIZE = 64;
-
-const AlignedData = struct {
-    counter1: usize align(CACHE_LINE_SIZE),
-    counter2: usize align(CACHE_LINE_SIZE),
+// ✅ 正确：所有分支返回相同类型
+const result = blk: {
+    if (value &lt; 10) break :blk "小";
+    if (value &lt; 20) break :blk "中";
+    break :blk "大";  // 所有分支都返回 []const u8
 };
 </code></pre>
-<h1 id="4-性能对比"><a class="header" href="#4-性能对比">4. 性能对比</a></h1>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>同步方式</th><th>性能</th><th>适用场景</th></tr>
-</thead>
-<tbody>
-<tr><td>无锁（原子操作）</td><td>⭐⭐⭐⭐⭐</td><td>简单计数、标志位</td></tr>
-<tr><td>自旋锁</td><td>⭐⭐⭐⭐</td><td>短临界区、低竞争</td></tr>
-<tr><td>互斥锁</td><td>⭐⭐⭐</td><td>长临界区、高竞争</td></tr>
-<tr><td>读写锁</td><td>⭐⭐⭐</td><td>读多写少</td></tr>
-</tbody>
-</table>
-</div>
-<h1 id="5-性能测试建议"><a class="header" href="#5-性能测试建议">5. 性能测试建议</a></h1>
+<h3 id="完整示例"><a class="header" href="#完整示例">完整示例</a></h3>
 <pre><code class="language-zig">const std = @import("std");
 
-fn benchmarkMutex(allocator: std.mem.Allocator) !void {
-    var mutex: std.Thread.Mutex = .{};
-    var counter: usize = 0;
-    
-    const start = std.time.nanoTimestamp();
-    
-    var threads: [4]std.Thread = undefined;
-    for (&amp;threads) |*thread| {
-        thread.* = try std.Thread.spawn(.{}, struct {
-            fn work(m: *std.Thread.Mutex, c: *usize) void {
-                for (0..100000) |_| {
-                    m.lock();
-                    defer m.unlock();
-                    c.* += 1;
-                }
-            }
-        }.work, .{ &amp;mutex, &amp;counter });
-    }
-    
-    for (threads) |thread| thread.join();
-    
-    const end = std.time.nanoTimestamp();
-    const elapsed = @as(f64, @floatFromInt(end - start)) / 1_000_000.0;
-    
-    std.debug.print("互斥锁耗时：{d:.2}ms\n", .{elapsed});
-}
-</code></pre>
-<hr>
-<h1 id="章节练习题"><a class="header" href="#章节练习题">章节练习题</a></h1>
-<h1 id="基础题"><a class="header" href="#基础题">基础题</a></h1>
-<p><strong>题目1</strong>：编写一个程序，使用 for 循环打印九九乘法表。</p>
-<p><strong>要求</strong>：</p>
-<ul>
-<li>使用嵌套 for 循环</li>
-<li>格式化输出，对齐整齐</li>
-<li>输出完整的 9x9 乘法表</li>
-</ul>
-<p><strong>解题思路</strong>：</p>
-<ol>
-<li>使用两层嵌套 for 循环</li>
-<li>外层循环控制行（1-9）</li>
-<li>内层循环控制列（1-当前行数）</li>
-<li>使用格式化字符串对齐输出</li>
-</ol>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn main(init: std.process.Init.Minimal) void {
-    std.debug.print("九九乘法表：\n\n", .{});
-    
-    for (1..10) |i| {
-        for (1..i + 1) |j| {
-            std.debug.print("{}x{}={:2} ", .{ j, i, j * i });
-        }
-        std.debug.print("\n", .{});
-    }
-}
-</code></pre>
-<p><strong>预期输出</strong>：</p>
-<pre><code>九九乘法表：
-
-1x1= 1 
-1x2= 2 2x2= 4 
-1x3= 3 2x3= 6 3x3= 9 
-1x4= 4 2x4= 8 3x4=12 4x4=16 
-1x5= 5 2x5=10 3x5=15 4x5=20 5x5=25 
-1x6= 6 2x6=12 3x6=18 4x6=24 5x6=30 6x6=36 
-1x7= 7 2x7=14 3x7=21 4x7=28 5x7=35 6x7=42 7x7=49 
-1x8= 8 2x8=16 3x8=24 4x8=32 5x8=40 6x8=48 7x8=56 8x8=64 
-1x9= 9 2x9=18 3x9=27 4x9=36 5x9=45 6x9=54 7x9=63 8x9=72 9x9=81 
-</code></pre>
-<p><strong>题目2</strong>：编写一个程序，使用 while 循环计算阶乘。</p>
-<p><strong>要求</strong>：</p>
-<ul>
-<li>计算 5! = 5 × 4 × 3 × 2 × 1</li>
-<li>使用 while 循环</li>
-<li>输出计算过程和结果</li>
-</ul>
-<p><strong>解题思路</strong>：</p>
-<ol>
-<li>初始化结果为 1</li>
-<li>使用 while 循环从 1 乘到 5</li>
-<li>在循环中累乘</li>
-<li>输出结果</li>
-</ol>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn main(init: std.process.Init.Minimal) void {
-    std.debug.print("=== 阶乘计算 ===\n\n", .{});
-    
-    var result: u32 = 1;
-    var i: u32 = 1;
-    const n: u32 = 5;
-    
-    std.debug.print("计算 {}! = ", .{n});
-    
-    while (i &lt;= n) : (i += 1) {
-        result *= i;
-        if (i &lt; n) {
-            std.debug.print("{} × ", .{i});
-        } else {
-            std.debug.print("{} ", .{i});
-        }
-    }
-    
-    std.debug.print("= {}\n", .{result});
-}
-</code></pre>
-<p><strong>预期输出</strong>：</p>
-<pre><code>=== 阶乘计算 ===
-
-计算 5! = 1 × 2 × 3 × 4 × 5  = 120
-</code></pre>
-<p><strong>题目3</strong>：编写一个程序，使用 switch 语句判断成绩等级。</p>
-<p><strong>要求</strong>：</p>
-<ul>
-<li>根据分数（0-100）判断等级</li>
-<li>A: 90-100, B: 80-89, C: 70-79, D: 60-69, F: 0-59</li>
-<li>输出分数和对应等级</li>
-</ul>
-<p><strong>解题思路</strong>：</p>
-<ol>
-<li>使用整数除法将分数映射到等级</li>
-<li>使用 switch 匹配等级</li>
-<li>输出结果</li>
-</ol>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn main(init: std.process.Init.Minimal) void {
-    const scores: [5]u32 = [_]u32{ 95, 82, 75, 63, 45 };
-    
-    std.debug.print("=== 成绩等级判断 ===\n\n", .{});
-    
-    for (scores) |score| {
-        const grade: u8 = @intCast(score / 10);
-        const level = switch (grade) {
-            10, 9 =&gt; "A",
-            8 =&gt; "B",
-            7 =&gt; "C",
-            6 =&gt; "D",
-            else =&gt; "F",
-        };
-        std.debug.print("分数 {} -&gt; 等级 {s}\n", .{ score, level });
-    }
-}
-</code></pre>
-<p><strong>预期输出</strong>：</p>
-<pre><code>=== 成绩等级判断 ===
-
-分数 95 -&gt; 等级 A
-分数 82 -&gt; 等级 B
-分数 75 -&gt; 等级 C
-分数 63 -&gt; 等级 D
-分数 45 -&gt; 等级 F
-</code></pre>
-<h1 id="进阶题"><a class="header" href="#进阶题">进阶题</a></h1>
-<p><strong>题目1</strong>：实现一个简单的猜数字游戏，使用 while 循环和二分查找。</p>
-<p><strong>要求</strong>：</p>
-<ul>
-<li>生成 1-100 的随机数</li>
-<li>使用二分查找策略猜测</li>
-<li>提示“太大“、“太小“或“正确”</li>
-<li>记录猜测次数</li>
-<li>输出猜测过程</li>
-</ul>
-<p><strong>解题思路</strong>：</p>
-<ol>
-<li>使用 <code>std.Random</code> 生成随机数</li>
-<li>使用 while 循环持续游戏</li>
-<li>使用 if-else 判断大小</li>
-<li>使用二分查找更新猜测范围</li>
-<li>猜对后退出循环</li>
-</ol>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn main(init: std.process.Init.Minimal) void {
-    var prng = std.Random.DefaultPrng.init(42);
-    const random = prng.random();
-    
-    const target = random.intRangeAtMost(u32, 1, 100);
-    var guess: u32 = 50;
-    var attempts: u32 = 0;
-    var low: u32 = 1;
-    var high: u32 = 100;
-    
-    std.debug.print("=== 猜数字游戏 ===\n", .{});
-    std.debug.print("目标数字（秘密）：{}\n\n", .{target});
-    
-    while (guess != target) {
-        attempts += 1;
-        std.debug.print("第 {} 次猜测：{}", .{ attempts, guess });
-        
-        if (guess &lt; target) {
-            std.debug.print(" - 太小！\n", .{});
-            low = guess + 1;
-        } else if (guess &gt; target) {
-            std.debug.print(" - 太大！\n", .{});
-            high = guess - 1;
-        } else {
-            std.debug.print(" - 正确！\n", .{});
-            break;
-        }
-        
-        guess = (low + high) / 2;
-    }
-    
-    std.debug.print("\n恭喜！你用了 {} 次猜对了数字 {}！\n", .{ attempts, target });
-}
-</code></pre>
-<p><strong>预期输出</strong>（示例）：</p>
-<pre><code>=== 猜数字游戏 ===
-目标数字（秘密）：73
-
-第 1 次猜测：50 - 太小！
-第 2 次猜测：75 - 太大！
-第 3 次猜测：62 - 太小！
-第 4 次猜测：68 - 太小！
-第 5 次猜测：71 - 太小！
-第 6 次猜测：73 - 正确！
-
-恭喜！你用了 6 次猜对了数字 73！
-</code></pre>
-<p><strong>题目2</strong>：实现一个简单的状态机，使用 labeled switch 控制状态转换。</p>
-<p><strong>要求</strong>：</p>
-<ul>
-<li>定义至少 4 个状态（如：空闲、运行、暂停、停止）</li>
-<li>使用 labeled switch 实现状态转换</li>
-<li>模拟状态机的执行过程</li>
-<li>输出状态转换路径</li>
-</ul>
-<p><strong>解题思路</strong>：</p>
-<ol>
-<li>定义状态枚举</li>
-<li>使用 labeled switch 实现状态机</li>
-<li>使用 <code>continue :label</code> 实现状态转换</li>
-<li>使用计数器限制循环次数</li>
-<li>输出状态转换过程</li>
-</ol>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-const State = enum {
-    idle,
-    running,
-    paused,
-    stopped,
-};
-
-pub fn main(init: std.process.Init.Minimal) void {
-    std.debug.print("=== 状态机演示 ===\n\n", .{});
-    
-    var current_state: State = .idle;
-    var step: u32 = 0;
-    const max_steps = 10;
-    
-    std.debug.print("初始状态：{s}\n\n", .{@tagName(current_state)});
-    
-    state_machine: switch (current_state) {
-        .idle =&gt; {
-            step += 1;
-            std.debug.print("步骤 {} - 状态：空闲\n", .{step});
-            std.debug.print("  -&gt; 启动系统\n", .{});
-            current_state = .running;
-            if (step &lt; max_steps) continue :state_machine current_state;
-        },
-        .running =&gt; {
-            step += 1;
-            std.debug.print("步骤 {} - 状态：运行中\n", .{step});
-            
-            if (step == 3) {
-                std.debug.print("  -&gt; 暂停系统\n", .{});
-                current_state = .paused;
-                continue :state_machine current_state;
-            } else if (step == 7) {
-                std.debug.print("  -&gt; 停止系统\n", .{});
-                current_state = .stopped;
-                continue :state_machine current_state;
-            } else {
-                std.debug.print("  -&gt; 继续运行\n", .{});
-                if (step &lt; max_steps) continue :state_machine current_state;
-            }
-        },
-        .paused =&gt; {
-            step += 1;
-            std.debug.print("步骤 {} - 状态：已暂停\n", .{step});
-            std.debug.print("  -&gt; 恢复运行\n", .{});
-            current_state = .running;
-            if (step &lt; max_steps) continue :state_machine current_state;
-        },
-        .stopped =&gt; {
-            step += 1;
-            std.debug.print("步骤 {} - 状态：已停止\n", .{step});
-            std.debug.print("  -&gt; 系统终止\n", .{});
-            break :state_machine;
-        },
-    }
-    
-    std.debug.print("\n状态机执行完成！总步骤：{}\n", .{step});
-}
-</code></pre>
-<p><strong>预期输出</strong>：</p>
-<pre><code>=== 状态机演示 ===
-
-初始状态：idle
-
-步骤 1 - 状态：空闲
-  -&gt; 启动系统
-步骤 2 - 状态：运行中
-  -&gt; 继续运行
-步骤 3 - 状态：运行中
-  -&gt; 暂停系统
-步骤 4 - 状态：已暂停
-  -&gt; 恢复运行
-步骤 5 - 状态：运行中
-  -&gt; 继续运行
-步骤 6 - 状态：运行中
-  -&gt; 继续运行
-步骤 7 - 状态：运行中
-  -&gt; 停止系统
-步骤 8 - 状态：已停止
-  -&gt; 系统终止
-
-状态机执行完成！总步骤：8
-</code></pre>
-<h1 id="挑战题"><a class="header" href="#挑战题">挑战题</a></h1>
-<p><strong>题目</strong>：实现一个简单的文本解析器，使用控制流语句解析简单的命令。</p>
-<p><strong>要求</strong>：</p>
-<ul>
-<li>支持以下命令：<code>PRINT &lt;message&gt;</code>、<code>REPEAT &lt;n&gt; &lt;message&gt;</code>、<code>EXIT</code></li>
-<li>使用字符串比较和循环</li>
-<li>输出解析结果和执行过程</li>
-<li>处理无效命令</li>
-</ul>
-<p><strong>解题思路</strong>：</p>
-<ol>
-<li>定义命令枚举</li>
-<li>使用字符串比较识别命令</li>
-<li>使用循环处理 REPEAT 命令</li>
-<li>使用 switch 或 if-else 处理不同命令</li>
-<li>输出执行结果</li>
-</ol>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-const Command = enum {
-    print,
-    repeat,
-    exit,
-    unknown,
-};
-
-fn parseCommand(input: []const u8) Command {
-    if (std.mem.startsWith(u8, input, "PRINT ")) {
-        return .print;
-    } else if (std.mem.startsWith(u8, input, "REPEAT ")) {
-        return .repeat;
-    } else if (std.mem.eql(u8, input, "EXIT")) {
-        return .exit;
-    } else {
-        return .unknown;
-    }
-}
-
-pub fn main(init: std.process.Init.Minimal) void {
-    const commands: [5][]const u8 = [_][]const u8{
-        "PRINT Hello, World!",
-        "REPEAT 3 Zig is awesome!",
-        "INVALID",
-        "PRINT Goodbye!",
-        "EXIT",
+pub fn main(_: std.process.Init.Minimal) void {
+    // 基本用法：计算并返回值
+    const result = blk: {
+        const a = 10;
+        const b = 20;
+        break :blk a + b;
     };
-    
-    std.debug.print("=== 文本命令解析器 ===\n\n", .{});
-    
-    var running = true;
-    var cmd_index: usize = 0;
-    
-    while (running and cmd_index &lt; commands.len) {
-        const cmd = commands[cmd_index];
-        std.debug.print("命令：{s}\n", .{cmd});
-        
-        switch (parseCommand(cmd)) {
-            .print =&gt; {
-                const message = cmd["PRINT ".len..];
-                std.debug.print("  输出：{s}\n\n", .{message});
-            },
-            .repeat =&gt; {
-                const rest = cmd["REPEAT ".len..];
-                var iter = std.mem.split(u8, rest, " ");
-                const count_str = iter.next() orelse "0";
-                const count = std.fmt.parseInt(u32, count_str, 10) catch 0;
-                const message = iter.rest();
-                
-                std.debug.print("  重复 {} 次：\n", .{count});
-                var i: u32 = 0;
-                while (i &lt; count) : (i += 1) {
-                    std.debug.print("    {d}: {s}\n", .{ i + 1, message });
-                }
-                std.debug.print("\n", .{});
-            },
-            .exit =&gt; {
-                std.debug.print("  退出程序\n\n", .{});
-                running = false;
-            },
-            .unknown =&gt; {
-                std.debug.print("  错误：未知命令\n\n", .{});
-            },
-        }
-        
-        cmd_index += 1;
-    }
-    
-    std.debug.print("解析器执行完成！\n", .{});
+    std.debug.print("块表达式结果: {}\n", .{result});
+
+    // 条件返回：在条件分支中提前退出
+    const value: i32 = 15;
+    const category = blk: {
+        if (value &lt; 10) break :blk "小";
+        if (value &lt; 20) break :blk "中";
+        break :blk "大";
+    };
+    std.debug.print("值 {} 的类别: {s}\n", .{ value, category });
+
+    // 嵌套块：使用不同标签区分层级
+    const nested = outer: {
+        const inner = inner: {
+            break :inner 5;
+        };
+        break :outer inner * 2;
+    };
+    std.debug.print("嵌套块结果: {}\n", .{nested});
 }
 </code></pre>
-<p><strong>预期输出</strong>：</p>
-<pre><code>=== 文本命令解析器 ===
-
-命令：PRINT Hello, World!
-  输出：Hello, World!
-
-命令：REPEAT 3 Zig is awesome!
-  重复 3 次：
-    1: Zig is awesome!
-    2: Zig is awesome!
-    3: Zig is awesome!
-
-命令：INVALID
-  错误：未知命令
-
-命令：PRINT Goodbye!
-  输出：Goodbye!
-
-命令：EXIT
-  退出程序
-
-解析器执行完成！
+<p>预期输出：</p>
+<pre><code>块表达式结果: 30
+值 15 的类别: 中
+嵌套块结果: 10
 </code></pre>
-<hr>
+
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../part1-basics/chapter-basic-syntax.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../part1-basics/chapter-basic-types.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
@@ -1439,7 +1030,7 @@ pub fn main(init: std.process.Init.Minimal) void {
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../part1-basics/chapter-basic-syntax.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../part1-basics/chapter-basic-types.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 

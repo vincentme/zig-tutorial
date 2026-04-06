@@ -1,225 +1,61 @@
-# 【draft】基础语法
+# 【draft】基础语法（上）- 基本类型与复合类型
 
-本章将介绍 Zig 的基本语法元素，包括变量声明、数据类型、数组、切片、枚举、联合和结构体。这些是构建 Zig 程序的基础。
+本章介绍 Zig 的基本类型和复合类型，包括变量声明、基本数据类型、数组、切片、枚举、联合、结构体和元组。
+
+Zig 的类型系统分为两个层次：**基本类型**（整数、浮点数、布尔值等）是构建程序的最小单元，**复合类型**（数组、结构体、枚举等）则将基本类型组合成更复杂的数据结构。理解这些类型是学习 Zig 的第一步，后续章节将在此基础上介绍控制流、错误处理和内存管理等核心概念。
 
 ## Zig 编程基础
 
-本节介绍 Zig 编程的基础概念，包括变量声明、命名规范、作用域规则等。这些是编写 Zig 程序的基本要素。
-
 ### 变量声明
 
-### 类型系统特点
-
-Zig采用强类型系统，但支持类型推断。与C/C++不同，Zig明确区分：
-
-- **常量（const）**: 编译期或运行期不可变值
-- **变量（var）**: 可在运行期修改的值
-- **编译期常量（comptime）**: 在编译期计算并内联的值
-
-### 设计理念
-
-1. **显式优于隐式**: 明确区分可变与不可变，减少意外修改
-2. **编译期优化**: 编译期常量可以被完全优化
-3. **内存安全**: 不可变性防止并发问题
-4. **代码可读性**: 一眼就能看出变量是否会被修改
-
-### 应用场景
-
-- **配置参数**：使用`const`，防止意外修改
-- **循环计数器**：使用`var`，允许递增
-- **数学常量**：使用`comptime`，编译期计算
-
-### 基本语法
-
-Zig 是强类型语言，支持类型推断：
+Zig 是强类型语言，支持类型推断。变量声明使用 `const`（常量）或 `var`（变量）：
 
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
-    // 常量声明（不可变）
-    const constant: i32 = 42;
-    const inferred_const = 100; // 类型推断为 comptime_int
+pub fn main(_: std.process.Init.Minimal) void {
+    const constant: i32 = 42;    // 常量：不可变
+    var mutable: i32 = 10;       // 变量：可变
     
-    // 变量声明（可变）
-    var mutable: i32 = 10;
-    var inferred_var = 20; // 类型推断为 i32
-    
-    mutable = 30; // 合法
-    // constant = 50; // 编译错误：常量不可修改
+    mutable = 30;                 // 合法
+    // constant = 50;             // 编译错误：常量不可修改
     
     std.debug.print("constant: {}, mutable: {}\n", .{ constant, mutable });
 }
 ```
 
-**预期输出：**
+预期输出：
 ```
 constant: 42, mutable: 30
 ```
 
 ### 命名规范
 
-Zig 遵循明确的命名规范，确保代码风格一致且易于理解。
+Zig 遵循明确的命名规范，确保代码风格一致：
 
-#### 变量命名
-
-**蛇形命名法（snake_case）**：用于变量名
-
-```zig
-// ✅ 正确示例
-var user_name: []const u8 = undefined;
-var current_score: i32 = 0;
-var is_active: bool = false;
-
-// ❌ 错误示例
-var userName: []const u8 = undefined;
-var CurrentScore: i32 = 0;
-```
-
-#### 函数命名
-
-**驼峰命名法（camelCase）**：用于函数名
+| 标识符类型                 | 命名规范   | 示例                        |
+| -------------------------- | ---------- | --------------------------- |
+| 变量、常量                 | snake_case | `user_name`, `max_size`     |
+| 函数                       | camelCase  | `calculateTotal`, `isValid` |
+| 类型（结构体、枚举、联合） | PascalCase | `Person`, `Status`          |
+| 枚举成员                   | PascalCase | `Pending`, `InProgress`     |
+| 私有字段和方法             | 下划线前缀 | `_count`, `_validate`       |
 
 ```zig
-// ✅ 正确示例
-fn calculateTotal() i32 { }
-fn processUserData(data: []const u8) void { }
-fn isValidEmail(email: []const u8) bool { }
-
-// ❌ 错误示例
-fn calculate_total() i32 { }      // 错误：函数应使用驼峰命名
-fn CalculateTotal() i32 { }       // 错误：首字母应小写
-```
-
-#### 类型命名
-
-- **结构体、枚举、联合的类型名**使用 PascalCase
-- **枚举成员名**使用 PascalCase
-- **结构体和联合的字段名**使用 snake_case
-  - **私有字段和方法**使用下划线前缀
-
-```zig
-// ✅ 正确示例
 const Person = struct {
     name: []const u8,
     age: u32,
-};
-
-const StudentRecord = struct {
-    student_id: usize,
-    grades: []f32,
+    _internal_id: usize,  // 私有字段
 };
 
 const Status = enum {
     Pending,
     InProgress,
     Completed,
-    Failed,
 };
 
-const Result = union {
-    success: []const u8,
-    error: ErrorType,
-};
-
-const Counter = struct {
-    _count: usize,              // 私有字段
-    
-    pub fn init() Counter {
-        return .{ ._count = 0 };
-    }
-    
-    pub fn increment(self: *Counter) void {
-        self._count += 1;
-    }
-    
-    fn _validate(self: *const Counter) bool {  // 私有方法
-        return self._count < 1000;
-    }
-};
-
-// ❌ 错误示例
-const person = struct { };         // 错误：类型名应首字母大写
-const student_record = struct { }; // 错误：应使用帕斯卡命名
-
-const Status = enum {
-    pending,        // 错误：枚举成员应使用帕斯卡命名
-    in_progress,    // 错误：枚举成员应使用帕斯卡命名
-};
+fn calculateTotal() i32 { }
 ```
-
-#### 常量命名
-
-**蛇形命名（snake_case）**：用于常量，遵循既有约定时使用全大写
-
-```zig
-// ✅ 正确示例 - 常量使用 snake_case
-const max_size = 1024;
-const default_timeout = 30;
-const buffer_size = 4096;
-const max_connections = 100;
-const version = "1.0.0";
-
-// ✅ 正确示例 - 遵循既有约定时使用 SCREAMING_SNAKE_CASE
-const PI = 3.14159;              // 数学常量
-const ENOENT = error.FileNotFound; // POSIX 约定
-const SIGINT = 2;                // 信号常量
-
-// ❌ 错误示例
-const maxSize = 1024;            // 错误：应使用蛇形命名
-const MAX_SIZE = 1024;           // 不推荐：普通常量不需要全大写
-```
-
-#### 泛型类型参数命名
-
-泛型参数使用**单个大写字母或描述性名称**。
-
-```zig
-// ✅ 正确示例 - 单个字母
-fn Stack(comptime T: type) type {
-    return struct {
-        items: []T,
-    };
-}
-
-fn HashMap(comptime K: type, comptime V: type) type {
-    return struct {
-        keys: []K,
-        values: []V,
-    };
-}
-
-// ✅ 正确示例 - 描述性名称
-fn Queue(comptime Element: type) type {
-    return struct {
-        elements: []Element,
-    };
-}
-
-// ❌ 错误示例
-fn Stack(comptime t: type) type { }  // 错误：类型参数应大写
-fn Stack(comptime TYPE: type) type { } // 错误：不应全大写
-```
-
-#### 命名规范总结表
-
-| 标识符类型               | 命名规范               | 示例                         | 说明                              |
-| ------------------------ | ---------------------- | ---------------------------- | --------------------------------- |
-| 变量                     | snake_case             | `user_name`, `current_score` | 单词间用下划线分隔，全小写        |
-| 函数                     | camelCase              | `calculateTotal`, `isValid`  | 首字母小写，后续单词首字母大写    |
-| 结构体、枚举、联合的类型 | PascalCase             | `Person`, `StudentRecord`    | 每个单词首字母大写                |
-| 结构体和联合的字段       | snake_case             | `student_id`, `age`          | 单词间用下划线分隔，全小写        |
-| 枚举成员                 | PascalCase             | `Red`, `InProgress`          | 每个单词首字母大写                |
-| 常量                     | snake_case             | `max_size`, `buffer_size`    | 特殊约定可用 SCREAMING_SNAKE_CASE |
-| 泛型参数                 | 单个大写字母           | `T`, `K`, `V`                | 或使用描述性名称如 `Element`      |
-| 私有字段和方法           | _snake_case _camelCase | `_count`, `_validateInput`   | 下划线前缀                        |
-
-#### 命名最佳实践
-
-1. **使用有意义的名称**：`user_count` 而非 `x`
-2. **避免缩写**：`error_message` 而非 `err_msg`
-3. **布尔值使用 is/has/can 前缀**：`is_valid` 而非 `valid`
-4. **函数名使用动词**：`getName()` 而非 `name()`
 
 ### 变量遮蔽规则
 
@@ -442,6 +278,8 @@ pub fn main(_: std.process.Init.Minimal) void {
 2. **明确不安全操作**：使用 `@truncate`、`@bitCast` 时添加注释说明意图
 3. **处理可能的错误**：对于可能失败的转换，先检查范围再使用 `@intCast`，或使用 `std.math.cast`
 
+> 📖 **相关章节**：类型转换失败时的错误处理机制将在[错误处理基础](chapter-error-handling.md)中详细讲解。
+
 ## 数组和切片
 
 ### 数组 vs 切片：核心概念
@@ -521,6 +359,8 @@ matrix[2][0] = 7
 matrix[2][1] = 8
 matrix[2][2] = 9
 ```
+
+> 📖 **相关章节**：数组遍历使用的 `for` 循环将在[控制流与资源管理](chapter-control-flow.md)中详细讲解。
 
 ### 数组的实际应用
 
@@ -734,7 +574,7 @@ pub fn main(_: std.process.Init.Minimal) void {
 }
 ```
 
-**预期输出**：
+预期输出：
 ```
 === 数组 vs 切片内存布局 ===
 
@@ -818,6 +658,8 @@ fn findSubstring(text: []const u8, pattern: []const u8) ?usize {
 1. **C 语言兼容性**：C 字符串以 null（0）结尾，哨兵数组可以直接与 C 代码互操作
 2. **无需存储长度**：通过哨兵值判断结束，不需要单独存储长度信息
 3. **历史兼容**：许多系统 API 使用哨兵终止字符串
+
+> 📖 **相关章节**：哨兵终止数组主要用于 C 互操作，详细内容请参考 [C 互操作](../part2-advanced/chapter-c-interop.md)。
 
 ### 语法说明
 
@@ -904,24 +746,13 @@ pub fn main(init: std.process.Init.Minimal) void {
 
 ## 枚举（enum）
 
-### 什么是枚举？
+枚举用于定义一组命名的整数值，提供类型安全和代码可读性。
 
-枚举（Enumeration）是一种用户定义的类型，它由一组命名的整数值组成。枚举用于表示一组相关的常量值，使代码更具可读性和类型安全性。
-
-### 为什么使用枚举？
-
-1. **类型安全**：编译器确保只使用有效的枚举值
-2. **代码可读性**：使用有意义的名称代替魔法数字
-3. **穷尽性检查**：switch 语句必须处理所有枚举值
-4. **命名空间**：枚举值在枚举类型的命名空间内，避免冲突
-
-### Zig 枚举的独特之处
-
-与其他语言不同，Zig 的枚举：
+**Zig 枚举的特点**：
 - 可以指定底层整数类型
 - 可以包含方法
-- 支持编译期计算
 - 与 C 枚举完全兼容
+- switch 语句必须穷尽所有枚举值
 
 枚举用于定义一组命名的整数值：
 
@@ -963,6 +794,8 @@ pub fn main(_: std.process.Init.Minimal) void {
 序值：0
 从整数创建：.green
 ```
+
+> 📖 **相关章节**：枚举与 `switch` 语句配合使用时，编译器会强制穷尽性检查，详见[控制流与资源管理](chapter-control-flow.md)。
 
 ### 带整数类型的枚举
 
@@ -1360,6 +1193,8 @@ const Register = packed struct {
 2. **模式匹配**：switch 可以穷尽所有可能的情况
 3. **多态实现**：实现类似面向对象的"多态"
 4. **内存效率**：比接口/继承更高效
+
+> 📖 **相关章节**：带标签联合与 `switch` 语句配合使用时，编译器会自动推断活动变体，详见[控制流与资源管理](chapter-control-flow.md)。
 
 #### 两种定义方式
 
@@ -2360,89 +2195,6 @@ tuple[3] = true
 - 支持解包赋值
 - 与结构体共享底层实现，只是字段名为数字
 
-## 块表达式（Block Expression）
-
-在 Zig 中，块（Block）不仅是作用域，还可以作为表达式返回值，但**必须使用标签**。
-
-### 基本语法
-
-```zig
-const result = blk: {
-    const a = 10;
-    const b = 20;
-    break :blk a + b;  // 使用 break :label 返回值
-};
-```
-
-**要点**：
-- 块开始处必须有标签（如 `blk:`）
-- 使用 `break :label value` 返回值
-- 不带标签的块不能返回值，只是一个作用域
-- **所有分支的返回值类型必须一致**
-
-### 类型一致性要求
-
-块表达式的所有退出路径必须返回相同类型的值：
-
-```zig
-// ❌ 错误：不同分支返回不同类型
-const result = blk: {
-    if (condition) {
-        break :blk 42;      // i32
-    } else {
-        break :blk "hello"; // 编译错误：类型不匹配
-    }
-};
-
-// ✅ 正确：所有分支返回相同类型
-const result = blk: {
-    if (value < 10) break :blk "小";
-    if (value < 20) break :blk "中";
-    break :blk "大";  // 所有分支都返回 []const u8
-};
-```
-
-### 完整示例
-
-```zig
-const std = @import("std");
-
-pub fn main(_: std.process.Init.Minimal) void {
-    // 基本用法：计算并返回值
-    const result = blk: {
-        const a = 10;
-        const b = 20;
-        break :blk a + b;
-    };
-    std.debug.print("块表达式结果: {}\n", .{result});
-
-    // 条件返回：在条件分支中提前退出
-    const value: i32 = 15;
-    const category = blk: {
-        if (value < 10) break :blk "小";
-        if (value < 20) break :blk "中";
-        break :blk "大";
-    };
-    std.debug.print("值 {} 的类别: {s}\n", .{ value, category });
-
-    // 嵌套块：使用不同标签区分层级
-    const nested = outer: {
-        const inner = inner: {
-            break :inner 5;
-        };
-        break :outer inner * 2;
-    };
-    std.debug.print("嵌套块结果: {}\n", .{nested});
-}
-```
-
-预期输出：
-```
-块表达式结果: 30
-值 15 的类别: 中
-嵌套块结果: 10
-```
-
 ## 字符和字符串
 
 Zig 提供了强大的字符和字符串支持，原生支持 Unicode，并且字符串字面量具有独特的类型安全特性。
@@ -2610,192 +2362,3 @@ fn main() void {
 - 不处理转义序列
 - 不包含最后的换行符
 - 适合嵌入代码、JSON、XML 等文本
-
-## 可选类型（Optional）
-
-Zig 的可选类型使用 `?T` 表示，用于表示值可能存在或不存在的情况，是 Zig 类型系统的重要组成部分。
-
-### 核心概念
-
-- **可选类型**：表示值可能存在（`T`）或不存在（`null`）
-- **语法**：`?T` 表示类型 `T` 或 `null`
-- **内存布局**：额外存储一个标志位，指示值是否存在
-
-### 为什么需要可选类型？
-
-**问题场景**：
-- 查找操作可能找不到结果
-- 配置项可能未设置
-- 资源可能未初始化
-
-**传统解决方案的问题**：
-- C 语言：使用特殊值（如 `-1`、`NULL`）表示"不存在"，容易出错
-- Java：使用 `null` 引用，导致 `NullPointerException`
-- Zig：使用可选类型，编译期强制处理"不存在"的情况
-
-### Zig 的设计理念
-
-**类型安全**：
-- 编译期强制处理 `null` 情况
-- 不能直接使用可选值，必须先解包
-- 避免空指针异常
-
-**显式处理**：
-- 使用 `if`、`orelse`、`.?` 等操作显式处理
-- 代码意图清晰，易于理解
-- 错误处理逻辑显式可见
-
-### 解包操作
-
-Zig 提供了三种解包可选类型的方式：`if` 模式匹配、`.?` 操作符和 `orelse` 表达式。
-
-#### if 模式匹配
-
-Zig 的 if 可以直接解构可选类型，这是 Zig 的重要特性：
-
-```zig
-const std = @import("std");
-
-pub fn main(_: std.process.Init.Minimal) void {
-    const maybe_number: ?i32 = 42;
-
-    // 模式匹配：自动解包可选类型
-    // 如果 maybe_number 不为 null，number 绑定到内部值
-    if (maybe_number) |number| {
-        std.debug.print("数字是：{}\n", .{number});
-        // number 的类型是 i32，不是 ?i32
-    } else {
-        std.debug.print("没有数字 (null)\n", .{});
-    }
-
-    // 捕获指针：可以修改值
-    var mutable_number: ?i32 = 10;
-    if (mutable_number) |*num| {
-        num.* += 5; // 修改内部值
-    }
-    std.debug.print("修改后：{any}\n", .{mutable_number});
-}
-```
-
-预期输出：
-```
-数字是：42
-修改后：15
-```
-
-#### .? 操作符
-
-`.?` 操作符用于解包可选类型，如果值为 `null` 则触发 panic：
-
-```zig
-const std = @import("std");
-
-pub fn main(_: std.process.Init.Minimal) void {
-    const maybe_number: ?i32 = 42;
-    
-    // 使用 .? 操作符（确定不为 null）
-    const value = maybe_number.?;
-    std.debug.print(".? 操作符: {}\n", .{value});
-    
-    // ⚠️ 如果为 null 会 panic
-    // const maybe_null: ?i32 = null;
-    // const bad = maybe_null.?; // 运行时错误：attempt to use null value
-}
-```
-
-预期输出：
-```
-.? 操作符: 42
-```
-
-**适用场景**：确定值不为 `null`，否则是编程错误。
-
-#### orelse 表达式
-
-`orelse` 用于为 `null` 提供默认值：
-
-```zig
-const std = @import("std");
-
-pub fn main(_: std.process.Init.Minimal) void {
-    const maybe_null: ?i32 = null;
-    
-    // 使用 orelse 提供默认值
-    const value1 = maybe_null orelse 0;
-    std.debug.print("orelse 默认值: {}\n", .{value1});
-    
-    // orelse 可以接表达式
-    const value2 = maybe_null orelse blk: {
-        std.debug.print("遇到 null，计算默认值\n", .{});
-        break :blk 100;
-    };
-    std.debug.print("orelse 表达式: {}\n", .{value2});
-    
-    // orelse 可以接块表达式（提前返回）
-    const value3 = maybe_null orelse {
-        std.debug.print("值为 null，提前返回\n", .{});
-        return;
-    };
-    _ = value3;
-}
-```
-
-**适用场景**：需要为 `null` 提供合理的默认值。
-
-#### 三种方式的对比
-
-| 方式     | 用途                    | 安全性 | 适用场景                        |
-| -------- | ----------------------- | ------ | ------------------------------- |
-| `if`     | 条件处理 null 和非 null | 高     | 需要区分 null 和非 null 的逻辑  |
-| `.?`     | 确定不为 null 时使用    | 低     | 确定值不为 null，否则是编程错误 |
-| `orelse` | 提供 null 时的默认值    | 高     | 需要为 null 提供合理的默认值    |
-
-#### 实际应用场景
-
-```zig
-// 场景1：安全的配置读取
-const Config = struct {
-    timeout: ?u32,
-    max_retries: ?u32,
-};
-
-fn getTimeout(config: Config) u32 {
-    // 如果配置中有值，使用配置值；否则使用默认值
-    return if (config.timeout) |t| t else 30;
-}
-
-// 场景2：错误处理
-fn readFile(path: []const u8) ?[]const u8 {
-    // 可能返回 null
-    return null;
-}
-
-fn processFile(path: []const u8) void {
-    if (readFile(path)) |content| {
-        std.debug.print("文件内容：{s}\n", .{content});
-    } else {
-        std.debug.print("无法读取文件\n", .{});
-    }
-}
-
-// 场景3：链式可选值处理
-fn getNestedValue(data: ?*const Data) ?i32 {
-    if (data) |d| {
-        if (d.value) |v| {
-            return v * 2;
-        }
-    }
-    return null;
-}
-```
-
-### 可选类型与错误联合类型的关联
-
-> 📖 **深入学习**：错误联合类型的详细用法将在[错误处理基础](chapter-error-handling.md)中讲解。
-
-可选类型 `?T` 和错误联合类型 `!T` 都用于表示"可能失败"的值，但用途不同：
-
-| 类型 | 含义               | 使用场景           |
-| ---- | ------------------ | ------------------ |
-| `?T` | 值可能存在或不存在 | 查找操作、可选配置 |
-| `!T` | 操作可能成功或失败 | 可能出错的操作     |
