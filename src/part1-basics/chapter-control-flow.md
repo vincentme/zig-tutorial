@@ -2,20 +2,7 @@
 
 本章介绍 Zig 的控制流语句，包括条件判断、循环和分支选择。Zig 的控制流设计强调显式性和安全性。
 
-## 条件语句
-
-# Zig 控制流的独特设计
-
-与其他语言相比，Zig 的控制流有以下特点：
-
-1. **if 是表达式**：可以返回值，不仅用于控制流
-2. **模式匹配**：if 可以解构可选类型和错误联合类型
-3. **无三元运算符**：使用 if 表达式替代
-4. **编译期执行**：控制流可以在编译期运行
-
-**if 语句：**
-
-# if 语句的核心概念
+## if 语句
 
 在 Zig 中，if 不仅是语句，还是表达式。这意味着：
 - if 可以返回值
@@ -25,7 +12,7 @@
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     const number: i32 = 42;
     
     // 基本 if 语句：控制流
@@ -54,7 +41,15 @@ pub fn main(init: std.process.Init.Minimal) void {
 }
 ```
 
-# if 表达式 vs 三元运算符
+预期输出：
+```
+大于 30 但小于等于 50
+结果：大数
+最大值：100
+类别：中
+```
+
+### if 表达式 vs 三元运算符
 
 Zig 没有三元运算符（?:），而是使用 if 表达式：
 
@@ -66,114 +61,53 @@ const abs_value = if (x >= 0) x else -x;
 const max = if (a > b) a else b;
 ```
 
-**处理 Optionals 的 if：**
+### 可选类型的模式匹配
 
-# 可选类型的模式匹配
-
-Zig 的 if 可以直接解构可选类型，这是 Zig 的重要特性：
+Zig 的 if 可以直接解构可选类型，这是 Zig 的重要特性。详细用法请参考[基础语法 - 可选类型的解包操作](chapter-basic-syntax.md#解包操作)。
 
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     const maybe_number: ?i32 = 42;
     
     // 模式匹配：自动解包可选类型
-    // 如果 maybe_number 不为 null，number 绑定到内部值
     if (maybe_number) |number| {
         std.debug.print("数字是：{}\n", .{number});
-        // number 的类型是 i32，不是 ?i32
     } else {
         std.debug.print("没有数字 (null)\n", .{});
     }
-    
-    // 捕获指针：可以修改值
-    var mutable_number: ?i32 = 10;
-    if (mutable_number) |*num| {
-        num.* += 5; // 修改内部值
-    }
-    std.debug.print("修改后：{}\n", .{mutable_number});
-    
-    // 处理错误联合类型
-    const error_value: anyerror!i32 = 42;
-    if (error_value) |number| {
-        std.debug.print("数字是：{}\n", .{number});
-    } else |err| {
-        std.debug.print("错误：{}\n", .{err});
-    }
 }
 ```
 
-# 实际应用场景
-
-```zig
-// 场景1：安全的配置读取
-const Config = struct {
-    timeout: ?u32,
-    max_retries: ?u32,
-};
-
-fn getTimeout(config: Config) u32 {
-    // 如果配置中有值，使用配置值；否则使用默认值
-    return if (config.timeout) |t| t else 30;
-}
-
-// 场景2：错误处理
-fn readFile(path: []const u8) ?[]const u8 {
-    // 可能返回 null
-    return null;
-}
-
-fn processFile(path: []const u8) void {
-    if (readFile(path)) |content| {
-        std.debug.print("文件内容：{s}\n", .{content});
-    } else {
-        std.debug.print("无法读取文件\n", .{});
-    }
-}
-
-// 场景3：链式可选值处理
-fn getNestedValue(data: ?*const Data) ?i32 {
-    if (data) |d| {
-        if (d.value) |v| {
-            return v * 2;
-        }
-    }
-    return null;
-}
-```
-
-## 循环语句
-
-**while 循环：**
-
-# while 循环的独特之处
+## while 循环
 
 Zig 的 while 循环支持：
 - **continue 表达式**：每次迭代后执行的表达式
 - **可选类型解包**：自动处理可选值
-- **标签**：支持嵌套循环的控制
+- **标签**：支持带标签的 break/continue 控制嵌套循环，以及让 while 作为表达式返回值
 
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     var i: usize = 0;
-    
+
     // 基本 while 循环
     while (i < 5) {
         std.debug.print("i = {}\n", .{i});
         i += 1;
     }
-    
+
     // 带 continue 表达式的 while
     // 格式：while (condition) : (continue_expression) { ... }
+    // 与写在循环块结尾的区别是：continue 表达式在每次迭代后均执行，而循环块结尾的表达式可以被 continue 跳过
     var j: usize = 0;
     while (j < 10) : (j += 2) {
         std.debug.print("j = {}\n", .{j});
         // j += 2 在每次迭代后自动执行
     }
-    
+
     // 带 break 条件的 while
     var k: usize = 0;
     while (true) {
@@ -181,19 +115,109 @@ pub fn main(init: std.process.Init.Minimal) void {
         std.debug.print("k = {}\n", .{k});
         k += 1;
     }
-    
+
     // 处理可选值的 while
-    var numbers = [_]?i32{ 1, 2, null, 4, null };
+    // while 可以直接解包可选值，遇到 null 时自动结束循环
+    const numbers = [_]?i32{ 1, 2, null, 4, null };
     var index: usize = 0;
+
+    // 方式1：while 直接处理可选值
+    while (numbers[index]) |num| : (index += 1) {
+        std.debug.print("有效数字：{}\n", .{num});
+        // 当 numbers[index] 为 null 时，循环自动结束
+    }
+
+    std.debug.print("---\n", .{});
+
+    // 方式2：使用 if 在 while 内部处理（跳过 null 继续）
+    index = 0;
     while (index < numbers.len) : (index += 1) {
         if (numbers[index]) |num| {
             std.debug.print("有效数字：{}\n", .{num});
         }
     }
+
+    std.debug.print("---\n", .{});
+
+    // 标签和带标签的 break/continue
+    // 用于控制嵌套循环
+    var outer_count: usize = 0;
+    outer: while (outer_count < 3) : (outer_count += 1) {
+        var inner: usize = 0;
+        while (inner < 5) : (inner += 1) {
+            if (inner == 2 and outer_count < 2) continue :outer;  // 前两次跳到外层循环
+            if (outer_count == 2 and inner == 3) break :outer;    // 第三次跳出外层循环
+            std.debug.print("outer={}, inner={}\n", .{ outer_count, inner });
+        }
+    }
 }
 ```
 
-# while 循环的实际应用
+预期输出：
+```
+i = 0
+i = 1
+i = 2
+i = 3
+i = 4
+j = 0
+j = 2
+j = 4
+j = 6
+j = 8
+k = 0
+k = 1
+k = 2
+有效数字：1
+有效数字：2
+---
+有效数字：1
+有效数字：2
+有效数字：4
+---
+outer=0, inner=0
+outer=0, inner=1
+outer=1, inner=0
+outer=1, inner=1
+outer=2, inner=0
+outer=2, inner=1
+outer=2, inner=2
+```
+
+### while 作为表达式
+
+while 循环也可以作为表达式返回值，需要使用带标签的 break：
+
+```zig
+const std = @import("std");
+
+pub fn main(_: std.process.Init.Minimal) void {
+    // while 作为表达式返回值
+    const result = while_loop: while (true) {
+        var i: usize = 0;
+        while (i < 10) : (i += 1) {
+            if (i == 5) break :while_loop i * 2;  // 返回 10
+        }
+        break :while_loop 0;
+    };
+    
+    std.debug.print("结果: {}\n", .{result});  // 输出：结果: 10
+    
+    // 实际应用：查找第一个满足条件的元素
+    const items = [_]i32{ 1, 3, 5, 7, 9 };
+    const found = find: {
+        var i: usize = 0;
+        while (i < items.len) : (i += 1) {
+            if (items[i] > 6) break :find items[i];
+        }
+        break :find -1;
+    };
+    
+    std.debug.print("找到的元素: {}\n", .{found});  // 输出：找到的元素: 7
+}
+```
+
+### while 循环的实际应用
 
 ```zig
 // 场景1：读取直到结束
@@ -232,9 +256,7 @@ fn Iterator(comptime T: type) type {
 }
 ```
 
-**for 循环：**
-
-# for 循环的强大功能
+## for 循环
 
 Zig 的 for 循环支持：
 - **单元素遍历**：遍历数组、切片等

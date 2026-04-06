@@ -1,6 +1,6 @@
 # 【draft】基础语法
 
-本章将介绍Zig的基本语法元素，包括变量声明、数据类型、数组、切片、枚举、联合和结构体。这些是构建Zig程序的基础。
+本章将介绍 Zig 的基本语法元素，包括变量声明、数据类型、数组、切片、枚举、联合和结构体。这些是构建 Zig 程序的基础。
 
 ## Zig 编程基础
 
@@ -216,51 +216,10 @@ fn Stack(comptime TYPE: type) type { } // 错误：不应全大写
 
 #### 命名最佳实践
 
-1. **使用有意义的名称**：名称应清楚表达用途
-   ```zig
-   // ✅ 好的命名
-   var user_count: usize = 0;
-   fn calculateAverage(scores: []f32) f32 { }
-   
-   // ❌ 不好的命名
-   var x: usize = 0;              // 含义不明确
-   fn calc(s: []f32) f32 { }      // 名称过于简短
-   ```
-
-2. **避免缩写**：除非是广泛认可的缩写
-   ```zig
-   // ✅ 好的命名
-   var error_message: []const u8 = undefined;
-   var http_response: Response = undefined;
-   
-   // ❌ 不好的命名
-   var err_msg: []const u8 = undefined;  // 不必要的缩写
-   var resp: Response = undefined;       // 缩写不清晰
-   ```
-
-3. **布尔值使用 is/has/can 前缀**
-   ```zig
-   // ✅ 好的命名
-   var is_valid: bool = false;
-   var has_permission: bool = false;
-   var can_write: bool = false;
-   
-   // ❌ 不好的命名
-   var valid: bool = false;       // 缺少前缀
-   var permission: bool = false;  // 含义不明确
-   ```
-
-4. **函数名使用动词或动词短语**
-   ```zig
-   // ✅ 好的命名
-   fn getName() []const u8 { }
-   fn setData(value: i32) void { }
-   fn isValid() bool { }
-   
-   // ❌ 不好的命名
-   fn name() []const u8 { }       // 缺少动词
-   fn data(value: i32) void { }   // 含义不明确
-   ```
+1. **使用有意义的名称**：`user_count` 而非 `x`
+2. **避免缩写**：`error_message` 而非 `err_msg`
+3. **布尔值使用 is/has/can 前缀**：`is_valid` 而非 `valid`
+4. **函数名使用动词**：`getName()` 而非 `name()`
 
 ### 变量遮蔽规则
 
@@ -450,79 +409,26 @@ Zig 提供了多种类型转换方式，每种都有特定的用途和安全保�
 | `@truncate`     | 截断高位       | **不安全**，明确意图（不检查范围）                                                     | `i32` → `u8`  |
 | `@bitCast`      | 位模式重解释   | **不安全**，保持位模式                                                                 | `f32` → `u32` |
 
-**详细代码示例：**
+**示例：**
 
 ```zig
 const std = @import("std");
 
 pub fn main(_: std.process.Init.Minimal) void {
-    // ========================================
-    // 1. @intCast - 安全的整数类型转换
-    // ========================================
-    std.debug.print("=== @intCast 示例 ===\n", .{});
-
+    // 安全转换：@intCast（运行时检查）
     const small: i32 = 100;
     const small_u8: u8 = @intCast(small); // ✅ OK: 100 在 u8 范围内
     std.debug.print("i32({}) -> u8({})\n", .{ small, small_u8 });
 
-    // ⚠️ 以下代码在 Debug/ReleaseSafe 模式下会 panic
-    // const large: i32 = 300;
-    // const large_u8: u8 = @intCast(large);  // ❌ panic: 300 超出 u8 范围
-
-    // 在 ReleaseFast/ReleaseSmall 模式下，这是 UB（未定义行为）
-    // 编译器不会检查，结果不可预测
-
-    // ========================================
-    // 2. @floatFromInt - 整数转浮点
-    // ========================================
-    std.debug.print("\n=== @floatFromInt 示例 ===\n", .{});
-
-    const int_val: i32 = 42;
-    const float_val: f32 = @floatFromInt(int_val); // ✅ OK: 42.0
-    std.debug.print("i32({}) -> f32({})\n", .{ int_val, float_val });
-
-    // 大整数转浮点可能丢失精度
-    const large_int: i64 = 12345678901234567;
-    const large_float: f64 = @floatFromInt(large_int);
-    std.debug.print("i64({}) -> f64({d:.2})\n", .{ large_int, large_float });
-
-    // ========================================
-    // 3. @intFromFloat - 浮点转整数
-    // ========================================
-    std.debug.print("\n=== @intFromFloat 示例 ===\n", .{});
-
-    const float_num: f32 = 42.7;
-    const int_num: i32 = @intFromFloat(float_num); // ✅ OK: 42（截断小数）
-    std.debug.print("f32({}) -> i32({})\n", .{ float_num, int_num });
-
-    // ⚠️ 以下代码在 Debug/ReleaseSafe 模式下会 panic
-    // const huge_float: f32 = 1e10;
-    // const huge_int: i32 = @intFromFloat(huge_float);  // ❌ panic: 超出 i32 范围
-
-    // ========================================
-    // 4. @truncate - 截断高位（不安全）
-    // ========================================
-    std.debug.print("\n=== @truncate 示例 ===\n", .{});
-
+    // 不安全转换：@truncate（直接截断）
     const value: u32 = 300;
     const truncated: u8 = @truncate(value); // ✅ OK: 300 % 256 = 44
     std.debug.print("u32({}) -> u8({}) [截断]\n", .{ value, truncated });
 
-    // ========================================
-    // 5. @bitCast - 位模式重解释（不安全）
-    // ========================================
-    std.debug.print("\n=== @bitCast 示例 ===\n", .{});
-
+    // 位模式重解释：@bitCast
     const float_bits: f32 = 3.14159;
-    const bits: u32 = @bitCast(float_bits); // ✅ OK: 保持位模式
+    const bits: u32 = @bitCast(float_bits);
     std.debug.print("f32({}) -> u32(0x{x})\n", .{ float_bits, bits });
-
-    // 反向转换
-    const back_to_float: f32 = @bitCast(bits);
-    std.debug.print("u32(0x{x}) -> f32({})\n", .{ bits, back_to_float });
-
-    // 注意：@bitCast 要求源类型和目标类型大小相同
-    // const wrong: u64 = @bitCast(float_bits);  // ❌ 编译错误：大小不匹配
 }
 ```
 
@@ -535,34 +441,6 @@ pub fn main(_: std.process.Init.Minimal) void {
 1. **优先使用安全转换**：`@intCast`、`@floatFromInt` 等有运行时检查的转换
 2. **明确不安全操作**：使用 `@truncate`、`@bitCast` 时添加注释说明意图
 3. **处理可能的错误**：对于可能失败的转换，先检查范围再使用 `@intCast`，或使用 `std.math.cast`
-
-```zig
-const std = @import("std");
-
-// 方式一：手动检查
-fn safeConvert(value: i32) !u8 {
-    if (value < 0 or value > 255) {
-        return error.OutOfRange;
-    }
-    return @intCast(value);
-}
-
-// 方式二：使用 std.math.cast（返回 optional）
-fn safeConvert2(value: i32) !u8 {
-    return std.math.cast(u8, value) orelse error.OutOfRange;
-}
-
-pub fn main(_: std.process.Init.Minimal) !void {
-    const value: i32 = 300;
-    const safe: u8 = try safeConvert(value);
-    std.debug.print("safeConvert({}) -> u8({}) [安全]\n", .{ value, safe });
-
-    const value2: i32 = 300;
-    const safe2: u8 = try safeConvert2(value2);
-    std.debug.print("safeConvert2({}) -> u8({}) [安全]\n", .{ value2, safe2 });
-}
-
-```
 
 ## 数组和切片
 
@@ -1277,10 +1155,11 @@ if (getStatus()) |status| {
 
 ### 为什么需要联合？
 
-1. **内存效率**：多个数据类型共享同一内存空间，节省内存
-2. **类型转换**：可以安全地在不同类型之间重解释内存
-3. **多态实现**：带标签联合是实现多态的基础
-4. **C 兼容性**：与 C 语言的 union 完全兼容
+联合的主要用途：
+- **内存效率**：多个数据类型共享同一内存空间
+- **类型转换**：在不同类型之间重解释内存
+- **多态实现**：带标签联合实现类型安全的多态
+- **C 兼容性**：与 C 语言的 union 完全兼容
 
 ### Zig 联合的两大类别
 
@@ -1290,6 +1169,17 @@ Zig 将联合分为两大类：
 | -------------- | ---------------------- | ------------------ |
 | **无标签联合** | 无类型标签，需手动跟踪 | C 互操作、类型转换 |
 | **带标签联合** | 有类型标签，自动跟踪   | 类型安全的多态     |
+
+### 联合类型选择指南
+
+| 联合类型         | 内存布局 | 类型安全 | 适用场景               |
+| ---------------- | -------- | -------- | ---------------------- |
+| **普通 union**   | 未定义   | 低       | 通用场景               |
+| **extern union** | C ABI    | 低       | C 互操作、类型转换     |
+| **packed union** | 位级精确 | 低       | 硬件编程、位操作       |
+| **带标签联合**   | 自动     | 高       | 类型安全的多态（推荐） |
+
+**推荐**：优先使用带标签联合，除非有特殊需求。
 
 ### 无标签联合（Untagged Union）
 
@@ -1890,47 +1780,15 @@ pub fn main(_: std.process.Init.Minimal) void {
 ### 结构体的实际应用场景
 
 ```zig
-// 场景1：配置管理
+// 配置管理
 const Config = struct {
     host: []const u8 = "localhost",
     port: u16 = 8080,
     max_connections: usize = 100,
     
     fn loadFromFile(path: []const u8) !Config {
-        // 从文件加载配置
+        _ = path;
         return Config{};
-    }
-};
-
-// 场景2：状态机
-const StateMachine = struct {
-    state: State,
-    data: []u8,
-    
-    const State = enum { idle, running, paused };
-    
-    fn transition(self: *StateMachine, new_state: State) void {
-        self.state = new_state;
-    }
-};
-
-// 场景3：资源管理
-const File = struct {
-    handle: ?std.fs.File,
-    path: []const u8,
-    
-    fn open(path: []const u8) !File {
-        return File{
-            .handle = try std.fs.cwd().openFile(path, .{}),
-            .path = path,
-        };
-    }
-    
-    fn close(self: *File) void {
-        if (self.handle) |h| {
-            h.close();
-            self.handle = null;
-        }
     }
 };
 ```
@@ -2137,7 +1995,7 @@ const point: Point = .{ .x = 1.0, .y = 2.0 };
 | **返回值**     | 返回类型提供了结果位置           | `return .{ .x = 0.0, .y = 0.0 };`           |
 | **嵌套结构体** | 外层字段的类型已知，内层可以省略 | `.top_left = .{ .x = 0.0, .y = 0.0 }`       |
 
-#### 完整示例
+#### 示例
 
 ```zig
 const std = @import("std");
@@ -2147,39 +2005,17 @@ const Point = struct {
     y: f32,
 };
 
-const Rectangle = struct {
-    top_left: Point,
-    bottom_right: Point,
-};
-
 fn printPoint(p: Point) void {
     std.debug.print("Point({}, {})\n", .{ p.x, p.y });
 }
 
 pub fn main(_: std.process.Init.Minimal) void {
-    // 完整写法
-    const p1 = Point{ .x = 1.0, .y = 2.0 };
-    printPoint(p1);
-
     // 结果位置语义：类型已知时可以省略类型名
-    const p2: Point = .{ .x = 3.0, .y = 4.0 };
-    printPoint(p2);
+    const p: Point = .{ .x = 1.0, .y = 2.0 };
+    printPoint(p);
 
     // 函数参数中的简写
-    printPoint(.{ .x = 5.0, .y = 6.0 });
-
-    // 嵌套结构体的简写
-    const rect: Rectangle = .{
-        .top_left = .{ .x = 0.0, .y = 0.0 },
-        .bottom_right = .{ .x = 10.0, .y = 10.0 },
-    };
-
-    std.debug.print("矩形: ({}, {}) 到 ({}, {})\n", .{
-        rect.top_left.x,
-        rect.top_left.y,
-        rect.bottom_right.x,
-        rect.bottom_right.y,
-    });
+    printPoint(.{ .x = 3.0, .y = 4.0 });
 }
 ```
 
@@ -2187,8 +2023,6 @@ pub fn main(_: std.process.Init.Minimal) void {
 ```
 Point(1, 2)
 Point(3, 4)
-Point(5, 6)
-矩形: (0, 0) 到 (10, 10)
 ```
 
 #### 注意事项
@@ -2197,37 +2031,24 @@ Point(5, 6)
 
 ```zig
 const Point = struct { x: f32, y: f32 };
-const Vec2 = struct { x: f32, y: f32 };
 
-// ❌ 错误：类型不明确，编译器无法推断
+// ❌ 错误：类型不明确
 // const p = .{ .x = 1.0, .y = 2.0 };
 
 // ✅ 正确：类型注解明确
-const p1: Point = .{ .x = 1.0, .y = 2.0 };
-const p2: Vec2 = .{ .x = 1.0, .y = 2.0 };
-```
-
-**2. 字段名必须匹配**
-
-```zig
-const Point = struct { x: f32, y: f32 };
-
-// ❌ 错误：字段名不匹配
-// const p: Point = .{ .a = 1.0, .b = 2.0 };
-
-// ✅ 正确：字段名匹配
 const p: Point = .{ .x = 1.0, .y = 2.0 };
 ```
 
-**3. 所有必填字段必须提供**
+**2. 字段名必须匹配，所有必填字段必须提供**
 
 ```zig
 const Point = struct { x: f32, y: f32 };
 
-// ❌ 错误：缺少字段 y
+// ❌ 错误：字段名不匹配或缺少字段
+// const p: Point = .{ .a = 1.0 };
 // const p: Point = .{ .x = 1.0 };
 
-// ✅ 正确：提供所有必填字段
+// ✅ 正确：字段名匹配且完整
 const p: Point = .{ .x = 1.0, .y = 2.0 };
 ```
 
@@ -2785,8 +2606,6 @@ fn main() void {
 }
 ```
 
-
-
 **特点**：
 - 不处理转义序列
 - 不包含最后的换行符
@@ -2826,7 +2645,13 @@ Zig 的可选类型使用 `?T` 表示，用于表示值可能存在或不存在�
 - 代码意图清晰，易于理解
 - 错误处理逻辑显式可见
 
-### 基本操作
+### 解包操作
+
+Zig 提供了三种解包可选类型的方式：`if` 模式匹配、`.?` 操作符和 `orelse` 表达式。
+
+#### if 模式匹配
+
+Zig 的 if 可以直接解构可选类型，这是 Zig 的重要特性：
 
 ```zig
 const std = @import("std");
@@ -2834,67 +2659,135 @@ const std = @import("std");
 pub fn main(_: std.process.Init.Minimal) void {
     const maybe_number: ?i32 = 42;
 
-    // 方式1：使用 if 解包
+    // 模式匹配：自动解包可选类型
+    // 如果 maybe_number 不为 null，number 绑定到内部值
     if (maybe_number) |number| {
-        std.debug.print("值: {}\n", .{number});
+        std.debug.print("数字是：{}\n", .{number});
+        // number 的类型是 i32，不是 ?i32
     } else {
-        std.debug.print("null\n", .{});
+        std.debug.print("没有数字 (null)\n", .{});
     }
 
-    // 方式2：使用 .? 操作符（如果是 null 则 panic）
-    const value1 = maybe_number.?;
-    std.debug.print(".? 操作符: {}\n", .{value1});
-
-    // 方式3：使用 orelse 提供默认值
-    const maybe_null: ?i32 = null;
-    const value2 = maybe_null orelse 0;
-    std.debug.print("orelse 默认值: {}\n", .{value2});
-
-    // orelse 可以接表达式
-    const value3 = maybe_null orelse blk: {
-        std.debug.print("遇到 null，计算默认值\n", .{});
-        break :blk 100; // ✅ 正确：使用 break 返回值
-    };
-    std.debug.print("orelse 表达式: {}\n", .{value3});
+    // 捕获指针：可以修改值
+    var mutable_number: ?i32 = 10;
+    if (mutable_number) |*num| {
+        num.* += 5; // 修改内部值
+    }
+    std.debug.print("修改后：{any}\n", .{mutable_number});
 }
 ```
 
 预期输出：
 ```
-值: 42
-.? 操作符: 42
-orelse 默认值: 0
-遇到 null，计算默认值
-orelse 表达式: 100
+数字是：42
+修改后：15
 ```
 
-### orelse 与 .? 的区别
+#### .? 操作符
+
+`.?` 操作符用于解包可选类型，如果值为 `null` 则触发 panic：
 
 ```zig
 const std = @import("std");
 
-fn riskyOperation() ?i32 {
-    return null;
-}
-
-pub fn main(init: std.process.Init.Minimal) void {
-    // 使用 .? - 如果为 null 会 panic
-    // const bad = riskyOperation().?; // 运行时错误：attempt to use null value
+pub fn main(_: std.process.Init.Minimal) void {
+    const maybe_number: ?i32 = 42;
     
-    // 使用 orelse - 安全地处理 null
-    const safe = riskyOperation() orelse {
-        std.debug.print("操作返回 null，使用默认值\n", .{});
-        return;
-    };
+    // 使用 .? 操作符（确定不为 null）
+    const value = maybe_number.?;
+    std.debug.print(".? 操作符: {}\n", .{value});
     
-    std.debug.print("值: {}\n", .{safe});
+    // ⚠️ 如果为 null 会 panic
+    // const maybe_null: ?i32 = null;
+    // const bad = maybe_null.?; // 运行时错误：attempt to use null value
 }
 ```
 
-**最佳实践**：
-- **使用 `if`**：需要区分 null 和非 null 的逻辑
-- **使用 `.?`**：确定值不为 null，否则是编程错误
-- **使用 `orelse`**：需要为 null 提供合理的默认值
+预期输出：
+```
+.? 操作符: 42
+```
+
+**适用场景**：确定值不为 `null`，否则是编程错误。
+
+#### orelse 表达式
+
+`orelse` 用于为 `null` 提供默认值：
+
+```zig
+const std = @import("std");
+
+pub fn main(_: std.process.Init.Minimal) void {
+    const maybe_null: ?i32 = null;
+    
+    // 使用 orelse 提供默认值
+    const value1 = maybe_null orelse 0;
+    std.debug.print("orelse 默认值: {}\n", .{value1});
+    
+    // orelse 可以接表达式
+    const value2 = maybe_null orelse blk: {
+        std.debug.print("遇到 null，计算默认值\n", .{});
+        break :blk 100;
+    };
+    std.debug.print("orelse 表达式: {}\n", .{value2});
+    
+    // orelse 可以接块表达式（提前返回）
+    const value3 = maybe_null orelse {
+        std.debug.print("值为 null，提前返回\n", .{});
+        return;
+    };
+    _ = value3;
+}
+```
+
+**适用场景**：需要为 `null` 提供合理的默认值。
+
+#### 三种方式的对比
+
+| 方式     | 用途                    | 安全性 | 适用场景                        |
+| -------- | ----------------------- | ------ | ------------------------------- |
+| `if`     | 条件处理 null 和非 null | 高     | 需要区分 null 和非 null 的逻辑  |
+| `.?`     | 确定不为 null 时使用    | 低     | 确定值不为 null，否则是编程错误 |
+| `orelse` | 提供 null 时的默认值    | 高     | 需要为 null 提供合理的默认值    |
+
+#### 实际应用场景
+
+```zig
+// 场景1：安全的配置读取
+const Config = struct {
+    timeout: ?u32,
+    max_retries: ?u32,
+};
+
+fn getTimeout(config: Config) u32 {
+    // 如果配置中有值，使用配置值；否则使用默认值
+    return if (config.timeout) |t| t else 30;
+}
+
+// 场景2：错误处理
+fn readFile(path: []const u8) ?[]const u8 {
+    // 可能返回 null
+    return null;
+}
+
+fn processFile(path: []const u8) void {
+    if (readFile(path)) |content| {
+        std.debug.print("文件内容：{s}\n", .{content});
+    } else {
+        std.debug.print("无法读取文件\n", .{});
+    }
+}
+
+// 场景3：链式可选值处理
+fn getNestedValue(data: ?*const Data) ?i32 {
+    if (data) |d| {
+        if (d.value) |v| {
+            return v * 2;
+        }
+    }
+    return null;
+}
+```
 
 ### 可选类型与错误联合类型的关联
 
@@ -2906,21 +2799,3 @@ pub fn main(init: std.process.Init.Minimal) void {
 | ---- | ------------------ | ------------------ |
 | `?T` | 值可能存在或不存在 | 查找操作、可选配置 |
 | `!T` | 操作可能成功或失败 | 可能出错的操作     |
-
-```zig
-// 可选类型：查找操作可能找不到结果
-fn findUser(id: u32) ?User {
-    if (database.has(id)) {
-        return database.get(id);
-    }
-    return null; // 找不到是正常情况
-}
-
-// 错误联合类型：操作可能失败
-fn readFile(path: []const u8) ![]u8 {
-    if (!fileExists(path)) {
-        return error.FileNotFound; // 失败是错误情况
-    }
-    // ...
-}
-```
