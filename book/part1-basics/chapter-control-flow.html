@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>【draft】基础语法（下）- 控制流与资源管理 - Zig 编程语言入门教程</title>
+        <title>控制流与资源管理 - Zig 编程语言入门教程</title>
 
 
         <!-- Custom HTML head -->
@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-4958c3a4.js";
+            window.path_to_searchindex_js = "../searchindex-684feaa1.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-cf9e32e7.js"></script>
+        <script src="../toc-043b281c.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -181,7 +181,7 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="draft基础语法下--控制流与资源管理"><a class="header" href="#draft基础语法下--控制流与资源管理">【draft】基础语法（下）- 控制流与资源管理</a></h1>
+                        <h1 id="控制流与资源管理"><a class="header" href="#控制流与资源管理">控制流与资源管理</a></h1>
 <p>本章介绍 Zig 的控制流语句和资源管理机制，包括可选类型、条件判断 if、循环（for 和 while）、分支选择 switch、资源管理 defer 和块表达式。与许多语言不同，Zig 的所有控制流语句都是表达式，可以返回值，结合穷尽性检查和编译期验证，确保代码的安全性和可维护性。资源管理方面，Zig 通过 defer 和 errdefer 机制确保资源的正确释放，避免内存泄漏和资源泄漏问题。</p>
 <h2 id="可选类型optional"><a class="header" href="#可选类型optional">可选类型（Optional）</a></h2>
 <p>Zig 的可选类型使用 <code>?T</code> 表示，用于表示值可能存在或不存在的情况，是 Zig 类型系统的重要组成部分。</p>
@@ -220,6 +220,7 @@
 <h3 id="解包操作"><a class="header" href="#解包操作">解包操作</a></h3>
 <p>Zig 提供了三种解包可选类型的方式：<code>if</code> 模式匹配、<code>.?</code> 操作符和 <code>orelse</code> 表达式。</p>
 <h4 id="if-模式匹配"><a class="header" href="#if-模式匹配">if 模式匹配</a></h4>
+<p>if 模式匹配是 Zig if 语句的重要特性之一，主要用于处理可选类型。更多 if 语句的用法将在下一节介绍。</p>
 <p>Zig 的 if 可以直接解构可选类型，这是 Zig 的重要特性：</p>
 <pre><code class="language-zig">const std = @import("std");
 
@@ -344,9 +345,6 @@ fn getNestedValue(data: ?*const Data) ?i32 {
 }
 </code></pre>
 <h3 id="可选类型与错误联合类型的关联"><a class="header" href="#可选类型与错误联合类型的关联">可选类型与错误联合类型的关联</a></h3>
-<blockquote>
-<p>📖 <strong>深入学习</strong>：错误联合类型的详细用法将在<a href="chapter-error-handling.html">错误处理基础</a>中讲解。</p>
-</blockquote>
 <p>可选类型 <code>?T</code> 和错误联合类型 <code>!T</code> 都用于表示“可能失败“的值，但用途不同：</p>
 <div class="table-wrapper">
 <table>
@@ -359,10 +357,13 @@ fn getNestedValue(data: ?*const Data) ?i32 {
 </tbody>
 </table>
 </div>
+<blockquote>
+<p>📖 <strong>深入学习</strong>：错误联合类型的详细用法将在<a href="chapter-error-handling.html">错误处理基础</a>中讲解。</p>
+</blockquote>
 <h2 id="if-语句"><a class="header" href="#if-语句">if 语句</a></h2>
 <p>可选类型部分介绍了如何使用 <code>if</code> 进行模式匹配来解包可选值，这里将进一步介绍 <code>if</code> 语句的其他特性。Zig 的 if 语句相对于其他语言，具有以下特性：</p>
 <ul>
-<li><strong>模式匹配</strong>：可以解包可选类型和错误联合类型</li>
+<li><strong>模式匹配</strong>：主要用于解包可选类型和错误联合类型（已在可选类型部分详细介绍）</li>
 <li><strong>指针捕获</strong>：使用 <code>|*val|</code> 捕获指针，允许在分支内修改值</li>
 <li><strong>类型安全</strong>：所有分支必须返回相同类型的值</li>
 <li><strong>编译期执行</strong>：支持 comptime if，在编译期进行条件判断</li>
@@ -402,6 +403,12 @@ pub fn main(_: std.process.Init.Minimal) void {
 结果：大数
 最大值：100
 类别：中
+</code></pre>
+<p><strong>if 表达式与可选类型结合</strong>：</p>
+<p>if 表达式可以与可选类型的模式匹配结合使用，实现简洁的条件计算：</p>
+<pre><code class="language-zig">const maybe_value: ?i32 = 42;
+const result = if (maybe_value) |v| v * 2 else 0;
+std.debug.print("结果：{}\n", .{result}); // 输出：结果：84
 </code></pre>
 <h3 id="if-表达式-vs-三元运算符"><a class="header" href="#if-表达式-vs-三元运算符">if 表达式 vs 三元运算符</a></h3>
 <p>Zig 没有三元运算符（?:），而是使用 if 表达式：</p>
@@ -746,7 +753,7 @@ fn zipWith(a: []const i32, b: []const i32, result: []i32) void {
 </ul>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     const number: i32 = 2;
     
     // 基本 switch：必须穷尽所有情况
@@ -820,7 +827,7 @@ fn classifyNumber(n: i32) []const u8 {
 fn doublePositive(numbers: []i32) void {
     for (numbers) |*n| {
         switch (n.*) {
-            1...100 =&gt; |*val| val.* *= 2,
+            1...100 =&gt; n.* *= 2,  // 直接通过外部指针 n 修改
             else =&gt; {},
         }
     }
@@ -841,7 +848,8 @@ fn doublePositive(numbers: []i32) void {
 <p><code>defer</code> 用于确保代码在作用域结束时执行，常用于资源清理：</p>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
+    defer std.debug.print("主函数结束\n", .{});
     std.debug.print("开始\n", .{});
 
     {
@@ -852,12 +860,13 @@ pub fn main(init: std.process.Init.Minimal) void {
 
     std.debug.print("结束\n", .{});
 }
-
-// 输出顺序：
-// 开始
-// 作用域中间
-// 作用域结束
-// 结束
+</code></pre>
+<p>预期输出：</p>
+<pre><code>开始
+作用域中间
+作用域结束
+结束
+主函数结束
 </code></pre>
 <h3 id="实际应用场景-1"><a class="header" href="#实际应用场景-1">实际应用场景</a></h3>
 <pre><code class="language-zig">// 场景1：文件操作
@@ -892,22 +901,22 @@ fn protectedOperation(mutex: *std.Thread.Mutex) void {
 <p>多个 defer 按照后进先出的顺序执行，这确保了资源的正确释放顺序：</p>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     defer std.debug.print("第一个 defer\n", .{});
     defer std.debug.print("第二个 defer\n", .{});
     defer std.debug.print("第三个 defer\n", .{});
     
     std.debug.print("主体代码\n", .{});
 }
-
-// 输出顺序（LIFO - 后进先出）：
-// 主体代码
-// 第三个 defer
-// 第二个 defer
-// 第一个 defer
+</code></pre>
+<p>预期输出：</p>
+<pre><code>主体代码
+第三个 defer
+第二个 defer
+第一个 defer
 </code></pre>
 <h3 id="defer-vs-errdefer"><a class="header" href="#defer-vs-errdefer">defer vs errdefer</a></h3>
-<p>Zig 还提供了 <code>errdefer</code>，只在发生错误时执行：</p>
+<p><code>errdefer</code> 与 <code>defer</code> 类似，都在作用域结束时执行，但 <code>errdefer</code> 只在函数返回错误时执行，正常返回时不执行：</p>
 <pre><code class="language-zig">fn allocateAndInit(allocator: std.mem.Allocator) !*Resource {
     const resource = try allocator.create(Resource);
     // 如果后续代码出错，释放内存
@@ -922,13 +931,12 @@ pub fn main(init: std.process.Init.Minimal) void {
 <p><strong>defer 的常见应用场景：</strong></p>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit(); // 确保分配器被清理
     
     const allocator = gpa.allocator();
     
-    // 文件操作（0.16.0-dev 新API）
     const file = try std.fs.cwd().openFile("test.txt", .{});
     defer file.close(); // 确保文件被关闭
     
@@ -937,12 +945,10 @@ pub fn main(init: std.process.Init.Minimal) !void {
     defer allocator.free(buffer); // 确保内存被释放
     
     // 使用资源...
-    std.debug.print("资源已分配\n", .{});
 }
 </code></pre>
 <h2 id="块表达式block-expression"><a class="header" href="#块表达式block-expression">块表达式（Block Expression）</a></h2>
-<p>前面介绍的 if、while、for 等控制流语句都可以作为表达式返回值，而块表达式则提供了另一种创建表达式的方式。块表达式可以包含复杂的逻辑和控制流，最终返回一个值，这在需要计算复杂表达式的场景中非常有用。</p>
-<p>在 Zig 中，块（Block）不仅是作用域，还可以作为表达式返回值，但<strong>必须使用标签</strong>。</p>
+<p>前面介绍的 if、while、for 等控制流语句都可以作为表达式返回值，而块表达式则提供了另一种创建表达式的方式。块表达式是一个带标签的作用域，可以包含多条语句和复杂的控制流逻辑，最终通过 <code>break :label value</code> 返回一个值。</p>
 <h3 id="基本语法"><a class="header" href="#基本语法">基本语法</a></h3>
 <pre><code class="language-zig">const result = blk: {
     const a = 10;
@@ -1016,7 +1022,7 @@ pub fn main(_: std.process.Init.Minimal) void {
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../part1-basics/chapter-basic-types.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../part1-basics/chapter-compound-types.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
@@ -1030,7 +1036,7 @@ pub fn main(_: std.process.Init.Minimal) void {
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../part1-basics/chapter-basic-types.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../part1-basics/chapter-compound-types.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 

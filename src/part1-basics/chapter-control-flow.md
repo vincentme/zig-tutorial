@@ -1,4 +1,4 @@
-# 【draft】基础语法（下）- 控制流与资源管理
+# 控制流与资源管理
 
 本章介绍 Zig 的控制流语句和资源管理机制，包括可选类型、条件判断 if、循环（for 和 while）、分支选择 switch、资源管理 defer 和块表达式。与许多语言不同，Zig 的所有控制流语句都是表达式，可以返回值，结合穷尽性检查和编译期验证，确保代码的安全性和可维护性。资源管理方面，Zig 通过 defer 和 errdefer 机制确保资源的正确释放，避免内存泄漏和资源泄漏问题。
 
@@ -41,6 +41,8 @@ Zig 的可选类型使用 `?T` 表示，用于表示值可能存在或不存在�
 Zig 提供了三种解包可选类型的方式：`if` 模式匹配、`.?` 操作符和 `orelse` 表达式。
 
 #### if 模式匹配
+
+if 模式匹配是 Zig if 语句的重要特性之一，主要用于处理可选类型。更多 if 语句的用法将在下一节介绍。
 
 Zig 的 if 可以直接解构可选类型，这是 Zig 的重要特性：
 
@@ -182,8 +184,6 @@ fn getNestedValue(data: ?*const Data) ?i32 {
 
 ### 可选类型与错误联合类型的关联
 
-> 📖 **深入学习**：错误联合类型的详细用法将在[错误处理基础](chapter-error-handling.md)中讲解。
-
 可选类型 `?T` 和错误联合类型 `!T` 都用于表示"可能失败"的值，但用途不同：
 
 | 类型 | 含义               | 使用场景           |
@@ -191,11 +191,13 @@ fn getNestedValue(data: ?*const Data) ?i32 {
 | `?T` | 值可能存在或不存在 | 查找操作、可选配置 |
 | `!T` | 操作可能成功或失败 | 可能出错的操作     |
 
+> 📖 **深入学习**：错误联合类型的详细用法将在[错误处理基础](chapter-error-handling.md)中讲解。
+
 ## if 语句
 
 可选类型部分介绍了如何使用 `if` 进行模式匹配来解包可选值，这里将进一步介绍 `if` 语句的其他特性。Zig 的 if 语句相对于其他语言，具有以下特性：
 
-- **模式匹配**：可以解包可选类型和错误联合类型
+- **模式匹配**：主要用于解包可选类型和错误联合类型（已在可选类型部分详细介绍）
 - **指针捕获**：使用 `|*val|` 捕获指针，允许在分支内修改值
 - **类型安全**：所有分支必须返回相同类型的值
 - **编译期执行**：支持 comptime if，在编译期进行条件判断
@@ -238,6 +240,16 @@ pub fn main(_: std.process.Init.Minimal) void {
 结果：大数
 最大值：100
 类别：中
+```
+
+**if 表达式与可选类型结合**：
+
+if 表达式可以与可选类型的模式匹配结合使用，实现简洁的条件计算：
+
+```zig
+const maybe_value: ?i32 = 42;
+const result = if (maybe_value) |v| v * 2 else 0;
+std.debug.print("结果：{}\n", .{result}); // 输出：结果：84
 ```
 
 ### if 表达式 vs 三元运算符
@@ -615,7 +627,7 @@ Zig 的 switch 语句非常强大：
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     const number: i32 = 2;
     
     // 基本 switch：必须穷尽所有情况
@@ -694,7 +706,7 @@ fn classifyNumber(n: i32) []const u8 {
 fn doublePositive(numbers: []i32) void {
     for (numbers) |*n| {
         switch (n.*) {
-            1...100 => |*val| val.* *= 2,
+            1...100 => n.* *= 2,  // 直接通过外部指针 n 修改
             else => {},
         }
     }
@@ -723,7 +735,8 @@ fn doublePositive(numbers: []i32) void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
+    defer std.debug.print("主函数结束\n", .{});
     std.debug.print("开始\n", .{});
 
     {
@@ -734,12 +747,15 @@ pub fn main(init: std.process.Init.Minimal) void {
 
     std.debug.print("结束\n", .{});
 }
+```
 
-// 输出顺序：
-// 开始
-// 作用域中间
-// 作用域结束
-// 结束
+预期输出：
+```
+开始
+作用域中间
+作用域结束
+结束
+主函数结束
 ```
 
 ### 实际应用场景
@@ -781,24 +797,26 @@ fn protectedOperation(mutex: *std.Thread.Mutex) void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     defer std.debug.print("第一个 defer\n", .{});
     defer std.debug.print("第二个 defer\n", .{});
     defer std.debug.print("第三个 defer\n", .{});
     
     std.debug.print("主体代码\n", .{});
 }
+```
 
-// 输出顺序（LIFO - 后进先出）：
-// 主体代码
-// 第三个 defer
-// 第二个 defer
-// 第一个 defer
+预期输出：
+```
+主体代码
+第三个 defer
+第二个 defer
+第一个 defer
 ```
 
 ### defer vs errdefer
 
-Zig 还提供了 `errdefer`，只在发生错误时执行：
+`errdefer` 与 `defer` 类似，都在作用域结束时执行，但 `errdefer` 只在函数返回错误时执行，正常返回时不执行：
 
 ```zig
 fn allocateAndInit(allocator: std.mem.Allocator) !*Resource {
@@ -817,13 +835,12 @@ fn allocateAndInit(allocator: std.mem.Allocator) !*Resource {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit(); // 确保分配器被清理
     
     const allocator = gpa.allocator();
     
-    // 文件操作（0.16.0-dev 新API）
     const file = try std.fs.cwd().openFile("test.txt", .{});
     defer file.close(); // 确保文件被关闭
     
@@ -832,15 +849,12 @@ pub fn main(init: std.process.Init.Minimal) !void {
     defer allocator.free(buffer); // 确保内存被释放
     
     // 使用资源...
-    std.debug.print("资源已分配\n", .{});
 }
 ```
 
 ## 块表达式（Block Expression）
 
-前面介绍的 if、while、for 等控制流语句都可以作为表达式返回值，而块表达式则提供了另一种创建表达式的方式。块表达式可以包含复杂的逻辑和控制流，最终返回一个值，这在需要计算复杂表达式的场景中非常有用。
-
-在 Zig 中，块（Block）不仅是作用域，还可以作为表达式返回值，但**必须使用标签**。
+前面介绍的 if、while、for 等控制流语句都可以作为表达式返回值，而块表达式则提供了另一种创建表达式的方式。块表达式是一个带标签的作用域，可以包含多条语句和复杂的控制流逻辑，最终通过 `break :label value` 返回一个值。
 
 ### 基本语法
 
