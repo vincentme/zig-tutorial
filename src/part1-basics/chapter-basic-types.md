@@ -55,6 +55,124 @@ const Status = enum {
 fn calculateTotal() i32 { }
 ```
 
+### 注释规范
+
+Zig 支持三种注释形式，用于提高代码可读性和生成文档。
+
+#### 注释类型对比
+
+| 注释类型     | 语法  | 用途                     | 示例           |
+| ------------ | ----- | ------------------------ | -------------- |
+| 普通注释     | `//`  | 代码说明等               | `// 临时注释`  |
+| 文档注释     | `///` | 为结构体、函数等添加文档 | `/// 函数说明` |
+| 顶层文档注释 | `//!` | 为文件或模块添加文档     | `//! 模块说明` |
+
+#### 普通注释
+
+使用 `//` 进行单行注释，不会被文档工具提取：
+
+```zig
+// 这是单行注释
+const x = 10;  // 行尾注释
+
+// 多行注释使用多个单行注释
+// 第二行注释
+// 第三行注释
+const y = 20;
+```
+
+#### 文档注释
+
+使用 `///` 为结构体、函数对象等添加文档注释，会被 `zig doc` 工具提取生成 API 文档：
+
+```zig
+/// 计算两个整数的和
+/// 
+/// 参数：
+///   - a: 第一个整数
+///   - b: 第二个整数
+/// 
+/// 返回：两个整数的和
+/// 
+/// 示例：
+/// ```zig
+/// const result = add(2, 3); // result = 5
+/// ```
+fn add(a: i32, b: i32) i32 {
+    return a + b;
+}
+
+/// 用户信息结构体
+const Person = struct {
+    /// 用户姓名
+    name: []const u8,
+    /// 用户年龄
+    age: u32,
+};
+```
+
+#### 顶层文档注释
+
+使用 `//!` 为整个文件或模块添加文档说明：
+
+```zig
+//! 用户管理模块
+//! 
+//! 提供用户信息的存储、查询和更新功能。
+//! 
+//! 示例：
+//! ```zig
+//! const user = User{ .name = "Alice", .age = 30 };
+//! ```
+
+const std = @import("std");
+
+pub const User = struct {
+    name: []const u8,
+    age: u32,
+};
+```
+
+顶层文档注释通常放在文件开头，用于说明整个模块的用途和使用方法。
+
+#### 注释最佳实践
+
+1. **解释"为什么"，而不是"是什么"**：
+   ```zig
+   // ❌ 不好的注释：重复代码
+   // 将 x 加 1
+   x += 1;
+   
+   // ✅ 好的注释：解释意图
+   // 跳过第一个元素，因为它包含标题
+   x += 1;
+   ```
+
+2. **保持注释与代码同步**：
+   ```zig
+   // ❌ 注释过时
+   // 最大连接数为 10
+   const MAX_CONNECTIONS = 100;  // 实际已改为 100
+   ```
+
+3. **使用文档注释而不是普通注释**：
+   ```zig
+   // ❌ 普通注释不会被文档工具提取
+   // 计算总和
+   fn sum(a: i32, b: i32) i32 { ... }
+   
+   // ✅ 文档注释会被提取
+   /// 计算总和
+   fn sum(a: i32, b: i32) i32 { ... }
+   ```
+
+4. **为复杂逻辑添加注释**：
+   ```zig
+   // 使用位运算优化乘法
+   // 等价于 x * 8，但更快
+   const result = x << 3;
+   ```
+
 ### 变量遮蔽规则
 
 Zig **完全禁止**变量遮蔽（Shadowing）。标识符永远不允许使用相同的名称来"隐藏"其他标识符。这意味着：
@@ -141,52 +259,27 @@ pub fn main(_: std.process.Init.Minimal) void {
 混合声明：10, 25, 30
 ```
 
-### 内存管理原则
-
-Zig 采用手动内存管理，没有垃圾回收器。理解内存管理原则对编写高效、安全的 Zig 程序至关重要。
-
-**核心原则**：
-
-1. **显式分配**：明确指定内存分配的位置和方式
-2. **明确所有权**：谁分配内存，谁负责释放
-3. **避免全局状态**：分配器作为参数传递，而不是使用全局变量
-
-**为什么这样设计？**
-
-- **灵活性**：调用者可以选择最合适的分配器（栈分配器、堆分配器、竞技场分配器等）
-- **可测试性**：测试时可以使用自定义分配器跟踪内存使用
-- **可组合性**：函数可以轻松组合，不会因为全局状态产生冲突
-- **性能**：可以根据场景选择最优的分配策略
-
-**常见分配器类型**：
-
-| 分配器                 | 用途       | 特点                                 |
-| ---------------------- | ---------- | ------------------------------------ |
-| `DebugAllocator`       | 开发调试   | 检测内存泄漏、双重释放、捕获堆栈跟踪 |
-| `page_allocator`       | 简单场景   | 直接使用操作系统页面分配             |
-| `ArenaAllocator`       | 批量分配   | 一次性释放所有内存                   |
-| `FixedBufferAllocator` | 固定缓冲区 | 使用预分配的缓冲区                   |
-
-> 📖 **深入学习**：内存管理的详细实践（包括分配器传递模式、自定义分配器）请参考[内存管理模型](../part2-advanced/chapter-memory-management.md)。
-
 ## 基本数据类型
 
-**整数类型：**
+### 整数类型
+
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     // 有符号整数
     const signed_i8: i8 = -128;
     const signed_i16: i16 = -32768;
     const signed_i32: i32 = -2147483648;
     const signed_i64: i64 = -9223372036854775808;
+    const signed_i128: i128 = -170141183460469231731687303715884105728;
     
     // 无符号整数
     const unsigned_u8: u8 = 255;
     const unsigned_u16: u16 = 65535;
     const unsigned_u32: u32 = 4294967295;
     const unsigned_u64: u64 = 18446744073709551615;
+    const unsigned_u128: u128 = 340282366920938463463374607431768211455;
     
     // 平台相关大小
     const isize_val: isize = 100; // 指针大小
@@ -198,29 +291,84 @@ pub fn main(init: std.process.Init.Minimal) void {
 }
 ```
 
-**浮点类型：**
+### 浮点类型
+
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
-    const float_32: f32 = 3.14159;
-    const float_64: f64 = 3.141592653589793;
-    const float_128: f128 = 3.14159265358979323846264338327950288;
+pub fn main(_: std.process.Init.Minimal) void {
+    const float_16: f16 = 3.14;      // 16位半精度
+    const float_32: f32 = 3.14159;   // 32位单精度
+    const float_64: f64 = 3.141592653589793; // 64位双精度
+    const float_80: f80 = 3.141592653589793238; // 80位扩展精度
+    const float_128: f128 = 3.14159265358979323846264338327950288; // 128位四精度
 
-    std.debug.print("f32: {}, f64: {}, f128: {}\n", .{ float_32, float_64, float_128 });
+    std.debug.print("f16: {}, f32: {}, f64: {}, f80: {}, f128: {}\n", .{ float_16, float_32, float_64, float_80, float_128 });
 }
 ```
 
 **预期输出：**
 ```
-f32: 3.14159, f64: 3.141592653589793, f128: 3.14159265358979323846264338327950288
+f16: 3.140625, f32: 3.14159, f64: 3.141592653589793, f80: 3.141592653589793238, f128: 3.14159265358979323846264338327950288
 ```
 
-**布尔和字符类型：**
+### 编译期类型
+
+Zig 提供了编译期类型，用于在编译时确定值的类型：
+
+- `comptime_int`：编译期整数类型，根据值自动推断位宽
+- `comptime_float`：编译期浮点类型，根据值自动推断精度
+
 ```zig
-const bool_val: bool = true;
-const char_val: u8 = 'A'; // 字符字面量是 u8 类型
+const std = @import("std");
+
+pub fn main(_: std.process.Init.Minimal) void {
+    const int_val: comptime_int = 42;      // 编译期确定类型
+    const float_val: comptime_float = 3.14;
+    std.debug.print("comptime_int: {}, comptime_float: {}\n", .{ int_val, float_val });
+}
 ```
+
+**预期输出：**
+```
+comptime_int: 42, comptime_float: 3.14
+```
+
+### 布尔类型
+
+布尔类型表示逻辑值，只有 `true` 和 `false` 两个取值：
+
+```zig
+const std = @import("std");
+
+pub fn main(_: std.process.Init.Minimal) void {
+    const is_enabled: bool = true;
+    const is_disabled: bool = false;
+    
+    // 布尔运算
+    const result_and = is_enabled and is_disabled;  // false
+    const result_or = is_enabled or is_disabled;    // true
+    const result_not = !is_enabled;                  // false
+    
+    std.debug.print("and: {}, or: {}, not: {}\n", .{ result_and, result_or, result_not });
+}
+```
+
+**预期输出：**
+```
+and: false, or: true, not: false
+```
+
+**要点：**
+- 布尔类型占用 1 字节内存
+- 支持逻辑运算：`and`（与）、`or`（或）、`!`（非）
+- 主要用于条件判断和逻辑运算
+
+> 📖 **深入学习**：布尔类型在控制流中的详细用法请参考[控制流与资源管理](chapter-control-flow.md)。
+
+### 字符类型
+
+字符字面量（如 `'A'`）的类型是 `comptime_int`，表示 Unicode 码位。详细说明请参考本章[字符和字符串](#字符和字符串)章节。
 
 ### 基本类型转换
 
@@ -251,7 +399,7 @@ const std = @import("std");
 pub fn main(_: std.process.Init.Minimal) void {
     // 安全转换：@intCast（运行时检查）
     const small: i32 = 100;
-    const small_u8: u8 = @intCast(small); // ✅ OK: 100 在 u8 茨围内
+    const small_u8: u8 = @intCast(small); // ✅ OK: 100 在 u8 范围内
     std.debug.print("i32({}) -> u8({})\n", .{ small, small_u8 });
 
     // 不安全转换：@truncate（直接截断）

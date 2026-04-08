@@ -37,10 +37,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-684feaa1.js";
+            window.path_to_searchindex_js = "searchindex-00c7812b.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-043b281c.js"></script>
+        <script src="toc-546ed77d.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -520,6 +520,115 @@ const Status = enum {
 
 fn calculateTotal() i32 { }
 </code></pre>
+<h3 id="注释规范"><a class="header" href="#注释规范">注释规范</a></h3>
+<p>Zig 支持三种注释形式，用于提高代码可读性和生成文档。</p>
+<h4 id="注释类型对比"><a class="header" href="#注释类型对比">注释类型对比</a></h4>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>注释类型</th><th>语法</th><th>用途</th><th>示例</th></tr>
+</thead>
+<tbody>
+<tr><td>普通注释</td><td><code>//</code></td><td>代码说明等</td><td><code>// 临时注释</code></td></tr>
+<tr><td>文档注释</td><td><code>///</code></td><td>为结构体、函数等添加文档</td><td><code>/// 函数说明</code></td></tr>
+<tr><td>顶层文档注释</td><td><code>//!</code></td><td>为文件或模块添加文档</td><td><code>//! 模块说明</code></td></tr>
+</tbody>
+</table>
+</div>
+<h4 id="普通注释"><a class="header" href="#普通注释">普通注释</a></h4>
+<p>使用 <code>//</code> 进行单行注释，不会被文档工具提取：</p>
+<pre><code class="language-zig">// 这是单行注释
+const x = 10;  // 行尾注释
+
+// 多行注释使用多个单行注释
+// 第二行注释
+// 第三行注释
+const y = 20;
+</code></pre>
+<h4 id="文档注释"><a class="header" href="#文档注释">文档注释</a></h4>
+<p>使用 <code>///</code> 为结构体、函数对象等添加文档注释，会被 <code>zig doc</code> 工具提取生成 API 文档：</p>
+<pre><code class="language-zig">/// 计算两个整数的和
+/// 
+/// 参数：
+///   - a: 第一个整数
+///   - b: 第二个整数
+/// 
+/// 返回：两个整数的和
+/// 
+/// 示例：
+/// ```zig
+/// const result = add(2, 3); // result = 5
+/// ```
+fn add(a: i32, b: i32) i32 {
+    return a + b;
+}
+
+/// 用户信息结构体
+const Person = struct {
+    /// 用户姓名
+    name: []const u8,
+    /// 用户年龄
+    age: u32,
+};
+</code></pre>
+<h4 id="顶层文档注释"><a class="header" href="#顶层文档注释">顶层文档注释</a></h4>
+<p>使用 <code>//!</code> 为整个文件或模块添加文档说明：</p>
+<pre><code class="language-zig">//! 用户管理模块
+//! 
+//! 提供用户信息的存储、查询和更新功能。
+//! 
+//! 示例：
+//! ```zig
+//! const user = User{ .name = "Alice", .age = 30 };
+//! ```
+
+const std = @import("std");
+
+pub const User = struct {
+    name: []const u8,
+    age: u32,
+};
+</code></pre>
+<p>顶层文档注释通常放在文件开头，用于说明整个模块的用途和使用方法。</p>
+<h4 id="注释最佳实践"><a class="header" href="#注释最佳实践">注释最佳实践</a></h4>
+<ol>
+<li>
+<p><strong>解释“为什么“，而不是“是什么“</strong>：</p>
+<pre><code class="language-zig">// ❌ 不好的注释：重复代码
+// 将 x 加 1
+x += 1;
+
+// ✅ 好的注释：解释意图
+// 跳过第一个元素，因为它包含标题
+x += 1;
+</code></pre>
+</li>
+<li>
+<p><strong>保持注释与代码同步</strong>：</p>
+<pre><code class="language-zig">// ❌ 注释过时
+// 最大连接数为 10
+const MAX_CONNECTIONS = 100;  // 实际已改为 100
+</code></pre>
+</li>
+<li>
+<p><strong>使用文档注释而不是普通注释</strong>：</p>
+<pre><code class="language-zig">// ❌ 普通注释不会被文档工具提取
+// 计算总和
+fn sum(a: i32, b: i32) i32 { ... }
+
+// ✅ 文档注释会被提取
+/// 计算总和
+fn sum(a: i32, b: i32) i32 { ... }
+</code></pre>
+</li>
+<li>
+<p><strong>为复杂逻辑添加注释</strong>：</p>
+<pre><code class="language-zig">// 使用位运算优化乘法
+// 等价于 x * 8，但更快
+const result = x &lt;&lt; 3;
+</code></pre>
+</li>
+</ol>
 <h3 id="变量遮蔽规则"><a class="header" href="#变量遮蔽规则">变量遮蔽规则</a></h3>
 <p>Zig <strong>完全禁止</strong>变量遮蔽（Shadowing）。标识符永远不允许使用相同的名称来“隐藏“其他标识符。这意味着：</p>
 <ul>
@@ -598,54 +707,24 @@ pub fn main(_: std.process.Init.Minimal) void {
 数组解包：p=4, q=5, r=6
 混合声明：10, 25, 30
 </code></pre>
-<h3 id="内存管理原则"><a class="header" href="#内存管理原则">内存管理原则</a></h3>
-<p>Zig 采用手动内存管理，没有垃圾回收器。理解内存管理原则对编写高效、安全的 Zig 程序至关重要。</p>
-<p><strong>核心原则</strong>：</p>
-<ol>
-<li><strong>显式分配</strong>：明确指定内存分配的位置和方式</li>
-<li><strong>明确所有权</strong>：谁分配内存，谁负责释放</li>
-<li><strong>避免全局状态</strong>：分配器作为参数传递，而不是使用全局变量</li>
-</ol>
-<p><strong>为什么这样设计？</strong></p>
-<ul>
-<li><strong>灵活性</strong>：调用者可以选择最合适的分配器（栈分配器、堆分配器、竞技场分配器等）</li>
-<li><strong>可测试性</strong>：测试时可以使用自定义分配器跟踪内存使用</li>
-<li><strong>可组合性</strong>：函数可以轻松组合，不会因为全局状态产生冲突</li>
-<li><strong>性能</strong>：可以根据场景选择最优的分配策略</li>
-</ul>
-<p><strong>常见分配器类型</strong>：</p>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>分配器</th><th>用途</th><th>特点</th></tr>
-</thead>
-<tbody>
-<tr><td><code>DebugAllocator</code></td><td>开发调试</td><td>检测内存泄漏、双重释放、捕获堆栈跟踪</td></tr>
-<tr><td><code>page_allocator</code></td><td>简单场景</td><td>直接使用操作系统页面分配</td></tr>
-<tr><td><code>ArenaAllocator</code></td><td>批量分配</td><td>一次性释放所有内存</td></tr>
-<tr><td><code>FixedBufferAllocator</code></td><td>固定缓冲区</td><td>使用预分配的缓冲区</td></tr>
-</tbody>
-</table>
-</div>
-<blockquote>
-<p>📖 <strong>深入学习</strong>：内存管理的详细实践（包括分配器传递模式、自定义分配器）请参考<a href="#draft内存管理模型">内存管理模型</a>。</p>
-</blockquote>
 <h2 id="基本数据类型"><a class="header" href="#基本数据类型">基本数据类型</a></h2>
-<p><strong>整数类型：</strong></p>
+<h3 id="整数类型"><a class="header" href="#整数类型">整数类型</a></h3>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     // 有符号整数
     const signed_i8: i8 = -128;
     const signed_i16: i16 = -32768;
     const signed_i32: i32 = -2147483648;
     const signed_i64: i64 = -9223372036854775808;
+    const signed_i128: i128 = -170141183460469231731687303715884105728;
     
     // 无符号整数
     const unsigned_u8: u8 = 255;
     const unsigned_u16: u16 = 65535;
     const unsigned_u32: u32 = 4294967295;
     const unsigned_u64: u64 = 18446744073709551615;
+    const unsigned_u128: u128 = 340282366920938463463374607431768211455;
     
     // 平台相关大小
     const isize_val: isize = 100; // 指针大小
@@ -656,24 +735,69 @@ pub fn main(init: std.process.Init.Minimal) void {
     const c_long_val: c_long = 20;
 }
 </code></pre>
-<p><strong>浮点类型：</strong></p>
+<h3 id="浮点类型"><a class="header" href="#浮点类型">浮点类型</a></h3>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
-    const float_32: f32 = 3.14159;
-    const float_64: f64 = 3.141592653589793;
-    const float_128: f128 = 3.14159265358979323846264338327950288;
+pub fn main(_: std.process.Init.Minimal) void {
+    const float_16: f16 = 3.14;      // 16位半精度
+    const float_32: f32 = 3.14159;   // 32位单精度
+    const float_64: f64 = 3.141592653589793; // 64位双精度
+    const float_80: f80 = 3.141592653589793238; // 80位扩展精度
+    const float_128: f128 = 3.14159265358979323846264338327950288; // 128位四精度
 
-    std.debug.print("f32: {}, f64: {}, f128: {}\n", .{ float_32, float_64, float_128 });
+    std.debug.print("f16: {}, f32: {}, f64: {}, f80: {}, f128: {}\n", .{ float_16, float_32, float_64, float_80, float_128 });
 }
 </code></pre>
 <p><strong>预期输出：</strong></p>
-<pre><code>f32: 3.14159, f64: 3.141592653589793, f128: 3.14159265358979323846264338327950288
+<pre><code>f16: 3.140625, f32: 3.14159, f64: 3.141592653589793, f80: 3.141592653589793238, f128: 3.14159265358979323846264338327950288
 </code></pre>
-<p><strong>布尔和字符类型：</strong></p>
-<pre><code class="language-zig">const bool_val: bool = true;
-const char_val: u8 = 'A'; // 字符字面量是 u8 类型
+<h3 id="编译期类型"><a class="header" href="#编译期类型">编译期类型</a></h3>
+<p>Zig 提供了编译期类型，用于在编译时确定值的类型：</p>
+<ul>
+<li><code>comptime_int</code>：编译期整数类型，根据值自动推断位宽</li>
+<li><code>comptime_float</code>：编译期浮点类型，根据值自动推断精度</li>
+</ul>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(_: std.process.Init.Minimal) void {
+    const int_val: comptime_int = 42;      // 编译期确定类型
+    const float_val: comptime_float = 3.14;
+    std.debug.print("comptime_int: {}, comptime_float: {}\n", .{ int_val, float_val });
+}
 </code></pre>
+<p><strong>预期输出：</strong></p>
+<pre><code>comptime_int: 42, comptime_float: 3.14
+</code></pre>
+<h3 id="布尔类型"><a class="header" href="#布尔类型">布尔类型</a></h3>
+<p>布尔类型表示逻辑值，只有 <code>true</code> 和 <code>false</code> 两个取值：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(_: std.process.Init.Minimal) void {
+    const is_enabled: bool = true;
+    const is_disabled: bool = false;
+    
+    // 布尔运算
+    const result_and = is_enabled and is_disabled;  // false
+    const result_or = is_enabled or is_disabled;    // true
+    const result_not = !is_enabled;                  // false
+    
+    std.debug.print("and: {}, or: {}, not: {}\n", .{ result_and, result_or, result_not });
+}
+</code></pre>
+<p><strong>预期输出：</strong></p>
+<pre><code>and: false, or: true, not: false
+</code></pre>
+<p><strong>要点：</strong></p>
+<ul>
+<li>布尔类型占用 1 字节内存</li>
+<li>支持逻辑运算：<code>and</code>（与）、<code>or</code>（或）、<code>!</code>（非）</li>
+<li>主要用于条件判断和逻辑运算</li>
+</ul>
+<blockquote>
+<p>📖 <strong>深入学习</strong>：布尔类型在控制流中的详细用法请参考<a href="#控制流与资源管理">控制流与资源管理</a>。</p>
+</blockquote>
+<h3 id="字符类型"><a class="header" href="#字符类型">字符类型</a></h3>
+<p>字符字面量（如 <code>'A'</code>）的类型是 <code>comptime_int</code>，表示 Unicode 码位。详细说明请参考本章<a href="#字符和字符串">字符和字符串</a>章节。</p>
 <h3 id="基本类型转换"><a class="header" href="#基本类型转换">基本类型转换</a></h3>
 <h4 id="为什么需要显式类型转换"><a class="header" href="#为什么需要显式类型转换">为什么需要显式类型转换？</a></h4>
 <p>Zig 的设计哲学是“显式优于隐式“，因此不进行隐式类型转换。这带来以下好处：</p>
@@ -704,7 +828,7 @@ const char_val: u8 = 'A'; // 字符字面量是 u8 类型
 pub fn main(_: std.process.Init.Minimal) void {
     // 安全转换：@intCast（运行时检查）
     const small: i32 = 100;
-    const small_u8: u8 = @intCast(small); // ✅ OK: 100 在 u8 茨围内
+    const small_u8: u8 = @intCast(small); // ✅ OK: 100 在 u8 范围内
     std.debug.print("i32({}) -&gt; u8({})\n", .{ small, small_u8 });
 
     // 不安全转换：@truncate（直接截断）
@@ -3489,162 +3613,177 @@ pub fn main(_: std.process.Init.Minimal) void {
 嵌套块结果: 10
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div>
-<h1 id="draft函数定义与调用"><a class="header" href="#draft函数定义与调用">【draft】函数定义与调用</a></h1>
-<h1 id="zig函数的核心原则"><a class="header" href="#zig函数的核心原则">Zig函数的核心原则</a></h1>
-<ol>
-<li>
-<p><strong>显式错误处理</strong></p>
-<ul>
-<li>错误是类型系统的一部分，不是异常</li>
-<li>调用者必须显式处理可能的错误</li>
-<li>没有<code>try-catch</code>块，使用<code>try</code>和<code>catch</code>关键字</li>
-</ul>
-</li>
-<li>
-<p><strong>无隐式分配</strong></p>
-<ul>
-<li>函数不会隐式分配内存</li>
-<li>所有分配器必须显式传递</li>
-<li>内存所有权清晰明确</li>
-</ul>
-</li>
-<li>
-<p><strong>参数不可变</strong></p>
-<ul>
-<li>默认情况下，函数参数是只读的</li>
-<li>需要修改时，显式传递指针</li>
-<li>防止意外修改，提高代码安全性</li>
-</ul>
-</li>
-</ol>
-<h1 id="与其他语言的对比"><a class="header" href="#与其他语言的对比">与其他语言的对比</a></h1>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>特性</th><th>C</th><th>Rust</th><th>Go</th><th>Zig</th></tr>
-</thead>
-<tbody>
-<tr><td>错误处理</td><td>返回码</td><td>Result&lt;T, E&gt;</td><td>error类型</td><td>!T错误联合</td></tr>
-<tr><td>内存分配</td><td>隐式/显式</td><td>所有权系统</td><td>GC</td><td>显式分配器</td></tr>
-<tr><td>参数可变性</td><td>可变</td><td>不可变（默认）</td><td>可变</td><td>不可变（默认）</td></tr>
-<tr><td>泛型</td><td>宏</td><td>泛型/trait</td><td>无（接口）</td><td>comptime</td></tr>
-</tbody>
-</table>
-</div>
-<h1 id="实际应用场景-2"><a class="header" href="#实际应用场景-2">实际应用场景</a></h1>
-<p><strong>场景1：库函数设计</strong></p>
-<pre><code class="language-zig">// 好的设计：显式分配器，清晰的错误处理
-pub fn readFile(
-    allocator: std.mem.Allocator,
-    path: []const u8,
-) ![]u8 {
-    // 调用者知道：
-    // 1. 需要提供分配器
-    // 2. 可能返回错误
-    // 3. 返回的内存需要释放
-}
-</code></pre>
-<p><strong>场景2：错误传播策略</strong></p>
-<pre><code class="language-zig">// 使用try：将错误传播给调用者
-// ❌ 错误示例
-fn processFile(path: []const u8) !void {
-    const content = try readFile(path);  // 错误会自动传播
-    // ...
-}
-
-// 使用catch：在当前层级处理错误
-fn safeProcessFile(path: []const u8) void {
-    const content = readFile(path) catch {
-        std.debug.print("读取失败，使用默认内容\n", .{});
-        return;
-    };
-    // ...
-}
-</code></pre>
-<p><strong>场景3：性能优化</strong></p>
-<pre><code class="language-zig">// 内联函数：适合小型、频繁调用的函数
-inline fn max(a: anytype, b: @TypeOf(a)) @TypeOf(a) {
-    return if (a &gt; b) a else b;
-}
-
-// 普通函数：适合复杂逻辑
-fn complexCalculation(data: []const f32) f32 {
-    // 复杂计算...
-}
-</code></pre>
+<h1 id="函数定义与调用"><a class="header" href="#函数定义与调用">函数定义与调用</a></h1>
+<p>函数是 Zig 程序的基本构建块。Zig 的函数设计体现了语言的核心特性：显式错误处理通过错误联合类型实现、参数默认不可变确保安全性、无隐式内存分配保证性能可控。本章将介绍函数的定义、参数传递、错误处理和高级特性。</p>
 <h2 id="函数基础"><a class="header" href="#函数基础">函数基础</a></h2>
+<h3 id="函数语法结构"><a class="header" href="#函数语法结构">函数语法结构</a></h3>
+<p>Zig 函数的基本语法结构如下：</p>
+<pre><code class="language-zig">fn 函数名(参数列表) 返回值类型 {
+    函数体
+}
+</code></pre>
+<p><strong>组成部分说明</strong>：</p>
+<ol>
+<li><strong><code>fn</code> 关键字</strong>：函数声明的开始</li>
+<li><strong>函数名</strong>：遵循 camelCase 命名规范（如 <code>calculateTotal</code>、<code>processData</code>）</li>
+<li><strong>参数列表</strong>：
+<ul>
+<li>格式：<code>参数名: 类型</code></li>
+<li>多个参数用逗号分隔</li>
+<li>参数默认不可变</li>
+</ul>
+</li>
+<li><strong>返回值类型</strong>：
+<ul>
+<li><code>void</code> 表示无返回值</li>
+<li><code>?T</code> 表示可选返回值</li>
+<li><code>!T</code> 表示错误联合类型</li>
+<li><code>noreturn</code> 表示永不返回（如 panic、exit）</li>
+</ul>
+</li>
+<li><strong>函数体</strong>：包含具体的逻辑代码</li>
+</ol>
+<h3 id="基本函数示例"><a class="header" href="#基本函数示例">基本函数示例</a></h3>
 <pre><code class="language-zig">const std = @import("std");
 
-// 基本函数定义
+// 基本函数：两个参数，返回 i32
 fn add(a: i32, b: i32) i32 {
     return a + b;
 }
 
-// 无返回值函数
+// 无返回值函数：使用 void
 fn greet(name: []const u8) void {
     std.debug.print("Hello, {s}!\n", .{name});
 }
 
-// 可选返回值
+// 可选返回值：使用 ?T
 fn divide(a: i32, b: i32) ?i32 {
     if (b == 0) return null;
     return @divTrunc(a, b);
 }
 
-pub fn main(init: std.process.Init.Minimal) void {
-    const sum = add(10, 20);
-    std.debug.print("sum: {}\n", .{sum});
-    
-    greet("Zig");
-    
-    if (divide(10, 2)) |result| {
-        std.debug.print("10 / 2 = {}\n", .{result});
-    }
-}
-</code></pre>
-<h2 id="错误处理函数"><a class="header" href="#错误处理函数">错误处理函数</a></h2>
-<p>Zig 使用错误联合类型（<code>!T</code>）来表示可能失败的操作。这是 Zig 错误处理的核心机制。</p>
-<h1 id="基本概念"><a class="header" href="#基本概念">基本概念</a></h1>
-<pre><code class="language-zig">const std = @import("std");
-
-// 定义错误集合
-const MathError = error{
-    DivisionByZero,
-    Overflow,
-};
-
-// 返回错误的函数：MathError!i32 表示可能返回 MathError 或 i32
+// 错误联合类型：使用 !T
+const MathError = error{DivisionByZero};
 fn safeDivide(a: i32, b: i32) MathError!i32 {
     if (b == 0) return MathError.DivisionByZero;
     return @divTrunc(a, b);
 }
-</code></pre>
-<h1 id="使用方式-1"><a class="header" href="#使用方式-1">使用方式</a></h1>
-<pre><code class="language-zig">pub fn main(init: std.process.Init.Minimal) void {
-    // 方式1：使用 catch 处理错误，提供默认值
-    const result1 = safeDivide(10, 2) catch 0;
-    std.debug.print("10 / 2 = {}\n", .{result1});
+
+pub fn main(_: std.process.Init.Minimal) void {
+    // 调用基本函数
+    const sum = add(10, 20);
+    std.debug.print("sum: {}\n", .{sum});
     
-    // 方式2：使用 catch 捕获错误并处理
-    const result2 = safeDivide(10, 0) catch |err| {
-        std.debug.print("错误：{}\n", .{err});
+    // 调用无返回值函数
+    greet("Zig");
+    
+    // 处理可选返回值
+    if (divide(10, 2)) |result| {
+        std.debug.print("10 / 2 = {}\n", .{result});
+    }
+    
+    // 处理错误联合类型
+    const safe_result = safeDivide(10, 2) catch {
+        std.debug.print("除零错误\n", .{});
         return;
     };
-    std.debug.print("结果：{}\n", .{result2});
+    std.debug.print("安全除法: {}\n", .{safe_result});
 }
 </code></pre>
-<blockquote>
-<p><strong>深入学习</strong>：错误处理是 Zig 的重要特性，<a href="#draft错误处理基础">错误处理基础</a>将详细讲解错误集合、错误联合类型、<code>try</code>/<code>catch</code>、<code>errdefer</code> 等高级用法。</p>
-</blockquote>
+<p><strong>预期输出</strong>：</p>
+<pre><code>sum: 30
+Hello, Zig!
+10 / 2 = 5
+安全除法: 5
+</code></pre>
+<h3 id="zig-函数的限制"><a class="header" href="#zig-函数的限制">Zig 函数的限制</a></h3>
+<p>Zig 不支持以下特性：</p>
+<ul>
+<li><strong>函数重载</strong>：不能定义同名但参数不同的函数</li>
+<li><strong>默认参数</strong>：所有参数必须显式传递</li>
+</ul>
+<p><strong>替代方案</strong>：</p>
+<ul>
+<li>使用 <code>anytype</code> 实现泛型</li>
+<li>使用可选参数 <code>?T</code> 实现可选值</li>
+<li>使用结构体参数实现命名参数</li>
+</ul>
+<pre><code class="language-zig">const std = @import("std");
+
+// ❌ 不支持：函数重载
+// fn add(a: i32, b: i32) i32 { ... }
+// fn add(a: f64, b: f64) f64 { ... }  // 编译错误：重复定义
+
+// ✅ 替代方案：使用 anytype
+fn add(a: anytype, b: @TypeOf(a)) @TypeOf(a) {
+    return a + b;
+}
+
+// ❌ 不支持：默认参数
+// fn greet(name: []const u8, greeting: []const u8 = "Hello") void { ... }
+
+// ✅ 替代方案：使用可选参数
+fn greet(name: []const u8, greeting: ?[]const u8) void {
+    const g = greeting orelse "Hello";
+    std.debug.print("{s}, {s}!\n", .{ g, name });
+}
+
+pub fn main(_: std.process.Init.Minimal) void {
+    const int_sum = add(10, 20);
+    const float_sum = add(3.14, 2.86);
+    std.debug.print("int: {}, float: {}\n", .{ int_sum, float_sum });
+    
+    greet("Zig", null);           // 使用默认值
+    greet("World", "Hi");         // 显式传递
+}
+</code></pre>
+<p><strong>预期输出</strong>：</p>
+<pre><code>int: 30, float: 6
+Hello, Zig!
+Hi, World!
+</code></pre>
+<h3 id="递归函数"><a class="header" href="#递归函数">递归函数</a></h3>
+<p>Zig 支持递归函数，但需要注意栈深度限制：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+// 递归计算阶乘
+fn factorial(n: u32) u32 {
+    if (n &lt;= 1) return 1;
+    return n * factorial(n - 1);
+}
+
+// 尾递归优化
+fn factorialTail(n: u32, acc: u32) u32 {
+    if (n &lt;= 1) return acc;
+    return factorialTail(n - 1, n * acc);
+}
+
+pub fn main(_: std.process.Init.Minimal) void {
+    const result1 = factorial(5);
+    const result2 = factorialTail(5, 1);
+    std.debug.print("阶乘(5): {}\n", .{result1});
+    std.debug.print("尾递归阶乘(5): {}\n", .{result2});
+}
+</code></pre>
+<p><strong>预期输出</strong>：</p>
+<pre><code>阶乘(5): 120
+尾递归阶乘(5): 120
+</code></pre>
+<p><strong>注意事项</strong>：</p>
+<ul>
+<li>递归深度受栈大小限制</li>
+<li>尾递归可能被编译器优化</li>
+<li>对于深度递归，考虑使用迭代替代</li>
+</ul>
 <h2 id="函数参数传递"><a class="header" href="#函数参数传递">函数参数传递</a></h2>
-<h1 id="zig-参数传递的核心原则"><a class="header" href="#zig-参数传递的核心原则">Zig 参数传递的核心原则</a></h1>
+<h3 id="zig-参数传递的核心原则"><a class="header" href="#zig-参数传递的核心原则">Zig 参数传递的核心原则</a></h3>
 <p>Zig 采用独特的参数传递策略，理解这一点对于编写高效、安全的代码至关重要：</p>
 <ol>
 <li><strong>参数默认不可变</strong>：防止意外修改，提高代码可预测性</li>
-<li><strong>值语义优先</strong>：小类型（指针大小或更小）通过值传递</li>
+<li><strong>值语义优先</strong>：所有参数按值传递（语义上），编译器可能优化大结构体的传递为常量指针传递</li>
 <li><strong>显式传递意图</strong>：需要修改时必须显式传递指针</li>
 </ol>
-<h1 id="为什么参数不可变"><a class="header" href="#为什么参数不可变">为什么参数不可变？</a></h1>
+<h3 id="为什么参数不可变"><a class="header" href="#为什么参数不可变">为什么参数不可变？</a></h3>
 <p>不可变参数带来以下好处：</p>
 <ul>
 <li><strong>函数纯净性</strong>：函数不会产生副作用，更易推理</li>
@@ -3669,13 +3808,18 @@ fn incrementPointer(x: *i32) void {
 }
 
 // 常量指针传递（不可修改）
-// 大类型通过指针传递以避免复制，但不允许修改
-fn printValue(x: *const i32) void {
-    std.debug.print("值：{}\n", .{x.*});
-    // x.* = 10; // 编译错误：常量指针不可修改
+// 大类型通过常量指针传递以避免复制，但不允许修改
+const BigStruct = struct {
+    values: [100]i32,
+    name: []const u8,
+};
+
+fn printBigStruct(data: *const BigStruct) void {
+    std.debug.print("名称：{s}, 第一个值：{}\n", .{ data.name, data.values[0] });
+    // data.values[0] = 10; // 编译错误：常量指针不可修改
 }
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     var num: i32 = 10;
     
     // 值传递：num 不会被修改
@@ -3685,13 +3829,24 @@ pub fn main(init: std.process.Init.Minimal) void {
     
     // 指针传递：num 会被修改
     incrementPointer(&amp;num);
-    std.debug.print("incrementPointer 后：{}\n", .{num});
+    std.debug.print("调用 incrementPointer 后：{}\n", .{num});
     
     // 常量指针传递：高效且安全
-    printValue(&amp;num);
+    var big_data = BigStruct{
+        .values = [_]i32{0} ** 100,
+        .name = "测试数据",
+    };
+    big_data.values[0] = 42;
+    printBigStruct(&amp;big_data);
 }
 </code></pre>
-<h1 id="参数传递策略选择"><a class="header" href="#参数传递策略选择">参数传递策略选择</a></h1>
+<p>预期输出</p>
+<pre><code>incrementValue 结果：11
+原始值不变：10
+调用 incrementPointer 后：11
+名称：测试数据, 第一个值：42
+</code></pre>
+<h3 id="参数传递策略选择"><a class="header" href="#参数传递策略选择">参数传递策略选择</a></h3>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -3706,7 +3861,7 @@ pub fn main(init: std.process.Init.Minimal) void {
 </tbody>
 </table>
 </div>
-<h1 id="实际应用示例"><a class="header" href="#实际应用示例">实际应用示例</a></h1>
+<h3 id="实际应用示例"><a class="header" href="#实际应用示例">实际应用示例</a></h3>
 <pre><code class="language-zig">// 场景1：大型结构体的高效传递
 const BigData = struct {
     values: [1000]f32,
@@ -3736,15 +3891,14 @@ fn divideWithRemainder(a: i32, b: i32, remainder: *i32) i32 {
 }
 </code></pre>
 <h2 id="内建函数"><a class="header" href="#内建函数">内建函数</a></h2>
-<h1 id="什么是内建函数"><a class="header" href="#什么是内建函数">什么是内建函数？</a></h1>
+<h3 id="什么是内建函数"><a class="header" href="#什么是内建函数">什么是内建函数？</a></h3>
 <p>内建函数（Builtin Functions）是 Zig 提供的特殊函数，以 <code>@</code> 开头。它们：</p>
 <ul>
 <li>由编译器直接实现</li>
 <li>提供底层操作能力</li>
-<li>在编译期或运行期执行</li>
 <li>是 Zig 元编程的基础</li>
 </ul>
-<h1 id="常用内建函数分类"><a class="header" href="#常用内建函数分类">常用内建函数分类</a></h1>
+<h3 id="常用内建函数分类"><a class="header" href="#常用内建函数分类">常用内建函数分类</a></h3>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -3759,183 +3913,66 @@ fn divideWithRemainder(a: i32, b: i32, remainder: *i32) i32 {
 </tbody>
 </table>
 </div>
-<p>Zig 提供了大量内建函数，以<code>@</code>开头：</p>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     // 类型信息：获取类型的详细信息
     const type_info = @typeInfo(i32);
     std.debug.print("i32 类型信息：{}\n", .{type_info});
-    
+
     // 编译期类型推断：获取表达式的类型
     const T = @TypeOf(42);
     std.debug.print("42 的类型：{}\n", .{T});
-    
+
     // 内存操作：位重解释
-    var bytes: [4]u8 = [_]u8{ 1, 2, 3, 4 };
+    const bytes: [4]u8 = [_]u8{ 1, 2, 3, 4 };
     const as_int: u32 = @bitCast(bytes);
     std.debug.print("字节转整数：{}\n", .{as_int});
-    
+
     // 指针操作：指针与整数转换
     const ptr: *const i32 = @ptrFromInt(0x1000);
     const addr = @intFromPtr(ptr);
     std.debug.print("指针地址：{x}\n", .{addr});
-    
+
     // 编译期断言：在编译期检查条件
     comptime {
         std.debug.assert(@sizeOf(u64) == 8);
     }
 }
 </code></pre>
-<h1 id="内建函数的实际应用"><a class="header" href="#内建函数的实际应用">内建函数的实际应用</a></h1>
-<pre><code class="language-zig">// 场景1：泛型编程
-fn printTypeInfo(comptime T: type) void {
-    const info = @typeInfo(T);
-    switch (info) {
-        .Int =&gt; |int_info| {
-            std.debug.print("整数类型，位数：{}\n", .{int_info.bits});
-        },
-        .Float =&gt; {
-            std.debug.print("浮点类型\n", .{});
-        },
-        else =&gt; {
-            std.debug.print("其他类型\n", .{});
-        },
-    }
-}
-
-// 场景2：安全的类型转换
-fn safeCast(comptime T: type, value: anytype) ?T {
-    const Src = @TypeOf(value);
-    if (@typeInfo(Src) == .Int and @typeInfo(T) == .Int) {
-        if (value &gt;= std.math.minInt(T) and value &lt;= std.math.maxInt(T)) {
-            return @intCast(value);
-        }
-    }
-    return null;
-}
-
-// 场景3：内存布局检查
-fn checkStructLayout(comptime T: type) void {
-    comptime {
-        std.debug.print("类型 {} 的大小：{}\n", .{ T, @sizeOf(T) });
-        std.debug.print("类型 {} 的对齐：{}\n", .{ T, @alignOf(T) });
-    }
-}
+<p>预期输出</p>
+<pre><code>i32 类型信息：.{ .int = .{ .signedness = .signed, .bits = 32 } }
+42 的类型：comptime_int
+字节转整数：67305985
+指针地址：1000
 </code></pre>
 <h2 id="函数高级特性"><a class="header" href="#函数高级特性">函数高级特性</a></h2>
-<h1 id="anytype-参数类型"><a class="header" href="#anytype-参数类型">anytype 参数类型</a></h1>
-<h1 id="什么是-anytype"><a class="header" href="#什么是-anytype">什么是 anytype？</a></h1>
-<p><code>anytype</code> 是 Zig 的一个特殊关键字，它允许函数接受任意类型的参数。与泛型不同，<code>anytype</code> 在调用时会为每个不同的类型生成一个专门的函数版本。</p>
-<h1 id="anytype-的工作原理"><a class="header" href="#anytype-的工作原理">anytype 的工作原理</a></h1>
-<ol>
-<li><strong>编译期类型推断</strong>：编译器在调用点推断实际类型</li>
-<li><strong>单态化</strong>：为每种使用的类型生成专门的函数版本</li>
-<li><strong>类型安全</strong>：虽然接受任意类型，但仍是类型安全的</li>
-</ol>
-<h1 id="anytype-vs-泛型参数"><a class="header" href="#anytype-vs-泛型参数">anytype vs 泛型参数</a></h1>
-<pre><code class="language-zig">// 使用 anytype：更简洁，适合简单场景
-fn print(value: anytype) void {
+<h3 id="anytype-参数类型"><a class="header" href="#anytype-参数类型">anytype 参数类型</a></h3>
+<p><code>anytype</code> 允许函数接受任意类型的参数，编译器会为每种类型生成专门的函数版本（单态化）：</p>
+<pre><code class="language-zig">fn print(value: anytype) void {
     std.debug.print("{}\n", .{value});
 }
 
-// 使用泛型参数：更明确，适合复杂场景
-fn printGeneric(comptime T: type, value: T) void {
-    std.debug.print("{}\n", .{value});
-}
+print(42);      // 编译器生成 print(i32) 版本
+print(3.14);    // 编译器生成 print(f64) 版本
+print("hello"); // 编译器生成 print(*const [5:0]u8) 版本
 </code></pre>
-<p>使用 <code>anytype</code> 可以让函数接受任意类型的参数，编译器会自动推断类型：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-// 使用 anytype 的泛型函数
-// 编译器会为每种类型生成专门的版本
-fn printType(value: anytype) void {
-    const T = @TypeOf(value);
-    std.debug.print("值: {}, 类型: {}\n", .{ value, T });
-}
-
-// 获取类型信息：实现类型安全的泛型操作
-fn describeType(value: anytype) void {
-    const T = @TypeOf(value);
-    const info = @typeInfo(T);
-    
-    switch (info) {
-        .int =&gt; |int_info| {
-            std.debug.print("整数类型，位数: {}, 有符号: {}\n", .{
-                int_info.bits,
-                int_info.signedness == .signed,
-            });
-        },
-        .float =&gt; {
-            std.debug.print("浮点类型\n", .{});
-        },
-        .pointer =&gt; {
-            std.debug.print("指针类型\n", .{});
-        },
-        else =&gt; {
-            std.debug.print("其他类型\n", .{});
-        },
-    }
-}
-
-pub fn main(init: std.process.Init.Minimal) void {
-    // 每次调用都会生成专门的函数版本
-    printType(42);        // 生成 printType(i32) 版本
-    printType(3.14);      // 生成 printType(f64) 版本
-    printType("hello");   // 生成 printType(*const [5:0]u8) 版本
-    
-    describeType(@as(i32, 100));
-    describeType(@as(f64, 2.5));
-}
-</code></pre>
-<h1 id="anytype-的实际应用"><a class="header" href="#anytype-的实际应用">anytype 的实际应用</a></h1>
-<pre><code class="language-zig">// 场景1：通用比较函数
-fn max(a: anytype, b: @TypeOf(a)) @TypeOf(a) {
-    return if (a &gt; b) a else b;
-}
-
-// 场景2：通用打印函数
-fn debugPrint(value: anytype) void {
-    const T = @TypeOf(value);
-    switch (@typeInfo(T)) {
-        .Optional =&gt; {
-            if (value) |v| {
-                std.debug.print("Some({})\n", .{v});
-            } else {
-                std.debug.print("None\n", .{});
-            }
-        },
-        else =&gt; {
-            std.debug.print("{}\n", .{value});
-        },
-    }
-}
-
-// 场景3：约束 anytype 类型
-fn addNumbers(a: anytype, b: @TypeOf(a)) @TypeOf(a) {
-    const T = @TypeOf(a);
-    // 编译期检查类型是否支持加法
-    if (@typeInfo(T) != .Int and @typeInfo(T) != .Float) {
-        @compileError("addNumbers 只支持数字类型");
-    }
-    return a + b;
-}
-</code></pre>
-<h1 id="noreturn-函数类型"><a class="header" href="#noreturn-函数类型">noreturn 函数类型</a></h1>
-<h1 id="什么是-noreturn"><a class="header" href="#什么是-noreturn">什么是 noreturn？</a></h1>
+<blockquote>
+<p>📖 <strong>深入学习</strong>：anytype 的详细内容请参考<a href="#anytype-与动态类型">编译期计算与元编程</a>章节。</p>
+</blockquote>
+<h3 id="noreturn-函数类型"><a class="header" href="#noreturn-函数类型">noreturn 函数类型</a></h3>
 <p><code>noreturn</code> 是一个特殊类型，表示函数永远不会返回。这用于：</p>
 <ul>
 <li>表示程序终止</li>
 <li>无限循环</li>
 <li>错误处理（如 panic）</li>
 </ul>
-<h1 id="为什么需要-noreturn"><a class="header" href="#为什么需要-noreturn">为什么需要 noreturn？</a></h1>
+<h4 id="为什么需要-noreturn"><a class="header" href="#为什么需要-noreturn">为什么需要 noreturn？</a></h4>
 <ol>
 <li><strong>类型系统完整性</strong>：让编译器知道某些代码路径不会继续</li>
 <li><strong>优化提示</strong>：编译器可以进行更好的控制流分析</li>
 <li><strong>代码清晰</strong>：明确表达函数的意图</li>
 </ol>
-<p><code>noreturn</code> 用于表示永远不会返回的函数：</p>
 <pre><code class="language-zig">const std = @import("std");
 
 // 永不返回的函数：无限循环
@@ -3946,29 +3983,21 @@ fn panicHandler(message: []const u8) noreturn {
 
 // 退出程序：系统调用
 fn exitProgram(code: u8) noreturn {
-    std.os.exit(code);
-    // exit 之后代码不会执行
+    std.process.exit(code);
 }
 
-// noreturn 在控制流中的作用
-fn assertPositive(value: i32) void {
-    if (value &lt; 0) {
-        // 编译器知道这里不会返回，所以后续代码是可达的
-        std.os.exit(1);
-    }
-    std.debug.print("值是正数: {}\n", .{value});
-}
-
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     const should_panic = false;
     
     if (should_panic) {
         panicHandler("测试 panic");
-        // 这里不需要处理返回值，因为 panicHandler 不会返回
     }
     
     std.debug.print("程序正常执行\n", .{});
 }
+</code></pre>
+<p>预期输出</p>
+<pre><code>程序正常执行
 </code></pre>
 <p><strong>使用场景</strong>：</p>
 <ul>
@@ -3976,43 +4005,61 @@ pub fn main(init: std.process.Init.Minimal) void {
 <li>无限循环</li>
 <li>程序退出</li>
 </ul>
-<h1 id="noreturn-的类型系统作用"><a class="header" href="#noreturn-的类型系统作用">noreturn 的类型系统作用</a></h1>
-<pre><code class="language-zig">// noreturn 可以赋值给任何类型
+<h4 id="noreturn-的类型系统作用"><a class="header" href="#noreturn-的类型系统作用">noreturn 的类型系统作用</a></h4>
+<p><code>noreturn</code> 在类型系统中有一个特殊属性：<strong>可以隐式转换为任何类型</strong>。这是因为一个永不返回的函数永远不会产生值，所以它可以出现在任何期望某种类型值的上下文中。</p>
+<p><strong>类型理论解释</strong>：</p>
+<ul>
+<li><code>noreturn</code> 是<strong>底类型（Bottom Type）</strong>，也称为空类型</li>
+<li>在类型理论中，底类型是所有类型的子类型</li>
+<li>因为没有任何值属于底类型，所以它不会违反类型安全</li>
+</ul>
+<p><strong>实际意义</strong>：</p>
+<ol>
+<li><strong>简化控制流</strong>：在条件分支中使用返回 <code>noreturn</code> 类型的函数，编译器知道该分支不会继续</li>
+<li><strong>避免死代码警告</strong>：编译器不会警告 <code>noreturn</code> 之后的代码不可达</li>
+<li><strong>类型安全</strong>：确保所有代码路径都返回正确的类型</li>
+</ol>
+<pre><code class="language-zig">// 示例1：noreturn 可以赋值给任何类型
 fn getValueOrPanic(maybe_value: ?i32) i32 {
-    // 如果 panic，返回类型是 noreturn，可以赋值给 i32
+    // orelse 块返回 noreturn，可以赋值给 i32
     return maybe_value orelse {
         std.debug.print("错误：值为 null\n", .{});
-        std.os.exit(1);
+        std.process.exit(1);
     };
 }
 
-// 在 switch 中使用
+// 示例2：在 switch 中使用
 fn classify(n: i32) []const u8 {
     return switch (n) {
         0...10 =&gt; "小",
         11...100 =&gt; "中",
         else =&gt; {
+            // else 分支返回 noreturn，可以赋值给 []const u8
             std.debug.print("无效值: {}\n", .{n});
-            std.os.exit(1);
+            std.process.exit(1);
         },
     };
 }
 </code></pre>
-<h1 id="export-函数"><a class="header" href="#export-函数">export 函数</a></h1>
-<h1 id="什么是-export"><a class="header" href="#什么是-export">什么是 export？</a></h1>
-<p><code>export</code> 关键字使函数在生成的目标文件中可见，并遵循 C ABI 调用约定。这用于：</p>
+<h3 id="export-关键字"><a class="header" href="#export-关键字">export 关键字</a></h3>
+<p><code>export</code> 关键字使函数或变量作为<strong>全局符号</strong>导出到目标文件中，并遵循 C ABI 调用约定。这用于：</p>
 <ul>
-<li>创建可供其他语言调用的库</li>
-<li>与 C 代码互操作</li>
-<li>创建动态链接库</li>
+<li>创建动态库或静态库供其他语言调用</li>
+<li>导出 C ABI 兼容的函数和变量</li>
 </ul>
-<h1 id="export-的特点"><a class="header" href="#export-的特点">export 的特点</a></h1>
-<ol>
-<li><strong>C ABI 兼容</strong>：函数签名遵循 C 语言的调用约定</li>
-<li><strong>符号可见</strong>：函数符号在目标文件中可见</li>
-<li><strong>名称修饰</strong>：函数名不会被修饰，保持原样</li>
-</ol>
-<p><code>export</code> 使函数在生成的目标文件中可见，并遵循 C ABI：</p>
+<p><strong>符号可见性对比</strong>：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>声明方式</th><th>当前编译单元</th><th>当前模块</th><th>其他目标文件</th></tr>
+</thead>
+<tbody>
+<tr><td><code>fn foo()</code></td><td>✅ 可见</td><td>❌ 不可见</td><td>❌ 不可见</td></tr>
+<tr><td><code>pub fn foo()</code></td><td>✅ 可见</td><td>✅ 可见</td><td>❌ 不可见</td></tr>
+<tr><td><code>export fn foo()</code></td><td>✅ 可见</td><td>✅ 可见</td><td>✅ 可见（全局符号）</td></tr>
+</tbody>
+</table>
+</div>
 <pre><code class="language-zig">const std = @import("std");
 
 // 导出为 C ABI 兼容的函数
@@ -4034,26 +4081,23 @@ export fn incrementCounter() void {
     globalCounter += 1;
 }
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     const result = addNumbers(10, 20);
     std.debug.print("结果: {}\n", .{result});
 }
 </code></pre>
-<p><strong>用途</strong>：</p>
-<ul>
-<li>创建动态库/静态库</li>
-<li>与其他语言互操作</li>
-<li>提供C兼容接口</li>
-</ul>
-<h1 id="extern-函数"><a class="header" href="#extern-函数">extern 函数</a></h1>
-<p><code>extern</code> 用于声明外部库的函数：</p>
+<h3 id="extern-关键字"><a class="header" href="#extern-关键字">extern 关键字</a></h3>
+<p><code>extern</code> 用于声明外部库的函数或变量：</p>
 <pre><code class="language-zig">const std = @import("std");
 
 // 声明外部 C 库函数
 extern "c" fn printf(format: [*:0]const u8, ...) c_int;
 extern "c" fn atan2(a: f64, b: f64) f64;
 
-pub fn main(init: std.process.Init.Minimal) void {
+// 声明外部变量
+extern "c" var errno: c_int;
+
+pub fn main(_: std.process.Init.Minimal) void {
     // 调用 C 标准库函数
     _ = printf("Hello from C!\n");
     
@@ -4065,7 +4109,7 @@ pub fn main(init: std.process.Init.Minimal) void {
 <pre><code class="language-bash"># 编译时链接数学库
 zig build-exe main.zig -lc -lm
 </code></pre>
-<h1 id="inline-函数"><a class="header" href="#inline-函数">inline 函数</a></h1>
+<h3 id="inline-关键字"><a class="header" href="#inline-关键字">inline 关键字</a></h3>
 <p><code>inline</code> 强制函数内联，否则编译失败：</p>
 <pre><code class="language-zig">const std = @import("std");
 
@@ -4074,13 +4118,12 @@ inline fn square(x: i32) i32 {
     return x * x;
 }
 
-// 条件内联
+// 普通编译器决定是否内联
 fn maybeInline(x: i32) i32 {
-    // 编译器决定是否内联
     return x + 1;
 }
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     // square 会被内联展开
     const result = square(5);
     std.debug.print("平方: {}\n", .{result});
@@ -4091,6 +4134,9 @@ pub fn main(init: std.process.Init.Minimal) void {
         std.debug.assert(val == 100);
     }
 }
+</code></pre>
+<p>预期输出</p>
+<pre><code>平方: 25
 </code></pre>
 <p><strong>何时使用 inline</strong>：</p>
 <ul>
@@ -4823,179 +4869,7 @@ fn processFile(path: []const u8) !void {
     };
 }
 </code></pre>
-<hr>
-<h1 id="章节练习题"><a class="header" href="#章节练习题">章节练习题</a></h1>
-<h1 id="基础题"><a class="header" href="#基础题">基础题</a></h1>
-<p><strong>题目1</strong>：编写一个函数，实现安全的整数除法，使用错误处理。</p>
-<p><strong>要求</strong>：</p>
-<ul>
-<li>函数签名为 <code>fn safeDivide(a: i32, b: i32) !i32</code></li>
-<li>除数为 0 时返回错误 <code>error.DivisionByZero</code></li>
-<li>正常情况返回商</li>
-</ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-const MathError = error{
-    DivisionByZero,
-};
-
-fn safeDivide(a: i32, b: i32) MathError!i32 {
-    if (b == 0) return error.DivisionByZero;
-    return @divTrunc(a, b);
-}
-
-pub fn main(init: std.process.Init.Minimal) void {
-    const result = safeDivide(10, 2) catch |err| {
-        std.debug.print("错误：{}\n", .{err});
-        return;
-    };
-    std.debug.print("结果：{}\n", .{result});
-}
-</code></pre>
-<p><strong>题目2</strong>：编写一个函数，解析字符串为整数，处理可能的错误。</p>
-<p><strong>要求</strong>：</p>
-<ul>
-<li>函数签名为 <code>fn parseInt(str: []const u8) !i32</code></li>
-<li>无效输入返回错误 <code>error.InvalidInput</code></li>
-<li>使用 <code>std.fmt.parseInt</code></li>
-</ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">fn parseInt(str: []const u8) !i32 {
-    return std.fmt.parseInt(i32, str, 10) catch |err| {
-        return error.InvalidInput;
-    };
-}
-</code></pre>
-<p><strong>题目3</strong>：编写一个函数，演示 <code>try</code> 和 <code>catch</code> 的使用。</p>
-<p><strong>要求</strong>：</p>
-<ul>
-<li>定义错误集 <code>FileError</code></li>
-<li>实现文件读取函数（模拟）</li>
-<li>使用 <code>try</code> 和 <code>catch</code> 处理错误</li>
-</ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">const FileError = error{
-    FileNotFound,
-    PermissionDenied,
-};
-
-fn openFile(path: []const u8) FileError!void {
-    if (std.mem.eql(u8, path, "secret.txt")) {
-        return error.PermissionDenied;
-    }
-    std.debug.print("文件已打开：{s}\n", .{path});
-}
-
-pub fn main(init: std.process.Init.Minimal) void {
-    openFile("test.txt") catch |err| {
-        std.debug.print("错误：{}\n", .{err});
-    };
-}
-</code></pre>
-<h1 id="进阶题"><a class="header" href="#进阶题">进阶题</a></h1>
-<p><strong>题目1</strong>：实现一个函数，使用 <code>errdefer</code> 进行资源清理。</p>
-<p><strong>要求</strong>：</p>
-<ul>
-<li>模拟资源分配</li>
-<li>错误时自动清理资源</li>
-<li>成功时手动清理</li>
-</ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">const ResourceError = error{
-    AllocationFailed,
-    InitializationFailed,
-};
-
-fn createResource() ResourceError!void {
-    std.debug.print("分配资源...\n", .{});
-    errdefer std.debug.print("清理资源（错误）\n", .{});
-    
-    // 模拟初始化失败
-    return error.InitializationFailed;
-}
-
-pub fn main(init: std.process.Init.Minimal) void {
-    createResource() catch |err| {
-        std.debug.print("错误：{}\n", .{err});
-    };
-}
-</code></pre>
-<p><strong>题目2</strong>：实现一个函数，使用 <code>catch |err| switch</code> 处理多种错误。</p>
-<p><strong>要求</strong>：</p>
-<ul>
-<li>定义包含至少 3 种错误的错误集</li>
-<li>对每种错误提供不同的处理方式</li>
-<li>使用 switch 处理错误</li>
-</ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">const NetworkError = error{
-    ConnectionFailed,
-    Timeout,
-    InvalidResponse,
-};
-
-fn fetchData() NetworkError![]const u8 {
-    return error.Timeout;
-}
-
-pub fn main(init: std.process.Init.Minimal) void {
-    const data = fetchData() catch |err| switch (err) {
-        error.ConnectionFailed =&gt; {
-            std.debug.print("连接失败，重试中...\n", .{});
-            return;
-        },
-        error.Timeout =&gt; {
-            std.debug.print("超时，使用缓存数据\n", .{});
-            return;
-        },
-        error.InvalidResponse =&gt; {
-            std.debug.print("无效响应，记录日志\n", .{});
-            return;
-        },
-    };
-    _ = data;
-}
-</code></pre>
-<h1 id="挑战题"><a class="header" href="#挑战题">挑战题</a></h1>
-<p><strong>题目</strong>：实现一个简单的错误传播链，演示多层函数的错误处理。</p>
-<p><strong>要求</strong>：</p>
-<ul>
-<li>实现至少 3 层函数调用</li>
-<li>每层函数都可能返回错误</li>
-<li>使用 <code>try</code> 传播错误</li>
-<li>在顶层统一处理错误</li>
-</ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">const AppError = error{
-    ConfigLoadFailed,
-    DatabaseConnectFailed,
-    QueryFailed,
-};
-
-fn loadConfig() AppError!void {
-    std.debug.print("加载配置...\n", .{});
-}
-
-fn connectDatabase() AppError!void {
-    try loadConfig();
-    std.debug.print("连接数据库...\n", .{});
-}
-
-fn queryData() AppError!void {
-    try connectDatabase();
-    std.debug.print("查询数据...\n", .{});
-}
-
-pub fn main(init: std.process.Init.Minimal) void {
-    queryData() catch |err| {
-        std.debug.print("应用错误：{}\n", .{err});
-        return;
-    };
-    std.debug.print("操作成功！\n", .{});
-}
-</code></pre>
-<hr><div style="break-before: page; page-break-before: always;"></div>
+<div style="break-before: page; page-break-before: always;"></div>
 <h1 id="draft构建系统"><a class="header" href="#draft构建系统">【draft】构建系统</a></h1>
 <blockquote>
 <p>💡 <strong>重要章节</strong>：构建系统是 Zig 的核心特性之一，掌握它对于项目开发至关重要。</p>
@@ -5594,8 +5468,8 @@ zig build --help
 <li><strong>示例项目</strong>：https://github.com/ziglang/zig/tree/master/build_examples</li>
 </ul>
 <hr>
-<h1 id="章节练习题-1"><a class="header" href="#章节练习题-1">章节练习题</a></h1>
-<h1 id="基础题-1"><a class="header" href="#基础题-1">基础题</a></h1>
+<h1 id="章节练习题"><a class="header" href="#章节练习题">章节练习题</a></h1>
+<h1 id="基础题"><a class="header" href="#基础题">基础题</a></h1>
 <p><strong>题目1</strong>：创建一个简单的 build.zig 文件，构建一个可执行程序。</p>
 <p><strong>要求</strong>：</p>
 <ul>
@@ -5662,7 +5536,7 @@ pub fn build(b: *std.Build) void {
     greet_step.dependOn(&amp;greet_cmd.step);
 }
 </code></pre>
-<h1 id="进阶题-1"><a class="header" href="#进阶题-1">进阶题</a></h1>
+<h1 id="进阶题"><a class="header" href="#进阶题">进阶题</a></h1>
 <p><strong>题目1</strong>：配置项目依赖，添加一个外部库。</p>
 <p><strong>要求</strong>：</p>
 <ul>
@@ -5722,7 +5596,7 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(&amp;tests.step);
 }
 </code></pre>
-<h1 id="挑战题-1"><a class="header" href="#挑战题-1">挑战题</a></h1>
+<h1 id="挑战题"><a class="header" href="#挑战题">挑战题</a></h1>
 <p><strong>题目</strong>：创建一个多目标构建配置，同时构建库和可执行程序。</p>
 <p><strong>要求</strong>：</p>
 <ul>
@@ -7160,8 +7034,8 @@ zig test src/main.zig
 zig test src/main.zig --test-filter "fibonacci"
 </code></pre>
 <hr>
-<h1 id="章节练习题-2"><a class="header" href="#章节练习题-2">章节练习题</a></h1>
-<h1 id="基础题-2"><a class="header" href="#基础题-2">基础题</a></h1>
+<h1 id="章节练习题-1"><a class="header" href="#章节练习题-1">章节练习题</a></h1>
+<h1 id="基础题-1"><a class="header" href="#基础题-1">基础题</a></h1>
 <p><strong>题目1</strong>：使用 <code>std.mem</code> 模块实现字符串反转。</p>
 <p><strong>要求</strong>：</p>
 <ul>
@@ -7266,7 +7140,7 @@ pub fn main(init: std.process.Init.Minimal) !void {
     }
 }
 </code></pre>
-<h1 id="进阶题-2"><a class="header" href="#进阶题-2">进阶题</a></h1>
+<h1 id="进阶题-1"><a class="header" href="#进阶题-1">进阶题</a></h1>
 <p><strong>题目1</strong>：使用 <code>std.fs</code> 模块读取文件内容。</p>
 <p><strong>要求</strong>：</p>
 <ul>
@@ -7321,7 +7195,7 @@ pub fn main(init: std.process.Init.Minimal) !void {
     std.debug.print("姓名：{s}, 年龄：{}\n", .{ person.name, person.age });
 }
 </code></pre>
-<h1 id="挑战题-2"><a class="header" href="#挑战题-2">挑战题</a></h1>
+<h1 id="挑战题-1"><a class="header" href="#挑战题-1">挑战题</a></h1>
 <p><strong>题目</strong>：实现一个简单的命令行参数解析器，使用 <code>std.process</code> 模块。</p>
 <p><strong>要求</strong>：</p>
 <ul>
@@ -8035,7 +7909,7 @@ const result = max(i32, 10, 20);  // 显式指定类型
 <li>C++：类型推断是隐式的，错误信息难以理解</li>
 <li>Zig：类型是显式参数，错误信息清晰</li>
 </ul>
-<h1 id="实际应用场景-3"><a class="header" href="#实际应用场景-3">实际应用场景</a></h1>
+<h1 id="实际应用场景-2"><a class="header" href="#实际应用场景-2">实际应用场景</a></h1>
 <p><strong>场景1：泛型数据结构</strong></p>
 <pre><code class="language-zig">// 编译期生成不同类型的栈
 fn Stack(comptime T: type) type {
@@ -8553,22 +8427,107 @@ pub fn main(init: std.process.Init.Minimal) void {
 }
 </code></pre>
 <h4 id="95-anytype-与动态类型"><a class="header" href="#95-anytype-与动态类型">9.5 anytype 与动态类型</a></h4>
-<p><code>anytype</code> 是 Zig 中的动态类型占位符，在编译期确定具体类型：</p>
+<p><code>anytype</code> 是 Zig 的特殊关键字，允许函数接受任意类型的参数。编译器会在调用点推断实际类型，并为每种类型生成专门的函数版本（单态化）。</p>
+<h5 id="anytype-的工作原理"><a class="header" href="#anytype-的工作原理">anytype 的工作原理</a></h5>
+<ol>
+<li><strong>编译期类型推断</strong>：编译器在调用点推断实际类型</li>
+<li><strong>单态化</strong>：为每种使用的类型生成专门的函数版本</li>
+<li><strong>类型安全</strong>：虽然接受任意类型，但仍是类型安全的</li>
+</ol>
+<h5 id="anytype-vs-泛型参数"><a class="header" href="#anytype-vs-泛型参数">anytype vs 泛型参数</a></h5>
+<pre><code class="language-zig">// 使用 anytype：更简洁，适合简单场景
+fn print(value: anytype) void {
+    std.debug.print("{}\n", .{value});
+}
+
+// 使用泛型参数：更明确，适合复杂场景
+fn printGeneric(comptime T: type, value: T) void {
+    std.debug.print("{}\n", .{value});
+}
+</code></pre>
+<p><strong>关键区别</strong>：</p>
+<ul>
+<li><code>anytype</code>：类型推断是隐式的，代码更简洁</li>
+<li><code>comptime T: type</code>：类型参数是显式的，更适合复杂场景</li>
+</ul>
+<h5 id="基本使用示例"><a class="header" href="#基本使用示例">基本使用示例</a></h5>
 <pre><code class="language-zig">const std = @import("std");
 
-fn printValue(value: anytype) void {
+// 使用 anytype 的泛型函数
+// 编译器会为每种类型生成专门的版本
+fn printType(value: anytype) void {
     const T = @TypeOf(value);
-    std.debug.print("类型：{}, 值：{}\n", .{ T, value });
+    std.debug.print("值: {}, 类型: {}\n", .{ value, T });
+}
+
+// 获取类型信息：实现类型安全的泛型操作
+fn describeType(value: anytype) void {
+    const T = @TypeOf(value);
+    const info = @typeInfo(T);
+    
+    switch (info) {
+        .int =&gt; |int_info| {
+            std.debug.print("整数类型，位数: {}, 有符号: {}\n", .{
+                int_info.bits,
+                int_info.signedness == .signed,
+            });
+        },
+        .float =&gt; {
+            std.debug.print("浮点类型\n", .{});
+        },
+        .pointer =&gt; {
+            std.debug.print("指针类型\n", .{});
+        },
+        else =&gt; {
+            std.debug.print("其他类型\n", .{});
+        },
+    }
 }
 
 pub fn main(init: std.process.Init.Minimal) void {
-    printValue(42);         // i32
-    printValue(3.14);        // f64
-    printValue("hello");     // *const [5:0]u8
-    printValue(true);        // bool
+    // 每次调用都会生成专门的函数版本
+    printType(42);        // 生成 printType(i32) 版本
+    printType(3.14);      // 生成 printType(f64) 版本
+    printType("hello");   // 生成 printType(*const [5:0]u8) 版本
+    
+    describeType(@as(i32, 100));
+    describeType(@as(f64, 2.5));
 }
 </code></pre>
-<p><strong>使用 @TypeOf 和 @Type：</strong></p>
+<h5 id="anytype-的实际应用"><a class="header" href="#anytype-的实际应用">anytype 的实际应用</a></h5>
+<pre><code class="language-zig">// 场景1：通用比较函数
+fn max(a: anytype, b: @TypeOf(a)) @TypeOf(a) {
+    return if (a &gt; b) a else b;
+}
+
+// 场景2：通用打印函数
+fn debugPrint(value: anytype) void {
+    const T = @TypeOf(value);
+    switch (@typeInfo(T)) {
+        .Optional =&gt; {
+            if (value) |v| {
+                std.debug.print("Some({})\n", .{v});
+            } else {
+                std.debug.print("None\n", .{});
+            }
+        },
+        else =&gt; {
+            std.debug.print("{}\n", .{value});
+        },
+    }
+}
+
+// 场景3：约束 anytype 类型
+fn addNumbers(a: anytype, b: @TypeOf(a)) @TypeOf(a) {
+    const T = @TypeOf(a);
+    // 编译期检查类型是否支持加法
+    if (@typeInfo(T) != .Int and @typeInfo(T) != .Float) {
+        @compileError("addNumbers 只支持数字类型");
+    }
+    return a + b;
+}
+</code></pre>
+<h5 id="使用-typeof-和-type"><a class="header" href="#使用-typeof-和-type">使用 @TypeOf 和 @Type</a></h5>
 <pre><code class="language-zig">const std = @import("std");
 
 pub fn main(init: std.process.Init.Minimal) void {
@@ -8637,143 +8596,6 @@ pub fn main(init: std.process.Init.Minimal) void {
     std.debug.print("不透明类型用于隐藏实现细节\n", .{});
 }
 </code></pre>
-<hr>
-<h3 id="章节练习题-3"><a class="header" href="#章节练习题-3">章节练习题</a></h3>
-<h4 id="基础题-3"><a class="header" href="#基础题-3">基础题</a></h4>
-<p><strong>题目1</strong>：编写一个 comptime 函数，计算数组长度。</p>
-<p><strong>要求</strong>：</p>
-<ul>
-<li>函数签名为 <code>fn arrayLength(comptime T: type, comptime size: usize) usize</code></li>
-<li>在编译期返回数组长度</li>
-<li>使用 <code>comptime</code> 关键字</li>
-</ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-fn arrayLength(comptime T: type, comptime size: usize) usize {
-    return size;
-}
-
-pub fn main(init: std.process.Init.Minimal) void {
-    const len = comptime arrayLength(i32, 10);
-    std.debug.print("数组长度：{}\n", .{len});
-}
-</code></pre>
-<p><strong>题目2</strong>：使用 <code>comptime</code> 实现类型检查函数。</p>
-<p><strong>要求</strong>：</p>
-<ul>
-<li>函数签名为 <code>fn isInteger(comptime T: type) bool</code></li>
-<li>检查类型是否为整数类型</li>
-<li>使用 <code>@typeInfo</code></li>
-</ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">fn isInteger(comptime T: type) bool {
-    return switch (@typeInfo(T)) {
-        .int =&gt; true,
-        else =&gt; false,
-    };
-}
-
-pub fn main(init: std.process.Init.Minimal) void {
-    std.debug.print("i32 是整数：{}\n", .{isInteger(i32)});
-    std.debug.print("f32 是整数：{}\n", .{isInteger(f32)});
-}
-</code></pre>
-<p><strong>题目3</strong>：编写一个 comptime 函数，计算斐波那契数列。</p>
-<p><strong>要求</strong>：</p>
-<ul>
-<li>函数签名为 <code>fn fib(comptime n: u32) u32</code></li>
-<li>在编译期计算结果</li>
-<li>使用递归实现</li>
-</ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">fn fib(comptime n: u32) u32 {
-    if (n &lt;= 1) return n;
-    return fib(n - 1) + fib(n - 2);
-}
-
-pub fn main(init: std.process.Init.Minimal) void {
-    const result = comptime fib(10);
-    std.debug.print("fib(10) = {}\n", .{result});
-}
-</code></pre>
-<h4 id="进阶题-3"><a class="header" href="#进阶题-3">进阶题</a></h4>
-<p><strong>题目1</strong>：实现一个 comptime 类型转换函数。</p>
-<p><strong>要求</strong>：</p>
-<ul>
-<li>函数签名为 <code>fn typeName(comptime T: type) []const u8</code></li>
-<li>返回类型的名称字符串</li>
-<li>使用 <code>@typeName</code></li>
-</ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">fn typeName(comptime T: type) []const u8 {
-    return @typeName(T);
-}
-
-pub fn main(init: std.process.Init.Minimal) void {
-    std.debug.print("类型名称：{s}\n", .{typeName(i32)});
-    std.debug.print("类型名称：{s}\n", .{typeName([]const u8)});
-}
-</code></pre>
-<p><strong>题目2</strong>：使用 <code>comptime</code> 实现泛型最大值函数。</p>
-<p><strong>要求</strong>：</p>
-<ul>
-<li>函数签名为 <code>fn max(comptime T: type, a: T, b: T) T</code></li>
-<li>支持多种数值类型</li>
-<li>使用 <code>comptime</code> 约束类型</li>
-</ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">fn max(comptime T: type, a: T, b: T) T {
-    return if (a &gt; b) a else b;
-}
-
-pub fn main(init: std.process.Init.Minimal) void {
-    std.debug.print("max(i32, 10, 20) = {}\n", .{max(i32, 10, 20)});
-    std.debug.print("max(f64, 3.14, 2.71) = {}\n", .{max(f64, 3.14, 2.71)});
-}
-</code></pre>
-<h4 id="挑战题-3"><a class="header" href="#挑战题-3">挑战题</a></h4>
-<p><strong>题目</strong>：实现一个 comptime 字符串哈希函数。</p>
-<p><strong>要求</strong>：</p>
-<ul>
-<li>函数签名为 <code>fn hash(comptime str: []const u8) u32</code></li>
-<li>在编译期计算字符串哈希值</li>
-<li>使用简单的哈希算法（如 DJB2）</li>
-</ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">fn hash(comptime str: []const u8) u32 {
-    var h: u32 = 5381;
-    for (str) |c| {
-        h = ((h &lt;&lt; 5) + h) + c;
-    }
-    return h;
-}
-
-pub fn main(init: std.process.Init.Minimal) void {
-    const h1 = comptime hash("hello");
-    const h2 = comptime hash("world");
-    std.debug.print("hash(\"hello\") = {}\n", .{h1});
-    std.debug.print("hash(\"world\") = {}\n", .{h2});
-}
-</code></pre>
-<hr>
-<blockquote>
-<p>💡 <strong>章节过渡</strong>：从编译期计算到泛型编程</p>
-<p>在<a href="#draft编译期计算与元编程">编译期计算与元编程</a>中，我们学习了编译期计算（comptime）的强大功能，掌握了如何在编译阶段完成计算、类型反射和代码生成。
-现在，我们将学习泛型编程，了解如何利用编译期计算实现类型参数化的代码复用。</p>
-<p><strong>为什么编译期计算是泛型编程的基础？</strong></p>
-<ol>
-<li><strong>类型参数化</strong>：泛型使用 <code>comptime T: type</code> 参数，在编译期确定具体类型</li>
-<li><strong>代码生成</strong>：泛型函数在编译期为每种类型生成特化代码</li>
-<li><strong>零成本抽象</strong>：编译期泛型没有运行时开销</li>
-</ol>
-<p><strong>学习建议</strong>：</p>
-<ul>
-<li>确保你已经理解了 <code>comptime</code> 的基本用法</li>
-<li>回顾类型反射（<code>@typeInfo</code>、<code>@Type</code>）的相关知识</li>
-<li>准备好将编译期计算应用到实际编程中</li>
-</ul>
-</blockquote>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="draft泛型编程"><a class="header" href="#draft泛型编程">【draft】泛型编程</a></h1>
 <blockquote>
@@ -8810,7 +8632,7 @@ fn maxU8(a: u8, b: u8) u8 {
 <li><strong>类型安全</strong>：编译期完整检查，保证类型正确性</li>
 <li><strong>显式优于隐式</strong>：类型参数必须显式标注 <code>comptime</code></li>
 </ol>
-<h1 id="与其他语言的对比-1"><a class="header" href="#与其他语言的对比-1">与其他语言的对比</a></h1>
+<h1 id="与其他语言的对比"><a class="header" href="#与其他语言的对比">与其他语言的对比</a></h1>
 <p><strong>C++ 模板</strong>：</p>
 <pre><code class="language-cpp">// C++ 模板
 template&lt;typename T&gt;
@@ -12057,241 +11879,6 @@ pub fn main(init: std.process.Init.Minimal) void {
     std.debug.print("饱和加法结果：{}\n", .{saturated});
 }
 </code></pre>
-<hr>
-<h1 id="章节练习题-4"><a class="header" href="#章节练习题-4">章节练习题</a></h1>
-<h1 id="基础题-4"><a class="header" href="#基础题-4">基础题</a></h1>
-<p><strong>题目1</strong>：使用 <code>GeneralPurposeAllocator</code> 分配和释放内存。</p>
-<p><strong>要求</strong>：</p>
-<ul>
-<li>分配一个包含 10 个整数的切片</li>
-<li>初始化切片元素</li>
-<li>使用 <code>defer</code> 确保内存释放</li>
-</ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn main(init: std.process.Init.Minimal) !void {
-    var gpa: std.heap.DebugAllocator(.{}) = .init;
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
-    
-    var slice = try allocator.alloc(i32, 10);
-    defer allocator.free(slice);
-    
-    for (slice, 0..) |*item, i| {
-        item.* = @intCast(i);
-    }
-    
-    std.debug.print("切片：{any}\n", .{slice});
-}
-</code></pre>
-<p><strong>题目2</strong>：使用 <code>ArenaAllocator</code> 管理临时内存。</p>
-<p><strong>要求</strong>：</p>
-<ul>
-<li>创建 ArenaAllocator</li>
-<li>进行多次分配</li>
-<li>一次性释放所有内存</li>
-</ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn main(init: std.process.Init.Minimal) !void {
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    defer arena.deinit();
-    const allocator = arena.allocator();
-    
-    var slice1 = try allocator.alloc(i32, 10);
-    var slice2 = try allocator.alloc(u8, 100);
-    
-    _ = slice1;
-    _ = slice2;
-    
-    std.debug.print("Arena 分配成功\n", .{});
-}
-</code></pre>
-<p><strong>题目3</strong>：使用 <code>FixedBufferAllocator</code> 在栈上分配内存。</p>
-<p><strong>要求</strong>：</p>
-<ul>
-<li>创建固定大小的缓冲区</li>
-<li>使用 FixedBufferAllocator</li>
-<li>分配并使用内存</li>
-</ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn main(init: std.process.Init.Minimal) !void {
-    var buffer: [1024]u8 = undefined;
-    var fba = std.heap.FixedBufferAllocator.init(&amp;buffer);
-    const allocator = fba.allocator();
-    
-    var slice = try allocator.alloc(u8, 100);
-    @memset(slice, 0);
-    
-    std.debug.print("FixedBuffer 分配成功\n", .{});
-}
-</code></pre>
-<h1 id="进阶题-4"><a class="header" href="#进阶题-4">进阶题</a></h1>
-<p><strong>题目1</strong>：实现一个简单的内存池。</p>
-<p><strong>要求</strong>：</p>
-<ul>
-<li>预分配固定大小的内存块</li>
-<li>提供 alloc 和 free 方法</li>
-<li>重用已释放的内存块</li>
-</ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-const MemoryPool = struct {
-    blocks: [][]u8,
-    used: []bool,
-    block_size: usize,
-    
-    fn init(allocator: std.mem.Allocator, count: usize, block_size: usize) !MemoryPool {
-        var blocks = try allocator.alloc([]u8, count);
-        var used = try allocator.alloc(bool, count);
-        
-        for (0..count) |i| {
-            blocks[i] = try allocator.alloc(u8, block_size);
-            used[i] = false;
-        }
-        
-        return MemoryPool{
-            .blocks = blocks,
-            .used = used,
-            .block_size = block_size,
-        };
-    }
-    
-    fn alloc(self: *MemoryPool) ?[]u8 {
-        for (self.used, 0..) |*is_used, i| {
-            if (!is_used.*) {
-                is_used.* = true;
-                return self.blocks[i];
-            }
-        }
-        return null;
-    }
-    
-    fn free(self: *MemoryPool, block: []u8) void {
-        for (self.blocks, 0..) |b, i| {
-            if (b.ptr == block.ptr) {
-                self.used[i] = false;
-                return;
-            }
-        }
-    }
-};
-</code></pre>
-<p><strong>题目2</strong>：使用 <code>std.heap.LoggingAllocator</code> 跟踪内存分配。</p>
-<p><strong>要求</strong>：</p>
-<ul>
-<li>包装现有分配器</li>
-<li>记录所有分配和释放操作</li>
-<li>输出日志信息</li>
-</ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn main(init: std.process.Init.Minimal) !void {
-    var gpa: std.heap.DebugAllocator(.{}) = .init;
-    defer _ = gpa.deinit();
-    
-    var logging = std.heap.LoggingAllocator(
-        .debug,
-        .debug,
-    ).init(gpa.allocator());
-    const allocator = logging.allocator();
-    
-    var slice = try allocator.alloc(u8, 100);
-    defer allocator.free(slice);
-    
-    std.debug.print("Logging 分配器测试完成\n", .{});
-}
-</code></pre>
-<h1 id="挑战题-4"><a class="header" href="#挑战题-4">挑战题</a></h1>
-<p><strong>题目</strong>：实现一个自定义分配器，统计内存使用情况。</p>
-<p><strong>要求</strong>：</p>
-<ul>
-<li>包装现有分配器</li>
-<li>统计总分配次数、总释放次数、当前使用量</li>
-<li>提供查询接口</li>
-</ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-const StatsAllocator = struct {
-    parent: std.mem.Allocator,
-    alloc_count: usize,
-    free_count: usize,
-    current_bytes: usize,
-    
-    fn init(parent: std.mem.Allocator) StatsAllocator {
-        return StatsAllocator{
-            .parent = parent,
-            .alloc_count = 0,
-            .free_count = 0,
-            .current_bytes = 0,
-        };
-    }
-    
-    fn allocator(self: *StatsAllocator) std.mem.Allocator {
-        return std.mem.Allocator{
-            .ptr = self,
-            .vtable = &amp;.{
-                .alloc = alloc,
-                .resize = resize,
-                .free = free,
-            },
-        };
-    }
-    
-    fn alloc(ctx: *anyopaque, len: usize, ptr_align: u8, ret_addr: usize) ?[*]u8 {
-        const self: *StatsAllocator = @ptrCast(@alignCast(ctx));
-        const result = self.parent.rawAlloc(len, ptr_align, ret_addr);
-        if (result) |_| {
-            self.alloc_count += 1;
-            self.current_bytes += len;
-        }
-        return result;
-    }
-    
-    fn resize(ctx: *anyopaque, buf: []u8, buf_align: u8, new_len: usize, ret_addr: usize) bool {
-        const self: *StatsAllocator = @ptrCast(@alignCast(ctx));
-        return self.parent.rawResize(buf, buf_align, new_len, ret_addr);
-    }
-    
-    fn free(ctx: *anyopaque, buf: []u8, buf_align: u8, ret_addr: usize) void {
-        const self: *StatsAllocator = @ptrCast(@alignCast(ctx));
-        self.parent.rawFree(buf, buf_align, ret_addr);
-        self.free_count += 1;
-        self.current_bytes -= buf.len;
-    }
-    
-    fn printStats(self: *StatsAllocator) void {
-        std.debug.print("分配次数：{}\n", .{self.alloc_count});
-        std.debug.print("释放次数：{}\n", .{self.free_count});
-        std.debug.print("当前使用：{} 字节\n", .{self.current_bytes});
-    }
-};
-</code></pre>
-<hr>
-<blockquote>
-<p>💡 <strong>章节过渡</strong>：从内存管理到并发编程</p>
-<p>在<a href="#draft内存管理模型">内存管理模型</a>中，我们学习了内存管理模型，掌握了 Zig 的显式内存管理哲学和各种分配器的使用。
-现在，我们将学习并发编程，了解如何在多线程环境下安全地管理资源。</p>
-<p><strong>为什么内存管理是并发编程的基础？</strong></p>
-<ol>
-<li><strong>共享资源</strong>：多线程访问共享内存需要同步机制</li>
-<li><strong>线程安全</strong>：理解内存所有权是避免数据竞争的关键</li>
-<li><strong>资源生命周期</strong>：并发环境下资源管理更加复杂</li>
-</ol>
-<p><strong>学习建议</strong>：</p>
-<ul>
-<li>回顾分配器的使用和内存所有权概念</li>
-<li>理解 <code>defer</code> 和 <code>errdefer</code> 的资源管理作用</li>
-<li>准备学习线程安全和同步机制</li>
-</ul>
-</blockquote>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="draft并发编程概述"><a class="header" href="#draft并发编程概述">【draft】并发编程概述</a></h1>
 <blockquote>
@@ -12819,7 +12406,7 @@ pub fn main(init: std.process.Init.Minimal) !void {
 </tbody>
 </table>
 </div>
-<h3 id="实际应用场景-4"><a class="header" href="#实际应用场景-4">实际应用场景</a></h3>
+<h3 id="实际应用场景-3"><a class="header" href="#实际应用场景-3">实际应用场景</a></h3>
 <ol>
 <li>
 <p><strong>线程特定的日志缓冲区</strong>：</p>
@@ -14686,8 +14273,8 @@ pub fn main(init: std.process.Init.Minimal) void {
 }
 </code></pre>
 <hr>
-<h1 id="章节练习题-5"><a class="header" href="#章节练习题-5">章节练习题</a></h1>
-<h1 id="基础题-5"><a class="header" href="#基础题-5">基础题</a></h1>
+<h1 id="章节练习题-2"><a class="header" href="#章节练习题-2">章节练习题</a></h1>
+<h1 id="基础题-2"><a class="header" href="#基础题-2">基础题</a></h1>
 <p><strong>题目1</strong>：编写一个函数，使用指针交换两个变量的值。</p>
 <p><strong>要求</strong>：</p>
 <ul>
@@ -14755,7 +14342,7 @@ pub fn main(init: std.process.Init.Minimal) void {
     std.debug.print("总和：{}\n", .{result});
 }
 </code></pre>
-<h1 id="进阶题-5"><a class="header" href="#进阶题-5">进阶题</a></h1>
+<h1 id="进阶题-2"><a class="header" href="#进阶题-2">进阶题</a></h1>
 <p><strong>题目1</strong>：实现一个简单的链表节点结构，使用指针链接。</p>
 <p><strong>要求</strong>：</p>
 <ul>
@@ -14833,7 +14420,7 @@ pub fn main(init: std.process.Init.Minimal) !void {
     }
 }
 </code></pre>
-<h1 id="挑战题-5"><a class="header" href="#挑战题-5">挑战题</a></h1>
+<h1 id="挑战题-2"><a class="header" href="#挑战题-2">挑战题</a></h1>
 <p><strong>题目</strong>：实现一个简单的二叉树结构，使用指针管理节点。</p>
 <p><strong>要求</strong>：</p>
 <ul>
@@ -16019,7 +15606,7 @@ pub fn main(init: std.process.Init.Minimal) void {
 <p><strong>编译为库</strong>：</p>
 <pre><code class="language-bash">zig build-lib add.zig -dynamic
 </code></pre>
-<h4 id="进阶题-6"><a class="header" href="#进阶题-6">进阶题</a></h4>
+<h4 id="进阶题-3"><a class="header" href="#进阶题-3">进阶题</a></h4>
 <p><strong>题目1</strong>：编写一个 Zig 程序，使用 C 标准库的 <code>malloc</code> 和 <code>free</code>。</p>
 <p><strong>要求</strong>：</p>
 <ul>
@@ -16068,7 +15655,7 @@ pub fn main(init: std.process.Init.Minimal) void {
     print_point(p);
 }
 </code></pre>
-<h4 id="挑战题-6"><a class="header" href="#挑战题-6">挑战题</a></h4>
+<h4 id="挑战题-3"><a class="header" href="#挑战题-3">挑战题</a></h4>
 <p><strong>题目</strong>：编写一个 Zig 程序，封装 C 库函数为 Zig 友好的 API。</p>
 <p><strong>要求</strong>：</p>
 <ul>
@@ -17650,8 +17237,8 @@ zig fetch https://github.com/username/my-project/archive/refs/tags/v1.0.0.tar.gz
 # Discord、Reddit、Twitter 等
 </code></pre>
 <hr>
-<h1 id="章节练习题-6"><a class="header" href="#章节练习题-6">章节练习题</a></h1>
-<h1 id="基础题-6"><a class="header" href="#基础题-6">基础题</a></h1>
+<h1 id="章节练习题-3"><a class="header" href="#章节练习题-3">章节练习题</a></h1>
+<h1 id="基础题-3"><a class="header" href="#基础题-3">基础题</a></h1>
 <p><strong>题目1</strong>：创建一个 <code>build.zig.zon</code> 文件，定义项目基本信息。</p>
 <p><strong>要求</strong>：</p>
 <ul>
@@ -17728,7 +17315,7 @@ zig fetch https://github.com/user/repo/archive/refs/tags/v1.0.0.tar.gz
 #     },
 # },
 </code></pre>
-<h1 id="进阶题-7"><a class="header" href="#进阶题-7">进阶题</a></h1>
+<h1 id="进阶题-4"><a class="header" href="#进阶题-4">进阶题</a></h1>
 <p><strong>题目1</strong>：配置多个依赖项，并处理依赖冲突。</p>
 <p><strong>要求</strong>：</p>
 <ul>
@@ -17803,7 +17390,7 @@ pub fn build(b: *std.Build) void {
     b.installArtifact(lib);
 }
 </code></pre>
-<h1 id="挑战题-7"><a class="header" href="#挑战题-7">挑战题</a></h1>
+<h1 id="挑战题-4"><a class="header" href="#挑战题-4">挑战题</a></h1>
 <p><strong>题目</strong>：创建一个完整的项目结构，包含主程序、库和测试。</p>
 <p><strong>要求</strong>：</p>
 <ul>
@@ -18858,8 +18445,8 @@ zig build test
 </table>
 </div>
 <hr>
-<h1 id="章节练习题-7"><a class="header" href="#章节练习题-7">章节练习题</a></h1>
-<h1 id="基础题-7"><a class="header" href="#基础题-7">基础题</a></h1>
+<h1 id="章节练习题-4"><a class="header" href="#章节练习题-4">章节练习题</a></h1>
+<h1 id="基础题-4"><a class="header" href="#基础题-4">基础题</a></h1>
 <p><strong>题目1</strong>：编写一个函数，使用指针交换两个变量的值。</p>
 <p><strong>要求</strong>：</p>
 <ul>
@@ -18927,7 +18514,7 @@ pub fn main(init: std.process.Init.Minimal) void {
     std.debug.print("总和：{}\n", .{result});
 }
 </code></pre>
-<h1 id="进阶题-8"><a class="header" href="#进阶题-8">进阶题</a></h1>
+<h1 id="进阶题-5"><a class="header" href="#进阶题-5">进阶题</a></h1>
 <p><strong>题目1</strong>：实现一个简单的链表节点结构，使用指针链接。</p>
 <p><strong>要求</strong>：</p>
 <ul>
@@ -19005,7 +18592,7 @@ pub fn main(init: std.process.Init.Minimal) !void {
     }
 }
 </code></pre>
-<h1 id="挑战题-8"><a class="header" href="#挑战题-8">挑战题</a></h1>
+<h1 id="挑战题-5"><a class="header" href="#挑战题-5">挑战题</a></h1>
 <p><strong>题目</strong>：实现一个简单的二叉树结构，使用指针管理节点。</p>
 <p><strong>要求</strong>：</p>
 <ul>

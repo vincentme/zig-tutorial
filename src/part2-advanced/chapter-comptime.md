@@ -636,25 +636,116 @@ pub fn main(init: std.process.Init.Minimal) void {
 
 #### 9.5 anytype 与动态类型
 
-`anytype` 是 Zig 中的动态类型占位符，在编译期确定具体类型：
+`anytype` 是 Zig 的特殊关键字，允许函数接受任意类型的参数。编译器会在调用点推断实际类型，并为每种类型生成专门的函数版本（单态化）。
+
+##### anytype 的工作原理
+
+1. **编译期类型推断**：编译器在调用点推断实际类型
+2. **单态化**：为每种使用的类型生成专门的函数版本
+3. **类型安全**：虽然接受任意类型，但仍是类型安全的
+
+##### anytype vs 泛型参数
+
+```zig
+// 使用 anytype：更简洁，适合简单场景
+fn print(value: anytype) void {
+    std.debug.print("{}\n", .{value});
+}
+
+// 使用泛型参数：更明确，适合复杂场景
+fn printGeneric(comptime T: type, value: T) void {
+    std.debug.print("{}\n", .{value});
+}
+```
+
+**关键区别**：
+- `anytype`：类型推断是隐式的，代码更简洁
+- `comptime T: type`：类型参数是显式的，更适合复杂场景
+
+##### 基本使用示例
 
 ```zig
 const std = @import("std");
 
-fn printValue(value: anytype) void {
+// 使用 anytype 的泛型函数
+// 编译器会为每种类型生成专门的版本
+fn printType(value: anytype) void {
     const T = @TypeOf(value);
-    std.debug.print("类型：{}, 值：{}\n", .{ T, value });
+    std.debug.print("值: {}, 类型: {}\n", .{ value, T });
+}
+
+// 获取类型信息：实现类型安全的泛型操作
+fn describeType(value: anytype) void {
+    const T = @TypeOf(value);
+    const info = @typeInfo(T);
+    
+    switch (info) {
+        .int => |int_info| {
+            std.debug.print("整数类型，位数: {}, 有符号: {}\n", .{
+                int_info.bits,
+                int_info.signedness == .signed,
+            });
+        },
+        .float => {
+            std.debug.print("浮点类型\n", .{});
+        },
+        .pointer => {
+            std.debug.print("指针类型\n", .{});
+        },
+        else => {
+            std.debug.print("其他类型\n", .{});
+        },
+    }
 }
 
 pub fn main(init: std.process.Init.Minimal) void {
-    printValue(42);         // i32
-    printValue(3.14);        // f64
-    printValue("hello");     // *const [5:0]u8
-    printValue(true);        // bool
+    // 每次调用都会生成专门的函数版本
+    printType(42);        // 生成 printType(i32) 版本
+    printType(3.14);      // 生成 printType(f64) 版本
+    printType("hello");   // 生成 printType(*const [5:0]u8) 版本
+    
+    describeType(@as(i32, 100));
+    describeType(@as(f64, 2.5));
 }
 ```
 
-**使用 @TypeOf 和 @Type：**
+##### anytype 的实际应用
+
+```zig
+// 场景1：通用比较函数
+fn max(a: anytype, b: @TypeOf(a)) @TypeOf(a) {
+    return if (a > b) a else b;
+}
+
+// 场景2：通用打印函数
+fn debugPrint(value: anytype) void {
+    const T = @TypeOf(value);
+    switch (@typeInfo(T)) {
+        .Optional => {
+            if (value) |v| {
+                std.debug.print("Some({})\n", .{v});
+            } else {
+                std.debug.print("None\n", .{});
+            }
+        },
+        else => {
+            std.debug.print("{}\n", .{value});
+        },
+    }
+}
+
+// 场景3：约束 anytype 类型
+fn addNumbers(a: anytype, b: @TypeOf(a)) @TypeOf(a) {
+    const T = @TypeOf(a);
+    // 编译期检查类型是否支持加法
+    if (@typeInfo(T) != .Int and @typeInfo(T) != .Float) {
+        @compileError("addNumbers 只支持数字类型");
+    }
+    return a + b;
+}
+```
+
+##### 使用 @TypeOf 和 @Type
 
 ```zig
 const std = @import("std");
@@ -732,157 +823,3 @@ pub fn main(init: std.process.Init.Minimal) void {
     std.debug.print("不透明类型用于隐藏实现细节\n", .{});
 }
 ```
-
----
-
-### 章节练习题
-
-#### 基础题
-
-**题目1**：编写一个 comptime 函数，计算数组长度。
-
-**要求**：
-- 函数签名为 `fn arrayLength(comptime T: type, comptime size: usize) usize`
-- 在编译期返回数组长度
-- 使用 `comptime` 关键字
-
-**参考答案**：
-```zig
-const std = @import("std");
-
-fn arrayLength(comptime T: type, comptime size: usize) usize {
-    return size;
-}
-
-pub fn main(init: std.process.Init.Minimal) void {
-    const len = comptime arrayLength(i32, 10);
-    std.debug.print("数组长度：{}\n", .{len});
-}
-```
-
-**题目2**：使用 `comptime` 实现类型检查函数。
-
-**要求**：
-- 函数签名为 `fn isInteger(comptime T: type) bool`
-- 检查类型是否为整数类型
-- 使用 `@typeInfo`
-
-**参考答案**：
-```zig
-fn isInteger(comptime T: type) bool {
-    return switch (@typeInfo(T)) {
-        .int => true,
-        else => false,
-    };
-}
-
-pub fn main(init: std.process.Init.Minimal) void {
-    std.debug.print("i32 是整数：{}\n", .{isInteger(i32)});
-    std.debug.print("f32 是整数：{}\n", .{isInteger(f32)});
-}
-```
-
-**题目3**：编写一个 comptime 函数，计算斐波那契数列。
-
-**要求**：
-- 函数签名为 `fn fib(comptime n: u32) u32`
-- 在编译期计算结果
-- 使用递归实现
-
-**参考答案**：
-```zig
-fn fib(comptime n: u32) u32 {
-    if (n <= 1) return n;
-    return fib(n - 1) + fib(n - 2);
-}
-
-pub fn main(init: std.process.Init.Minimal) void {
-    const result = comptime fib(10);
-    std.debug.print("fib(10) = {}\n", .{result});
-}
-```
-
-#### 进阶题
-
-**题目1**：实现一个 comptime 类型转换函数。
-
-**要求**：
-- 函数签名为 `fn typeName(comptime T: type) []const u8`
-- 返回类型的名称字符串
-- 使用 `@typeName`
-
-**参考答案**：
-```zig
-fn typeName(comptime T: type) []const u8 {
-    return @typeName(T);
-}
-
-pub fn main(init: std.process.Init.Minimal) void {
-    std.debug.print("类型名称：{s}\n", .{typeName(i32)});
-    std.debug.print("类型名称：{s}\n", .{typeName([]const u8)});
-}
-```
-
-**题目2**：使用 `comptime` 实现泛型最大值函数。
-
-**要求**：
-- 函数签名为 `fn max(comptime T: type, a: T, b: T) T`
-- 支持多种数值类型
-- 使用 `comptime` 约束类型
-
-**参考答案**：
-```zig
-fn max(comptime T: type, a: T, b: T) T {
-    return if (a > b) a else b;
-}
-
-pub fn main(init: std.process.Init.Minimal) void {
-    std.debug.print("max(i32, 10, 20) = {}\n", .{max(i32, 10, 20)});
-    std.debug.print("max(f64, 3.14, 2.71) = {}\n", .{max(f64, 3.14, 2.71)});
-}
-```
-
-#### 挑战题
-
-**题目**：实现一个 comptime 字符串哈希函数。
-
-**要求**：
-- 函数签名为 `fn hash(comptime str: []const u8) u32`
-- 在编译期计算字符串哈希值
-- 使用简单的哈希算法（如 DJB2）
-
-**参考答案**：
-```zig
-fn hash(comptime str: []const u8) u32 {
-    var h: u32 = 5381;
-    for (str) |c| {
-        h = ((h << 5) + h) + c;
-    }
-    return h;
-}
-
-pub fn main(init: std.process.Init.Minimal) void {
-    const h1 = comptime hash("hello");
-    const h2 = comptime hash("world");
-    std.debug.print("hash(\"hello\") = {}\n", .{h1});
-    std.debug.print("hash(\"world\") = {}\n", .{h2});
-}
-```
-
----
-
-> 💡 **章节过渡**：从编译期计算到泛型编程
-> 
-> 在[编译期计算与元编程](chapter-comptime.md)中，我们学习了编译期计算（comptime）的强大功能，掌握了如何在编译阶段完成计算、类型反射和代码生成。
-> 现在，我们将学习泛型编程，了解如何利用编译期计算实现类型参数化的代码复用。
-> 
-> **为什么编译期计算是泛型编程的基础？**
-> 
-> 1. **类型参数化**：泛型使用 `comptime T: type` 参数，在编译期确定具体类型
-> 2. **代码生成**：泛型函数在编译期为每种类型生成特化代码
-> 3. **零成本抽象**：编译期泛型没有运行时开销
-> 
-> **学习建议**：
-> - 确保你已经理解了 `comptime` 的基本用法
-> - 回顾类型反射（`@typeInfo`、`@Type`）的相关知识
-> - 准备好将编译期计算应用到实际编程中

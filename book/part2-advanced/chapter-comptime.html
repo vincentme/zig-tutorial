@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-684feaa1.js";
+            window.path_to_searchindex_js = "../searchindex-00c7812b.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-043b281c.js"></script>
+        <script src="../toc-546ed77d.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -791,22 +791,107 @@ pub fn main(init: std.process.Init.Minimal) void {
 }
 </code></pre>
 <h4 id="95-anytype-与动态类型"><a class="header" href="#95-anytype-与动态类型">9.5 anytype 与动态类型</a></h4>
-<p><code>anytype</code> 是 Zig 中的动态类型占位符，在编译期确定具体类型：</p>
+<p><code>anytype</code> 是 Zig 的特殊关键字，允许函数接受任意类型的参数。编译器会在调用点推断实际类型，并为每种类型生成专门的函数版本（单态化）。</p>
+<h5 id="anytype-的工作原理"><a class="header" href="#anytype-的工作原理">anytype 的工作原理</a></h5>
+<ol>
+<li><strong>编译期类型推断</strong>：编译器在调用点推断实际类型</li>
+<li><strong>单态化</strong>：为每种使用的类型生成专门的函数版本</li>
+<li><strong>类型安全</strong>：虽然接受任意类型，但仍是类型安全的</li>
+</ol>
+<h5 id="anytype-vs-泛型参数"><a class="header" href="#anytype-vs-泛型参数">anytype vs 泛型参数</a></h5>
+<pre><code class="language-zig">// 使用 anytype：更简洁，适合简单场景
+fn print(value: anytype) void {
+    std.debug.print("{}\n", .{value});
+}
+
+// 使用泛型参数：更明确，适合复杂场景
+fn printGeneric(comptime T: type, value: T) void {
+    std.debug.print("{}\n", .{value});
+}
+</code></pre>
+<p><strong>关键区别</strong>：</p>
+<ul>
+<li><code>anytype</code>：类型推断是隐式的，代码更简洁</li>
+<li><code>comptime T: type</code>：类型参数是显式的，更适合复杂场景</li>
+</ul>
+<h5 id="基本使用示例"><a class="header" href="#基本使用示例">基本使用示例</a></h5>
 <pre><code class="language-zig">const std = @import("std");
 
-fn printValue(value: anytype) void {
+// 使用 anytype 的泛型函数
+// 编译器会为每种类型生成专门的版本
+fn printType(value: anytype) void {
     const T = @TypeOf(value);
-    std.debug.print("类型：{}, 值：{}\n", .{ T, value });
+    std.debug.print("值: {}, 类型: {}\n", .{ value, T });
+}
+
+// 获取类型信息：实现类型安全的泛型操作
+fn describeType(value: anytype) void {
+    const T = @TypeOf(value);
+    const info = @typeInfo(T);
+    
+    switch (info) {
+        .int =&gt; |int_info| {
+            std.debug.print("整数类型，位数: {}, 有符号: {}\n", .{
+                int_info.bits,
+                int_info.signedness == .signed,
+            });
+        },
+        .float =&gt; {
+            std.debug.print("浮点类型\n", .{});
+        },
+        .pointer =&gt; {
+            std.debug.print("指针类型\n", .{});
+        },
+        else =&gt; {
+            std.debug.print("其他类型\n", .{});
+        },
+    }
 }
 
 pub fn main(init: std.process.Init.Minimal) void {
-    printValue(42);         // i32
-    printValue(3.14);        // f64
-    printValue("hello");     // *const [5:0]u8
-    printValue(true);        // bool
+    // 每次调用都会生成专门的函数版本
+    printType(42);        // 生成 printType(i32) 版本
+    printType(3.14);      // 生成 printType(f64) 版本
+    printType("hello");   // 生成 printType(*const [5:0]u8) 版本
+    
+    describeType(@as(i32, 100));
+    describeType(@as(f64, 2.5));
 }
 </code></pre>
-<p><strong>使用 @TypeOf 和 @Type：</strong></p>
+<h5 id="anytype-的实际应用"><a class="header" href="#anytype-的实际应用">anytype 的实际应用</a></h5>
+<pre><code class="language-zig">// 场景1：通用比较函数
+fn max(a: anytype, b: @TypeOf(a)) @TypeOf(a) {
+    return if (a &gt; b) a else b;
+}
+
+// 场景2：通用打印函数
+fn debugPrint(value: anytype) void {
+    const T = @TypeOf(value);
+    switch (@typeInfo(T)) {
+        .Optional =&gt; {
+            if (value) |v| {
+                std.debug.print("Some({})\n", .{v});
+            } else {
+                std.debug.print("None\n", .{});
+            }
+        },
+        else =&gt; {
+            std.debug.print("{}\n", .{value});
+        },
+    }
+}
+
+// 场景3：约束 anytype 类型
+fn addNumbers(a: anytype, b: @TypeOf(a)) @TypeOf(a) {
+    const T = @TypeOf(a);
+    // 编译期检查类型是否支持加法
+    if (@typeInfo(T) != .Int and @typeInfo(T) != .Float) {
+        @compileError("addNumbers 只支持数字类型");
+    }
+    return a + b;
+}
+</code></pre>
+<h5 id="使用-typeof-和-type"><a class="header" href="#使用-typeof-和-type">使用 @TypeOf 和 @Type</a></h5>
 <pre><code class="language-zig">const std = @import("std");
 
 pub fn main(init: std.process.Init.Minimal) void {
@@ -875,143 +960,6 @@ pub fn main(init: std.process.Init.Minimal) void {
     std.debug.print("不透明类型用于隐藏实现细节\n", .{});
 }
 </code></pre>
-<hr>
-<h3 id="章节练习题"><a class="header" href="#章节练习题">章节练习题</a></h3>
-<h4 id="基础题"><a class="header" href="#基础题">基础题</a></h4>
-<p><strong>题目1</strong>：编写一个 comptime 函数，计算数组长度。</p>
-<p><strong>要求</strong>：</p>
-<ul>
-<li>函数签名为 <code>fn arrayLength(comptime T: type, comptime size: usize) usize</code></li>
-<li>在编译期返回数组长度</li>
-<li>使用 <code>comptime</code> 关键字</li>
-</ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-fn arrayLength(comptime T: type, comptime size: usize) usize {
-    return size;
-}
-
-pub fn main(init: std.process.Init.Minimal) void {
-    const len = comptime arrayLength(i32, 10);
-    std.debug.print("数组长度：{}\n", .{len});
-}
-</code></pre>
-<p><strong>题目2</strong>：使用 <code>comptime</code> 实现类型检查函数。</p>
-<p><strong>要求</strong>：</p>
-<ul>
-<li>函数签名为 <code>fn isInteger(comptime T: type) bool</code></li>
-<li>检查类型是否为整数类型</li>
-<li>使用 <code>@typeInfo</code></li>
-</ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">fn isInteger(comptime T: type) bool {
-    return switch (@typeInfo(T)) {
-        .int =&gt; true,
-        else =&gt; false,
-    };
-}
-
-pub fn main(init: std.process.Init.Minimal) void {
-    std.debug.print("i32 是整数：{}\n", .{isInteger(i32)});
-    std.debug.print("f32 是整数：{}\n", .{isInteger(f32)});
-}
-</code></pre>
-<p><strong>题目3</strong>：编写一个 comptime 函数，计算斐波那契数列。</p>
-<p><strong>要求</strong>：</p>
-<ul>
-<li>函数签名为 <code>fn fib(comptime n: u32) u32</code></li>
-<li>在编译期计算结果</li>
-<li>使用递归实现</li>
-</ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">fn fib(comptime n: u32) u32 {
-    if (n &lt;= 1) return n;
-    return fib(n - 1) + fib(n - 2);
-}
-
-pub fn main(init: std.process.Init.Minimal) void {
-    const result = comptime fib(10);
-    std.debug.print("fib(10) = {}\n", .{result});
-}
-</code></pre>
-<h4 id="进阶题"><a class="header" href="#进阶题">进阶题</a></h4>
-<p><strong>题目1</strong>：实现一个 comptime 类型转换函数。</p>
-<p><strong>要求</strong>：</p>
-<ul>
-<li>函数签名为 <code>fn typeName(comptime T: type) []const u8</code></li>
-<li>返回类型的名称字符串</li>
-<li>使用 <code>@typeName</code></li>
-</ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">fn typeName(comptime T: type) []const u8 {
-    return @typeName(T);
-}
-
-pub fn main(init: std.process.Init.Minimal) void {
-    std.debug.print("类型名称：{s}\n", .{typeName(i32)});
-    std.debug.print("类型名称：{s}\n", .{typeName([]const u8)});
-}
-</code></pre>
-<p><strong>题目2</strong>：使用 <code>comptime</code> 实现泛型最大值函数。</p>
-<p><strong>要求</strong>：</p>
-<ul>
-<li>函数签名为 <code>fn max(comptime T: type, a: T, b: T) T</code></li>
-<li>支持多种数值类型</li>
-<li>使用 <code>comptime</code> 约束类型</li>
-</ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">fn max(comptime T: type, a: T, b: T) T {
-    return if (a &gt; b) a else b;
-}
-
-pub fn main(init: std.process.Init.Minimal) void {
-    std.debug.print("max(i32, 10, 20) = {}\n", .{max(i32, 10, 20)});
-    std.debug.print("max(f64, 3.14, 2.71) = {}\n", .{max(f64, 3.14, 2.71)});
-}
-</code></pre>
-<h4 id="挑战题"><a class="header" href="#挑战题">挑战题</a></h4>
-<p><strong>题目</strong>：实现一个 comptime 字符串哈希函数。</p>
-<p><strong>要求</strong>：</p>
-<ul>
-<li>函数签名为 <code>fn hash(comptime str: []const u8) u32</code></li>
-<li>在编译期计算字符串哈希值</li>
-<li>使用简单的哈希算法（如 DJB2）</li>
-</ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">fn hash(comptime str: []const u8) u32 {
-    var h: u32 = 5381;
-    for (str) |c| {
-        h = ((h &lt;&lt; 5) + h) + c;
-    }
-    return h;
-}
-
-pub fn main(init: std.process.Init.Minimal) void {
-    const h1 = comptime hash("hello");
-    const h2 = comptime hash("world");
-    std.debug.print("hash(\"hello\") = {}\n", .{h1});
-    std.debug.print("hash(\"world\") = {}\n", .{h2});
-}
-</code></pre>
-<hr>
-<blockquote>
-<p>💡 <strong>章节过渡</strong>：从编译期计算到泛型编程</p>
-<p>在<a href="chapter-comptime.html">编译期计算与元编程</a>中，我们学习了编译期计算（comptime）的强大功能，掌握了如何在编译阶段完成计算、类型反射和代码生成。
-现在，我们将学习泛型编程，了解如何利用编译期计算实现类型参数化的代码复用。</p>
-<p><strong>为什么编译期计算是泛型编程的基础？</strong></p>
-<ol>
-<li><strong>类型参数化</strong>：泛型使用 <code>comptime T: type</code> 参数，在编译期确定具体类型</li>
-<li><strong>代码生成</strong>：泛型函数在编译期为每种类型生成特化代码</li>
-<li><strong>零成本抽象</strong>：编译期泛型没有运行时开销</li>
-</ol>
-<p><strong>学习建议</strong>：</p>
-<ul>
-<li>确保你已经理解了 <code>comptime</code> 的基本用法</li>
-<li>回顾类型反射（<code>@typeInfo</code>、<code>@Type</code>）的相关知识</li>
-<li>准备好将编译期计算应用到实际编程中</li>
-</ul>
-</blockquote>
 
                     </main>
 
