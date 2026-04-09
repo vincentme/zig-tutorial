@@ -11,7 +11,7 @@
 - [控制流与资源管理](part1-basics/chapter-control-flow.md)
 - [函数](part1-basics/chapter-functions.md)
 - [【draft】错误处理](part1-basics/chapter-error-handling.md)
-- [【draft】构建系统](part1-basics/chapter-build-system.md)
+- [【draft】构建系统入门](part1-basics/chapter-build-system.md)
 
 # 第二部分：高级特性
 - [【draft】标准库常用模块](part2-advanced/chapter-standard-library.md)

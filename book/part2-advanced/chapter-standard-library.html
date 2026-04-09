@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-00c7812b.js";
+            window.path_to_searchindex_js = "../searchindex-1993ac1f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-546ed77d.js"></script>
+        <script src="../toc-2fc75e4c.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -326,6 +326,15 @@ pub fn main(init: std.process.Init) !void {
 </tbody>
 </table>
 </div>
+<p><strong>std.Io 的设计理念</strong>：</p>
+<p>Zig 0.16.0-dev 引入的 <code>std.Io</code> 接口采用了重要的设计模式：</p>
+<ol>
+<li><strong>由调用者提供 I/O 实现</strong>：类似 Allocator 模式，程序作者可以决定具体的 I/O 实现（阻塞 I/O 或事件循环）</li>
+<li><strong>统一所有 I/O 操作</strong>：文件、网络、标准输入输出都使用相同的接口</li>
+<li><strong>为未来异步设计奠定基础</strong>：Io 接口负责并发操作，支持 <code>io.async</code> 模式</li>
+<li><strong>异步不等于并发</strong>：使用 <code>io.async</code> 不强制并发，可以在单线程阻塞模式下运行</li>
+</ol>
+<p>这意味着库作者可以使用 <code>io.async</code> 而不强制用户使用事件循环，用户可以选择阻塞 I/O 或事件循环 I/O，而不需要库提供两个版本。</p>
 <p>Zig 0.16.0-dev 对I/O系统进行了全面重构，引入了新的 <code>std.Io</code> 模块。</p>
 <h1 id="新版本方式0160-dev"><a class="header" href="#新版本方式0160-dev">新版本方式（0.16.0-dev）</a></h1>
 <pre><code class="language-zig">// ✨ 新特性：std.Io 统一接口
