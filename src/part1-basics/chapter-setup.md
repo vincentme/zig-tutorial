@@ -123,7 +123,7 @@ pub fn main(init: std.process.Init) !void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     // 使用 std.debug.print 进行简单输出
     std.debug.print("Hello, World!\n", .{});
 }

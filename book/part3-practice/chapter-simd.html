@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-4cba6933.js";
+            window.path_to_searchindex_js = "../searchindex-a9ca16c2.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-2fc75e4c.js"></script>
@@ -186,7 +186,7 @@
 <h2 id="向量类型"><a class="header" href="#向量类型">向量类型</a></h2>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     // 定义向量类型：4 个 f32
     const Vec4 = @Vector(4, f32);
     
@@ -213,7 +213,7 @@ pub fn main(init: std.process.Init.Minimal) void {
 <h2 id="向量操作"><a class="header" href="#向量操作">向量操作</a></h2>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     const Vec8 = @Vector(8, i32);
     
     const a: Vec8 = .{ 1, 2, 3, 4, 5, 6, 7, 8 };
@@ -247,7 +247,7 @@ fn dotProduct(comptime N: usize, a: @Vector(N, f32), b: @Vector(N, f32)) f32 {
     return @reduce(.Add, prod);
 }
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     const Vec4 = @Vector(4, f32);
     
     const v1: Vec4 = .{ 1.0, 2.0, 3.0, 4.0 };

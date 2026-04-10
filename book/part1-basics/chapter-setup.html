@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-4cba6933.js";
+            window.path_to_searchindex_js = "../searchindex-a9ca16c2.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-2fc75e4c.js"></script>
@@ -283,7 +283,7 @@ pub fn main(init: std.process.Init) !void {
 <p>如果不需要完整的I/O功能，可以使用简化签名：</p>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     // 使用 std.debug.print 进行简单输出
     std.debug.print("Hello, World!\n", .{});
 }

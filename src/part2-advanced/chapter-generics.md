@@ -104,7 +104,7 @@ fn identity(comptime T: type, value: T) T {
     return value;
 }
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     // 显式指定类型
     const a = identity(i32, 42);
     std.debug.print("a = {}\n", .{a});
@@ -163,7 +163,7 @@ fn minValue(comptime T: type, a: T, b: T) T {
     return if (a < b) a else b;
 }
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     // 整数类型
     std.debug.print("max(i32, 10, 20) = {}\n", .{maxValue(i32, 10, 20)});
     std.debug.print("min(i32, 10, 20) = {}\n", .{minValue(i32, 10, 20)});
@@ -193,7 +193,7 @@ fn double(comptime T: type, value: T) T {
     return value * 2;
 }
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     // 显式指定类型
     const a = double(i32, 10);
     std.debug.print("double(i32, 10) = {}\n", .{a});
@@ -225,7 +225,7 @@ fn makePair(comptime K: type, comptime V: type, key: K, value: V) Pair(K, V) {
     return .{ .key = key, .value = value };
 }
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     // 字符串-整数对
     const p1 = makePair([]const u8, i32, "age", 25);
     std.debug.print("key: {s}, value: {}\n", .{ p1.key, p1.value });
@@ -261,7 +261,7 @@ fn abs(comptime T: type, x: Numeric(T)) Numeric(T) {
     };
 }
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     // 整数绝对值
     std.debug.print("abs(i32, -5) = {}\n", .{abs(i32, -5)});
     std.debug.print("abs(i32, 10) = {}\n", .{abs(i32, 10)});
@@ -316,7 +316,7 @@ fn Point(comptime T: type) type {
     };
 }
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     // 整数点
     const p1 = Point(i32).init(3, 4);
     std.debug.print("Point(i32) distance: {}\n", .{p1.distance()});
@@ -409,7 +409,7 @@ fn Stack(comptime T: type) type {
     };
 }
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
@@ -539,7 +539,7 @@ fn Queue(comptime T: type) type {
     };
 }
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
@@ -608,7 +608,7 @@ fn printTypeInfo(comptime T: type) void {
     }
 }
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     printTypeInfo(i32);
     printTypeInfo(f64);
     printTypeInfo(bool);
@@ -673,7 +673,7 @@ fn serialize(comptime T: type, item: T, writer: anytype) !void {
     }
 }
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     const Person = struct {
         name: []const u8,
         age: u32,
@@ -744,7 +744,7 @@ fn Number(comptime T: type) type {
     };
 }
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     // 整数类型
     const int_num = Number(i32).init(10);
     std.debug.print("add: {}, double: {}, isPositive: {}\n", .{
@@ -787,7 +787,7 @@ fn safeDivide(comptime T: type, a: T, b: T) !T {
     }
 }
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     // 整数除法
     const result1 = safeDivide(i32, 10, 3) catch |err| {
         std.debug.print("Error: {}\n", .{err});
@@ -868,7 +868,7 @@ fn SafeStack(comptime T: type) type {
     };
 }
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
@@ -938,7 +938,7 @@ fn ArrayList(comptime T: type) type {
     };
 }
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();

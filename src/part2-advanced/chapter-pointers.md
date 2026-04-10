@@ -54,7 +54,7 @@ Zig 有多种指针类型，每种都有不同的用途：
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     var value: i32 = 42;
     
     // 创建指针：使用 & 取地址
@@ -90,7 +90,7 @@ pub fn main(init: std.process.Init.Minimal) void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     var array = [_]i32{ 1, 2, 3, 4, 5 };
     
     // 多项目指针：指向数组的第一个元素
@@ -136,7 +136,7 @@ pub fn main(init: std.process.Init.Minimal) void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     var array = [_]i32{ 1, 2, 3, 4, 5 };
     
     // 创建切片：从数组中"切出"一部分
@@ -213,7 +213,7 @@ fn findValue(arr: []const i32, target: i32) ?*const i32 {
     return null;
 }
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     var array = [_]i32{ 10, 20, 30, 40, 50 };
     
     // 查找存在的值
@@ -235,7 +235,7 @@ pub fn main(init: std.process.Init.Minimal) void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     var value: i32 = 0x12345678;
     
     // 整数到指针
@@ -258,7 +258,7 @@ pub fn main(init: std.process.Init.Minimal) void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     // 特殊对齐的变量
     var aligned_value: i32 align(16) = 42;
     
@@ -280,7 +280,7 @@ const std = @import("std");
 // 硬件寄存器地址
 const UART_DR: *volatile u32 = @ptrFromInt(0x4000_1000);
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     // volatile 读写不会被编译器优化
     UART_DR.* = 'A';
     const received = UART_DR.*;
@@ -313,7 +313,7 @@ fn boostMana(mana_ptr: *u32, amount: u32) void {
     creature_ptr.health -= 1.0;
 }
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     var elf = Creature{
         .health = 150.0,
         .mana = 10,
@@ -344,7 +344,7 @@ const Node = struct {
     next: ?*Node,
 };
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     var node = Node{ .value = 42, .next = null };
     
     // 获取字段指针
@@ -405,7 +405,7 @@ const TaskList = struct {
     }
 };
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     var list = TaskList.init();
     
     var task1 = Task{ .node = .{ .prev = null, .next = null }, .id = 1, .name = "初始化" };
@@ -429,7 +429,7 @@ const std = @import("std");
 
 const Point = struct { x: f32, y: f32 };
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     var point = Point{ .x = 1.0, .y = 2.0 };
     
     // ✅ 正确：字段指针有效
@@ -450,7 +450,7 @@ const std = @import("std");
 
 const Point = struct { x: f32, y: f32 };
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     var point = Point{ .x = 1.0, .y = 2.0 };
     
     // ✅ 正确：字段名是编译期常量
@@ -469,7 +469,7 @@ const std = @import("std");
 
 const Point = struct { x: f32, y: f32 };
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     var point = Point{ .x = 1.0, .y = 2.0 };
     var standalone: f32 = 3.0;
     
@@ -514,7 +514,7 @@ Alignment 取决于 CPU 架构，但始终是 2 的幂，且小于 `1 << 29`。
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     // i32 类型默认对齐值
     std.debug.print("@alignOf(i32) = {}\n", .{@alignOf(i32)});
     std.debug.print("@alignOf(f64) = {}\n", .{@alignOf(f64)});
@@ -532,7 +532,7 @@ pub fn main(init: std.process.Init.Minimal) void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     var x: i32 = 1234;
 
     // 隐式对齐指针（指向 i32 的指针默认对齐为 @alignOf(i32)）
@@ -606,7 +606,7 @@ $ zig test test_incorrect_pointer_alignment.zig
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     var x: i32 = 1234;
 
     // 更大对齐的指针可以转换为更小对齐
@@ -643,7 +643,7 @@ fn swap(a: *i32, b: *i32) void {
     b.* = temp;
 }
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     var x: i32 = 10;
     var y: i32 = 20;
     
@@ -668,7 +668,7 @@ fn doubleAll(arr: []i32) void {
     }
 }
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     var arr = [_]i32{ 1, 2, 3, 4, 5 };
     doubleAll(&arr);
     std.debug.print("结果：{any}\n", .{arr});
@@ -692,7 +692,7 @@ fn sum(arr: *const [5]i32) i32 {
     return total;
 }
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     const arr = [_]i32{ 1, 2, 3, 4, 5 };
     const result = sum(&arr);
     std.debug.print("总和：{}\n", .{result});
@@ -724,7 +724,7 @@ const Node = struct {
     }
 };
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     var node1 = Node.init(1);
     var node2 = Node.init(2);
     var node3 = Node.init(3);
@@ -752,7 +752,7 @@ pub fn main(init: std.process.Init.Minimal) void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
@@ -819,7 +819,7 @@ const TreeNode = struct {
     }
 };
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     var root = TreeNode.init(5);
     var left = TreeNode.init(3);
     var right = TreeNode.init(7);
@@ -874,7 +874,7 @@ fn printMessage(msg: []const u8) void {
     }
 }
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     const thread1 = try std.Thread.spawn(.{}, printMessage, .{"A"});
     const thread2 = try std.Thread.spawn(.{}, printMessage, .{"B"});
     
@@ -896,7 +896,7 @@ pub fn main(init: std.process.Init.Minimal) !void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     var counter = std.atomic.Value(usize).init(0);
     
     _ = counter.fetchAdd(1, .monotonic);
@@ -919,7 +919,7 @@ pub fn main(init: std.process.Init.Minimal) void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var mutex = std.Thread.Mutex{};
     var counter: usize = 0;
     
@@ -1032,7 +1032,7 @@ const ThreadPool = struct {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var wg: std.Thread.WaitGroup = .{};
     var counter: usize = 0;
     var mutex = std.Thread.Mutex{};
@@ -1113,7 +1113,7 @@ const Channel = struct {
     }
 };
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();

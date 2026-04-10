@@ -13,12 +13,12 @@ Zig 错误处理的核心设计理念：
 
 ## 为什么Zig不用异常？
 
-Zig选择显式错误处理而非异常机制，原因如下：
+Zig 选择显式错误处理而非异常机制，原因如下：
 
-1. **可预测性**: 控制流清晰可见，没有隐藏的跳转
-2. **性能**: 无异常处理开销，错误处理代码只在需要时执行
-3. **可读性**: 函数签名明确声明可能返回的错误
-4. **可调试性**: 错误追踪完整，易于定位问题根源
+1. **可预测性**：控制流清晰可见，没有隐藏的跳转。C++ 异常可以在任意调用点抛出，调用者无法从函数签名得知可能的错误；Zig 的错误联合类型在签名中明确声明，`try`/`catch` 让错误传播路径一目了然
+2. **性能**：无异常处理开销。C++ 异常需要栈展开（stack unwinding）和异常表，即使不抛出异常也有二进制大小和缓存的开销；Zig 的错误处理与返回值等价，成功路径零额外开销
+3. **可读性**：函数签名明确声明可能返回的错误，调用者必须显式处理
+4. **可调试性**：错误追踪完整，易于定位问题根源
 
 ## 错误集合
 
@@ -48,7 +48,7 @@ const FileError = error{
 
 pub fn main(_: std.process.Init.Minimal) void {
     const err: FileError = FileError.NotFound;
-    
+
     // 错误比较
     if (err == FileError.NotFound) {
         std.debug.print("文件未找到\n", .{});
@@ -56,10 +56,20 @@ pub fn main(_: std.process.Init.Minimal) void {
 }
 ```
 
+**错误值的全局唯一性**：Zig 中的错误值是全局唯一的整数。不同错误集中定义的同名错误实际上是同一个值：
+
+```zig
+const A = error{NotFound};
+const B = error{NotFound};
+// A.NotFound 和 B.NotFound 是同一个错误值
+// 它们可以互相赋值，比较相等
+```
+
+这意味着错误名称在全局命名空间中是唯一的——这是 Zig 错误系统的基础设计。
+
 **实际应用：配置文件错误集**
 
 ```zig
-// 为配置文件解析定义专门的错误集
 const ConfigError = error{
     FileNotFound,
     InvalidSyntax,
@@ -72,10 +82,9 @@ const Config = struct {
     host: []const u8,
 };
 
-// 使用示例：函数可能返回的错误
 fn loadConfig(path: []const u8) ConfigError!Config {
     if (path.len == 0) {
-        return error.FileNotFound;  // 返回错误
+        return error.FileNotFound;
     }
     return Config{ .port = 8080, .host = "localhost" };
 }
@@ -130,9 +139,9 @@ fn divide(a: i32, b: i32) !i32 {
 - 在库的公共 API 中，建议显式声明错误集，便于用户理解和使用
 - 在内部实现中，可以使用错误集推断以减少维护成本
 
-#### 错误集合并
+### 错误集合并
 
-在显式声明错误集时，如果函数可能返回多个不同来源的错误，可以使用 `||` 操作符合并错误集。
+在显式声明错误集时，如果函数可能返回多个不同来源的错误，可以使用 `||` 操作符合并错误集：
 
 ```zig
 const FileError = error{
@@ -160,12 +169,60 @@ const SpecificError = error{NotFound};
 
 fn example() void {
     const specific: SpecificError = error.NotFound;
-    
+
     // 子集可以隐式转换为超集
     const file: FileError = specific;  // ✅ 正确
-    
+
     // 但超集不能隐式转换为子集
     // const back: SpecificError = file;  // ❌ 编译错误
+}
+```
+
+### 错误集转换
+
+当需要将较大的错误集转换为较小的错误集时，可以使用 `@errorCast`：
+
+```zig
+const LowLevelError = error{
+    DiskError,
+    NetworkError,
+};
+
+const HighLevelError = error{
+    IOError,
+    Timeout,
+};
+
+// 错误映射：手动将低级错误转换为高级错误
+fn mapError(err: LowLevelError) HighLevelError {
+    return switch (err) {
+        error.DiskError => error.IOError,
+        error.NetworkError => error.Timeout,
+    };
+}
+
+fn highLevelOperation() HighLevelError!void {
+    lowLevelOperation() catch |err| return mapError(err);
+}
+
+fn lowLevelOperation() LowLevelError!void {
+    return error.DiskError;
+}
+```
+
+`@errorCast` 用于将错误集缩小到目标类型，如果运行时错误值不在目标错误集中，会触发安全检查的非法行为：
+
+```zig
+const BroadError = error{ NotFound, PermissionDenied };
+const SpecificError = error{NotFound};
+
+fn narrow() SpecificError!void {
+    const result = broad() catch |err| return @errorCast(err);
+    _ = result;
+}
+
+fn broad() BroadError!void {
+    return error.NotFound;
 }
 ```
 
@@ -182,8 +239,6 @@ fn example() void {
 - 降低类型安全性（编译器无法检查具体错误类型）
 - 应该在生产代码中避免使用
 
-**示例**：
-
 ```zig
 fn flexibleFunction() anyerror!void {
     // 可以返回任何错误
@@ -191,6 +246,29 @@ fn flexibleFunction() anyerror!void {
 ```
 
 **推荐做法**：优先使用具体错误集，只在必要时使用 `anyerror`。
+
+### 错误相关内建函数
+
+Zig 提供了多个与错误处理相关的内建函数：
+
+| 内建函数            | 作用                                    | 示例                                        |
+| ------------------- | --------------------------------------- | ------------------------------------------- |
+| `@errorCast`        | 将错误集转换为更小的错误集（超集→子集） | `@errorCast(err)`                           |
+| `@intFromError`     | 获取错误值的整数表示                    | `@intFromError(error.NotFound)`             |
+| `@errorFromInt`     | 从整数获取错误值                        | `@errorFromInt(@as(u16, 1))`                |
+| `@errorName`        | 获取错误的字符串表示                    | `@errorName(error.NotFound)` → `"NotFound"` |
+| `@errorReturnTrace` | 获取错误返回追踪                        | `@errorReturnTrace()`                       |
+
+**`@errorName`** 在调试时特别实用：
+
+```zig
+const err = someOperation() catch |e| {
+    std.debug.print("错误名称：{s}\n", .{@errorName(e)});
+    return e;
+};
+```
+
+**注意**：`@intFromError` 和 `@errorFromInt` 的整数表示在不同编译之间不稳定，应避免依赖具体的整数值。
 
 ## 错误联合类型
 
@@ -213,16 +291,18 @@ const ParseError = error{
 // 错误联合类型：可能返回 i32 或 ParseError
 fn parseNumber(str: []const u8) ParseError!i32 {
     if (str.len == 0) return ParseError.InvalidFormat;
-    
+
     var result: i32 = 0;
     for (str) |char| {
         if (char < '0' or char > '9') return ParseError.InvalidFormat;
         result = result * 10 + (char - '0');
     }
-    
+
     return result;
 }
 ```
+
+**省略错误集的写法**：`!Type` 等价于 `anyerror!Type`，表示可以返回任何错误。在函数签名中，`!Type` 通常表示让编译器推断错误集。
 
 ## 错误传播和处理
 
@@ -235,7 +315,6 @@ fn parseNumber(str: []const u8) ParseError!i32 {
 **基本用法**：
 
 ```zig
-// try 的作用：如果操作失败，立即返回错误；否则返回正常值
 fn divide(a: i32, b: i32) !i32 {
     if (b == 0) return error.DivisionByZero;
     return @divTrunc(a, b);
@@ -257,13 +336,23 @@ const result = divide(10, 2) catch |err| {
 };
 ```
 
+**使用限制**：`try` 只能在返回错误联合类型的函数中使用。在返回 `void` 或其他非错误联合类型的函数中使用 `try` 会导致编译错误：
+
+```zig
+// ❌ 错误：main 返回 void，不能使用 try
+pub fn main(_: std.process.Init.Minimal) void {
+    try mightFail();  // 编译错误
+}
+
+// ✅ 正确：main 返回 !void
+pub fn main(_: std.process.Init.Minimal) !void {
+    try mightFail();
+}
+```
+
 ### catch：错误处理
 
 `catch` 用于在当前层级处理错误，提供恢复机制或默认值。
-
-`catch` 有两种主要用法：
-1. 提供默认值（忽略具体错误）
-2. 捕获错误并处理
 
 **用法 1：提供默认值**
 
@@ -272,7 +361,7 @@ const result = divide(10, 2) catch |err| {
 const result = divide(10, 0) catch 0;
 ```
 
-**用法 2：处理错误**
+**用法 2：捕获错误并处理**
 
 ```zig
 fn example() void {
@@ -283,6 +372,17 @@ fn example() void {
     std.debug.print("结果：{}\n", .{result});
 }
 ```
+
+**用法 3：catch unreachable**
+
+当逻辑上确定不会出错时，可以使用 `catch unreachable` 断言：
+
+```zig
+// "42" 一定可以解析为整数，逻辑上不可能失败
+const value = parseU32("42") catch unreachable;
+```
+
+`unreachable` 在 Debug/ReleaseSafe 模式下会触发安全检查的非法行为，在 ReleaseFast 模式下是未定义行为。仅在可以**证明**不会出错时使用。
 
 ### 错误匹配
 
@@ -330,123 +430,101 @@ fn example() void {
 }
 ```
 
-**适用场景**：
-- 需要分别处理成功和失败情况
-- 成功和失败的处理逻辑都比较复杂
-
 **与 catch 的区别**：
 - `catch`：主要用于错误处理，成功时直接获取值
 - `if`：分别处理成功和失败，两者都可以有复杂逻辑
 
 ## errdefer
 
-`errdefer` 用于在函数返回错误时执行清理操作。
+`errdefer` 用于在函数返回**错误**时执行清理操作。它与 `defer` 的关键区别是：`defer` 无论成功失败都会执行，而 `errdefer` **仅在返回错误时执行**。
+
+### defer vs errdefer
+
+```zig
+// defer：无论成功还是失败，都会执行
+fn withDefer(allocator: std.mem.Allocator) !void {
+    const memory = try allocator.alloc(u8, 100);
+    defer allocator.free(memory);  // ✅ 成功和失败都会释放
+    // ... 使用 memory ...
+}
+
+// errdefer：仅在失败时执行
+fn withErrdefer(allocator: std.mem.Allocator) ![]u8 {
+    const memory = try allocator.alloc(u8, 100);
+    errdefer allocator.free(memory);  // ✅ 仅失败时释放
+    // 成功时将 memory 返回给调用者，调用者负责释放
+    return memory;
+}
+```
+
+**选择原则**：
+- 资源在函数内完成生命周期 → 使用 `defer`
+- 资源在成功时转移给调用者 → 使用 `errdefer`
 
 ### 基本用法
 
-```zig
-const std = @import("std");
-
-fn allocateAndProcess(allocator: std.mem.Allocator) !void {
-    const memory = try allocator.alloc(u8, 100);
-    
-    // 如果函数返回错误，释放内存
-    errdefer allocator.free(memory);
-    
-    // 可能失败的操作
-    const success = false;
-    if (!success) {
-        return error.ProcessingFailed;  // errdefer 会执行
-    }
-    
-    // 成功时的清理
-    allocator.free(memory);
-}
-```
-
-### 多资源管理
+`errdefer` 最典型的场景是**所有权转移**：函数成功时将资源返回给调用者，仅在失败时才需要清理：
 
 ```zig
 const std = @import("std");
 
-fn processFile(allocator: std.mem.Allocator, path: []const u8) !void {
-    // 资源获取顺序：按依赖关系获取
-    const file = try std.fs.cwd().openFile(path, .{});
-    errdefer file.close();  // 出错时关闭文件
-    
-    const buffer = try allocator.alloc(u8, 1024);
-    errdefer allocator.free(buffer);  // 出错时释放内存
-    
-    // 处理内容
-    var buf: [1024]u8 = undefined;
-    const bytes_read = try file.read(std.io.getStdOut().writer().context, &buf);
-    try processContent(buf[0..bytes_read]);
-    
-    // 成功时的清理（按相反顺序）
-    allocator.free(buffer);
-    file.close();
-}
-
-fn processContent(content: []const u8) !void {
-    if (content.len == 0) {
-        return error.EmptyContent;
-    }
-    std.debug.print("处理内容：{s}\n", .{content});
-}
-```
-
-**实际应用：数据库连接池**
-
-```zig
-const std = @import("std");
-
-// 简化的数据库连接池示例
-const ConnectionPool = struct {
-    connections: []*Connection,
-    allocator: std.mem.Allocator,
-    
-    fn acquire(self: *ConnectionPool) !*Connection {
-        // 尝试获取空闲连接
-        for (self.connections) |conn| {
-            if (!conn.in_use) {
-                conn.in_use = true;
-                return conn;
-            }
-        }
-        return error.NoAvailableConnection;
-    }
-    
-    fn release(self: *ConnectionPool, conn: *Connection) void {
-        conn.in_use = false;
-    }
-};
-
-const Connection = struct {
-    id: usize,
-    in_use: bool = false,
-};
-
-// 使用 errdefer 管理连接
-fn queryUser(pool: *ConnectionPool, user_id: usize) !UserData {
-    const conn = try pool.acquire();
-    errdefer pool.release(conn);  // 出错时归还连接
-    
-    // 执行查询...
-    if (user_id == 0) {
-        return error.InvalidUserId;
-    }
-    
-    const user_data = UserData{ .id = user_id, .name = "test" };
-    
-    pool.release(conn);  // 成功时手动归还
-    return user_data;
-}
-
-const UserData = struct {
+const User = struct {
     id: usize,
     name: []const u8,
 };
+
+fn createUser(allocator: std.mem.Allocator, id: usize, name: []const u8) !*User {
+    const user = try allocator.create(User);
+    errdefer allocator.destroy(user);  // 失败时释放，成功时调用者拥有 user
+
+    user.* = User{ .id = id, .name = name };
+
+    if (id == 0) {
+        return error.InvalidUserId;  // errdefer 会执行，释放 user
+    }
+
+    return user;  // 成功：调用者负责释放 user
+}
 ```
+
+如果这里使用 `defer`，则成功返回后 `user` 会被立即销毁，调用者拿到的就是悬空指针——这正是 `errdefer` 存在的意义。
+
+### 多资源管理
+
+当函数需要分配多个资源时，每个 `errdefer` 负责清理自己对应的资源，确保部分初始化失败时不会泄漏：
+
+```zig
+const std = @import("std");
+
+const Config = struct {
+    name: []const u8,
+    items: []u32,
+};
+
+fn loadConfig(allocator: std.mem.Allocator, name: []const u8, count: usize) !*Config {
+    const config = try allocator.create(Config);
+    errdefer allocator.destroy(config);  // 第 2 步失败时清理 config
+
+    const items = try allocator.alloc(u32, count);
+    errdefer allocator.free(items);  // 第 3 步失败时清理 items
+
+    config.* = Config{
+        .name = name,
+        .items = items,
+    };
+
+    if (count > 1000) {
+        return error.TooManyItems;  // errdefer 按相反顺序执行：free(items) → destroy(config)
+    }
+
+    return config;  // 成功：调用者拥有 config 及其 items
+}
+```
+
+**关键点**：
+- 每个 `try` 之后紧跟对应的 `errdefer`，确保该步失败时之前获取的资源被清理
+- 多个 `errdefer` 按 LIFO（后进先出）顺序执行，与资源获取顺序相反
+- 成功时所有资源通过 `config` 一起返回，调用者负责最终释放
 
 ### 执行顺序
 
@@ -456,45 +534,69 @@ const UserData = struct {
 fn example() !void {
     const resource1 = try acquire1();
     errdefer release1(resource1);  // 第 3 个执行
-    
+
     const resource2 = try acquire2();
     errdefer release2(resource2);  // 第 2 个执行
-    
+
     const resource3 = try acquire3();
     errdefer release3(resource3);  // 第 1 个执行
-    
+
     // 如果出错，执行顺序：release3 → release2 → release1
 }
 ```
 
-# 错误处理流程
+### 错误捕获：errdefer |err|
 
-## 流程图
+`errdefer` 支持捕获错误值，可以在清理时根据错误类型执行不同逻辑：
 
-**完整错误处理流程**：
+```zig
+const std = @import("std");
+
+fn sendRequest(url: []const u8) !void {
+    std.debug.print("发送请求到 {s}\n", .{url});
+
+    errdefer |err| {
+        std.debug.print("请求失败：{}\n", .{err});
+    }
+
+    if (std.mem.startsWith(u8, url, "https://") == false) {
+        return error.InvalidUrl;
+    }
+
+    // 模拟网络请求...
+    return error.Timeout;
+}
+```
+
+**常见用途**：
+- 记录失败原因的日志
+- 根据错误类型执行不同的清理逻辑
+- 在清理时附加错误上下文信息
+
+## 错误处理流程
 
 ```mermaid
 flowchart TD
     A[函数调用] --> B[执行函数体代码]
     B --> C{执行结果}
-    
+
     C -->|成功| D[返回正常值 T]
     D --> H[调用者接收返回值]
     H --> J[继续执行正常逻辑]
-    
+
     C -->|失败| E[创建错误值<br/>error.ErrorName]
     E --> F[执行 errdefer<br/>清理资源]
     F --> G[返回错误值<br/>return err]
     G --> H
-    
+
     H --> K{返回值类型}
     K -->|正常值 T| J
     K -->|错误值 !T| L[错误处理分支]
-    
+
     L --> M[try 传播<br/>继续传播给上层]
     L --> N[catch 处理<br/>恢复/默认值]
     L --> O[if err 匹配<br/>特定处理]
-    
+
     style A fill:#e1f5ff
     style D fill:#e1ffe1
     style J fill:#e1ffe1
@@ -507,158 +609,45 @@ flowchart TD
     style O fill:#e1ffe1
 ```
 
-**错误处理关键节点**：
-
-| 节点         | 作用                     | 示例                             |
-| ------------ | ------------------------ | -------------------------------- |
-| **错误创建** | 定义错误类型并创建错误值 | `return error.FileNotFound;`     |
-| **errdefer** | 确保错误发生时资源被清理 | `errdefer file.close();`         |
-| **错误传播** | 将错误传递给上层调用者   | `try openFile(path);`            |
-| **错误捕获** | 在当前层级处理错误       | `catch { return default; }`      |
-| **错误匹配** | 根据错误类型执行不同逻辑 | `if (err == error.NotFound) ...` |
-
 ## 完整示例
 
 ```zig
 const std = @import("std");
 
-fn processFile(allocator: std.mem.Allocator, path: []const u8) !void {
-    const file = try std.fs.cwd().openFile(path, .{});
-    errdefer file.close();
-    
-    const buffer = try allocator.alloc(u8, 1024);
-    errdefer allocator.free(buffer);
-    
-    var buf: [1024]u8 = undefined;
-    const bytes_read = try file.read(std.io.getStdOut().writer().context, &buf);
-    
-    if (bytes_read == 0) {
-        return error.EmptyFile;
+const Buffer = struct {
+    data: []u8,
+    len: usize,
+};
+
+fn createBuffer(allocator: std.mem.Allocator, content: []const u8, max_size: usize) !Buffer {
+    if (content.len == 0) {
+        return error.EmptyContent;
     }
-    
-    std.debug.print("读取到 {} 字节\n", .{bytes_read});
-    
-    allocator.free(buffer);
-    file.close();
+    if (content.len > max_size) {
+        return error.ContentTooLarge;
+    }
+
+    const data = try allocator.alloc(u8, max_size);
+    errdefer allocator.free(data);  // 仅失败时释放，成功时返回给调用者
+
+    @memcpy(data[0..content.len], content);
+
+    return Buffer{ .data = data, .len = content.len };
 }
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
-    
-    processFile(allocator, "data.txt") catch |err| {
-        std.debug.print("处理失败: {}\n", .{err});
+
+    const content = "Hello, Zig!";
+    const result = createBuffer(allocator, content, 1024) catch |err| {
+        std.debug.print("创建缓冲区失败: {}\n", .{err});
         return err;
     };
-    
-    std.debug.print("处理成功\n", .{});
-}
-```
+    defer allocator.free(result.data);  // 使用完毕后释放
 
-# 高级主题
-
-## 错误集推断详解
-
-Zig 编译器会自动推断函数的错误集：
-
-```zig
-const std = @import("std");
-
-// 显式声明错误集
-fn explicitErrors() error{ FileNotFound, OutOfMemory }!void {
-    const file = try std.fs.cwd().openFile("test.txt", .{});
-    defer file.close();
-    
-    var gpa: std.heap.DebugAllocator(.{}) = .init;
-    const allocator = gpa.allocator();
-    const buffer = try allocator.alloc(u8, 1024);
-    defer allocator.free(buffer);
-}
-
-// 让编译器推断错误集
-fn inferredErrors() !void {
-    const file = try std.fs.cwd().openFile("test.txt", .{});
-    defer file.close();
-    
-    var gpa: std.heap.DebugAllocator(.{}) = .init;
-    const allocator = gpa.allocator();
-    const buffer = try allocator.alloc(u8, 1024);
-    defer allocator.free(buffer);
-    
-    // 编译器会推断出与 explicitErrors 相同的错误集
-}
-```
-
-## 错误集合并详解
-
-错误集可以合并和子集化：
-
-```zig
-const std = @import("std");
-
-const FileError = error{
-    NotFound,
-    PermissionDenied,
-};
-
-const NetworkError = error{
-    ConnectionFailed,
-    Timeout,
-};
-
-// 合并错误集
-const CombinedError = FileError || NetworkError;
-
-// 子集关系
-const SpecificError = error{NotFound};
-
-fn example() void {
-    const specific: SpecificError = error.NotFound;
-    
-    // 子集可以隐式转换为超集
-    const file: FileError = specific;
-    const combined: CombinedError = specific;
-    
-    // 但超集不能隐式转换为子集
-    // const back: SpecificError = file;  // 编译错误
-}
-```
-
-## 错误集转换详解
-
-在不同错误集之间转换：
-
-```zig
-const std = @import("std");
-
-const LowLevelError = error{
-    DiskError,
-    NetworkError,
-};
-
-const HighLevelError = error{
-    IOError,
-    Timeout,
-};
-
-// 错误映射
-fn mapError(err: LowLevelError) HighLevelError {
-    return switch (err) {
-        error.DiskError => error.IOError,
-        error.NetworkError => error.Timeout,
-    };
-}
-
-// 使用示例
-fn highLevelOperation() HighLevelError!void {
-    const result = lowLevelOperation() catch |err| {
-        return mapError(err);
-    };
-}
-
-fn lowLevelOperation() LowLevelError!void {
-    return error.DiskError;
+    std.debug.print("缓冲区 {} 字节：{s}\n", .{ result.len, result.data[0..result.len] });
 }
 ```
 
@@ -684,15 +673,9 @@ fn lowLevelOperation() LowLevelError!void {
   - 无异常表
   - 无隐藏的控制流
 
-### 最佳实践
+## 最佳实践
 
-1. **优先使用具体错误集**：避免 `anyerror`
-2. **合理使用错误集推断**：让编译器推断错误集
-3. **避免过度嵌套**：深层嵌套的错误处理会影响性能
-
-# 最佳实践
-
-## 定义清晰的错误类型
+### 定义清晰的错误类型
 
 ```zig
 // ✅ 好的做法：语义化的错误名称
@@ -711,118 +694,67 @@ const Error = error{
 };
 ```
 
-## 错误传播策略
+### 错误传播与处理原则
+
+1. **优先使用 `try` 传播错误**：让调用者决定如何处理，除非当前层级有明确的恢复策略
+2. **在当前层级能处理时使用 `catch`**：提供默认值或恢复逻辑，而非无条件传播
+3. **使用 `defer` 管理函数内资源**：资源在函数内完成生命周期时，始终使用 `defer`，不要用 `errdefer` + 手动清理
+4. **使用 `errdefer` 管理所有权转移**：资源在成功时返回给调用者时，用 `errdefer` 确保失败时清理
+5. **优先使用具体错误集**：避免 `anyerror`，让编译器帮你检查错误处理的完整性
+6. **公共 API 显式声明错误集**：便于用户理解函数可能返回哪些错误
+
+## 常见错误与调试
+
+### 常见编译错误
+
+#### 错误1：在非错误联合函数中使用 try
 
 ```zig
-// 策略1：使用 try 传播错误（让调用者处理）
-fn readConfig(path: []const u8) !Config {
-    const file = try std.fs.cwd().openFile(path, .{});
-    defer file.close();
-    // ...
+// ❌ 错误示例：main 返回 void，不能使用 try
+pub fn main(_: std.process.Init.Minimal) void {
+    try mightFail();  // 编译错误：try 在非错误联合返回类型函数中不可用
 }
 
-// 策略2：使用 catch 处理错误（当前层级处理）
-fn readConfigOrDefault(path: []const u8) Config {
-    return readConfig(path) catch {
-        return Config.default();
-    };
-}
-
-// 策略3：错误转换（统一错误类型）
-fn readConfigUnified(path: []const u8) UnifiedError!Config {
-    return readConfig(path) catch |err| switch (err) {
-        error.FileNotFound => UnifiedError.NotFound,
-        else => UnifiedError.IOError,
-    };
-}
-```
-
-## 资源管理
-
-```zig
-fn processFile(path: []const u8, allocator: std.mem.Allocator) !void {
-    const file = try std.fs.cwd().openFile(path, .{});
-    errdefer file.close();  // 出错时关闭文件
-    
-    const buffer = try allocator.alloc(u8, 1024);
-    errdefer allocator.free(buffer);  // 出错时释放内存
-    
-    try processContent(buffer);
-    
-    // 成功时手动清理
-    allocator.free(buffer);
-    file.close();
+// ✅ 正确做法：将返回类型改为错误联合类型
+pub fn main(_: std.process.Init.Minimal) !void {
+    try mightFail();
 }
 ```
 
-## 错误处理模式
+#### 错误2：错误集不兼容
 
-### 模式1：带默认值
-
-```zig
-const value = mightFail() catch 0;
-```
-
-### 模式2：带日志
+超集不能隐式转换为子集，需要显式处理：
 
 ```zig
-const value = mightFail() catch |err| {
-    std.log.err("操作失败: {}", .{err});
-    return err;
-};
-```
-
-### 模式3：多错误类型
-
-```zig
-const value = mightFailMultiple() catch |err| switch (err) {
-    error.NetworkError => handleNetworkError(err),
-    error.Timeout => retry(),
-    else => return err,
-};
-```
-
-# 常见错误与调试
-
-## 常见编译错误
-
-### 错误1：类型不匹配
-
-```zig
-// ❌ 错误示例
-fn foo(x: i32) void { _ = x; }
-foo(42.0);  // 错误：期望 i32，找到 comptime_float
-
-// ✅ 正确做法
-foo(@as(i32, 42));
-```
-
-### 错误2：错误集不兼容
-
-```zig
-// ❌ 错误示例
 const SpecificError = error{NotFound};
 const BroadError = error{NotFound, PermissionDenied};
 
+fn broad() BroadError!void {
+    return error.PermissionDenied;
+}
+
+// ❌ 错误示例：BroadError 不能隐式转换为 SpecificError
 fn narrow() SpecificError!void {
-    return error.NotFound;
+    return broad();  // 编译错误：错误集不兼容
 }
 
-fn broad() BroadError!void {
-    return narrow();  // 错误：错误集不兼容
+// ✅ 正确做法1：使用 @errorCast 显式转换（运行时安全检查）
+fn narrow() SpecificError!void {
+    broad() catch |err| return @errorCast(err);
 }
 
-// ✅ 正确做法
-fn broad() BroadError!void {
-    return narrow() catch |err| {
-        return @errorCast(err);
+// ✅ 正确做法2：逐个映射错误
+fn narrow() SpecificError!void {
+    broad() catch |err| switch (err) {
+        error.NotFound => return error.NotFound,
+        error.PermissionDenied => return error.PermissionDenied,  // 需要处理所有错误
     };
 }
 ```
 
-## 常见运行时错误
+### 常见运行时错误
 
-### 错误1：未处理的错误
+#### 错误1：未处理的错误
 
 ```zig
 // ❌ 错误示例
@@ -836,36 +768,69 @@ fn main() !void {
 }
 ```
 
-### 错误2：错误的 errdefer 使用
+#### 错误2：误用 errdefer 替代 defer
+
+当资源在成功和失败路径上都需要清理时，应使用 `defer`，而非 `errdefer` + 手动清理：
 
 ```zig
-// ❌ 错误示例
-fn example() !void {
-    const resource = try acquire();
-    errdefer release(resource);
-    
-    // 错误：在成功路径上也执行了 errdefer
-    return;  // errdefer 会执行，但资源已经被释放
+// ❌ 错误示例：errdefer + 手动清理，容易遗漏
+fn processFile(path: []const u8) !void {
+    const file = try openFile(path);
+    errdefer file.close();  // 仅失败时执行
+
+    try process(file);
+
+    file.close();  // 成功时手动清理——容易忘记
 }
 
-// ✅ 正确做法
-fn example() !void {
-    const resource = try acquire();
-    errdefer release(resource);
-    
-    // 成功时手动清理
-    release(resource);
+// ✅ 正确做法：使用 defer，无论成功失败都清理
+fn processFile(path: []const u8) !void {
+    const file = try openFile(path);
+    defer file.close();  // 成功和失败都会执行
+
+    try process(file);
 }
 ```
 
-## 调试技巧
+另一种常见错误：在 `errdefer` 场景中忘记成功路径也需要处理资源：
 
-### 技巧1：打印错误信息
+```zig
+// ❌ 错误示例：errdefer 只在失败时执行，成功时资源泄漏
+fn allocateAndProcess(allocator: std.mem.Allocator) !void {
+    const memory = try allocator.alloc(u8, 100);
+    errdefer allocator.free(memory);  // 仅失败时释放
+
+    try process(memory);
+    // 成功返回时，memory 没有被释放，也没有转移给调用者——泄漏！
+}
+
+// ✅ 正确做法1：函数内完成生命周期，使用 defer
+fn allocateAndProcess(allocator: std.mem.Allocator) !void {
+    const memory = try allocator.alloc(u8, 100);
+    defer allocator.free(memory);  // 无论成功失败都释放
+
+    try process(memory);
+}
+
+// ✅ 正确做法2：成功时转移所有权，使用 errdefer
+fn allocateForCaller(allocator: std.mem.Allocator) ![]u8 {
+    const memory = try allocator.alloc(u8, 100);
+    errdefer allocator.free(memory);  // 仅失败时释放
+
+    try initialize(memory);
+
+    return memory;  // 成功：调用者负责释放
+}
+```
+
+### 调试技巧
+
+#### 技巧1：打印错误信息
 
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     const result = riskyOperation() catch |err| {
         std.debug.print("错误: {}\n", .{err});
         return;
@@ -874,12 +839,12 @@ pub fn main(init: std.process.Init.Minimal) void {
 }
 ```
 
-### 技巧2：打印堆栈追踪
+#### 技巧2：打印堆栈追踪
 
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     riskyOperation() catch |err| {
         std.debug.print("错误: {}\n", .{err});
         std.debug.dumpCurrentStackTrace(null);
@@ -887,7 +852,7 @@ pub fn main(init: std.process.Init.Minimal) void {
 }
 ```
 
-### 技巧3：使用安全检查模式
+#### 技巧3：使用安全检查模式
 
 ```bash
 # Debug 模式：启用所有安全检查

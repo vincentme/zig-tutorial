@@ -115,7 +115,7 @@ fn Config(comptime fields: []const ConfigField) type {
     };
 }
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     // 定义配置字段
     const config_fields = [_]ConfigField{
         .{ .name = "port", .type = u16, .description = "服务器端口" },

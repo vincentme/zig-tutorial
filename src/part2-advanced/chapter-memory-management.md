@@ -116,7 +116,7 @@ fn complexOperation() !void {
 
 **实践3：使用DebugAllocator检测泄漏**
 ```zig
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
 #### 10.0.1 ⚠️ 容器初始化最佳实践（0.15.x+）
 
 > **重要**：Zig 0.15.x 对容器初始化语法进行了规范化。错误的初始化方式会导致未定义行为。
@@ -173,7 +173,7 @@ var list = std.ArrayList(u32).init(allocator);
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var gpa: std.heap.DebugAllocator(.{}) = .{};  // ❌ 错误
     defer _ = gpa.deinit();
     
@@ -189,7 +189,7 @@ pub fn main(init: std.process.Init.Minimal) !void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var gpa: std.heap.DebugAllocator(.{}) = .init;  // ✅ 正确
     defer _ = gpa.deinit();
     
@@ -333,7 +333,7 @@ const std = @import("std");
 // 全局数据段
 const global_const: i32 = 42;
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     // 栈内存
     var stack_var: i32 = 10;
     
@@ -358,7 +358,7 @@ Zig 标准库提供了多种内存分配器：
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     // 通用分配器，带内存泄漏检测
     var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer {
@@ -382,7 +382,7 @@ pub fn main(init: std.process.Init.Minimal) !void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     
@@ -406,7 +406,7 @@ pub fn main(init: std.process.Init.Minimal) !void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     // 固定大小的缓冲区分配器
     var buffer: [1000]u8 = undefined;
     var fba = std.heap.FixedBufferAllocator.init(&buffer);
@@ -424,7 +424,7 @@ pub fn main(init: std.process.Init.Minimal) !void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     // 直接使用操作系统分配器
     // 适合大型内存分配，没有额外的内存跟踪开销
     const allocator = std.heap.page_allocator;
@@ -441,7 +441,7 @@ pub fn main(init: std.process.Init.Minimal) !void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
 
@@ -487,7 +487,7 @@ fn processData(allocator: std.mem.Allocator, data: []const u8) ![]u8 {
     return buffer;
 }
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     
@@ -514,7 +514,7 @@ const DataProcessor = struct {
     }
 };
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     
@@ -610,7 +610,7 @@ Zig 提供了一些内存安全机制：
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     var array = [_]i32{ 1, 2, 3 };
     
     // 安全访问（运行时边界检查）
@@ -629,7 +629,7 @@ pub fn main(init: std.process.Init.Minimal) void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     const a: u8 = 255;
     
     // 检测溢出的加法

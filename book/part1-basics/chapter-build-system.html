@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-4cba6933.js";
+            window.path_to_searchindex_js = "../searchindex-a9ca16c2.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-2fc75e4c.js"></script>
@@ -277,7 +277,7 @@ pub fn build(b: *std.Build) void {
 <p>在代码中使用选项：</p>
 <pre><code class="language-zig">const config = @import("config");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     if (config.enable_logging) {
         std.debug.print("Logging enabled\n", .{});
     }
@@ -334,7 +334,7 @@ pub fn build(b: *std.Build) void {
 <pre><code class="language-zig">const std = @import("std");
 const lib = @import("lib");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     lib.someFunction();
 }
 </code></pre>

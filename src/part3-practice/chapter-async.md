@@ -42,7 +42,7 @@ Zig 团队移除 `async`/`await` 关键字的原因：
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     // 创建线程
     const thread = try std.Thread.spawn(.{}, worker, .{});
     
@@ -67,7 +67,7 @@ fn worker() void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     
@@ -184,7 +184,7 @@ fn saveFile(io: Io, data: []const u8, name: []const u8) !void {
 const std = @import("std");
 const zap = @import("zap");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var listener = zap.HttpListener.init(.{
         .port = 3000,
         .on_request = onRequest,

@@ -262,7 +262,7 @@ fn Vector(comptime T: type, comptime size: usize) type {
     return [size]T;
 }
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     std.debug.print("=== comptime 执行流程演示 ===\n\n", .{});
     
     // 示例1：编译期常量计算
@@ -444,7 +444,7 @@ fn max(comptime T: type, a: T, b: T) T {
     return if (a > b) a else b;
 }
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     const result1 = max(i32, 10, 20);
     const result2 = max(f64, 3.14, 2.71);
     
@@ -457,7 +457,7 @@ pub fn main(init: std.process.Init.Minimal) void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     // 编译期变量
     comptime var i: usize = 0;
     
@@ -513,7 +513,7 @@ fn Stack(comptime T: type) type {
     };
 }
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     
@@ -581,7 +581,7 @@ const Person = struct {
     }
 };
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     printFields(Person);
     
     if (hasMethod(Person, "greet")) {
@@ -628,7 +628,7 @@ const Color = enum {
 
 const ColorStrings = EnumToString(Color);
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     const color = Color.Red;
     std.debug.print("颜色：{s}\n", .{ColorStrings.toString(color)});
 }
@@ -698,7 +698,7 @@ fn describeType(value: anytype) void {
     }
 }
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     // 每次调用都会生成专门的函数版本
     printType(42);        // 生成 printType(i32) 版本
     printType(3.14);      // 生成 printType(f64) 版本
@@ -750,7 +750,7 @@ fn addNumbers(a: anytype, b: @TypeOf(a)) @TypeOf(a) {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     const x = 10;
     const y = 20;
 
@@ -792,7 +792,7 @@ const OpaqueTest = struct {
     }
 };
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     OpaqueTest.demo();
 }
 ```
@@ -819,7 +819,7 @@ const ConnectionImpl = struct {
     }
 };
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     std.debug.print("不透明类型用于隐藏实现细节\n", .{});
 }
 ```

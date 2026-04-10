@@ -391,7 +391,7 @@ const Server = struct {
     }
 };
 
-pub fn main(init: std.process.Init.Minimal) !void {  // 旧版本主函数签名
+pub fn main(_: std.process.Init.Minimal) !void {  // 旧版本主函数签名
     // ...
 }
 ```

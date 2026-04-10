@@ -743,7 +743,7 @@ fn fibonacci(n: usize) usize {
     return fibonacci(n - 1) + fibonacci(n - 2);
 }
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     const iterations = 10_000;
     
     // 计时开始
@@ -1147,7 +1147,7 @@ fn swap(a: *i32, b: *i32) void {
     b.* = temp;
 }
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     var x: i32 = 10;
     var y: i32 = 20;
     
@@ -1172,7 +1172,7 @@ fn doubleAll(arr: []i32) void {
     }
 }
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     var arr = [_]i32{ 1, 2, 3, 4, 5 };
     doubleAll(&arr);
     std.debug.print("结果：{any}\n", .{arr});
@@ -1196,7 +1196,7 @@ fn sum(arr: *const [5]i32) i32 {
     return total;
 }
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     const arr = [_]i32{ 1, 2, 3, 4, 5 };
     const result = sum(&arr);
     std.debug.print("总和：{}\n", .{result});
@@ -1228,7 +1228,7 @@ const Node = struct {
     }
 };
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     var node1 = Node.init(1);
     var node2 = Node.init(2);
     var node3 = Node.init(3);
@@ -1256,7 +1256,7 @@ pub fn main(init: std.process.Init.Minimal) void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
@@ -1341,7 +1341,7 @@ const TreeNode = struct {
     }
 };
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     var root = TreeNode.init(5);
     var left = TreeNode.init(3);
     var right = TreeNode.init(7);

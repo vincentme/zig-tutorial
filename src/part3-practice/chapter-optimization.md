@@ -21,7 +21,7 @@ zig build -Doptimize=ReleaseSmall
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     const start = std.time.nanoTimestamp();
     
     // 要测试的代码
@@ -44,7 +44,7 @@ pub fn main(init: std.process.Init.Minimal) !void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     var value: i32 = 42;
     
     // 使用 std.debug.print 调试

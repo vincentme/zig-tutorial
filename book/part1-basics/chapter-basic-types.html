@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-4cba6933.js";
+            window.path_to_searchindex_js = "../searchindex-a9ca16c2.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-2fc75e4c.js"></script>
@@ -183,7 +183,7 @@
                     <main>
                         <h1 id="变量声明和基础类型"><a class="header" href="#变量声明和基础类型">变量声明和基础类型</a></h1>
 <p>本章介绍 Zig 的变量声明和基础类型，包括变量声明规则、基本数据类型、字符和字符串以及类型转换。这些是 Zig 编程的基础，后续章节将在此基础上介绍复合类型、控制流、错误处理和内存管理等核心概念。</p>
-<h2 id="zig-编程基础"><a class="header" href="#zig-编程基础">Zig 编程基础</a></h2>
+<h2 id="声明与命名"><a class="header" href="#声明与命名">声明与命名</a></h2>
 <h3 id="变量声明"><a class="header" href="#变量声明">变量声明</a></h3>
 <p>Zig 是强类型语言，支持类型推断。变量声明使用 <code>const</code>（常量）或 <code>var</code>（变量）：</p>
 <pre><code class="language-zig">const std = @import("std");
@@ -191,15 +191,39 @@
 pub fn main(_: std.process.Init.Minimal) void {
     const constant: i32 = 42;    // 常量：不可变
     var mutable: i32 = 10;       // 变量：可变
-    
+
     mutable = 30;                 // 合法
     // constant = 50;             // 编译错误：常量不可修改
-    
+
     std.debug.print("constant: {}, mutable: {}\n", .{ constant, mutable });
 }
 </code></pre>
 <p>预期输出：</p>
 <pre><code>constant: 42, mutable: 30
+</code></pre>
+<h4 id="undefined"><a class="header" href="#undefined">undefined</a></h4>
+<p><code>undefined</code> 用于声明未初始化的变量，表示该内存区域尚未被赋予有意义的值：</p>
+<pre><code class="language-zig">var buffer: [256]u8 = undefined;  // 声明缓冲区，稍后填充
+var x: i32 = undefined;           // 声明占位变量，解包赋值时立即覆盖
+</code></pre>
+<p><strong>重要</strong>：读取 <code>undefined</code> 值是非法行为（Illegal Behavior）。在 Debug/ReleaseSafe 模式下会触发 panic。<code>undefined</code> 仅用于声明后立即赋值的场景（如解包赋值的占位符、缓冲区分配等）。</p>
+<h4 id="编译期常量"><a class="header" href="#编译期常量">编译期常量</a></h4>
+<p>Zig 中 <code>const</code> 声明的值如果能在编译期确定，会自动成为编译期常量：</p>
+<ul>
+<li><strong>顶层 <code>const</code></strong>：文件级别的 <code>const</code> 声明默认是编译期求值的</li>
+<li><strong>函数内 <code>const</code></strong>：如果值是编译期已知的（如字面量、comptime 表达式），也会被编译期求值</li>
+</ul>
+<pre><code class="language-zig">const std = @import("std");
+
+const PI = 3.14159;           // 顶层 const，编译期常量
+
+pub fn main(_: std.process.Init.Minimal) void {
+    const answer = 42;         // 编译期常量（值已知）
+    var runtime_val: i32 = 10; // 运行时变量
+    _ = PI;
+    _ = answer;
+    _ = &amp;runtime_val;
+}
 </code></pre>
 <h3 id="命名规范"><a class="header" href="#命名规范">命名规范</a></h3>
 <p>Zig 遵循明确的命名规范，确保代码风格一致：</p>
@@ -217,129 +241,27 @@ pub fn main(_: std.process.Init.Minimal) void {
 </tbody>
 </table>
 </div>
-<pre><code class="language-zig">const Person = struct {
-    name: []const u8,
-    age: u32,
-    _internal_id: usize,  // 私有字段
-};
-
-const Status = enum {
-    Pending,
-    InProgress,
-    Completed,
-};
-
-fn calculateTotal() i32 { }
-</code></pre>
-<h3 id="注释规范"><a class="header" href="#注释规范">注释规范</a></h3>
-<p>Zig 支持三种注释形式，用于提高代码可读性和生成文档。</p>
-<h4 id="注释类型对比"><a class="header" href="#注释类型对比">注释类型对比</a></h4>
+<h3 id="注释"><a class="header" href="#注释">注释</a></h3>
+<p>Zig 支持三种注释形式：</p>
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th>注释类型</th><th>语法</th><th>用途</th><th>示例</th></tr>
+<tr><th>注释类型</th><th>语法</th><th>用途</th></tr>
 </thead>
 <tbody>
-<tr><td>普通注释</td><td><code>//</code></td><td>代码说明等</td><td><code>// 临时注释</code></td></tr>
-<tr><td>文档注释</td><td><code>///</code></td><td>为结构体、函数等添加文档</td><td><code>/// 函数说明</code></td></tr>
-<tr><td>顶层文档注释</td><td><code>//!</code></td><td>为文件或模块添加文档</td><td><code>//! 模块说明</code></td></tr>
+<tr><td>普通注释</td><td><code>//</code></td><td>代码说明</td></tr>
+<tr><td>文档注释</td><td><code>///</code></td><td>为声明添加文档，被 <code>zig doc</code> 提取</td></tr>
+<tr><td>顶层文档注释</td><td><code>//!</code></td><td>为文件或模块添加文档</td></tr>
 </tbody>
 </table>
 </div>
-<h4 id="普通注释"><a class="header" href="#普通注释">普通注释</a></h4>
-<p>使用 <code>//</code> 进行单行注释，不会被文档工具提取：</p>
-<pre><code class="language-zig">// 这是单行注释
-const x = 10;  // 行尾注释
+<pre><code class="language-zig">//! 本模块提供用户管理功能
 
-// 多行注释使用多个单行注释
-// 第二行注释
-// 第三行注释
-const y = 20;
-</code></pre>
-<h4 id="文档注释"><a class="header" href="#文档注释">文档注释</a></h4>
-<p>使用 <code>///</code> 为结构体、函数对象等添加文档注释，会被 <code>zig doc</code> 工具提取生成 API 文档：</p>
-<pre><code class="language-zig">/// 计算两个整数的和
-/// 
-/// 参数：
-///   - a: 第一个整数
-///   - b: 第二个整数
-/// 
-/// 返回：两个整数的和
-/// 
-/// 示例：
-/// ```zig
-/// const result = add(2, 3); // result = 5
-/// ```
+/// 计算两个整数的和
 fn add(a: i32, b: i32) i32 {
-    return a + b;
+    return a + b;  // 普通注释
 }
-
-/// 用户信息结构体
-const Person = struct {
-    /// 用户姓名
-    name: []const u8,
-    /// 用户年龄
-    age: u32,
-};
 </code></pre>
-<h4 id="顶层文档注释"><a class="header" href="#顶层文档注释">顶层文档注释</a></h4>
-<p>使用 <code>//!</code> 为整个文件或模块添加文档说明：</p>
-<pre><code class="language-zig">//! 用户管理模块
-//! 
-//! 提供用户信息的存储、查询和更新功能。
-//! 
-//! 示例：
-//! ```zig
-//! const user = User{ .name = "Alice", .age = 30 };
-//! ```
-
-const std = @import("std");
-
-pub const User = struct {
-    name: []const u8,
-    age: u32,
-};
-</code></pre>
-<p>顶层文档注释通常放在文件开头，用于说明整个模块的用途和使用方法。</p>
-<h4 id="注释最佳实践"><a class="header" href="#注释最佳实践">注释最佳实践</a></h4>
-<ol>
-<li>
-<p><strong>解释“为什么“，而不是“是什么“</strong>：</p>
-<pre><code class="language-zig">// ❌ 不好的注释：重复代码
-// 将 x 加 1
-x += 1;
-
-// ✅ 好的注释：解释意图
-// 跳过第一个元素，因为它包含标题
-x += 1;
-</code></pre>
-</li>
-<li>
-<p><strong>保持注释与代码同步</strong>：</p>
-<pre><code class="language-zig">// ❌ 注释过时
-// 最大连接数为 10
-const MAX_CONNECTIONS = 100;  // 实际已改为 100
-</code></pre>
-</li>
-<li>
-<p><strong>使用文档注释而不是普通注释</strong>：</p>
-<pre><code class="language-zig">// ❌ 普通注释不会被文档工具提取
-// 计算总和
-fn sum(a: i32, b: i32) i32 { ... }
-
-// ✅ 文档注释会被提取
-/// 计算总和
-fn sum(a: i32, b: i32) i32 { ... }
-</code></pre>
-</li>
-<li>
-<p><strong>为复杂逻辑添加注释</strong>：</p>
-<pre><code class="language-zig">// 使用位运算优化乘法
-// 等价于 x * 8，但更快
-const result = x &lt;&lt; 3;
-</code></pre>
-</li>
-</ol>
 <h3 id="变量遮蔽规则"><a class="header" href="#变量遮蔽规则">变量遮蔽规则</a></h3>
 <p>Zig <strong>完全禁止</strong>变量遮蔽（Shadowing）。标识符永远不允许使用相同的名称来“隐藏“其他标识符。这意味着：</p>
 <ul>
@@ -348,7 +270,7 @@ const result = x &lt;&lt; 3;
 </ul>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     const pi = 3.14;
 
     {
@@ -407,7 +329,7 @@ pub fn main(_: std.process.Init.Minimal) void {
 
     // 混合声明：可以同时声明常量和变量
     const tuple2 = .{ 10, 20, 30 };
-    const first, var second: i32, const third = tuple2; // 变量需要显示声明类型
+    const first, var second: i32, const third = tuple2; // 变量需要显式声明类型
     second = 25; // 可以修改
     std.debug.print("混合声明：{}, {}, {}\n", .{ first, second, third });
 }
@@ -419,33 +341,78 @@ pub fn main(_: std.process.Init.Minimal) void {
 混合声明：10, 25, 30
 </code></pre>
 <h2 id="基本数据类型"><a class="header" href="#基本数据类型">基本数据类型</a></h2>
+<h3 id="类型总览"><a class="header" href="#类型总览">类型总览</a></h3>
+<p>Zig 提供了以下基础类型：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>类型分类</th><th>类型</th><th>说明</th></tr>
+</thead>
+<tbody>
+<tr><td>整数</td><td><code>i8</code><del><code>i128</code>, <code>u8</code></del><code>u128</code>, <code>isize</code>, <code>usize</code></td><td>有符号/无符号整数</td></tr>
+<tr><td>浮点</td><td><code>f16</code>, <code>f32</code>, <code>f64</code>, <code>f80</code>, <code>f128</code></td><td>IEEE 浮点数</td></tr>
+<tr><td>布尔</td><td><code>bool</code></td><td><code>true</code> 或 <code>false</code></td></tr>
+<tr><td>空</td><td><code>void</code></td><td>空类型，大小为 0 字节</td></tr>
+<tr><td>不可达</td><td><code>noreturn</code></td><td>永不返回的类型</td></tr>
+<tr><td>编译期</td><td><code>comptime_int</code>, <code>comptime_float</code></td><td>编译期确定的数值类型</td></tr>
+<tr><td>可选</td><td><code>?T</code></td><td>可能为 <code>null</code> 的类型</td></tr>
+</tbody>
+</table>
+</div>
+<blockquote>
+<p>📖 <strong>深入学习</strong>：可选类型 <code>?T</code> 的详细用法请参考<a href="chapter-control-flow.html">控制流与资源管理</a>。</p>
+</blockquote>
 <h3 id="整数类型"><a class="header" href="#整数类型">整数类型</a></h3>
+<p>Zig 提供了从 8 位到 128 位的整数类型，以及平台相关的 <code>isize</code>/<code>usize</code>：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>类型</th><th>位数</th><th>最小值</th><th>最大值</th></tr>
+</thead>
+<tbody>
+<tr><td><code>i8</code></td><td>8</td><td>-128</td><td>127</td></tr>
+<tr><td><code>u8</code></td><td>8</td><td>0</td><td>255</td></tr>
+<tr><td><code>i16</code></td><td>16</td><td>-32,768</td><td>32,767</td></tr>
+<tr><td><code>u16</code></td><td>16</td><td>0</td><td>65,535</td></tr>
+<tr><td><code>i32</code></td><td>32</td><td>-2,147,483,648</td><td>2,147,483,647</td></tr>
+<tr><td><code>u32</code></td><td>32</td><td>0</td><td>4,294,967,295</td></tr>
+<tr><td><code>i64</code></td><td>64</td><td>≈ -9.2 × 10¹⁸</td><td>≈ 9.2 × 10¹⁸</td></tr>
+<tr><td><code>u64</code></td><td>64</td><td>0</td><td>≈ 1.8 × 10¹⁹</td></tr>
+<tr><td><code>i128</code></td><td>128</td><td>≈ -1.7 × 10³⁸</td><td>≈ 1.7 × 10³⁸</td></tr>
+<tr><td><code>u128</code></td><td>128</td><td>0</td><td>≈ 3.4 × 10³⁸</td></tr>
+<tr><td><code>isize</code></td><td>指针</td><td>与平台相关</td><td>与平台相关</td></tr>
+<tr><td><code>usize</code></td><td>指针</td><td>0</td><td>与平台相关</td></tr>
+</tbody>
+</table>
+</div>
+<p><code>isize</code>/<code>usize</code> 的大小与平台指针大小一致（64 位平台上为 64 位），常用于表示内存大小和索引。</p>
 <pre><code class="language-zig">const std = @import("std");
 
 pub fn main(_: std.process.Init.Minimal) void {
-    // 有符号整数
-    const signed_i8: i8 = -128;
-    const signed_i16: i16 = -32768;
-    const signed_i32: i32 = -2147483648;
-    const signed_i64: i64 = -9223372036854775808;
-    const signed_i128: i128 = -170141183460469231731687303715884105728;
-    
-    // 无符号整数
-    const unsigned_u8: u8 = 255;
-    const unsigned_u16: u16 = 65535;
-    const unsigned_u32: u32 = 4294967295;
-    const unsigned_u64: u64 = 18446744073709551615;
-    const unsigned_u128: u128 = 340282366920938463463374607431768211455;
-    
-    // 平台相关大小
-    const isize_val: isize = 100; // 指针大小
-    const usize_val: usize = 200;
-    
-    // C ABI 兼容类型
-    const c_int_val: c_int = 10;
-    const c_long_val: c_long = 20;
+    const a: i32 = -100;
+    const b: u32 = 200;
+    const size: usize = 1024;
+
+    std.debug.print("i32: {}, u32: {}, usize: {}\n", .{ a, b, size });
 }
 </code></pre>
+<h4 id="数字字面量"><a class="header" href="#数字字面量">数字字面量</a></h4>
+<p>整数字面量默认类型为 <code>comptime_int</code>，浮点字面量默认类型为 <code>comptime_float</code>：</p>
+<pre><code class="language-zig">const decimal = 42;          // comptime_int
+const hex = 0xFF;            // 十六进制
+const octal = 0o755;         // 八进制
+const binary = 0b1010;       // 二进制
+const float_val = 3.14;      // comptime_float
+const readable = 1_000_000;  // 下划线分隔
+</code></pre>
+<p><strong>进制前缀</strong>：</p>
+<ul>
+<li>十进制：无前缀（如 <code>42</code>）</li>
+<li>十六进制：<code>0x</code>（如 <code>0xFF</code>）</li>
+<li>八进制：<code>0o</code>（如 <code>0o755</code>）</li>
+<li>二进制：<code>0b</code>（如 <code>0b1010</code>）</li>
+</ul>
+<p><strong>下划线分隔符</strong>：数字中可插入 <code>_</code> 提高可读性（如 <code>1_000_000</code>、<code>0xFFFF_FFFF</code>、<code>1_000.0_001</code>）。</p>
 <h3 id="浮点类型"><a class="header" href="#浮点类型">浮点类型</a></h3>
 <pre><code class="language-zig">const std = @import("std");
 
@@ -471,7 +438,7 @@ pub fn main(_: std.process.Init.Minimal) void {
 <pre><code class="language-zig">const std = @import("std");
 
 pub fn main(_: std.process.Init.Minimal) void {
-    const int_val: comptime_int = 42;      // 编译期确定类型
+    const int_val: comptime_int = 42;
     const float_val: comptime_float = 3.14;
     std.debug.print("comptime_int: {}, comptime_float: {}\n", .{ int_val, float_val });
 }
@@ -486,19 +453,18 @@ pub fn main(_: std.process.Init.Minimal) void {
 pub fn main(_: std.process.Init.Minimal) void {
     const is_enabled: bool = true;
     const is_disabled: bool = false;
-    
-    // 布尔运算
+
     const result_and = is_enabled and is_disabled;  // false
     const result_or = is_enabled or is_disabled;    // true
     const result_not = !is_enabled;                  // false
-    
+
     std.debug.print("and: {}, or: {}, not: {}\n", .{ result_and, result_or, result_not });
 }
 </code></pre>
 <p><strong>预期输出：</strong></p>
 <pre><code>and: false, or: true, not: false
 </code></pre>
-<p><strong>要点：</strong></p>
+<p><strong>要点</strong>：</p>
 <ul>
 <li>布尔类型占用 1 字节内存</li>
 <li>支持逻辑运算：<code>and</code>（与）、<code>or</code>（或）、<code>!</code>（非）</li>
@@ -507,17 +473,27 @@ pub fn main(_: std.process.Init.Minimal) void {
 <blockquote>
 <p>📖 <strong>深入学习</strong>：布尔类型在控制流中的详细用法请参考<a href="chapter-control-flow.html">控制流与资源管理</a>。</p>
 </blockquote>
-<h3 id="字符类型"><a class="header" href="#字符类型">字符类型</a></h3>
-<p>字符字面量（如 <code>'A'</code>）的类型是 <code>comptime_int</code>，表示 Unicode 码位。详细说明请参考本章<a href="#字符和字符串">字符和字符串</a>章节。</p>
-<h3 id="基本类型转换"><a class="header" href="#基本类型转换">基本类型转换</a></h3>
-<h4 id="为什么需要显式类型转换"><a class="header" href="#为什么需要显式类型转换">为什么需要显式类型转换？</a></h4>
-<p>Zig 的设计哲学是“显式优于隐式“，因此不进行隐式类型转换。这带来以下好处：</p>
-<ol>
-<li><strong>避免精度丢失</strong>：所有类型转换都是明确的，不会意外丢失数据</li>
-<li><strong>提高代码可读性</strong>：类型转换意图清晰可见</li>
-<li><strong>减少运行时错误</strong>：编译期就能发现潜在的类型问题</li>
-</ol>
-<h4 id="基本类型转换策略"><a class="header" href="#基本类型转换策略">基本类型转换策略</a></h4>
+<h3 id="void-和-noreturn"><a class="header" href="#void-和-noreturn">void 和 noreturn</a></h3>
+<p><strong><code>void</code></strong> 是空类型，大小为 0 字节，用于不返回有用值的函数：</p>
+<pre><code class="language-zig">fn logMessage(msg: []const u8) void {
+    std.debug.print("{s}\n", .{msg});
+}
+</code></pre>
+<p><strong><code>noreturn</code></strong> 是永不返回的类型，用于表示程序不会继续执行的位置：</p>
+<pre><code class="language-zig">fn infiniteLoop() noreturn {
+    while (true) {}
+}
+</code></pre>
+<p><code>noreturn</code> 类型的表达式包括：<code>return</code>、<code>while (true) {}</code>、<code>unreachable</code>、<code>std.process.exit()</code> 等。</p>
+<h2 id="类型转换"><a class="header" href="#类型转换">类型转换</a></h2>
+<h3 id="为什么需要显式类型转换"><a class="header" href="#为什么需要显式类型转换">为什么需要显式类型转换？</a></h3>
+<p>Zig 的设计哲学是“显式优于隐式“，不进行隐式类型转换。以下代码展示了隐式转换可能带来的问题：</p>
+<pre><code class="language-zig">// 假设 Zig 允许隐式转换（实际不允许）：
+// const x: u8 = 300;     // 静默溢出！300 超出 u8 范围
+// const y: i32 = 3.14;   // 静默截断！丢失小数部分
+// Zig 要求显式声明转换意图，避免此类隐患
+</code></pre>
+<h3 id="转换方式一览"><a class="header" href="#转换方式一览">转换方式一览</a></h3>
 <p>Zig 提供了多种类型转换方式，每种都有特定的用途和安全保证：</p>
 <div class="table-wrapper">
 <table>
@@ -526,25 +502,28 @@ pub fn main(_: std.process.Init.Minimal) void {
 </thead>
 <tbody>
 <tr><td><code>@intCast</code></td><td>整数类型间转换</td><td><strong>运行时安全检查</strong>（Debug/ReleaseSafe模式panic，ReleaseFast/ReleaseSmall为未定义行为）</td><td><code>u32</code> → <code>u8</code></td></tr>
-<tr><td><code>@floatFromInt</code></td><td>整数转浮点</td><td>安全，可能丢失精度</td><td><code>i32</code> → <code>f32</code></td></tr>
+<tr><td><code>@floatFromInt</code></td><td>整数转浮点</td><td>不会 panic，但大整数可能丢失精度</td><td><code>i32</code> → <code>f32</code></td></tr>
 <tr><td><code>@intFromFloat</code></td><td>浮点转整数</td><td><strong>运行时安全检查</strong>（Debug/ReleaseSafe模式panic，ReleaseFast/ReleaseSmall为未定义行为）</td><td><code>f64</code> → <code>i32</code></td></tr>
-<tr><td><code>@truncate</code></td><td>截断高位</td><td><strong>不安全</strong>，明确意图（不检查范围）</td><td><code>i32</code> → <code>u8</code></td></tr>
+<tr><td><code>@truncate</code></td><td>截断高位</td><td><strong>不安全</strong>，直接丢弃高位（不检查范围）</td><td><code>u32</code> → <code>u8</code></td></tr>
 <tr><td><code>@bitCast</code></td><td>位模式重解释</td><td><strong>不安全</strong>，保持位模式</td><td><code>f32</code> → <code>u32</code></td></tr>
 </tbody>
 </table>
 </div>
-<p><strong>示例：</strong></p>
+<blockquote>
+<p><strong>Result Type Inference</strong>：上表中 <code>@intCast</code>、<code>@truncate</code>、<code>@bitCast</code> 等内建函数支持结果类型推断——通过目标变量的类型自动推断转换的目标类型。例如 <code>const x: u8 = @intCast(val);</code> 中，<code>@intCast</code> 的目标类型由变量 <code>x</code> 的类型 <code>u8</code> 推断得出。</p>
+</blockquote>
+<h3 id="示例"><a class="header" href="#示例">示例</a></h3>
 <pre><code class="language-zig">const std = @import("std");
 
 pub fn main(_: std.process.Init.Minimal) void {
     // 安全转换：@intCast（运行时检查）
     const small: i32 = 100;
-    const small_u8: u8 = @intCast(small); // ✅ OK: 100 在 u8 范围内
+    const small_u8: u8 = @intCast(small); // OK: 100 在 u8 范围内
     std.debug.print("i32({}) -&gt; u8({})\n", .{ small, small_u8 });
 
     // 不安全转换：@truncate（直接截断）
     const value: u32 = 300;
-    const truncated: u8 = @truncate(value); // ✅ OK: 300 % 256 = 44
+    const truncated: u8 = @truncate(value); // 300 % 256 = 44
     std.debug.print("u32({}) -&gt; u8({}) [截断]\n", .{ value, truncated });
 
     // 位模式重解释：@bitCast
@@ -558,7 +537,7 @@ pub fn main(_: std.process.Init.Minimal) void {
 <li><code>@intCast</code> 用于<strong>安全转换</strong>：值必须在目标类型范围内，否则 panic</li>
 <li><code>@truncate</code> 用于<strong>不安全的截断</strong>：直接丢弃高位，不检查范围</li>
 </ul>
-<h4 id="最佳实践"><a class="header" href="#最佳实践">最佳实践</a></h4>
+<h3 id="最佳实践"><a class="header" href="#最佳实践">最佳实践</a></h3>
 <ol>
 <li><strong>优先使用安全转换</strong>：<code>@intCast</code>、<code>@floatFromInt</code> 等有运行时检查的转换</li>
 <li><strong>明确不安全操作</strong>：使用 <code>@truncate</code>、<code>@bitCast</code> 时添加注释说明意图</li>
@@ -619,10 +598,10 @@ comptime_int 值: 90
 <ul>
 <li>字符字面量用单引号 <code>'A'</code>，类型是 <code>comptime_int</code></li>
 <li>支持完整的 Unicode 字符集</li>
-<li>可以直接打印码位或使用 <code>{c}</code> 格式化为字符</li>
+<li>可以直接打印码位，或使用 <code>{c}</code> 格式化为 ASCII 字符、<code>{u}</code> 格式化为 Unicode 字符</li>
 </ul>
 <blockquote>
-<p>📖 <strong>深入学习</strong>：字符串格式化（如 <code>{s}</code>, <code>{c}</code>, <code>{d}</code> 等格式说明符）的详细用法请参考<a href="../part2-advanced/chapter-standard-library.html#字符串格式化">标准库常用模块</a>中的格式化输出部分。</p>
+<p>📖 <strong>深入学习</strong>：字符串格式化（如 <code>{s}</code>, <code>{c}</code>, <code>{u}</code> 等格式说明符）的详细用法请参考<a href="../part2-advanced/chapter-standard-library.html#字符串格式化">标准库常用模块</a>中的格式化输出部分。</p>
 </blockquote>
 <h3 id="字符串字面量"><a class="header" href="#字符串字面量">字符串字面量</a></h3>
 <p>双引号用于字符串字面量，存储为 UTF-8 编码的字节序列：</p>
@@ -630,13 +609,13 @@ comptime_int 值: 90
 
 pub fn main(_: std.process.Init.Minimal) void {
     const str = "Hello, Zig!";
-    
+
     std.debug.print("字符串: {s}\n", .{str});
-    
+
     // 字符串可以包含任意 Unicode 字符
     const chinese = "你好，世界！";
     std.debug.print("中文: {s}\n", .{chinese});
-    
+
     // 字符串可以包含转义字符
     const escaped = "第一行\n第二行\t制表符";
     std.debug.print("转义: {s}\n", .{escaped});
@@ -657,26 +636,19 @@ pub fn main(_: std.process.Init.Minimal) void {
 <blockquote>
 <p>📖 <strong>相关章节</strong>：字符串的底层类型是哨兵终止数组（<code>*const [N:0]u8</code>），字符串的长度、索引访问等操作将在<a href="chapter-compound-types.html#哨兵终止数组">复合类型</a>章节详细讲解。</p>
 </blockquote>
-<h3 id="字符-vs-字符串"><a class="header" href="#字符-vs-字符串">字符 vs 字符串</a></h3>
-<p>字符和字符串是不同的概念，使用时需要注意区分：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn main(_: std.process.Init.Minimal) void {
-    // 字符：单个 Unicode 码位
-    const ch = '我';
-    std.debug.print("字符码位: 0x{x}\n", .{ch});  // 0x6211
-
-    // 字符串：UTF-8 编码的字节序列
-    const str = "我";
-    std.debug.print("字符串: {s}\n", .{str});  // 我
-}
-</code></pre>
-<p><strong>核心差异</strong>：</p>
-<ul>
-<li><strong>字符</strong>（<code>'我'</code>）：单个 Unicode 码位，类型是 <code>comptime_int</code></li>
-<li><strong>字符串</strong>（<code>"我"</code>）：UTF-8 编码的字节序列，可以包含多个字符</li>
-<li><strong>编码差异</strong>：字符 ‘我’ 存储为码位 0x6211，字符串 “我” 存储为 3 个字节（E6 88 91）</li>
-</ul>
+<h3 id="字符与字符串的区别"><a class="header" href="#字符与字符串的区别">字符与字符串的区别</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>方面</th><th>字符 <code>'我'</code></th><th>字符串 <code>"我"</code></th></tr>
+</thead>
+<tbody>
+<tr><td>类型</td><td><code>comptime_int</code></td><td><code>*const [3:0]u8</code></td></tr>
+<tr><td>存储内容</td><td>Unicode 码位 0x6211</td><td>UTF-8 字节 E6 88 91</td></tr>
+<tr><td>长度</td><td>不适用（单个码位）</td><td>3 字节</td></tr>
+</tbody>
+</table>
+</div>
 <p><strong>常见误区</strong>：</p>
 <ul>
 <li>❌ 字符串 <code>"A"</code> 不是字符 <code>'A'</code></li>
@@ -684,18 +656,18 @@ pub fn main(_: std.process.Init.Minimal) void {
 <li>✅ 字符表示单个码位，字符串表示字节序列</li>
 </ul>
 <h3 id="多行字符串字面量"><a class="header" href="#多行字符串字面量">多行字符串字面量</a></h3>
-<p>多行字符串以 <code>\\</code> 开头，不执行任何转义，不包含最后一行的换行符：</p>
+<p>多行字符串以 <code>\\</code> 开头，不执行任何转义。行与行之间自动插入换行符，但最后一行末尾不包含换行符：</p>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     const multi_line =
         \\第一行
         \\第二行
         \\第三行
     ;
-    
+
     std.debug.print("多行字符串:\n{s}\n", .{multi_line});
-    
+
     // 包含特殊字符（无需转义）
     const code =
         \\fn main() void {
@@ -703,7 +675,7 @@ pub fn main(init: std.process.Init.Minimal) void {
         \\    std.debug.print("{s}\n", .{x});
         \\}
     ;
-    
+
     std.debug.print("代码:\n{s}\n", .{code});
 }
 </code></pre>
@@ -721,7 +693,7 @@ fn main() void {
 <p><strong>特点</strong>：</p>
 <ul>
 <li>不处理转义序列</li>
-<li>不包含最后的换行符</li>
+<li>行与行之间自动插入换行符，最后一行末尾不包含换行符</li>
 <li>适合嵌入代码、JSON、XML 等文本</li>
 </ul>
 <hr>

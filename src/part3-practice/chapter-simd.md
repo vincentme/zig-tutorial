@@ -7,7 +7,7 @@ Zig 提供了对 SIMD（单指令多数据）的原生支持，允许进行高�
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     // 定义向量类型：4 个 f32
     const Vec4 = @Vector(4, f32);
     
@@ -37,7 +37,7 @@ pub fn main(init: std.process.Init.Minimal) void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     const Vec8 = @Vector(8, i32);
     
     const a: Vec8 = .{ 1, 2, 3, 4, 5, 6, 7, 8 };
@@ -74,7 +74,7 @@ fn dotProduct(comptime N: usize, a: @Vector(N, f32), b: @Vector(N, f32)) f32 {
     return @reduce(.Add, prod);
 }
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     const Vec4 = @Vector(4, f32);
     
     const v1: Vec4 = .{ 1.0, 2.0, 3.0, 4.0 };

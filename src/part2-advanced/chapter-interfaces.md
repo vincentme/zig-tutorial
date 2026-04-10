@@ -192,7 +192,7 @@ const BufferWriter = struct {
 };
 
 // 使用示例
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     // 文件写入器
     var file_writer = FileWriter{
         .file = try std.fs.cwd().createFile("test.txt", .{}),
@@ -293,7 +293,7 @@ fn writeMessage(w: Writer, message: []const u8) !void {    // ⑩
     try w.flush();
 }
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var file_writer = FileWriter{
         .file = try std.fs.cwd().createFile("test.txt", .{}),
     };
@@ -486,7 +486,7 @@ const FileReadWriter = struct {
 };
 
 // 使用示例
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var file_rw = FileReadWriter{
         .file = try std.fs.cwd().createFile("test.txt", .{
             .read = true,
@@ -594,7 +594,7 @@ const MergeSort = struct {
 };
 
 // 使用示例
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var items = [_]i32{ 5, 2, 8, 1, 9 };
     
     var quick = QuickSort{};
@@ -732,7 +732,7 @@ fn createShape(allocator: std.mem.Allocator, shape_type: ShapeType, params: anyt
 }
 
 // 使用示例
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();

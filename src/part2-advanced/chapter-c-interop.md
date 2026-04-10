@@ -94,7 +94,7 @@ const c = @cImport({
     @cInclude("stdlib.h");
 });
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     // 调用 C 函数
     _ = c.printf("Hello from C!\n");
     
@@ -121,7 +121,7 @@ pub extern "c" fn printf(format: [*:0]const u8, ...) c_int;
 pub extern "c" fn malloc(size: usize) ?*anyopaque;
 pub extern "c" fn free(ptr: ?*anyopaque) void;
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     // 调用外部函数
     _ = printf("Hello from Zig calling C!\n");
     
@@ -162,7 +162,7 @@ const c = @cImport({
     @cInclude("stdio.h");
 });
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     // 字符串字面量自动转换为 C 字符串
     const file = c.fopen("foo.txt", "rb");
     if (file == null) {
@@ -210,7 +210,7 @@ const c = @cImport({
     @cInclude("stdio.h");
 });
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     // ❌ 错误：直接传递 Zig 字符串对象
     const path: []const u8 = "foo.txt";
     // const file = c.fopen(path, "rb");  // 编译错误！
@@ -299,7 +299,7 @@ const c = @cImport({
     @cInclude("hb.h");  // Harfbuzz 库
 });
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     // 使用 C 库的构造函数创建对象
     var buf: c.hb_buffer_t = c.hb_buffer_create();
     
@@ -343,7 +343,7 @@ fn createPoint(x: f32, y: f32) Point {
     return .{ .x = x, .y = y };
 }
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     // 创建 C 结构体实例
     var p1: Point = .{ .x = 10.5, .y = 20.3 };
     
@@ -406,7 +406,7 @@ const c = @cImport({
     @cInclude("stdlib.h");
 });
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     const ptr = c.malloc(100);
     if (ptr) |p| {
         defer c.free(p);  // 确保释放
@@ -423,7 +423,7 @@ const c = @cImport({
     @cInclude("stdio.h");
 });
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     const file = c.fopen("data.txt", "r");
     if (file) |f| {
         defer _ = c.fclose(f);
@@ -509,7 +509,7 @@ Zig 提供了完整的 C 类型支持，确保与 C 代码的无缝互操作。�
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     // C ABI 类型
     const c_int_val: c_int = 42;
     const c_long_val: c_long = 100;
@@ -554,7 +554,7 @@ const c = @cImport({
     @cInclude("stdlib.h");
 });
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     // void* 对应 ?*anyopaque
     var ptr: ?*anyopaque = null;
     
@@ -648,7 +648,7 @@ const User = extern struct {
     name: [32]u8,  // 固定大小数组
 };
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     var user: User = .{
         .id = 1,
         .age = 25,
@@ -705,7 +705,7 @@ const c = @cImport({
     @cInclude("stdlib.h");
 });
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     // ✅ 正确：检查指针是否为 null
     const ptr = c.malloc(100);
     if (ptr) |p| {
@@ -872,7 +872,7 @@ const c = @cImport({
     @cInclude("stdio.h");
 });
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     _ = c.printf("Hello from C!\n");
 }
 ```
@@ -896,7 +896,7 @@ const c = @cImport({
     @cInclude("string.h");
 });
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     const str = "Hello, Zig!";
     const len = c.strlen(str.ptr);
     std.debug.print("字符串长度：{}\n", .{len});
@@ -939,7 +939,7 @@ const c = @cImport({
     @cInclude("stdlib.h");
 });
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     const size: usize = 100;
     const ptr = c.malloc(size);
     
@@ -970,7 +970,7 @@ const Point = extern struct {
 
 extern fn print_point(p: Point) void;
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     const p = Point{ .x = 10.5, .y = 20.3 };
     print_point(p);
 }
@@ -1025,7 +1025,7 @@ const File = struct {
     }
 };
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var file = try File.open("test.txt");
     defer file.close();
     

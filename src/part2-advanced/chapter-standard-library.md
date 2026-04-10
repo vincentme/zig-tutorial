@@ -200,7 +200,7 @@ pub fn main(init: std.process.Init) !void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     // 使用 std.debug.print 进行简单输出（无需 init.io）
     std.debug.print("Hello, stdout!\n", .{});
     
@@ -227,7 +227,7 @@ pub fn main(init: std.process.Init.Minimal) !void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     // 旧版本方式（已废弃）
     const stdout = std.io.getStdOut().writer();
     try stdout.print("Hello, stdout!\n", .{});
@@ -360,7 +360,7 @@ try stdout.flush();  // 必须刷新
 // ✨ 新特性：std.Io 统一接口
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     // 创建固定缓冲区 writer
     var buf: [256]u8 = undefined;
     var w: std.Io.Writer = .fixed(&buf);
@@ -425,7 +425,7 @@ pub fn main(init: std.process.Init) !void {
 // ✨ 新特性：std.Io 统一接口
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     // 从字符串创建 reader
     var r: std.Io.Reader = .fixed("hello\nworld");
     
@@ -865,7 +865,7 @@ const Point = struct {
     }
 };
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     const p = Point{ .x = 10.5, .y = 20.3 };
     
     // ❌ 错误：在 0.15.x+ 中，{} 不会调用 format 方法
@@ -884,7 +884,7 @@ pub fn main(init: std.process.Init.Minimal) void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     // std.zig.fmtId 返回一个有 format 方法的类型
     const identifier = std.zig.fmtId("my-identifier");
     
@@ -939,7 +939,7 @@ std.debug.print("{f}", .{my_type});  // 必须使用 {f}
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     // ===== 整数格式化 =====
     const int_val: u8 = 255;
     std.debug.print("十进制: {d}\n", .{int_val});
@@ -1020,7 +1020,7 @@ Zig 提供了多种浮点数格式化方式，每种适用于不同的场景：
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     const pi: f64 = 3.141592653589793;
     
     std.debug.print("默认精度: {d}\n", .{pi});
@@ -1041,7 +1041,7 @@ pub fn main(init: std.process.Init.Minimal) void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     const large: f64 = 123456789.0;
     const tiny: f64 = 0.00000012345;
     
@@ -1067,7 +1067,7 @@ pub fn main(init: std.process.Init.Minimal) void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     const val: f64 = 3.14159;
     std.debug.print("十六进制浮点: {x}\n", .{val});
     std.debug.print("十六进制浮点(大写): {X}\n", .{val});
@@ -1084,7 +1084,7 @@ pub fn main(init: std.process.Init.Minimal) void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     const inf = std.math.inf(f64);
     const neg_inf = -std.math.inf(f64);
     const nan = std.math.nan(f64);
@@ -1107,7 +1107,7 @@ NaN: nan
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     const f16_val: f16 = 3.14;
     const f32_val: f32 = 3.14159;
     const f64_val: f64 = 3.141592653589793;
@@ -1127,7 +1127,7 @@ pub fn main(init: std.process.Init.Minimal) void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     const num: u32 = 255;
     
     std.debug.print("十进制: {d}\n", .{num});
@@ -1147,7 +1147,7 @@ pub fn main(init: std.process.Init.Minimal) void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     const num: i32 = 42;
     
     std.debug.print("宽度8: {d:8}\n", .{num});
@@ -1167,7 +1167,7 @@ pub fn main(init: std.process.Init.Minimal) void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     const pi: f64 = 3.14159265359;
     
     std.debug.print("默认: {}\n", .{pi});
@@ -1208,7 +1208,7 @@ pub fn main(init: std.process.Init.Minimal) void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     const text = "Zig";
     
     std.debug.print("左对齐: '{s:<10}'\n", .{text});
@@ -1225,7 +1225,7 @@ pub fn main(init: std.process.Init.Minimal) void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     std.debug.print("布尔值: {}\n", .{true});
     std.debug.print("整数: {}\n", .{42});
     std.debug.print("浮点数: {}\n", .{3.14});
@@ -1249,7 +1249,7 @@ pub fn main(init: std.process.Init.Minimal) void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     const arr = [_]i32{ 1, 2, 3 };
     const slice: []const i32 = &arr;
     
@@ -1273,7 +1273,7 @@ pub fn main(init: std.process.Init.Minimal) void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var buf: [100]u8 = undefined;
     
     const result = try std.fmt.bufPrint(&buf, "值: {d}, 字符串: {s}", .{ 42, "hello" });
@@ -1290,7 +1290,7 @@ Zig 在编译期检查格式字符串，确保参数数量和类型匹配：
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     const name = "Zig";
     const version = 0.16;
     
@@ -1313,7 +1313,7 @@ pub fn main(init: std.process.Init.Minimal) void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     std.debug.print("使用 {{}} 作为占位符\n", .{});
     std.debug.print("JSON 示例: {{\"name\": \"{s}\"}}\n", .{"Zig"});
 }
@@ -1348,7 +1348,7 @@ const Point = struct {
     }
 };
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     const p = Point{ .x = 3.14159, .y = 2.71828 };
     std.debug.print("坐标: {}\n", .{p});
 }
@@ -1359,7 +1359,7 @@ pub fn main(init: std.process.Init.Minimal) !void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     // 字符串字面量
     const str = "Hello, Zig!";
     std.debug.print("字符串：{s}\n", .{str});
@@ -1399,7 +1399,7 @@ pub fn main(init: std.process.Init.Minimal) !void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
@@ -1436,7 +1436,7 @@ pub fn main(init: std.process.Init.Minimal) !void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
@@ -1577,7 +1577,7 @@ fn reverseString(allocator: std.mem.Allocator, str: []const u8) ![]u8 {
     return result;
 }
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
@@ -1601,7 +1601,7 @@ pub fn main(init: std.process.Init.Minimal) !void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
@@ -1638,7 +1638,7 @@ pub fn main(init: std.process.Init.Minimal) !void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
@@ -1678,7 +1678,7 @@ pub fn main(init: std.process.Init.Minimal) !void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     const file = try std.fs.cwd().openFile("test.txt", .{});
     defer file.close();
     
@@ -1706,7 +1706,7 @@ const Person = struct {
     age: u32,
 };
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
@@ -1738,7 +1738,7 @@ pub fn main(init: std.process.Init.Minimal) !void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
@@ -1948,7 +1948,7 @@ pub fn main(init: std.process.Init) !void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     // 创建目录
     try std.fs.cwd().makeDir("mydir");
     
@@ -1964,7 +1964,7 @@ pub fn main(init: std.process.Init.Minimal) !void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     // 打开目录
     var dir = try std.fs.cwd().openDir("mydir", .{
         .iterate = true,  // 允许遍历
@@ -2000,7 +2000,7 @@ pub fn main(init: std.process.Init.Minimal) !void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     // 删除文件
     try std.fs.cwd().deleteFile("hello.txt");
     
@@ -2047,7 +2047,7 @@ fn listFiles(dir: std.fs.Dir, path: []const u8, allocator: std.mem.Allocator) !v
     }
 }
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
@@ -2066,7 +2066,7 @@ pub fn main(init: std.process.Init.Minimal) !void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     const file = try std.fs.cwd().openFile("hello.txt", .{});
     defer file.close();
     
@@ -2085,7 +2085,7 @@ pub fn main(init: std.process.Init.Minimal) !void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     const stat = try std.fs.cwd().statFile("hello.txt");
     
     switch (stat.kind) {
@@ -2102,7 +2102,7 @@ pub fn main(init: std.process.Init.Minimal) !void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     // 方法1：使用 access
     const exists = std.fs.cwd().access("hello.txt", .{}) catch false;
     std.debug.print("文件存在: {}\n", .{exists});
@@ -2125,7 +2125,7 @@ pub fn main(init: std.process.Init.Minimal) !void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     // 设置文件权限（Unix 系统）
     // 0o644 = rw-r--r--
     try std.fs.cwd().chmod("hello.txt", 0o644);
@@ -2155,7 +2155,7 @@ Zig 自动处理这些差异。
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
@@ -2181,7 +2181,7 @@ pub fn main(init: std.process.Init.Minimal) !void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     const path = "/home/user/documents/file.txt";
     
     // 获取目录名
@@ -2208,7 +2208,7 @@ pub fn main(init: std.process.Init.Minimal) !void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
@@ -2231,7 +2231,7 @@ pub fn main(init: std.process.Init.Minimal) !void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
@@ -2255,7 +2255,7 @@ pub fn main(init: std.process.Init.Minimal) !void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     // Unix 权限常量
     const mode = 0o644; // rw-r--r--
     
@@ -2283,7 +2283,7 @@ pub fn main(init: std.process.Init.Minimal) !void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     // 创建文件时设置权限
     const file = try std.fs.cwd().createFile("script.sh", .{
         .mode = 0o755, // 可执行权限
@@ -2306,7 +2306,7 @@ Windows 使用不同的权限模型，Zig 会自动处理：
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     // Windows 上，chmod 会转换为相应的文件属性
     // Unix 上，chmod 直接设置权限位
     
@@ -2324,7 +2324,7 @@ pub fn main(init: std.process.Init.Minimal) !void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
@@ -2363,7 +2363,7 @@ pub fn main(init: std.process.Init.Minimal) !void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     // 使用 errdefer 确保资源释放
     const file = std.fs.cwd().openFile("maybe_missing.txt", .{}) catch |err| {
         if (err == error.FileNotFound) {

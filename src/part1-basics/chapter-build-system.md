@@ -117,7 +117,7 @@ pub fn build(b: *std.Build) void {
 ```zig
 const config = @import("config");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     if (config.enable_logging) {
         std.debug.print("Logging enabled\n", .{});
     }
@@ -184,7 +184,7 @@ pub fn build(b: *std.Build) void {
 const std = @import("std");
 const lib = @import("lib");
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     lib.someFunction();
 }
 ```

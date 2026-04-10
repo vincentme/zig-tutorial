@@ -142,7 +142,7 @@ fn serveOrder(order: Order) void {
     std.debug.print("食物已准备好，送餐到客户\n", .{});
 }
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     // 只能一次服务一个订单
     serveOrder(.{ .name = "Pizza Margherita", .quantity = 1 });
     // 第一个订单完成后才能服务第二个
@@ -173,7 +173,7 @@ fn cookAndDeliver(order: Order) void {
     std.debug.print("[线程 {}] 食物已准备好，送餐: {s}\n", .{ thread_id, order.name });
 }
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     std.debug.print("=== 餐厅点餐系统（多线程版本）===\n", .{});
     
     // 可以同时服务多个订单
@@ -316,7 +316,7 @@ Zig 提供了两种并发机制：
 const std = @import("std");
 
 // 示例：Zig 0.16.0-dev
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     // 创建线程
     const thread = try std.Thread.spawn(.{}, worker, .{42});
     
@@ -355,7 +355,7 @@ fn worker(id: u32) void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     const thread = try std.Thread.spawn(.{}, doSomeWork, .{});
     
     std.debug.print("主线程：等待工作线程完成\n", .{});
@@ -392,7 +392,7 @@ fn doSomeWork() void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     const thread = try std.Thread.spawn(.{}, independentWork, .{});
     
     // detach 线程，让它独立运行
@@ -441,7 +441,7 @@ fn independentWork() void {
 ```zig
 const std = @import("std");
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     // 场景1：需要结果的线程 - 使用 join
     const result_thread = try std.Thread.spawn(.{}, calculateResult, .{});
     result_thread.join();
@@ -506,7 +506,7 @@ const Counter = struct {
     }
 };
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var counter = Counter.init();
     
     // 创建多个线程
@@ -558,7 +558,7 @@ fn incrementCounter() void {
     std.debug.print("计数器值: {}\n", .{counter});
 }
 
-pub fn main(init: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init.Minimal) void {
     // 主线程
     incrementCounter(); // 输出: 1
     incrementCounter(); // 输出: 2
@@ -581,7 +581,7 @@ fn worker(id: usize) void {
     }
 }
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var threads: [3]std.Thread = undefined;
     
     for (&threads, 0..) |*t, i| {
@@ -666,7 +666,7 @@ fn incrementCounter() void {
     }
 }
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     const thread_count = 4;
     var threads: [thread_count]std.Thread = undefined;
     
@@ -733,7 +733,7 @@ fn consumer() void {
     }
 }
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     const producer_thread = try std.Thread.spawn(.{}, producer, .{});
     const consumer_thread = try std.Thread.spawn(.{}, consumer, .{});
     
@@ -804,7 +804,7 @@ const Future = struct {
 const std = @import("std");
 
 // 示例：Zig 0.16.0-dev
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
@@ -937,7 +937,7 @@ const AtomicCounter = struct {
     }
 };
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var counter = AtomicCounter.init();
     
     var threads: [10]std.Thread = undefined;
@@ -1040,7 +1040,7 @@ const SpinLock = struct {
     }
 };
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var spinlock = SpinLock.init();
     var protected_value: i32 = 0;
     
@@ -1124,7 +1124,7 @@ fn LockFreeStack(comptime T: type) type {
     };
 }
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var stack = LockFreeStack(i32).init();
     
     var nodes: [10]LockFreeStack(i32).Node = undefined;
@@ -1175,7 +1175,7 @@ const SpinLock = struct {
     }
 };
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var lock: SpinLock = .{};
     var counter: usize = 0;
     
@@ -1286,7 +1286,7 @@ fn BoundedQueue(comptime T: type) type {
     };
 }
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
@@ -1334,7 +1334,7 @@ fn consumerWorker(queue: *BoundedQueue(i32)) void {
 const std = @import("std");
 
 // 示例：Zig 0.16.0-dev
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
@@ -1493,7 +1493,7 @@ const ThreadSafeCounter = struct {
     }
 };
 
-pub fn main(init: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init.Minimal) !void {
     var counter = ThreadSafeCounter.init();
     
     const worker = struct {
