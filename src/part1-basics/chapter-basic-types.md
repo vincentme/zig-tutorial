@@ -1,8 +1,17 @@
-# 变量声明和基础类型
+# 变量、常量与基础类型
 
-本章介绍 Zig 的变量声明和基础类型，包括变量声明规则、基本数据类型、字符和字符串以及类型转换。这些是 Zig 编程的基础，后续章节将在此基础上介绍复合类型、控制流、错误处理和内存管理等核心概念。
+本章是 Zig 语法学习的起点。你会先接触最常见、最基础的几个主题：`const` 与 `var` 的区别、作用域与初始化、整数与浮点、布尔值、字符串字面量，以及显式类型转换。
 
-## 声明与命名
+这一章的目标不是一次讲完所有细节，而是帮助你建立几个最重要的直觉：
+
+- Zig 鼓励你明确区分“可变”和“不可变”
+- 值的类型通常需要尽早想清楚
+- 类型转换应当显式表达意图
+- 字符与字符串在 Zig 中是两个不同层次的概念
+
+有些小节会顺带提到后续章节才会系统展开的内容，例如数组、元组、可选类型或格式化输出。第一次阅读时，你只需要先抓住主线，不必急着把所有扩展知识一次吃透。
+
+## 声明、作用域与风格约定
 
 ### 变量声明
 
@@ -11,7 +20,7 @@ Zig 是强类型语言，支持类型推断。变量声明使用 `const`（常�
 ```zig
 const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const constant: i32 = 42;    // 常量：不可变
     var mutable: i32 = 10;       // 变量：可变
 
@@ -50,7 +59,7 @@ const std = @import("std");
 
 const PI = 3.14159;           // 顶层 const，编译期常量
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const answer = 42;         // 编译期常量（值已知）
     var runtime_val: i32 = 10; // 运行时变量
     _ = PI;
@@ -59,17 +68,25 @@ pub fn main(_: std.process.Init.Minimal) void {
 }
 ```
 
-### 命名规范
+### 命名风格建议
 
-Zig 遵循明确的命名规范，确保代码风格一致：
+这一节更适合作为**本教程的代码风格约定**来理解，而不是把它看成 Zig 语言层面的硬性规则。  
+实际项目中，不同团队和代码库可能会有不同风格；阅读 Zig 标准库时，你也会看到与某些语言不同的命名习惯。
 
-| 标识符类型                 | 命名规范   | 示例                        |
+本教程后续示例主要采用下面这套较容易阅读的风格：
+
+| 标识符类型                 | 建议风格   | 示例                        |
 | -------------------------- | ---------- | --------------------------- |
 | 变量、常量                 | snake_case | `user_name`, `max_size`     |
 | 函数                       | camelCase  | `calculateTotal`, `isValid` |
 | 类型（结构体、枚举、联合） | PascalCase | `Person`, `Status`          |
-| 枚举成员                   | PascalCase | `Pending`, `InProgress`     |
-| 私有字段和方法             | 下划线前缀 | `_count`, `_validate`       |
+| 局部辅助名称               | 简短但清晰 | `count`, `index`, `result`  |
+
+最重要的不是“死记某张表”，而是保持以下几点：
+
+- 同一项目内尽量一致
+- 名称要能表达意图
+- 不要为了简短而牺牲可读性
 
 ### 注释
 
@@ -92,15 +109,22 @@ fn add(a: i32, b: i32) i32 {
 
 ### 变量遮蔽规则
 
-Zig **完全禁止**变量遮蔽（Shadowing）。标识符永远不允许使用相同的名称来"隐藏"其他标识符。这意味着：
+在局部作用域中，Zig 对变量遮蔽（shadowing）采取了非常严格的态度。  
+对初学者来说，可以先把它理解为：
 
-- **嵌套作用域不能声明同名变量**：内部作用域不能重新声明外部作用域已有的变量名
-- **兄弟作用域可以同名**：不嵌套的独立作用域可以使用相同的变量名
+- **嵌套作用域里不要重新声明外层已经存在的同名局部变量**
+- **独立的兄弟作用域中可以出现同名变量**
+
+这样做的好处是：
+
+- 避免“看起来像在改同一个变量，实际上换了一个新变量”的错误
+- 降低阅读代码时的歧义
+- 让编译器更早发现潜在命名冲突
 
 ```zig
 const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const pi = 3.14;
 
     {
@@ -128,14 +152,14 @@ test "separate scopes" {
 - 编译器能够更早发现潜在的命名冲突
 - 一个标识符在其定义的作用域内始终保持相同的含义
 
-### 解包赋值
+### 解包赋值（语法预览）
 
 Zig 支持解包赋值，可以从元组、向量或数组中一次性提取多个值：
 
 ```zig
 const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     // 元组解包
     const tuple = .{ 1, 2, 3 };
     var x: i32 = undefined;
@@ -192,7 +216,7 @@ Zig 提供了以下基础类型：
 | 编译期   | `comptime_int`, `comptime_float`           | 编译期确定的数值类型  |
 | 可选     | `?T`                                       | 可能为 `null` 的类型  |
 
-> 📖 **深入学习**：可选类型 `?T` 的详细用法请参考[控制流与资源管理](chapter-control-flow.md)。
+> **深入学习**：可选类型 `?T` 的详细用法请参考[控制流与资源管理](chapter-control-flow.md)。
 
 ### 整数类型
 
@@ -218,7 +242,7 @@ Zig 提供了从 8 位到 128 位的整数类型，以及平台相关的 `isize`
 ```zig
 const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const a: i32 = -100;
     const b: u32 = 200;
     const size: usize = 1024;
@@ -253,7 +277,7 @@ const readable = 1_000_000;  // 下划线分隔
 ```zig
 const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const float_16: f16 = 3.14;      // 16位半精度
     const float_32: f32 = 3.14159;   // 32位单精度
     const float_64: f64 = 3.141592653589793; // 64位双精度
@@ -271,15 +295,20 @@ f16: 3.140625, f32: 3.14159, f64: 3.141592653589793, f80: 3.141592653589793238, 
 
 ### 编译期类型
 
-Zig 提供了编译期类型，用于在编译时确定值的类型：
+Zig 提供了编译期数值类型，用于表示“在编译阶段仍保持精确语义”的数值：
 
-- `comptime_int`：编译期整数类型，根据值自动推断位宽
-- `comptime_float`：编译期浮点类型，根据值自动推断精度
+- `comptime_int`：编译期整数类型
+- `comptime_float`：编译期浮点类型
+
+它们不应简单理解为“先自动推断成某个固定宽度的整数或浮点类型”，而更适合理解为：
+
+- 在被具体上下文约束之前，它们仍然保留编译期数值语义
+- 当你把它们赋给某个具体类型变量，或参与需要确定类型的表达式时，编译器才会将其落实到具体类型上
 
 ```zig
 const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const int_val: comptime_int = 42;
     const float_val: comptime_float = 3.14;
     std.debug.print("comptime_int: {}, comptime_float: {}\n", .{ int_val, float_val });
@@ -298,7 +327,7 @@ comptime_int: 42, comptime_float: 3.14
 ```zig
 const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const is_enabled: bool = true;
     const is_disabled: bool = false;
 
@@ -316,11 +345,11 @@ and: false, or: true, not: false
 ```
 
 **要点**：
-- 布尔类型占用 1 字节内存
+- 独立的 `bool` 值通常可以按 1 字节来理解
 - 支持逻辑运算：`and`（与）、`or`（或）、`!`（非）
 - 主要用于条件判断和逻辑运算
 
-> 📖 **深入学习**：布尔类型在控制流中的详细用法请参考[控制流与资源管理](chapter-control-flow.md)。
+> **深入学习**：布尔类型在控制流中的详细用法请参考[控制流与资源管理](chapter-control-flow.md)。
 
 ### void 和 noreturn
 
@@ -374,7 +403,7 @@ Zig 提供了多种类型转换方式，每种都有特定的用途和安全保�
 ```zig
 const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     // 安全转换：@intCast（运行时检查）
     const small: i32 = 100;
     const small_u8: u8 = @intCast(small); // OK: 100 在 u8 范围内
@@ -402,7 +431,7 @@ pub fn main(_: std.process.Init.Minimal) void {
 2. **明确不安全操作**：使用 `@truncate`、`@bitCast` 时添加注释说明意图
 3. **处理可能的错误**：对于可能失败的转换，先检查范围再使用 `@intCast`，或使用 `std.math.cast`
 
-> 📖 **相关章节**：类型转换失败时的错误处理机制将在[错误处理基础](chapter-error-handling.md)中详细讲解。
+> **相关章节**：类型转换失败时的错误处理机制将在[错误处理基础](chapter-error-handling.md)中详细讲解。
 
 ## 字符和字符串
 
@@ -433,7 +462,7 @@ Zig 提供了强大的字符和字符串支持，原生支持 Unicode。字符�
 ```zig
 const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     // ASCII 字符
     const letter = 'A';
     std.debug.print("字符: {c}, 码位: {}\n", .{ letter, letter });
@@ -465,7 +494,7 @@ comptime_int 值: 90
 - 支持完整的 Unicode 字符集
 - 可以直接打印码位，或使用 `{c}` 格式化为 ASCII 字符、`{u}` 格式化为 Unicode 字符
 
-> 📖 **深入学习**：字符串格式化（如 `{s}`, `{c}`, `{u}` 等格式说明符）的详细用法请参考[标准库常用模块](../part2-advanced/chapter-standard-library.md#字符串格式化)中的格式化输出部分。
+> **深入学习**：字符串格式化（如 `{s}`, `{c}`, `{u}` 等格式说明符）的详细用法请参考[标准库常用模块](../part2-advanced/chapter-standard-library.md#字符串格式化)中的格式化输出部分。
 
 ### 字符串字面量
 
@@ -474,7 +503,7 @@ comptime_int 值: 90
 ```zig
 const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const str = "Hello, Zig!";
 
     std.debug.print("字符串: {s}\n", .{str});
@@ -502,7 +531,7 @@ pub fn main(_: std.process.Init.Minimal) void {
 - 支持 UTF-8 编码，可以包含任意 Unicode 字符
 - 支持常见的转义字符：`\n`（换行）、`\t`（制表符）、`\\`（反斜杠）、`\"`（双引号）
 
-> 📖 **相关章节**：字符串的底层类型是哨兵终止数组（`*const [N:0]u8`），字符串的长度、索引访问等操作将在[复合类型](chapter-compound-types.md#哨兵终止数组)章节详细讲解。
+> **相关章节**：更准确地说，**字符串字面量**的底层类型可理解为哨兵终止字节数组的只读指针（如 `*const [N:0]u8`）。字符串的长度、索引访问以及哨兵终止数组的含义，将在[复合类型](chapter-compound-types.md#哨兵终止数组)章节详细讲解。
 
 ### 字符与字符串的区别
 
@@ -524,7 +553,7 @@ pub fn main(_: std.process.Init.Minimal) void {
 ```zig
 const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const multi_line =
         \\第一行
         \\第二行

@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>【draft】实战案例 - 内存池实现 - Zig 编程语言入门教程</title>
+        <title>实战案例 - 内存池实现 - Zig 编程语言入门教程</title>
 
 
         <!-- Custom HTML head -->
@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-a9ca16c2.js";
+            window.path_to_searchindex_js = "../searchindex-35211ac1.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-2fc75e4c.js"></script>
+        <script src="../toc-6dcbe846.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -181,24 +181,102 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="draft实战案例---内存池实现"><a class="header" href="#draft实战案例---内存池实现">【draft】实战案例 - 内存池实现</a></h1>
-<p>展示内存管理和泛型编程：</p>
+                        <h1 id="实战案例---内存池实现"><a class="header" href="#实战案例---内存池实现">实战案例 - 内存池实现</a></h1>
+<blockquote>
+<p><strong>章节定位</strong>：这一章属于第三部分中的“实现型案例”。<br>它不是为了告诉你“内存池一定比通用分配器更高级”，而是借助一个足够小、足够清楚的实现，帮助你理解：</p>
+<ul>
+<li>为什么对象池会存在</li>
+<li>它依赖哪些核心不变量</li>
+<li><code>acquire</code> / <code>release</code> 这类接口真正承诺了什么</li>
+<li>为什么高性能实现通常也意味着更强的调用约束</li>
+</ul>
+<p>本章的重点不是“记住一份代码”，而是学会判断：</p>
+<blockquote>
+<p><strong>什么时候内存池值得引入，什么时候它只是在增加复杂度。</strong></p>
+</blockquote>
+<p><strong>相关阅读与衔接建议</strong></p>
+<ul>
+<li>如果你想先补齐资源所有权、分配器传递和失败路径清理的基础，请先回看第二部分的<a href="../part2-advanced/chapter-memory-management.html">内存管理模型</a>。</li>
+<li>如果你更关心“对象池进一步优化之后会带来哪些额外约束”，可以在读完本章后继续阅读<a href="chapter-advanced-memory.html">高级内存管理技巧（专题）</a>。</li>
+<li>如果你更关心“字段组织、默认值和接口建模”而不是对象复用，那么下一章的<a href="chapter-config-system.html">实战案例 - 配置系统原型</a>会把注意力从资源复用切换到配置抽象。</li>
+</ul>
+<p>这一组交叉阅读关系很重要，因为第三部分里的案例并不是彼此孤立的：</p>
+<ul>
+<li>内存池强调<strong>固定形状对象的复用</strong></li>
+<li>配置系统强调<strong>字段元信息与接口结构</strong></li>
+<li>高级内存专题强调<strong>什么时候值得继续向更底层优化</strong></li>
+</ul>
+<p>把这三章连起来读，会更容易建立“什么时候该优化资源获取、什么时候该先把抽象边界讲清楚”的判断。</p>
+</blockquote>
+<hr>
+<h2 id="先问一个更本质的问题为什么要做内存池"><a class="header" href="#先问一个更本质的问题为什么要做内存池">先问一个更本质的问题：为什么要做内存池？</a></h2>
+<p>内存池适合解决一类非常具体的问题：</p>
+<ul>
+<li>对象会被频繁创建和释放</li>
+<li>对象大小固定，或至少形状非常稳定</li>
+<li>你希望减少堆分配次数</li>
+<li>你希望减轻内存碎片问题</li>
+<li>你希望把“对象可复用”这件事表达得更明确</li>
+</ul>
+<p>典型例子包括：</p>
+<ul>
+<li>游戏中的粒子对象</li>
+<li>任务调度器中的任务节点</li>
+<li>服务器中的连接上下文槽位</li>
+<li>编译器或解析器中的短生命周期节点</li>
+<li>固定尺寸缓存块</li>
+</ul>
+<p>但同样重要的是，内存池<strong>并不适合所有场景</strong>。<br>如果你的对象：</p>
+<ul>
+<li>大小变化很大</li>
+<li>生命周期交错复杂</li>
+<li>上界很难预测</li>
+<li>当前瓶颈根本不在分配器上</li>
+</ul>
+<p>那么直接使用通用分配器通常更简单，也更稳妥。</p>
+<p>所以，内存池不是“默认更好”，而是一种<strong>针对特定约束的优化性设计</strong>。</p>
+<hr>
+<h2 id="这一章的实现目标"><a class="header" href="#这一章的实现目标">这一章的实现目标</a></h2>
+<p>我们将实现一个教学用最小内存池，并围绕它讲清楚四件事：</p>
+<ol>
+<li><strong>数据布局是什么</strong></li>
+<li><strong>哪些不变量必须始终成立</strong></li>
+<li><strong>接口契约是什么</strong></li>
+<li><strong>哪些错误当前实现不主动防御，而是依赖调用者遵守前提</strong></li>
+</ol>
+<p>这四件事比“代码逐行解释”更重要。<br>因为真正理解内存池，不是看懂 <code>for</code> 循环和指针算术，而是知道：</p>
+<ul>
+<li>什么状态可以信任</li>
+<li>什么行为会破坏模型</li>
+<li>什么约束是性能换来的代价</li>
+</ul>
+<hr>
+<h2 id="先给出实现"><a class="header" href="#先给出实现">先给出实现</a></h2>
 <pre><code class="language-zig">const std = @import("std");
 
-fn MemoryPool(comptime T: type) type {                       // ①
+fn MemoryPool(comptime T: type) type {
+    comptime {
+        if (@sizeOf(T) == 0) {
+            @compileError("MemoryPool 不支持零大小类型");
+        }
+    }
+
     return struct {
         const Self = @This();
 
-        items: []T,                                          // ②
-        used: []bool,                                        // ③
-        allocator: std.mem.Allocator,                        // ④
-        count: usize,                                        // ⑤
+        items: []T,
+        used: []bool,
+        allocator: std.mem.Allocator,
+        count: usize,
 
-        fn init(allocator: std.mem.Allocator, capacity: usize) !Self {  // ⑥
+        pub fn init(allocator: std.mem.Allocator, capacity: usize) !Self {
             const items = try allocator.alloc(T, capacity);
-            const used = try allocator.alloc(bool, capacity);
+            errdefer allocator.free(items);
 
-            @memset(used, false);                            // ⑦
+            const used = try allocator.alloc(bool, capacity);
+            errdefer allocator.free(used);
+
+            @memset(used, false);
 
             return .{
                 .items = items,
@@ -208,33 +286,39 @@ fn MemoryPool(comptime T: type) type {                       // ①
             };
         }
 
-        fn deinit(self: *Self) void {                        // ⑧
+        pub fn deinit(self: *Self) void {
             self.allocator.free(self.items);
             self.allocator.free(self.used);
         }
 
-        fn acquire(self: *Self) ?*T {                        // ⑨
+        pub fn acquire(self: *Self) ?*T {
             for (self.used, 0..) |is_used, index| {
                 if (!is_used) {
                     self.used[index] = true;
                     self.count += 1;
-                    return &amp;self.items[index];               // ⑩
+                    return &amp;self.items[index];
                 }
             }
-            return null;                                     // ⑪
+            return null;
         }
 
-        fn release(self: *Self, item: *T) void {             // ⑫
-            const ptr_offset = @intFromPtr(item) - @intFromPtr(self.items.ptr);  // ⑬
-            const item_index = ptr_offset / @sizeOf(T);      // ⑭
+        pub fn release(self: *Self, item: *T) void {
+            const base_addr = @intFromPtr(self.items.ptr);
+            const item_addr = @intFromPtr(item);
+            const offset = item_addr - base_addr;
+            const index = offset / @sizeOf(T);
 
-            if (item_index &lt; self.used.len and self.used[item_index]) {
-                self.used[item_index] = false;
+            if (index &lt; self.used.len and self.used[index]) {
+                self.used[index] = false;
                 self.count -= 1;
             }
         }
 
-        fn getStats(self: *const Self) struct { total: usize, used: usize, free: usize } {  // ⑮
+        pub fn getStats(self: *const Self) struct {
+            total: usize,
+            used: usize,
+            free: usize,
+        } {
             return .{
                 .total = self.items.len,
                 .used = self.count,
@@ -244,182 +328,487 @@ fn MemoryPool(comptime T: type) type {                       // ①
     };
 }
 
-pub fn main(_: std.process.Init.Minimal) !void {
-    var gpa: std.heap.DebugAllocator(.{}) = .init;
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
-
-    var pool = try MemoryPool(i32).init(allocator, 10);       // ⑯
+test "memory pool basic lifecycle" {
+    var pool = try MemoryPool(i32).init(std.testing.allocator, 4);
     defer pool.deinit();
 
-    const item1 = pool.acquire().?;                           // ⑰
-    const item2 = pool.acquire().?;
-    const item3 = pool.acquire().?;
+    const a = pool.acquire().?;
+    const b = pool.acquire().?;
 
-    item1.* = 100;                                            // ⑱
-    item2.* = 200;
-    item3.* = 300;
+    a.* = 10;
+    b.* = 20;
 
-    std.debug.print("item1: {}, item2: {}, item3: {}\n", .{ item1.*, item2.*, item3.* });
+    try std.testing.expectEqual(@as(i32, 10), a.*);
+    try std.testing.expectEqual(@as(i32, 20), b.*);
 
-    const stats = pool.getStats();                            // ⑲
-    std.debug.print("内存池统计 - 总数：{}, 已用：{}, 空闲：{}\n", .{ stats.total, stats.used, stats.free });
+    var stats = pool.getStats();
+    try std.testing.expectEqual(@as(usize, 4), stats.total);
+    try std.testing.expectEqual(@as(usize, 2), stats.used);
+    try std.testing.expectEqual(@as(usize, 2), stats.free);
 
-    pool.release(item2);                                      // ⑳
+    pool.release(a);
+    pool.release(b);
 
-    const stats2 = pool.getStats();
-    std.debug.print("释放后统计 - 总数：{}, 已用：{}, 空闲：{}\n", .{ stats2.total, stats2.used, stats2.free });
+    stats = pool.getStats();
+    try std.testing.expectEqual(@as(usize, 0), stats.used);
+    try std.testing.expectEqual(@as(usize, 4), stats.free);
 }
 </code></pre>
-<p><strong>代码解析</strong>：</p>
-<p><strong>① 泛型内存池定义</strong></p>
+<p>先不要急着看细节。<br>这份实现最重要的不是“它怎么写”，而是“它依赖什么成立”。</p>
+<hr>
+<h2 id="先理解数据布局"><a class="header" href="#先理解数据布局">先理解数据布局</a></h2>
+<p>这个最小内存池由四部分核心状态组成：</p>
 <ul>
-<li><code>fn MemoryPool(comptime T: type) type</code> 是泛型函数</li>
-<li>返回一个结构体类型，实现类型安全的内存池</li>
-<li><code>comptime</code> 确保类型在编译期确定</li>
+<li><code>items: []T</code></li>
+<li><code>used: []bool</code></li>
+<li><code>allocator: std.mem.Allocator</code></li>
+<li><code>count: usize</code></li>
 </ul>
-<p><strong>② items: []T</strong></p>
+<h3 id="1-items"><a class="header" href="#1-items">1. <code>items</code></a></h3>
+<p><code>items</code> 是真正存放对象槽位的连续内存。</p>
+<p>你可以把它理解成：</p>
+<blockquote>
+<p>“池里所有可复用对象的物理存储区。”</p>
+</blockquote>
+<p>如果容量是 10，那么 <code>items[0]</code> 到 <code>items[9]</code> 就是 10 个可反复借出和归还的槽位。</p>
+<h3 id="2-used"><a class="header" href="#2-used">2. <code>used</code></a></h3>
+<p><code>used</code> 和 <code>items</code> 一一对应：</p>
 <ul>
-<li>存储所有预分配的对象</li>
-<li>类型为 T 的切片，连续内存布局</li>
-<li>容量在初始化时确定，运行时不变</li>
+<li><code>used[i] == true</code> 表示 <code>items[i]</code> 当前已借出</li>
+<li><code>used[i] == false</code> 表示 <code>items[i]</code> 当前空闲可用</li>
 </ul>
-<p><strong>③ used: []bool</strong></p>
+<p>因此，它本质上是一个“占用位图的最简单版本”。</p>
+<h3 id="3-allocator"><a class="header" href="#3-allocator">3. <code>allocator</code></a></h3>
+<p>它负责在初始化时分配 <code>items</code> 和 <code>used</code>，并在销毁时回收它们。</p>
+<p>这延续了 Zig 的标准设计原则：</p>
+<blockquote>
+<p><strong>分配器要显式传入，而不是偷偷藏在全局状态里。</strong></p>
+</blockquote>
+<h3 id="4-count"><a class="header" href="#4-count">4. <code>count</code></a></h3>
+<p><code>count</code> 表示当前已借出的对象数量。<br>它的作用不是必需，但非常有用：</p>
 <ul>
-<li>标记每个槽位是否被使用</li>
-<li>与 items 一一对应</li>
-<li><code>used[i] == true</code> 表示 <code>items[i]</code> 已被分配</li>
-</ul>
-<p><strong>④ allocator: std.mem.Allocator</strong></p>
-<ul>
-<li>存储分配器引用</li>
-<li>用于分配 items 和 used 数组</li>
-<li>遵循 Zig 的显式分配器传递模式</li>
-</ul>
-<p><strong>⑤ count: usize</strong></p>
-<ul>
-<li>当前已分配的对象数量</li>
-<li>用于快速统计和验证</li>
-<li>优化：避免每次遍历 used 数组</li>
-</ul>
-<p><strong>⑥ init 函数</strong></p>
-<ul>
-<li>初始化内存池，预分配所有内存</li>
-<li>一次性分配 items 和 used 数组</li>
-<li>返回初始化后的 MemoryPool 实例</li>
-</ul>
-<p><strong>⑦ @memset(used, false)</strong></p>
-<ul>
-<li>将所有槽位标记为未使用</li>
-<li>使用内置函数高效初始化</li>
-<li>确保内存池初始状态正确</li>
-</ul>
-<p><strong>⑧ deinit 函数</strong></p>
-<ul>
-<li>释放所有预分配的内存</li>
-<li>只需两次 free 操作</li>
-<li>遵循 RAII 模式（配合 defer）</li>
-</ul>
-<p><strong>⑨ acquire 函数</strong></p>
-<ul>
-<li>从内存池获取一个对象</li>
-<li>返回 <code>?*T</code>，可能失败（内存池已满）</li>
-<li>线性查找第一个空闲槽位</li>
-</ul>
-<p><strong>⑩ 返回对象指针</strong></p>
-<ul>
-<li><code>&amp;self.items[index]</code> 返回槽位的指针</li>
-<li>调用者可以直接使用该指针</li>
-<li>无需额外分配内存</li>
-</ul>
-<p><strong>⑪ 返回 null</strong></p>
-<ul>
-<li>内存池已满，无法分配</li>
-<li>调用者需要处理失败情况</li>
-<li>避免 panic，提供优雅降级</li>
-</ul>
-<p><strong>⑫ release 函数</strong></p>
-<ul>
-<li>将对象归还到内存池</li>
-<li>接收对象指针，计算索引</li>
-<li>标记槽位为未使用</li>
-</ul>
-<p><strong>⑬ 计算指针偏移量</strong></p>
-<ul>
-<li><code>@intFromPtr</code> 获取指针的整数值</li>
-<li>计算目标指针与数组起始指针的差值</li>
-<li>这是指针运算的关键步骤</li>
-</ul>
-<p><strong>⑭ 计算索引</strong></p>
-<ul>
-<li><code>ptr_offset / @sizeOf(T)</code> 得到数组索引</li>
-<li>利用指针算术实现 O(1) 释放</li>
-<li>比遍历查找更高效</li>
-</ul>
-<p><strong>⑮ getStats 函数</strong></p>
-<ul>
-<li>返回内存池统计信息</li>
-<li>匿名结构体作为返回类型</li>
-<li>用于监控和调试</li>
-</ul>
-<p><strong>⑯ 创建内存池</strong></p>
-<ul>
-<li><code>MemoryPool(i32)</code> 实例化泛型</li>
-<li>预分配 10 个 i32 对象</li>
-<li>使用 DebugAllocator 管理内存</li>
-</ul>
-<p><strong>⑰ 获取对象</strong></p>
-<ul>
-<li><code>pool.acquire()</code> 返回 <code>?*i32</code></li>
-<li><code>.?</code> 解包可选值（假设不会失败）</li>
-<li>返回的是指向内存池槽位的指针</li>
-</ul>
-<p><strong>⑱ 使用对象</strong></p>
-<ul>
-<li><code>item1.* = 100</code> 解引用指针并赋值</li>
-<li>直接操作内存池中的对象</li>
-<li>无需额外的内存分配</li>
-</ul>
-<p><strong>⑲ 查看统计</strong></p>
-<ul>
-<li>获取内存池使用情况</li>
-<li>验证分配是否正确</li>
-<li>用于调试和监控</li>
-</ul>
-<p><strong>⑳ 释放对象</strong></p>
-<ul>
-<li>将对象归还内存池</li>
-<li>槽位标记为未使用</li>
-<li>可以被后续 acquire 重用</li>
-</ul>
-<p><strong>关键要点</strong>：</p>
-<ol>
-<li><strong>预分配策略</strong>：一次性分配所有内存，避免频繁分配</li>
-<li><strong>O(1) 释放</strong>：通过指针算术实现快速释放</li>
-<li><strong>类型安全</strong>：泛型确保类型安全，编译期检查</li>
-<li><strong>内存效率</strong>：无碎片，连续内存布局</li>
-<li><strong>显式管理</strong>：清晰的获取/释放语义</li>
-</ol>
-<p><strong>预期输出</strong>：</p>
-<pre><code>item1: 100, item2: 200, item3: 300
-内存池统计 - 总数：10, 已用：3, 空闲：7
-释放后统计 - 总数：10, 已用：2, 空闲：8
-</code></pre>
-<p><strong>性能分析</strong>：</p>
-<ul>
-<li><strong>分配复杂度</strong>：O(n) 线性查找（可优化为 O(1) 使用空闲链表）</li>
-<li><strong>释放复杂度</strong>：O(1) 指针算术</li>
-<li><strong>内存开销</strong>：每个对象额外 1 字节（used 标记）</li>
-<li><strong>缓存友好</strong>：连续内存布局，缓存命中率高</li>
-</ul>
-<p><strong>下一步</strong>：</p>
-<ul>
-<li>实现空闲链表优化，将分配复杂度降至 O(1)</li>
-<li>添加线程安全支持（使用互斥锁）</li>
-<li>实现对象重置功能（release 时清零）</li>
-<li>参考标准库的 <code>std.mem.Pool</code> 实现</li>
+<li>快速提供统计信息</li>
+<li>避免每次都遍历 <code>used</code></li>
+<li>帮助我们检查池状态是否大致合理</li>
 </ul>
 <hr>
+<h2 id="这个实现依赖哪些不变量"><a class="header" href="#这个实现依赖哪些不变量">这个实现依赖哪些不变量？</a></h2>
+<p>这是整章最重要的部分。</p>
+<h3 id="不变量-1itemslen--usedlen"><a class="header" href="#不变量-1itemslen--usedlen">不变量 1：<code>items.len == used.len</code></a></h3>
+<p>每个对象槽位必须对应一个使用标记。<br>如果这两者长度不同，那么：</p>
+<ul>
+<li><code>used</code> 就无法准确描述每个槽位状态</li>
+<li><code>acquire</code> 和 <code>release</code> 的索引逻辑就会失去意义</li>
+</ul>
+<p>在当前实现里，这个不变量由 <code>init</code> 保证：</p>
+<ul>
+<li><code>items</code> 按 <code>capacity</code> 分配</li>
+<li><code>used</code> 也按同样的 <code>capacity</code> 分配</li>
+</ul>
+<h3 id="不变量-2count-必须等于-used--true-的数量"><a class="header" href="#不变量-2count-必须等于-used--true-的数量">不变量 2：<code>count</code> 必须等于 <code>used == true</code> 的数量</a></h3>
+<p>也就是说：</p>
+<ul>
+<li><code>count</code> 不能大于总容量</li>
+<li><code>count</code> 不能小于 0（对 <code>usize</code> 来说就是不能下溢）</li>
+<li><code>count</code> 应该始终反映“实际已借出对象数”</li>
+</ul>
+<p>当前实现通过这两个操作维护它：</p>
+<ul>
+<li><code>acquire</code> 成功时 <code>count += 1</code></li>
+<li><code>release</code> 成功归还时 <code>count -= 1</code></li>
+</ul>
+<h3 id="不变量-3usedi--false-的槽位才允许被-acquire"><a class="header" href="#不变量-3usedi--false-的槽位才允许被-acquire">不变量 3：<code>used[i] == false</code> 的槽位才允许被 <code>acquire</code></a></h3>
+<p>这听起来像废话，但它就是对象池正确性的核心：</p>
+<ul>
+<li>一个槽位不能同时借给两个调用者</li>
+<li>一个调用者归还后，槽位才再次变为空闲</li>
+</ul>
+<h3 id="不变量-4release-传入的指针必须来自当前池中的某个槽位"><a class="header" href="#不变量-4release-传入的指针必须来自当前池中的某个槽位">不变量 4：<code>release</code> 传入的指针必须来自当前池中的某个槽位</a></h3>
+<p>这是最关键、也最容易被忽略的接口契约之一。</p>
+<p>当前实现默认信任调用者：</p>
+<ul>
+<li>传入的 <code>item</code> 是从本池 <code>acquire()</code> 得到的</li>
+<li>它仍然指向本池中的有效槽位</li>
+<li>它没有被重复释放</li>
+</ul>
+<p>一旦这个前提被破坏，<code>release</code> 的行为就不再可靠。</p>
+<hr>
+<h2 id="初始化阶段池在建立什么状态"><a class="header" href="#初始化阶段池在建立什么状态">初始化阶段：池在建立什么状态？</a></h2>
+<p>看 <code>init</code>：</p>
+<pre><code class="language-zig">const items = try allocator.alloc(T, capacity);
+errdefer allocator.free(items);
+
+const used = try allocator.alloc(bool, capacity);
+errdefer allocator.free(used);
+
+@memset(used, false);
+</code></pre>
+<p>这里做了三件事：</p>
+<ol>
+<li>分配对象槽位数组</li>
+<li>分配占用标记数组</li>
+<li>把所有槽位初始化为空闲状态</li>
+</ol>
+<h3 id="为什么这里用-errdefer"><a class="header" href="#为什么这里用-errdefer">为什么这里用 <code>errdefer</code>？</a></h3>
+<p>因为初始化是一个典型的“分多步获取资源”的过程。</p>
+<ul>
+<li>第一步分配 <code>items</code></li>
+<li>第二步分配 <code>used</code></li>
+</ul>
+<p>如果第二步失败，而你没有清理第一步，那么就会泄漏 <code>items</code>。</p>
+<p>所以这里的 <code>errdefer</code> 表达的是：</p>
+<blockquote>
+<p><strong>如果初始化中途失败，已经成功获取的资源要立即回滚。</strong></p>
+</blockquote>
+<p>这也是 Zig 中很典型的资源管理模式。</p>
+<hr>
+<h2 id="acquire借出对象时到底发生了什么"><a class="header" href="#acquire借出对象时到底发生了什么"><code>acquire</code>：借出对象时到底发生了什么？</a></h2>
+<p>实现如下：</p>
+<pre><code class="language-zig">pub fn acquire(self: *Self) ?*T {
+    for (self.used, 0..) |is_used, index| {
+        if (!is_used) {
+            self.used[index] = true;
+            self.count += 1;
+            return &amp;self.items[index];
+        }
+    }
+    return null;
+}
+</code></pre>
+<p>它的行为可以拆成四步：</p>
+<ol>
+<li>线性扫描 <code>used</code></li>
+<li>找到第一个空闲槽位</li>
+<li>将其标记为已使用</li>
+<li>返回该槽位的指针</li>
+</ol>
+<h3 id="这个接口为什么返回-t"><a class="header" href="#这个接口为什么返回-t">这个接口为什么返回 <code>?*T</code>？</a></h3>
+<p>因为获取对象可能失败。<br>失败的最直接原因就是：</p>
+<ul>
+<li>池已经满了</li>
+<li>没有任何空闲槽位</li>
+</ul>
+<p>所以这里返回可选指针是非常合理的：</p>
+<ul>
+<li><code>?*T</code> 表示“可能拿到对象，也可能拿不到”</li>
+<li>不强行 panic</li>
+<li>调用者必须显式处理“池满”情况</li>
+</ul>
+<h3 id="这个设计的优点"><a class="header" href="#这个设计的优点">这个设计的优点</a></h3>
+<ul>
+<li>接口语义清楚</li>
+<li>没有额外堆分配</li>
+<li>对调用者来说，拿到的就是可直接使用的对象地址</li>
+</ul>
+<h3 id="它的代价"><a class="header" href="#它的代价">它的代价</a></h3>
+<ul>
+<li>当前实现使用线性扫描</li>
+<li><code>acquire</code> 的时间复杂度是 <code>O(n)</code></li>
+</ul>
+<p>这对教学实现完全可以接受。<br>因为我们当前优先想讲清楚的是模型，而不是先上更复杂的空闲链表优化。</p>
+<hr>
+<h2 id="release归还对象时真正困难的是什么"><a class="header" href="#release归还对象时真正困难的是什么"><code>release</code>：归还对象时真正困难的是什么？</a></h2>
+<p>实现如下：</p>
+<pre><code class="language-zig">pub fn release(self: *Self, item: *T) void {
+    const base_addr = @intFromPtr(self.items.ptr);
+    const item_addr = @intFromPtr(item);
+    const offset = item_addr - base_addr;
+    const index = offset / @sizeOf(T);
+
+    if (index &lt; self.used.len and self.used[index]) {
+        self.used[index] = false;
+        self.count -= 1;
+    }
+}
+</code></pre>
+<p>这是本章里最“危险但有代表性”的部分。</p>
+<h3 id="它在做什么"><a class="header" href="#它在做什么">它在做什么？</a></h3>
+<p>因为 <code>release</code> 收到的是一个 <code>*T</code>，而不是槽位索引。<br>所以它要先回答一个问题：</p>
+<blockquote>
+<p>这个指针对应的是 <code>items</code> 里的第几个槽位？</p>
+</blockquote>
+<p>于是代码通过指针地址做反推：</p>
+<ol>
+<li>取出池起始地址 <code>base_addr</code></li>
+<li>取出目标对象地址 <code>item_addr</code></li>
+<li>做地址差值得到偏移</li>
+<li>用元素大小除出索引</li>
+</ol>
+<p>如果这个索引合法，并且当前槽位确实处于已使用状态，就把它改回空闲。</p>
+<h3 id="为什么这很高效"><a class="header" href="#为什么这很高效">为什么这很高效？</a></h3>
+<p>因为它避免了“释放时再扫描整个池找这个对象”的成本。<br>一旦前提成立，索引推导就是常数时间。</p>
+<p>所以它的优点是：</p>
+<ul>
+<li><code>release</code> 可以做到接近 <code>O(1)</code></li>
+<li>不需要维护额外查找结构</li>
+<li>很符合固定槽位池的设计思路</li>
+</ul>
+<h3 id="但为什么它也危险"><a class="header" href="#但为什么它也危险">但为什么它也危险？</a></h3>
+<p>因为它几乎完全依赖调用者守约。</p>
+<p>当前实现没有完整防御以下情况：</p>
+<ul>
+<li>传入的指针并不来自当前池</li>
+<li>传入的指针不是槽位起始地址</li>
+<li>同一个对象被重复释放</li>
+<li>某个指针已经悬空</li>
+<li>某个指针来自别的池，但地址碰巧落入某种危险区间</li>
+</ul>
+<p>也就是说：</p>
+<blockquote>
+<p><strong>当前 <code>release</code> 更像“高信任契约接口”，而不是“强防御式接口”。</strong></p>
+</blockquote>
+<p>这并不是教学实现的错误，<br>但必须被明确写出来，不能让读者误以为它天然安全。</p>
+<hr>
+<h2 id="这个接口契约到底是什么"><a class="header" href="#这个接口契约到底是什么">这个接口契约到底是什么？</a></h2>
+<p>可以把当前内存池的接口契约写得非常明确。</p>
+<h3 id="initallocator-capacity"><a class="header" href="#initallocator-capacity"><code>init(allocator, capacity)</code></a></h3>
+<p>调用者承诺：</p>
+<ul>
+<li>提供有效的分配器</li>
+<li>容量表达的是池的固定上限</li>
+</ul>
+<p>内存池承诺：</p>
+<ul>
+<li>成功后，所有槽位都处于空闲状态</li>
+<li>失败时不会泄漏初始化过程中已获取的资源</li>
+</ul>
+<h3 id="acquire"><a class="header" href="#acquire"><code>acquire()</code></a></h3>
+<p>调用者承诺：</p>
+<ul>
+<li>正常处理返回 <code>null</code> 的情况</li>
+</ul>
+<p>内存池承诺：</p>
+<ul>
+<li>如果返回非空指针，该指针对应一个独占槽位</li>
+<li>在被释放前，这个槽位不会再次被借出</li>
+</ul>
+<h3 id="releaseitem"><a class="header" href="#releaseitem"><code>release(item)</code></a></h3>
+<p>调用者承诺：</p>
+<ul>
+<li><code>item</code> 确实来自当前池</li>
+<li><code>item</code> 对应的是一个当前仍处于“已借出”状态的槽位</li>
+<li>不会重复释放同一对象</li>
+<li>不会传入伪造或失效指针</li>
+</ul>
+<p>内存池承诺：</p>
+<ul>
+<li>在这些前提成立时，槽位会重新变为空闲</li>
+<li>后续 <code>acquire</code> 可以再次复用它</li>
+</ul>
+<p>把这段契约看清楚，比记住代码本身更重要。<br>因为很多高性能数据结构本质上都在做类似的交易：</p>
+<ul>
+<li><strong>更少的运行时防御</strong></li>
+<li>换来更低的额外成本</li>
+<li>前提是调用者必须更守规矩**</li>
+</ul>
+<hr>
+<h2 id="一个最容易被忽略的问题复用意味着旧状态仍然存在"><a class="header" href="#一个最容易被忽略的问题复用意味着旧状态仍然存在">一个最容易被忽略的问题：复用意味着旧状态仍然存在</a></h2>
+<p>很多初学者第一次看对象池时，会潜意识觉得：</p>
+<blockquote>
+<p>“释放后，这个对象应该自动变回干净状态吧？”</p>
+</blockquote>
+<p>但当前实现<strong>没有</strong>这么做。</p>
+<p>例如：</p>
+<pre><code class="language-zig">const item = pool.acquire().?;
+item.* = 123;
+pool.release(item);
+
+const reused = pool.acquire().?;
+</code></pre>
+<p>这里 <code>reused</code> 很可能就是刚才那个槽位。<br>而如果没有额外清理，它里面可能仍然保留旧值 <code>123</code>。</p>
+<p>这不是 bug，而是对象池模型的自然结果：</p>
+<ul>
+<li>释放只是“归还槽位”</li>
+<li>不等于“自动重置对象内容”</li>
+</ul>
+<p>所以你必须显式考虑：</p>
+<ul>
+<li>是由调用者在重新使用前覆盖全部字段？</li>
+<li>还是在 <code>release</code> 时统一重置？</li>
+<li>还是在 <code>acquire</code> 后做初始化？</li>
+</ul>
+<p>这属于设计决策的一部分，不应默认含糊过去。</p>
+<hr>
+<h2 id="为什么这里不用更聪明的设计"><a class="header" href="#为什么这里不用更聪明的设计">为什么这里不用“更聪明”的设计？</a></h2>
+<p>你可能会问：</p>
+<ul>
+<li>为什么不用空闲链表？</li>
+<li>为什么不用位图压缩？</li>
+<li>为什么不做重复释放检测？</li>
+<li>为什么不验证指针来源？</li>
+</ul>
+<p>答案是：</p>
+<blockquote>
+<p>因为本章当前目标是<strong>先讲清楚模型和契约</strong>。</p>
+</blockquote>
+<p>如果一开始就把实现升级成：</p>
+<ul>
+<li>空闲链表</li>
+<li>调试断言</li>
+<li>指针合法性检查</li>
+<li>对象清零</li>
+<li>线程同步</li>
+<li>更复杂的统计字段</li>
+</ul>
+<p>那么读者很容易在第一轮阅读中丢失重点。</p>
+<p>教学上的更合理顺序通常是：</p>
+<ol>
+<li>先用最小版本理解模型</li>
+<li>再明确指出局限</li>
+<li>最后讨论如何增强</li>
+</ol>
+<p>这比一开始就堆上“完整版”更适合学习。</p>
+<hr>
+<h2 id="这个实现适合什么场景"><a class="header" href="#这个实现适合什么场景">这个实现适合什么场景？</a></h2>
+<p>当前版本更适合作为：</p>
+<h3 id="1-教学型原型"><a class="header" href="#1-教学型原型">1. 教学型原型</a></h3>
+<p>你想先验证：</p>
+<ul>
+<li>对象池模型是否适合这个问题</li>
+<li>资源复用语义是否清楚</li>
+<li>接口是否容易被调用方接受</li>
+</ul>
+<h3 id="2-固定容量单线程小规模对象池"><a class="header" href="#2-固定容量单线程小规模对象池">2. 固定容量、单线程、小规模对象池</a></h3>
+<p>如果：</p>
+<ul>
+<li>对象大小固定</li>
+<li>容量上界明确</li>
+<li>没有跨线程共享</li>
+<li>可以接受线性扫描获取</li>
+</ul>
+<p>那么这个版本已经足够说明思路。</p>
+<h3 id="3-高频短生命周期对象"><a class="header" href="#3-高频短生命周期对象">3. 高频短生命周期对象</a></h3>
+<p>例如：</p>
+<ul>
+<li>临时任务节点</li>
+<li>事件对象</li>
+<li>粒子对象</li>
+<li>固定尺寸消息块</li>
+</ul>
+<hr>
+<h2 id="这个实现不适合什么场景"><a class="header" href="#这个实现不适合什么场景">这个实现不适合什么场景？</a></h2>
+<p>当前版本<strong>不适合直接拿去当生产组件</strong>，尤其是这些情况：</p>
+<h3 id="1-多线程共享访问"><a class="header" href="#1-多线程共享访问">1. 多线程共享访问</a></h3>
+<p>因为没有任何同步保护：</p>
+<ul>
+<li><code>used</code> 会发生竞争</li>
+<li><code>count</code> 会发生竞争</li>
+<li>同一槽位可能被并发错误借出/归还</li>
+</ul>
+<h3 id="2-调用方不可信"><a class="header" href="#2-调用方不可信">2. 调用方不可信</a></h3>
+<p>如果你不能保证调用方一定正确传入来自本池的指针，<br>那当前 <code>release</code> 就不够安全。</p>
+<h3 id="3-需要强防御式诊断"><a class="header" href="#3-需要强防御式诊断">3. 需要强防御式诊断</a></h3>
+<p>如果你希望组件主动检测：</p>
+<ul>
+<li>重复释放</li>
+<li>外来指针</li>
+<li>非槽位边界指针</li>
+<li>使用后释放</li>
+</ul>
+<p>那当前实现还远远不够。</p>
+<h3 id="4-容量不可预测"><a class="header" href="#4-容量不可预测">4. 容量不可预测</a></h3>
+<p>当前容量在初始化后固定，池满时只能返回 <code>null</code>。<br>如果业务上界不清晰，或需要弹性扩容，这个模型就要继续演进。</p>
+<h3 id="5-对象需要复杂清理逻辑"><a class="header" href="#5-对象需要复杂清理逻辑">5. 对象需要复杂清理逻辑</a></h3>
+<p>如果对象内部持有其他资源，例如：</p>
+<ul>
+<li>其他堆内存</li>
+<li>文件句柄</li>
+<li>网络连接</li>
+<li>锁或句柄</li>
+</ul>
+<p>那么“释放槽位”不等于“完成对象析构”。<br>这种场景必须更小心设计对象生命周期。</p>
+<hr>
+<h2 id="如果继续演进下一步通常会怎么改"><a class="header" href="#如果继续演进下一步通常会怎么改">如果继续演进，下一步通常会怎么改？</a></h2>
+<p>在真正工程里，最常见的增强方向通常有下面几类。</p>
+<h2 id="1-用空闲链表替代线性扫描"><a class="header" href="#1-用空闲链表替代线性扫描">1. 用空闲链表替代线性扫描</a></h2>
+<p>这样可以把 <code>acquire()</code> 从 <code>O(n)</code> 改进为更稳定的接近 <code>O(1)</code>。</p>
+<p>代价是：</p>
+<ul>
+<li>结构更复杂</li>
+<li>需要维护额外状态</li>
+<li>更难讲清楚第一次实现</li>
+</ul>
+<h2 id="2-增加-debug-模式下的合法性检查"><a class="header" href="#2-增加-debug-模式下的合法性检查">2. 增加 Debug 模式下的合法性检查</a></h2>
+<p>例如验证：</p>
+<ul>
+<li>指针是否落在池范围内</li>
+<li>偏移是否对齐到对象边界</li>
+<li>是否发生重复释放</li>
+</ul>
+<p>这会让教学实现更安全，也更适合调试。</p>
+<h2 id="3-在-release-时重置对象"><a class="header" href="#3-在-release-时重置对象">3. 在 <code>release()</code> 时重置对象</a></h2>
+<p>例如：</p>
+<ul>
+<li>清零对象</li>
+<li>调用显式 <code>reset</code></li>
+<li>清除敏感状态</li>
+</ul>
+<p>这样可以减少“旧状态残留”问题，<br>但也会增加额外开销，并引入“重置策略属于谁”的设计问题。</p>
+<h2 id="4-增加线程安全"><a class="header" href="#4-增加线程安全">4. 增加线程安全</a></h2>
+<p>通过：</p>
+<ul>
+<li>互斥锁</li>
+<li>原子操作</li>
+<li>分段池</li>
+<li>线程局部池</li>
+</ul>
+<p>让对象池适应并发环境。</p>
+<p>但这已经不再是“最小内存池”，而是另一个工程主题。</p>
+<h2 id="5-分离调试模式和发布模式"><a class="header" href="#5-分离调试模式和发布模式">5. 分离调试模式和发布模式</a></h2>
+<p>例如：</p>
+<ul>
+<li>Debug 模式做更强检查</li>
+<li>Release 模式保留更轻量逻辑</li>
+</ul>
+<p>这通常是高性能组件很常见的做法。</p>
+<hr>
+<h2 id="从这章真正应该学到什么"><a class="header" href="#从这章真正应该学到什么">从这章真正应该学到什么？</a></h2>
+<p>如果你只把这章理解成“一个泛型数据结构示例”，那其实还不够。</p>
+<p>这章真正要教你的，是下面这些判断。</p>
+<h3 id="1-内存池的价值来自复用和边界清楚"><a class="header" href="#1-内存池的价值来自复用和边界清楚">1. 内存池的价值来自“复用”和“边界清楚”</a></h3>
+<p>不是所有分配器问题都需要对象池。<br>对象池只对一类约束明确的问题有效。</p>
+<h3 id="2-高性能设计经常依赖接口契约"><a class="header" href="#2-高性能设计经常依赖接口契约">2. 高性能设计经常依赖接口契约</a></h3>
+<p>很多时候，速度不是白来的。<br>它往往来自：</p>
+<ul>
+<li>更少的抽象层</li>
+<li>更少的检查</li>
+<li>更明确的前提</li>
+<li>更强的调用方责任</li>
+</ul>
+<h3 id="3-不变量比逐行代码更值得先理解"><a class="header" href="#3-不变量比逐行代码更值得先理解">3. 不变量比逐行代码更值得先理解</a></h3>
+<p>只要你能始终抓住：</p>
+<ul>
+<li><code>items</code> 和 <code>used</code> 一一对应</li>
+<li><code>count</code> 反映借出数量</li>
+<li>每个槽位同一时刻只能被一个调用者持有</li>
+<li><code>release</code> 只能处理来自本池的有效指针</li>
+</ul>
+<p>那你对这个实现就已经抓住了核心。</p>
+<h3 id="4-教学实现和生产实现不是一回事"><a class="header" href="#4-教学实现和生产实现不是一回事">4. 教学实现和生产实现不是一回事</a></h3>
+<p>一个教学实现可以故意保留简化：</p>
+<ul>
+<li>它的目标是让结构变清楚</li>
+<li>不是一次性变成“可上线组件”</li>
+</ul>
+<p>能区分这点，是阅读第三部分案例时非常重要的能力。</p>
+<hr>
+<h2 id="小结"><a class="header" href="#小结">小结</a></h2>
+<p>这一章最重要的，不是“你会不会手写一个对象池”，而是你是否已经开始形成这些工程判断：</p>
+<ul>
+<li>什么时候对象池值得引入？</li>
+<li>它依赖哪些不变量？</li>
+<li><code>acquire</code> 和 <code>release</code> 的接口契约是什么？</li>
+<li>为什么 <code>release</code> 的高效实现也意味着更强前提？</li>
+<li>为什么对象复用不等于对象自动重置？</li>
+<li>为什么教学代码必须明确写出它<strong>没有</strong>防御哪些错误？</li>
+</ul>
+<p>如果你读完这一章后，已经能自然地问出这些问题，那么这一章就达到目的了。</p>
+<hr>
+<blockquote>
+<p>💡 <strong>下一章预告</strong></p>
+<p>下一章我们将进入 <a href="chapter-config-system.html">实战案例 - 配置系统原型</a>，继续讨论：当你把若干字段、默认值、类型信息和校验逻辑组织起来时，应该怎样区分“教学原型”和“工程化设计”。</p>
+</blockquote>
+
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">

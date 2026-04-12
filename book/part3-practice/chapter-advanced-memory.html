@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>【draft】高级内存管理技巧 - Zig 编程语言入门教程</title>
+        <title>高级内存管理技巧（专题） - Zig 编程语言入门教程</title>
 
 
         <!-- Custom HTML head -->
@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-a9ca16c2.js";
+            window.path_to_searchindex_js = "../searchindex-35211ac1.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-2fc75e4c.js"></script>
+        <script src="../toc-6dcbe846.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -181,11 +181,91 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="draft高级内存管理技巧"><a class="header" href="#draft高级内存管理技巧">【draft】高级内存管理技巧</a></h1>
+                        <h1 id="高级内存管理技巧专题"><a class="header" href="#高级内存管理技巧专题">高级内存管理技巧（专题）</a></h1>
 <blockquote>
-<p><strong>章节定位</strong>：本章是实战案例部分，侧重于内存管理的实践技巧、优化和调试。关于内存管理的理论基础（如分配器原理、所有权模型、内存安全策略等），请参见高级部分的<a href="../part2-advanced/chapter-memory-management.html">内存管理模型</a>章节。</p>
+<p><strong>章节定位</strong>：本章属于第三部分中的专题章节。<br>它不试图从零做一个“完整项目”，而是围绕内存管理中常见的几个进阶方向，讨论它们分别解决什么问题、带来什么收益、又引入了哪些额外约束。</p>
+<p>如果说第二部分的<a href="../part2-advanced/chapter-memory-management.html">内存管理模型</a>更关注“原则与接口”，那么本章更关注：</p>
+<ul>
+<li>什么时候值得进一步控制分配行为</li>
+<li>什么时候对象池真的有意义</li>
+<li>为什么“高级技巧”往往也意味着更高的正确性成本</li>
+<li>如何避免把优化手段误当成默认起手式</li>
+</ul>
+<p><strong>相关阅读与衔接建议</strong>：</p>
+<ul>
+<li>如果你想先回到更稳定的基础原则，请先复习第二部分的<a href="../part2-advanced/chapter-memory-management.html">内存管理模型</a></li>
+<li>如果你更想先理解“对象池为什么成立、接口契约是什么”，建议先读本部分的<a href="chapter-memory-pool.html">实战案例 - 内存池实现</a></li>
+<li>如果你读完本章后还想继续验证“这些优化到底有没有意义”，下一站最适合接到<a href="chapter-optimization.html">性能优化与调试（专题）</a></li>
+</ul>
 </blockquote>
-<h2 id="自定义分配器"><a class="header" href="#自定义分配器">自定义分配器</a></h2>
+<hr>
+<h2 id="先说结论不是所有项目都需要高级内存技巧"><a class="header" href="#先说结论不是所有项目都需要高级内存技巧">先说结论：不是所有项目都需要“高级内存技巧”</a></h2>
+<p>很多读者一看到“自定义分配器”“对象池”“内存追踪”，就会自然觉得这些一定比普通写法更高级、更专业。</p>
+<p>但更成熟的判断应该是：</p>
+<blockquote>
+<p><strong>只有当你确实遇到了观测、性能、容量控制或资源边界问题时，这些技巧才值得引入。</strong></p>
+</blockquote>
+<p>对于很多普通项目来说，下面这些做法往往已经足够好：</p>
+<ul>
+<li>显式传递 <code>std.mem.Allocator</code></li>
+<li>在测试中使用 <code>std.testing.allocator</code></li>
+<li>在开发阶段使用调试期分配器帮助发现问题</li>
+<li>用 <code>defer</code> / <code>errdefer</code> 把清理路径写清楚</li>
+<li>优先保持所有权边界明确，而不是过早优化</li>
+</ul>
+<p>所以，本章最重要的阅读姿势不是“多学几种更底层写法”，而是：</p>
+<ul>
+<li>先看它解决什么问题</li>
+<li>再看它多引入了哪些前提</li>
+<li>最后判断是否真的值得用</li>
+</ul>
+<hr>
+<h2 id="本章讨论的两类典型策略"><a class="header" href="#本章讨论的两类典型策略">本章讨论的两类典型策略</a></h2>
+<p>本章主要比较两种常见思路：</p>
+<ol>
+<li><strong>包装一个已有分配器，增加观测能力</strong></li>
+<li><strong>预分配一批对象，使用池化复用</strong></li>
+</ol>
+<p>它们分别对应不同目标：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>策略</th><th>主要目标</th><th>典型收益</th><th>主要代价</th></tr>
+</thead>
+<tbody>
+<tr><td>包装分配器</td><td>统计、观测、限制分配行为</td><td>更容易看见分配模式</td><td>接口更底层、实现更脆弱</td></tr>
+<tr><td>对象池 / 内存池</td><td>复用固定形状对象</td><td>减少重复分配和碎片</td><td>容量限制、正确性约束更强</td></tr>
+</tbody>
+</table>
+</div>
+<p>换句话说：</p>
+<ul>
+<li>如果你更关心“<strong>我到底分配了多少、分配得是否频繁</strong>”，更可能去包装分配器</li>
+<li>如果你更关心“<strong>这一类对象是否值得反复复用</strong>”，更可能去做对象池</li>
+</ul>
+<hr>
+<h2 id="一包装分配器给已有分配行为增加可观测性"><a class="header" href="#一包装分配器给已有分配行为增加可观测性">一、包装分配器：给已有分配行为增加“可观测性”</a></h2>
+<h3 id="这类技巧在解决什么问题"><a class="header" href="#这类技巧在解决什么问题">这类技巧在解决什么问题？</a></h3>
+<p>在很多工程里，真正困扰你的并不是“不会分配”，而是：</p>
+<ul>
+<li>不知道某个模块到底分配了多少次</li>
+<li>不知道是不是释放路径有缺失</li>
+<li>不知道某段逻辑是不是产生了过多短命对象</li>
+<li>不知道某个优化是否真的减少了分配压力</li>
+</ul>
+<p>这时，一个常见思路就是：</p>
+<blockquote>
+<p><strong>不直接改业务逻辑，而是在已有分配器外面套一层包装，顺便记录统计信息。</strong></p>
+</blockquote>
+<p>这类思路的好处是：</p>
+<ul>
+<li>不需要推翻原有接口设计</li>
+<li>可以把“观测行为”和“业务行为”分离</li>
+<li>特别适合做调试、排查和局部实验</li>
+</ul>
+<hr>
+<h3 id="一个最小统计分配器示例"><a class="header" href="#一个最小统计分配器示例">一个最小统计分配器示例</a></h3>
+<p>下面这个例子展示了一种教学型最小实现：它把一个已有分配器包起来，并记录分配次数、释放次数和当前统计字节数。</p>
 <pre><code class="language-zig">const std = @import("std");
 
 const TrackingAllocator = struct {
@@ -237,6 +317,10 @@ const TrackingAllocator = struct {
         return_address: usize,
     ) bool {
         const self: *Self = @ptrCast(@alignCast(ctx));
+
+        // 这里只把请求直接转发给底层分配器。
+        // 如果你想让 bytes_allocated 始终严格反映“当前真实占用字节数”，
+        // 还需要根据缩容/扩容的结果同步调整统计值。
         return self.backing_allocator.rawResize(buf, alignment, new_len, return_address);
     }
 
@@ -261,7 +345,7 @@ const TrackingAllocator = struct {
     }
 };
 
-pub fn main(_: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init) !void {
     var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
 
@@ -279,7 +363,77 @@ pub fn main(_: std.process.Init.Minimal) !void {
     tracker.printStats();
 }
 </code></pre>
-<h2 id="内存池优化"><a class="header" href="#内存池优化">内存池优化</a></h2>
+<hr>
+<h3 id="这个示例真正的教学价值是什么"><a class="header" href="#这个示例真正的教学价值是什么">这个示例真正的教学价值是什么？</a></h3>
+<p>它主要帮助你看清几个问题：</p>
+<h4 id="1-分配器本身也是可以被组合和包装的"><a class="header" href="#1-分配器本身也是可以被组合和包装的">1. 分配器本身也是可以被组合和包装的</a></h4>
+<p>你并不总是只能“直接使用标准分配器”。<br>在 Zig 里，分配器也可以成为可组合的工程接口。</p>
+<h4 id="2-观测逻辑可以外挂而不必污染业务代码"><a class="header" href="#2-观测逻辑可以外挂而不必污染业务代码">2. 观测逻辑可以外挂，而不必污染业务代码</a></h4>
+<p>你可以不修改业务模块签名，只替换它收到的 allocator。</p>
+<h4 id="3-高级能力常常意味着更靠近标准库底层接口"><a class="header" href="#3-高级能力常常意味着更靠近标准库底层接口">3. “高级能力”常常意味着更靠近标准库底层接口</a></h4>
+<p>一旦你开始自己拼 <code>Allocator</code> 的底层行为，就必须更清楚地理解：</p>
+<ul>
+<li>分配与释放的调用约定</li>
+<li>上下文对象如何转回具体类型</li>
+<li>统计值何时该增加、减少或保持不变</li>
+</ul>
+<hr>
+<h3 id="这个示例没有解决什么问题"><a class="header" href="#这个示例没有解决什么问题">这个示例没有解决什么问题？</a></h3>
+<p>虽然这个例子有教学价值，但它并不是一个可以直接长期维护的通用组件。</p>
+<p>它没有完整解决这些问题：</p>
+<h4 id="1-bytes_allocated-不是严格账本"><a class="header" href="#1-bytes_allocated-不是严格账本">1. <code>bytes_allocated</code> 不是严格账本</a></h4>
+<p>当前实现只在 <code>alloc</code> / <code>free</code> 中更新统计。<br>而 <code>resize</code> 的变化没有同步反映进去，因此它更像“近似观察值”，而不是精确审计结果。</p>
+<h4 id="2-没有并发安全"><a class="header" href="#2-没有并发安全">2. 没有并发安全</a></h4>
+<p>如果多个线程同时使用它，当前统计字段可能竞争。</p>
+<h4 id="3-没有记录调用来源"><a class="header" href="#3-没有记录调用来源">3. 没有记录调用来源</a></h4>
+<p>它只统计“有多少”，却没有告诉你“是谁分配的”。</p>
+<h4 id="4-这类底层接口可能更版本敏感"><a class="header" href="#4-这类底层接口可能更版本敏感">4. 这类底层接口可能更版本敏感</a></h4>
+<p>和普通语言语法相比，手动拼装分配器接口、调用底层 <code>raw*</code> 方法这类写法，更容易随着标准库演进发生变化。</p>
+<p>所以，本节更适合你把它理解成：</p>
+<blockquote>
+<p><strong>如何围绕 allocator 做工程扩展的一种思路示范。</strong></p>
+</blockquote>
+<p>而不是：</p>
+<blockquote>
+<p><strong>以后所有项目都应该自己先写一层 TrackingAllocator。</strong></p>
+</blockquote>
+<hr>
+<h3 id="什么时候值得这样做"><a class="header" href="#什么时候值得这样做">什么时候值得这样做？</a></h3>
+<p>更值得考虑包装分配器的情况通常包括：</p>
+<ul>
+<li>你正在定位某个模块的分配行为</li>
+<li>你怀疑“分配次数过多”是热点之一</li>
+<li>你想在不改业务逻辑的前提下增加观测</li>
+<li>你需要做局部实验，而不是建设长期稳定的通用库</li>
+</ul>
+<hr>
+<h3 id="什么时候不建议这样做"><a class="header" href="#什么时候不建议这样做">什么时候不建议这样做？</a></h3>
+<p>不建议一上来就这么做的情况通常包括：</p>
+<ul>
+<li>你还没有明确的观测目标</li>
+<li>你只是“感觉以后可能有用”</li>
+<li>你其实只是需要 <code>std.testing.allocator</code> 或调试期分配器</li>
+<li>你当前的问题根本不是分配行为不可见，而是所有权边界写不清楚</li>
+</ul>
+<hr>
+<h2 id="二对象池通过复用固定形状对象减少重复分配"><a class="header" href="#二对象池通过复用固定形状对象减少重复分配">二、对象池：通过复用固定形状对象减少重复分配</a></h2>
+<h3 id="对象池在解决什么问题"><a class="header" href="#对象池在解决什么问题">对象池在解决什么问题？</a></h3>
+<p>对象池的核心思路是：</p>
+<blockquote>
+<p><strong>提前准备一批对象槽位，后续获取和归还都在这批现有存储上完成。</strong></p>
+</blockquote>
+<p>它特别适合下面这些场景：</p>
+<ul>
+<li>对象大小固定</li>
+<li>创建和释放非常频繁</li>
+<li>生命周期通常较短</li>
+<li>容量上界大致可知</li>
+<li>希望减少堆分配次数和碎片</li>
+</ul>
+<p>和“包装分配器做统计”相比，对象池更偏向“直接改变资源获取策略”。</p>
+<hr>
+<h3 id="一个更偏优化导向的对象池示例"><a class="header" href="#一个更偏优化导向的对象池示例">一个更偏优化导向的对象池示例</a></h3>
+<p>下面这个实现使用空闲索引表（free list）来管理可复用槽位。<br>相比用 <code>used: []bool</code> 线性扫描的版本，它把获取空闲对象这一步做得更直接。</p>
 <pre><code class="language-zig">const std = @import("std");
 
 fn ObjectPool(comptime T: type) type {
@@ -324,6 +478,11 @@ fn ObjectPool(comptime T: type) type {
             const ptr_offset = @intFromPtr(item) - @intFromPtr(self.items.ptr);
             const item_index = ptr_offset / @sizeOf(T);
 
+            // 这里只做了最小合法性检查：确认索引位于当前池范围内。
+            // 它并不能完全阻止：
+            // - 传入并非来自当前池的指针
+            // - 重复释放同一个对象
+            // - 传入未按对象边界对齐的地址
             if (item_index &lt; self.items.len) {
                 self.free_list[self.free_count] = item_index;
                 self.free_count += 1;
@@ -332,7 +491,7 @@ fn ObjectPool(comptime T: type) type {
     };
 }
 
-pub fn main(_: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init) !void {
     var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
 
@@ -352,22 +511,173 @@ pub fn main(_: std.process.Init.Minimal) !void {
 }
 </code></pre>
 <hr>
+<h3 id="这个对象池相比前一章的基础池版本有什么不同"><a class="header" href="#这个对象池相比前一章的基础池版本有什么不同">这个对象池相比前一章的基础池版本，有什么不同？</a></h3>
+<p>如果你已经读过前一章的<a href="chapter-memory-pool.html">内存池实现</a>，你会发现这里的重点已经不再是“什么是池化思路”，而是：</p>
 <blockquote>
-<p>💡 <strong>章节过渡</strong>：从高级内存管理到性能优化与调试</p>
-<p>在<a href="chapter-optimization.html">性能优化与调试</a>中，我们学习了高级内存管理技巧，掌握了自定义分配器和内存池的实现。
-现在，我们将学习性能优化与调试，了解如何分析和优化程序性能。</p>
-<p><strong>为什么高级内存管理是性能优化的基础？</strong></p>
-<ol>
-<li><strong>性能瓶颈</strong>：内存管理往往是性能瓶颈所在</li>
-<li><strong>优化手段</strong>：自定义分配器是重要的性能优化手段</li>
-<li><strong>调试技巧</strong>：内存问题需要专门的调试工具和方法</li>
-</ol>
-<p><strong>学习建议</strong>：</p>
+<p><strong>如果已经决定池化，如何把获取空闲对象的路径进一步优化？</strong></p>
+</blockquote>
+<p>前一章更强调：</p>
 <ul>
-<li>回顾前面章节学到的优化技巧</li>
-<li>学习使用性能分析工具</li>
-<li>掌握调试内存问题的方法</li>
+<li>内存池是什么</li>
+<li>为什么需要预分配</li>
+<li>获取/释放接口的基本语义</li>
+<li>线性扫描版本有哪些清晰的教学价值</li>
 </ul>
+<p>而这一章更强调：</p>
+<ul>
+<li>如果你已经确认池化值得引入</li>
+<li>那么空闲槽位管理结构可以如何改进</li>
+<li>这种“更快”的实现又会引入哪些更强的前提</li>
+</ul>
+<hr>
+<h3 id="这个版本真正优化了什么"><a class="header" href="#这个版本真正优化了什么">这个版本真正优化了什么？</a></h3>
+<p>它主要优化的是：</p>
+<h4 id="1-获取空闲对象的路径"><a class="header" href="#1-获取空闲对象的路径">1. 获取空闲对象的路径</a></h4>
+<p>不再每次扫描整个 <code>used</code> 数组寻找空位，而是直接从 <code>free_list</code> 取一个索引。</p>
+<h4 id="2-获取逻辑更接近稳定-o1"><a class="header" href="#2-获取逻辑更接近稳定-o1">2. 获取逻辑更接近稳定 O(1)</a></h4>
+<p>相较于线性扫描，free list 的获取路径更短、更可预测。</p>
+<h4 id="3-更清楚地体现空闲对象集合这个概念"><a class="header" href="#3-更清楚地体现空闲对象集合这个概念">3. 更清楚地体现“空闲对象集合”这个概念</a></h4>
+<p>你可以把 <code>free_list</code> 理解为“当前所有可复用槽位的索引栈”。</p>
+<hr>
+<h3 id="它的代价是什么"><a class="header" href="#它的代价是什么">它的代价是什么？</a></h3>
+<p>性能改进并不免费，这种实现也引入了新的约束和风险。</p>
+<h4 id="1-release-的正确性更依赖调用者"><a class="header" href="#1-release-的正确性更依赖调用者">1. <code>release()</code> 的正确性更依赖调用者</a></h4>
+<p>当前实现只检查“索引是否落在范围内”，但没有完整确认：</p>
+<ul>
+<li>这个指针是否真的来自池内</li>
+<li>是否已经释放过</li>
+<li>是否指向对象边界起点</li>
+</ul>
+<h4 id="2-复用对象可能带着旧状态"><a class="header" href="#2-复用对象可能带着旧状态">2. 复用对象可能带着旧状态</a></h4>
+<p>对象被归还后，内容没有自动清零或重置。<br>下一次获取同一槽位时，调用者拿到的可能是旧数据。</p>
+<h4 id="3-容量仍然是固定的"><a class="header" href="#3-容量仍然是固定的">3. 容量仍然是固定的</a></h4>
+<p>池满了就返回 <code>null</code>，不会自动扩容。</p>
+<h4 id="4-仍然不是线程安全的"><a class="header" href="#4-仍然不是线程安全的">4. 仍然不是线程安全的</a></h4>
+<p>并发获取/归还需要额外同步。</p>
+<p>所以这里很适合建立一个现实判断：</p>
+<blockquote>
+<p><strong>越高性能的池化实现，往往越依赖更强的接口契约。</strong></p>
+</blockquote>
+<hr>
+<h3 id="什么场景更适合对象池"><a class="header" href="#什么场景更适合对象池">什么场景更适合对象池？</a></h3>
+<p>对象池更适合：</p>
+<ul>
+<li>粒子对象、任务节点、游戏实体等固定形状对象</li>
+<li>高频申请/释放的小对象</li>
+<li>想减少碎片和重复堆分配</li>
+<li>可以预估最大容量</li>
+<li>更看重吞吐和可预测性</li>
+</ul>
+<hr>
+<h3 id="什么场景不适合对象池"><a class="header" href="#什么场景不适合对象池">什么场景不适合对象池？</a></h3>
+<p>不适合直接上对象池的情况通常包括：</p>
+<ul>
+<li>对象大小变化很大</li>
+<li>容量上界不清楚</li>
+<li>生命周期极其复杂</li>
+<li>主要瓶颈根本不在分配</li>
+<li>团队还没有足够清楚的资源契约意识</li>
+</ul>
+<p>在这些场景下，强行池化往往只会让实现更复杂，而不一定真的带来收益。</p>
+<hr>
+<h2 id="三把两种策略放在一起看到底该用哪一种"><a class="header" href="#三把两种策略放在一起看到底该用哪一种">三、把两种策略放在一起看：到底该用哪一种？</a></h2>
+<p>到这里，可以把本章的两种思路放在同一张图里看。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>维度</th><th>包装分配器做统计</th><th>使用对象池复用对象</th></tr>
+</thead>
+<tbody>
+<tr><td>主要目标</td><td>观察和理解分配行为</td><td>降低重复分配成本</td></tr>
+<tr><td>是否改变资源获取方式</td><td>不一定</td><td>是</td></tr>
+<tr><td>对业务接口侵入性</td><td>通常较低</td><td>通常较高</td></tr>
+<tr><td>适合问题阶段</td><td>诊断、排查、实验</td><td>明确需要优化后</td></tr>
+<tr><td>主要风险</td><td>统计不准、实现偏底层</td><td>容量限制、错误释放、复用旧状态</td></tr>
+<tr><td>更像什么</td><td>工程观测工具</td><td>资源管理策略</td></tr>
+</tbody>
+</table>
+</div>
+<p>这张表背后最重要的结论是：</p>
+<blockquote>
+<p><strong>先搞清楚你在解决“观察问题”还是“分配策略问题”。</strong></p>
+</blockquote>
+<p>如果连问题类型都还没判断清楚，就很容易选错方向。</p>
+<hr>
+<h2 id="四版本敏感说明哪些内容要特别谨慎"><a class="header" href="#四版本敏感说明哪些内容要特别谨慎">四、版本敏感说明：哪些内容要特别谨慎？</a></h2>
+<p>本章的内容里，最容易受版本演进影响的部分不是“内存管理原则”，而是更底层的标准库接口形状。</p>
+<p>更稳定、应优先掌握的是：</p>
+<ul>
+<li>所有权与释放责任</li>
+<li><code>Allocator</code> 作为显式接口的思想</li>
+<li>对象池适合固定形状、频繁复用对象</li>
+<li>高级优化意味着更强的正确性约束</li>
+</ul>
+<p>相对更可能变化、需要结合本地版本确认的是：</p>
+<ul>
+<li>手动拼装 allocator vtable 的方式</li>
+<li>底层 <code>rawAlloc</code> / <code>rawResize</code> / <code>rawFree</code> 之类接口</li>
+<li>某些标准库内部辅助约定</li>
+<li>不同开发版里和调试分配器相关的实现细节</li>
+</ul>
+<p>所以阅读本章时，正确姿势应该是：</p>
+<blockquote>
+<p><strong>把稳定的重点放在“设计判断和责任边界”上；<br>对低层 API 形状，则保持“以本地标准库源码为准”的意识。</strong></p>
+</blockquote>
+<hr>
+<h2 id="五如果想继续演进这两类技巧分别该往哪里补"><a class="header" href="#五如果想继续演进这两类技巧分别该往哪里补">五、如果想继续演进，这两类技巧分别该往哪里补？</a></h2>
+<h3 id="对包装分配器的进一步演进方向"><a class="header" href="#对包装分配器的进一步演进方向">对包装分配器的进一步演进方向</a></h3>
+<p>如果你真的要把统计型分配器继续做下去，通常需要补：</p>
+<ol>
+<li>更完整的 <code>resize</code> 统计一致性</li>
+<li>并发安全</li>
+<li>更丰富的调试信息</li>
+<li>调用位置或来源追踪</li>
+<li>明确的文档和测试覆盖</li>
+</ol>
+<h3 id="对对象池的进一步演进方向"><a class="header" href="#对对象池的进一步演进方向">对对象池的进一步演进方向</a></h3>
+<p>如果你要把对象池继续推进，通常需要补：</p>
+<ol>
+<li>更严格的合法性检查</li>
+<li>重复释放检测</li>
+<li>对象重置逻辑</li>
+<li>线程安全支持</li>
+<li>容量耗尽时的策略设计</li>
+<li>更清晰的使用契约文档</li>
+</ol>
+<hr>
+<h2 id="六这一章最想帮你建立的判断"><a class="header" href="#六这一章最想帮你建立的判断">六、这一章最想帮你建立的判断</a></h2>
+<p>学完本章后，最理想的收获不是“记住两段代码”，而是开始能主动问出下面这些问题：</p>
+<ul>
+<li>我现在是看不见分配行为，还是分配策略真的有问题？</li>
+<li>当前瓶颈是否已经明确落在内存分配上？</li>
+<li>我引入这个技巧，是为了观测、限制，还是优化？</li>
+<li>这个技巧的收益，是否配得上它带来的正确性成本？</li>
+<li>我是否已经把调用者需要遵守的前提写清楚了？</li>
+</ul>
+<p>如果这些问题开始变成你的自然思维，那么这一章的目标就达到了。</p>
+<hr>
+<h2 id="本章小结"><a class="header" href="#本章小结">本章小结</a></h2>
+<p>这一章讨论了两类典型的高级内存技巧：</p>
+<ol>
+<li><strong>包装分配器</strong>：更适合观察、统计和实验</li>
+<li><strong>对象池优化</strong>：更适合减少固定形状对象的重复分配</li>
+</ol>
+<p>更重要的是，本章想强调一条贯穿第三部分的主线：</p>
+<blockquote>
+<p><strong>“更高级”不等于“更适合默认使用”。</strong></p>
+</blockquote>
+<p>真正好的内存优化，通常不只是“更快”，还应该满足：</p>
+<ul>
+<li>责任边界清楚</li>
+<li>失败模式可解释</li>
+<li>契约前提可验证</li>
+<li>团队成员能够维护</li>
+</ul>
+<p>如果你在读完本章后，已经能更冷静地判断“什么时候该引入高级内存技巧、什么时候应该先保持简单”，那么这一章就达到目的了。</p>
+<hr>
+<blockquote>
+<p>💡 <strong>下一章预告</strong></p>
+<p>下一章我们将学习<a href="chapter-optimization.html">性能优化与调试（专题）</a>，继续讨论：当你怀疑程序“可能不够快”时，应该如何测量、定位，并验证优化是否真的有效。</p>
 </blockquote>
 
                     </main>

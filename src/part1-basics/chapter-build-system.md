@@ -1,8 +1,10 @@
-# 【draft】构建系统入门
+# 构建系统入门
 
 > 💡 **重要章节**：构建系统是 Zig 的核心特性之一，掌握基本的构建命令对于项目开发至关重要。
 > 
-> **章节定位**：本章是基础部分，只介绍基本的构建命令和简单配置。关于构建系统的高级特性（如交叉编译、包管理、复杂构建配置等），请参见高级部分的[构建系统与包管理](../part2-advanced/chapter-package-management.md)章节。
+> **章节定位**：本章属于基础部分，重点是把你从“单文件练习”带到“项目化开发”。关于交叉编译、依赖管理、复杂构建配置等高级主题，请参见高级部分的[构建系统与包管理](../part2-advanced/chapter-package-management.md)章节。
+
+如果你已经在上一章通过 `zig init` 看过一个 Zig 项目的基本结构，本章可以理解为对那部分内容的**正式展开**：我们不再停留在“看到这些文件”，而是进一步解释它们分别做什么，以及你最常用的构建命令应该怎么用。
 
 ## 构建系统概述
 
@@ -24,7 +26,7 @@
 
 ## 基础项目结构
 
-使用 `zig init` 创建项目：
+如果你已经运行过 `zig init`，下面这部分内容会是一次更系统的回顾；如果还没有，也可以把它当作第一次正式认识 Zig 项目布局。
 
 ```bash
 mkdir my-project
@@ -117,7 +119,7 @@ pub fn build(b: *std.Build) void {
 ```zig
 const config = @import("config");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     if (config.enable_logging) {
         std.debug.print("Logging enabled\n", .{});
     }
@@ -184,7 +186,7 @@ pub fn build(b: *std.Build) void {
 const std = @import("std");
 const lib = @import("lib");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     lib.someFunction();
 }
 ```
@@ -246,12 +248,12 @@ zig build -Doptimize=ReleaseFast
 # 指定目标平台
 zig build -Dtarget=x86_64-windows
 
-# 清理构建产物
-zig build clean
-
-# 查看所有可用步骤
+# 查看当前项目定义了哪些步骤
 zig build --help
 ```
+
+> ⚠️ `zig build` 能使用哪些步骤，取决于当前项目的 `build.zig` 里定义了什么。  
+> 例如 `zig init` 生成的默认项目通常会提供 `run`、`test`、`install` 等步骤，但不会默认提供 `clean` 这样的自定义步骤。
 
 ## 构建系统参考资源
 
@@ -309,6 +311,8 @@ pub fn build(b: *std.Build) void {
 
 **参考答案**：
 ```zig
+const std = @import("std");
+
 pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
     
@@ -340,8 +344,10 @@ pub fn build(b: *std.Build) void {
 
 ## 下一步学习
 
-恭喜您完成了构建系统入门！接下来您可以：
+恭喜您完成了构建系统入门。到这里，第一部分的主线也基本闭合了：你已经接触了基础语法、控制流、错误处理，以及如何把这些代码组织成一个真正的项目。
 
-1. **实践练习**：完成章节练习题，巩固所学知识
-2. **深入学习**：阅读[构建系统与包管理](../part2-advanced/chapter-package-management.md)章节，了解高级特性
-3. **项目实战**：尝试构建一个多文件项目，体验完整的开发流程
+接下来你可以按下面的顺序继续：
+
+1. **实践练习**：完成本章练习题，把 `build.zig` 和项目结构真正跑一遍
+2. **回看第一部分**：如果你对错误处理、切片、函数参数等概念还不够稳，建议在进入高级主题前先补一遍基础
+3. **深入学习**：阅读[构建系统与包管理](../part2-advanced/chapter-package-management.md)章节，继续了解更复杂的构建配置与依赖管理

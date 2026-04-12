@@ -1,796 +1,71 @@
-# 【draft】构建系统与包管理
+# 构建系统与包管理
 
-> 📖 **章节概述**：本章将全面介绍 Zig 的构建系统和包管理机制，帮助您掌握项目构建、依赖管理和发布流程。
-> 
-> **章节定位**：本章是高级特性部分，侧重于构建系统的高级特性和包管理机制。关于构建系统的基础命令和简单配置，请参见基础部分的[构建系统入门](../part1-basics/chapter-build-system.md)章节。
+> 💡 **章节定位**
+>
+> 本章不是基础部分“构建系统入门”的重复，而是把视角推进到更真实的工程场景：
+>
+> - 项目如何组织多个目标
+> - `build.zig` 和 `build.zig.zon` 分别负责什么
+> - 依赖如何接入和固定
+> - 哪些构建相关写法更容易受版本影响
+>
+> 对 Zig 来说，构建系统和依赖管理是很重要的工程能力；但它们也恰好属于**版本敏感度相对更高**的区域。因此，本章会优先强调**原则、结构和阅读方法**，而不是把某个开发版快照下的每个 API 名字都当成长期稳定规范。
 
-Zig 内置了强大的构建系统，这是 Zig 的核心优势之一。与 C/C++ 需要依赖 Make、CMake 等外部工具不同，Zig 将构建系统直接集成到编译器中，提供了统一的构建体验。同时，Zig 0.16.0-dev 引入了新的包管理系统，使用 `build.zig.zon` 文件管理依赖，让依赖管理变得更加简单和可靠。
+## 先建立整体心智模型
 
-## 构建系统基础概念
+理解 Zig 构建系统时，最重要的不是先记命令，而是先看清：
 
-# 什么是构建系统？
+- **构建脚本是代码**：你通过 `build.zig` 来描述构建图
+- **构建图由步骤组成**：编译、运行、测试、生成文件、安装，都可以是 step
+- **依赖有独立清单**：项目元信息和远程/本地依赖通常写在 `build.zig.zon`
+- **工程重点是“组织关系”**，而不是“背下所有字段名”
 
-构建系统是用于自动化源代码编译过程的工具。在低级语言（如 C、C++、Zig）中，源代码需要被编译成机器码才能执行。构建系统负责管理这个编译过程，包括：
+## `build.zig` 和 `build.zig.zon` 各负责什么？
 
-- **编译源代码**：将源文件转换为二进制文件
-- **链接库文件**：将编译产物与外部库链接
-- **管理依赖**：处理项目之间的依赖关系
-- **优化构建**：利用缓存和并发加速构建过程
+这两个文件经常一起出现，但职责并不相同。
 
-# 为什么 Zig 需要构建系统？
+| 文件 | 主要职责 |
+| ---- | -------- |
+| `build.zig` | 描述如何构建：目标、步骤、模块关系、测试、运行、链接方式 |
+| `build.zig.zon` | 描述项目清单：名称、版本、依赖来源、需要发布的路径 |
 
-Zig 构建系统的设计目标是解决传统构建工具的痛点：
+你可以把它们理解为：
 
-1. **消除外部依赖**：不需要 Make、CMake、Python 等外部工具
-2. **跨平台一致性**：在所有平台上提供相同的构建体验
-3. **交叉编译支持**：内置 40+ 目标平台的交叉编译能力
-4. **依赖管理**：统一的包管理和依赖解析机制
-5. **可重复构建**：确保构建过程的确定性和可重复性
+- `build.zig` 更像“构建逻辑”
+- `build.zig.zon` 更像“项目清单和依赖声明”
 
-# 构建过程的核心组件
+## 一个最小项目通常长什么样？
 
-Zig 的构建过程涉及以下核心组件：
-
-**1. Zig 模块（Modules）**
-- 包含源代码的 `.zig` 文件
-- 每个模块可以导出函数、类型和常量
-- 模块之间可以相互导入
-
-**2. 目标对象（Target Objects）**
-构建系统可以生成四种类型的目标对象：
-
-| 目标类型       | 说明               | 文件扩展名                        |
-| -------------- | ------------------ | --------------------------------- |
-| 可执行文件     | 可直接运行的程序   | `.exe` (Windows), 无扩展名 (Unix) |
-| 静态库         | 编译时链接的库文件 | `.lib` (Windows), `.a` (Unix)     |
-| 动态库         | 运行时链接的库文件 | `.dll` (Windows), `.so` (Unix)    |
-| 测试可执行文件 | 运行单元测试的程序 | 同可执行文件                      |
-
-**3. 构建步骤（Build Steps）**
-构建过程由一系列步骤组成，形成一个有向无环图（DAG）：
-- 每个步骤独立执行
-- 支持并发构建
-- 自动处理依赖关系
-
-**4. 构建选项（Build Options）**
-用户可以通过命令行或 `build.zig` 配置构建选项：
-- 目标平台（target）
-- 优化级别（optimize）
-- 自定义选项
-
-# 构建脚本：build.zig
-
-每个 Zig 项目都有一个 `build.zig` 文件，这是构建脚本的入口点。构建脚本必须包含一个公共的 `build()` 函数：
-
-```zig
-const std = @import("std");
-
-pub fn build(b: *std.Build) void {
-    // 构建逻辑在这里实现
-}
-```
-
-**关键概念**：
-- `std.Build`：构建系统的核心结构，提供构建 API
-- `b` 参数：构建上下文，用于创建目标对象和配置选项
-- 构建步骤：通过 `b.step()` 创建，形成依赖关系图
-
-# 构建系统的工作流程
-
-```
-用户运行 zig build
-    ↓
-解析 build.zig 脚本
-    ↓
-创建构建步骤图（DAG）
-    ↓
-执行构建步骤（并发）
-    ↓
-生成目标文件
-    ↓
-安装构建产物
-```
-
-**示例：简单的构建脚本**
-
-```zig
-// 🚫 已废弃：0.15.x 已移除
-const std = @import("std");
-
-pub fn build(b: *std.Build) void {
-    // 1. 创建可执行文件目标
-    const exe = b.addExecutable(.{
-        .name = "hello",
-        .root_module = b.createModule(.{
-            .root_source_file = b.path("src/main.zig"),
-            .target = b.graph.host,  // 使用主机目标
-        }),
-    });
-    
-    // 2. 安装构建产物
-    b.installArtifact(exe);
-    
-    // 3. 创建运行步骤
-    const run_cmd = b.addRunArtifact(exe);
-    const run_step = b.step("run", "Run the application");
-    run_step.dependOn(&run_cmd.step);
-}
-```
-
-**构建命令**：
-```bash
-# 构建项目
-zig build
-
-# 构建并运行
-zig build run
-
-# 查看构建摘要
-zig build --summary all
-```
-
-## 项目初始化
-
-```bash
-# 创建新项目
-mkdir my-project
-cd my-project
-zig init
-
-# 项目结构
-my-project/
-├── build.zig           # 构建脚本
-├── build.zig.zon       # 项目清单（依赖管理）
-└── src/
-    ├── main.zig        # 主程序
-    └── root.zig        # 库根文件
-```
-
-## build.zig.zon 详解
-
-`build.zig.zon` 是 Zig 项目的清单文件，用于声明项目信息和依赖：
-
-```zig
-.{
-    // 项目名称
-    .name = "my-project",
-    
-    // 项目版本
-    .version = "0.1.0",
-    
-    // 依赖声明
-    .dependencies = .{
-        // 从 URL 添加依赖
-        .zap = .{
-            .url = "https://github.com/zigzap/zap/archive/refs/tags/v0.8.0.tar.gz",
-            .hash = "1220...",  // 依赖包的哈希值
-        },
-        
-        // 从 Git 仓库添加依赖
-        .clap = .{
-            .url = "https://github.com/Hejsil/zig-clap/archive/refs/heads/master.tar.gz",
-            .hash = "1220...",
-        },
-        
-        // 本地路径依赖
-        .my_local_lib = .{
-            .path = "../my-local-lib",
-        },
-    },
-    
-    // 项目路径配置
-    .paths = .{
-        "build.zig",
-        "build.zig.zon",
-        "src",
-        "LICENSE",
-        "README.md",
-    },
-}
-```
-
-# 依赖声明方式详解
-
-**1. URL 依赖**
-
-URL 依赖是最常用的依赖声明方式，支持从远程服务器下载依赖包：
-
-```zig
-.dependencies = .{
-    .zap = .{
-        // 依赖包的下载地址
-        .url = "https://github.com/zigzap/zap/archive/refs/tags/v0.8.0.tar.gz",
-        
-        // 依赖包的哈希值（用于验证完整性）
-        .hash = "1220fe3c8e4b3d7a8c9f1e2d3c4b5a6e7f8g9h0i1j2k3l4m5n6o7p8q9r0s1t2u3v4",
-    },
-},
-```
-
-**获取依赖哈希值**：
-```bash
-# 使用 zig fetch 命令获取哈希值
-zig fetch https://github.com/zigzap/zap/archive/refs/tags/v0.8.0.tar.gz
-
-# 输出示例：
-# 1220fe3c8e4b3d7a8c9f1e2d3c4b5a6e7f8g9h0i1j2k3l4m5n6o7p8q9r0s1t2u3v4
-```
-
-**注意事项**：
-- URL 必须指向一个 `.tar.gz` 或 `.tar.xz` 压缩包
-- 哈希值确保依赖包的完整性和安全性
-- 如果哈希值不匹配，构建会失败并提示正确的哈希值
-
-**2. Git 依赖**
-
-可以直接从 Git 仓库添加依赖：
-
-```zig
-.dependencies = .{
-    .clap = .{
-        // Git 仓库的 tarball 地址
-        .url = "https://github.com/Hejsil/zig-clap/archive/refs/heads/master.tar.gz",
-        .hash = "1220...",
-    },
-},
-```
-
-**指定分支或标签**：
-```zig
-// 使用特定标签
-.url = "https://github.com/user/repo/archive/refs/tags/v1.0.0.tar.gz",
-
-// 使用特定分支
-.url = "https://github.com/user/repo/archive/refs/heads/main.tar.gz",
-
-// 使用特定提交
-.url = "https://github.com/user/repo/archive/abc123def456.tar.gz",
-```
-
-**3. 本地路径依赖**
-
-本地路径依赖用于开发时的本地测试或内部库：
-
-```zig
-.dependencies = .{
-    .my_local_lib = .{
-        // 相对于 build.zig.zon 的路径
-        .path = "../my-local-lib",
-    },
-},
-```
-
-**注意事项**：
-- 路径可以是相对路径或绝对路径
-- 本地依赖不会发布到远程仓库
-- 适用于开发和测试阶段
-
-**4. 版本范围依赖（未来特性）**
-
-Zig 计划支持语义化版本范围：
-
-```zig
-// ⚠️ 注意
-.dependencies = .{
-    .zap = .{
-        .version = "^0.8.0",  // 兼容 0.8.x 版本
-    },
-},
-```
-
-# 版本管理最佳实践
-
-**1. 使用明确的版本标签**
-
-```zig
-// ✅ 推荐：使用明确的版本标签
-// ❌ 错误示例
-.zap = .{
-    .url = "https://github.com/zigzap/zap/archive/refs/tags/v0.8.0.tar.gz",
-    .hash = "1220...",
-},
-
-// ❌ 不推荐：使用 master 分支（不稳定）
-.zap = .{
-    .url = "https://github.com/zigzap/zap/archive/refs/heads/master.tar.gz",
-    .hash = "1220...",
-},
-```
-
-**2. 锁定依赖版本**
-
-```zig
-// ✅ 推荐：使用特定提交哈希
-// ❌ 错误示例
-.clap = .{
-    .url = "https://github.com/Hejsil/zig-clap/archive/abc123def.tar.gz",
-    .hash = "1220...",
-},
-
-// ❌ 不推荐：使用可变的分支名
-.clap = .{
-    .url = "https://github.com/Hejsil/zig-clap/archive/refs/heads/main.tar.gz",
-    .hash = "1220...",
-},
-```
-
-**3. 定期更新依赖**
-
-```bash
-# 更新依赖到最新版本
-zig build --fetch
-
-# 检查依赖更新
-zig fetch <url>
-```
-
-# 依赖解析机制
-
-Zig 的依赖解析遵循以下步骤：
-
-```
-1. 解析 build.zig.zon 文件
-   ↓
-2. 检查全局缓存（~/.cache/zig/）
-   ↓
-3. 如果缓存不存在，下载依赖包
-   ↓
-4. 验证哈希值
-   ↓
-5. 解压到缓存目录
-   ↓
-6. 解析依赖的 build.zig.zon（递归）
-   ↓
-7. 构建依赖图
-```
-
-**缓存位置**：
-- Linux/macOS: `~/.cache/zig/`
-- Windows: `%LOCALAPPDATA%\zig\`
-
-**清理缓存**：
-```bash
-# 清理特定依赖的缓存
-rm -rf ~/.cache/zig/p/<dependency-hash>
-
-# 清理所有缓存
-rm -rf ~/.cache/zig/
-```
-
-# 项目路径配置
-
-`paths` 字段定义了发布时包含的文件：
-
-```zig
-.paths = .{
-    "build.zig",        // 构建脚本（必需）
-    "build.zig.zon",    // 项目清单（必需）
-    "src",              // 源代码目录
-    "LICENSE",          // 许可证文件
-    "README.md",        // 项目说明
-    "examples",         // 示例代码（可选）
-},
-```
-
-**注意事项**：
-- 只包含必要的文件，减小包体积
-- 不要包含构建产物（zig-out、zig-cache）
-- 不要包含敏感信息（密钥、配置文件等）
-
-# 完整示例：多依赖项目
-
-```zig
-.{
-    .name = "web-server",
-    .version = "1.0.0",
-    
-    .dependencies = .{
-        // HTTP 框架
-        .zap = .{
-            .url = "https://github.com/zigzap/zap/archive/refs/tags/v0.8.0.tar.gz",
-            .hash = "1220fe3c8e4b3d7a8c9f1e2d3c4b5a6e7f8g9h0i1j2k3l4m5n6o7p8q9r0s1t2u3v4",
-        },
-        
-        // 命令行参数解析
-        .clap = .{
-            .url = "https://github.com/Hejsil/zig-clap/archive/refs/tags/v0.1.0.tar.gz",
-            .hash = "1220a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6",
-        },
-        
-        // JSON 解析
-        .json = .{
-            .url = "https://github.com/getty-zig/json/archive/refs/tags/v0.2.0.tar.gz",
-            .hash = "1220z9y8x7w6v5u4t3s2r1q0p9o8n7m6l5k4j3i2h1g0f9e8d7c6b5a4",
-        },
-        
-        // 本地测试库
-        .test_utils = .{
-            .path = "../test-utils",
-        },
-    },
-    
-    .paths = .{
-        "build.zig",
-        "build.zig.zon",
-        "src",
-        "LICENSE",
-        "README.md",
-        "examples",
-    },
-}
-```
-
-## build.zig 基础
-
-> 📖 **本节内容来源**：整合自 [Zig 官方构建系统文档](https://ziglang.org/learn/build-system/)
-
-`build.zig` 是 Zig 项目的构建脚本，定义了项目的构建规则、依赖关系和构建步骤。本节将详细介绍 `build.zig` 的核心概念和常见用法。
-
-### build() 函数
-
-每个 `build.zig` 文件必须包含一个公共的 `build()` 函数，这是构建脚本的入口点：
-
-```zig
-const std = @import("std");
-
-pub fn build(b: *std.Build) void {
-    // 构建逻辑在这里实现
-}
-```
-
-**参数说明**：
-- `b: *std.Build`：构建上下文，提供创建目标对象和配置选项的 API
-- 函数返回 `void`，因为构建过程通过副作用完成（创建文件、运行命令等）
-
-### 创建可执行文件
-
-最常见的目标对象是可执行文件。以下是创建可执行文件的完整示例：
-
-```zig
-// 🚫 已废弃：0.15.x 已移除
-const std = @import("std");
-
-pub fn build(b: *std.Build) void {
-    // 1. 获取标准构建选项
-    const target = b.standardTargetOptions(.{});
-    const optimize = b.standardOptimizeOption(.{});
-    
-    // 2. 创建可执行文件
-    const exe = b.addExecutable(.{
-        .name = "my-app",
-        .root_module = b.createModule(.{
-            .root_source_file = b.path("src/main.zig"),
-            .target = target,
-            .optimize = optimize,
-        }),
-    });
-    
-    // 3. 安装构建产物
-    b.installArtifact(exe);
-    
-    // 4. 创建运行步骤
-    const run_cmd = b.addRunArtifact(exe);
-    
-    // 5. 将运行步骤添加到默认构建步骤
-    const run_step = b.step("run", "Run the application");
-    run_step.dependOn(&run_cmd.step);
-}
-```
-
-**代码解析**：
-
-**1. 标准构建选项**
-```zig
-const target = b.standardTargetOptions(.{});
-const optimize = b.standardOptimizeOption(.{});
-```
-- `target`：目标平台（如 x86_64-linux、aarch64-macos 等）
-- `optimize`：优化级别（Debug、ReleaseSmall、ReleaseFast、ReleaseSafe）
-
-用户可以通过命令行覆盖这些选项：
-```bash
-zig build -Dtarget=aarch64-linux -Doptimize=ReleaseFast
-```
-
-**2. 创建可执行文件**
-```zig
-// 🚫 已废弃：0.15.x 已移除
-const exe = b.addExecutable(.{
-    .name = "my-app",
-    .root_module = b.createModule(.{
-        .root_source_file = b.path("src/main.zig"),
-        .target = target,
-        .optimize = optimize,
-    }),
-});
-```
-- `name`：输出文件名（不含扩展名）
-- `root_source_file`：主源文件路径
-- `target` 和 `optimize`：传递标准选项
-
-**3. 安装构建产物**
-```zig
-b.installArtifact(exe);
-```
-将构建产物复制到 `zig-out/bin/` 目录
-
-**4. 创建运行步骤**
-```zig
-const run_cmd = b.addRunArtifact(exe);
-const run_step = b.step("run", "Run the application");
-run_step.dependOn(&run_cmd.step);
-```
-- `addRunArtifact()`：创建运行命令
-- `b.step()`：创建命名步骤
-- `dependOn()`：建立步骤依赖关系
-
-### 创建库文件
-
-Zig 支持创建静态库和动态库：
-
-**静态库示例**：
-```zig
-// 🚫 已废弃：0.15.x 已移除
-const std = @import("std");
-
-pub fn build(b: *std.Build) void {
-    const target = b.standardTargetOptions(.{});
-    const optimize = b.standardOptimizeOption(.{});
-    
-    // 创建静态库
-    const lib = b.addStaticLibrary(.{
-        .name = "mylib",
-        .root_module = b.createModule(.{
-            .root_source_file = b.path("src/root.zig"),
-            .target = target,
-            .optimize = optimize,
-        }),
-    });
-    
-    b.installArtifact(lib);
-}
-```
-
-**动态库示例**：
-```zig
-// 🚫 已废弃：0.15.x 已移除
-const std = @import("std");
-
-pub fn build(b: *std.Build) void {
-    const target = b.standardTargetOptions(.{});
-    const optimize = b.standardOptimizeOption(.{});
-    
-    // 创建动态库
-    const lib = b.addSharedLibrary(.{
-        .name = "mylib",
-        .root_module = b.createModule(.{
-            .root_source_file = b.path("src/root.zig"),
-            .target = target,
-            .optimize = optimize,
-        }),
-    });
-    
-    b.installArtifact(lib);
-}
-```
-
-**库文件输出位置**：
-- 静态库：`zig-out/lib/libmylib.a` (Unix) 或 `zig-out/lib/mylib.lib` (Windows)
-- 动态库：`zig-out/lib/libmylib.so` (Linux) 或 `zig-out/lib/mylib.dll` (Windows)
-
-### 添加测试
-
-Zig 内置测试框架，可以在 `build.zig` 中配置测试：
-
-```zig
-// 🚫 已废弃：0.15.x 已移除
-const std = @import("std");
-
-pub fn build(b: *std.Build) void {
-    const target = b.standardTargetOptions(.{});
-    const optimize = b.standardOptimizeOption(.{});
-    
-    // 创建可执行文件
-    const exe = b.addExecutable(.{
-        .name = "my-app",
-        .root_module = b.createModule(.{
-            .root_source_file = b.path("src/main.zig"),
-            .target = target,
-            .optimize = optimize,
-        }),
-    });
-    b.installArtifact(exe);
-    
-    // 创建测试可执行文件
-    const unit_tests = b.addTest(.{
-        .root_module = b.createModule(.{
-            .root_source_file = b.path("src/main.zig"),
-            .target = target,
-            .optimize = optimize,
-        }),
-    });
-    
-    // 创建运行测试步骤
-    const run_unit_tests = b.addRunArtifact(unit_tests);
-    const test_step = b.step("test", "Run unit tests");
-    test_step.dependOn(&run_unit_tests.step);
-}
-```
-
-**运行测试**：
-```bash
-zig build test
-```
-
-### 链接系统库
-
-Zig 可以链接系统安装的 C 库：
-
-```zig
-// 🚫 已废弃：0.15.x 已移除
-const std = @import("std");
-
-pub fn build(b: *std.Build) void {
-    const target = b.standardTargetOptions(.{});
-    const optimize = b.standardOptimizeOption(.{});
-    
-    const exe = b.addExecutable(.{
-        .name = "my-app",
-        .root_module = b.createModule(.{
-            .root_source_file = b.path("src/main.zig"),
-            .target = target,
-            .optimize = optimize,
-        }),
-    });
-    
-    // 链接系统库（如 zlib）
-    exe.linkSystemLibrary("z");
-    exe.linkLibC();
-    
-    b.installArtifact(exe);
-}
-```
-
-**注意事项**：
-- `linkSystemLibrary()` 会自动查找系统库路径
-- `linkLibC()` 链接 C 标准库
-- 确保系统已安装对应的开发包（如 `libz-dev`）
-
-### 构建步骤和依赖关系
-
-构建系统通过步骤（Step）和依赖关系组织构建过程：
-
-```zig
-const std = @import("std");
-
-pub fn build(b: *std.Build) void {
-    // 创建自定义步骤
-    const build_step = b.step("build", "Build the application");
-    const test_step = b.step("test", "Run tests");
-    const all_step = b.step("all", "Build and test");
-    
-    // 建立依赖关系
-    all_step.dependOn(build_step);
-    all_step.dependOn(test_step);
-}
-```
-
-**步骤类型**：
-- `CompileStep`：编译源代码
-- `RunStep`：运行命令
-- `WriteFileStep`：生成文件
-- `InstallStep`：安装文件
-
-### 完整示例：多目标项目
-
-以下是一个包含可执行文件、库和测试的完整示例：
-
-```zig
-// 🚫 已废弃：0.15.x 已移除
-const std = @import("std");
-
-pub fn build(b: *std.Build) void {
-    const target = b.standardTargetOptions(.{});
-    const optimize = b.standardOptimizeOption(.{});
-    
-    // 1. 创建库模块
-    const lib_mod = b.createModule(.{
-        .root_source_file = b.path("src/lib.zig"),
-        .target = target,
-        .optimize = optimize,
-    });
-    
-    // 2. 创建库文件
-    const lib = b.addLibrary(.{
-        .name = "mylib",
-        .root_module = lib_mod,
-        .linkage = .static,
-    });
-    b.installArtifact(lib);
-    
-    // 3. 创建可执行文件
-    const exe = b.addExecutable(.{
-        .name = "my-app",
-        .root_module = b.createModule(.{
-            .root_source_file = b.path("src/main.zig"),
-            .target = target,
-            .optimize = optimize,
-        }),
-    });
-    
-    // 将库模块导入到可执行文件
-    exe.root_module.addImport("mylib", lib_mod);
-    b.installArtifact(exe);
-    
-    // 4. 创建测试
-    const lib_tests = b.addTest(.{
-        .root_module = lib_mod,
-    });
-    
-    const exe_tests = b.addTest(.{
-        .root_module = b.createModule(.{
-            .root_source_file = b.path("src/main.zig"),
-            .target = target,
-            .optimize = optimize,
-        }),
-    });
-    
-    // 5. 创建运行步骤
-    const run_exe = b.addRunArtifact(exe);
-    const run_step = b.step("run", "Run the application");
-    run_step.dependOn(&run_exe.step);
-    
-    // 6. 创建测试步骤
-    const run_lib_tests = b.addRunArtifact(lib_tests);
-    const run_exe_tests = b.addRunArtifact(exe_tests);
-    
-    const test_step = b.step("test", "Run all tests");
-    test_step.dependOn(&run_lib_tests.step);
-    test_step.dependOn(&run_exe_tests.step);
-}
-```
-
-**项目结构**：
-```
+```text
 my-project/
 ├── build.zig
 ├── build.zig.zon
 └── src/
-    ├── lib.zig      # 库源文件
-    └── main.zig     # 主程序
+    ├── main.zig
+    └── root.zig
 ```
 
-**使用方法**：
-```bash
-# 构建所有目标
-zig build
+这并不是唯一组织方式，但对很多小型项目和教程项目来说已经足够。
 
-# 运行应用程序
-zig build run
+## `build.zig`：描述构建图，而不是只写命令
 
-# 运行测试
-zig build test
+典型的 `build.zig` 至少要回答几个问题：
 
-# 安装库和可执行文件
-zig build install
-```
+- 要构建什么目标？可执行文件、静态库、动态库、测试目标？
+- 入口文件在哪里？
+- 目标平台和优化级别如何传入？
+- 是否需要定义 `run`、`test` 等自定义 step？
+- 是否要接入依赖或系统库？
 
-## 在 build.zig 中使用依赖
+一个最小的例子通常会类似下面这样：
 
 ```zig
-// 🚫 已废弃：0.15.x 已移除
 const std = @import("std");
 
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
-    
-    // 获取依赖
-    const zap_dep = b.dependency("zap", .{
-        .target = target,
-        .optimize = optimize,
-    });
-    
+
     const exe = b.addExecutable(.{
         .name = "my-app",
         .root_module = b.createModule(.{
@@ -799,945 +74,259 @@ pub fn build(b: *std.Build) void {
             .optimize = optimize,
         }),
     });
-    
-    // 链接依赖模块
-    exe.root_module.addImport("zap", zap_dep.module("zap"));
-    
+
     b.installArtifact(exe);
+
+    const run_cmd = b.addRunArtifact(exe);
+    const run_step = b.step("run", "Run the application");
+    run_step.dependOn(&run_cmd.step);
 }
 ```
 
-## 在代码中使用依赖
+### 这段代码真正值得理解的点
 
-```zig
-// ✨ 新特性：std.Io 统一接口
-const std = @import("std");
-const zap = @import("zap");
+- `target` 和 `optimize` 通常作为标准构建选项暴露给用户
+- `addExecutable()` 定义一个构建目标
+- `createModule()` 指向入口源文件并绑定构建参数
+- `installArtifact()` 决定产物会被安装到 `zig-out/`
+- `step()` 能让你定义诸如 `zig build run` 这样的工作流入口
 
-pub fn main(init: std.process.Init) !void {
-    // 使用 zap 库创建 HTTP 服务器
-    var listener = zap.HttpListener.init(.{
-        .port = 3000,
-        .on_request = onRequest,
-        .log = true,
-    });
-    
-    try listener.listen();
-    try std.Io.File.stdout().writeStreamingAll(init.io, "服务器运行在 http://localhost:3000\n");
-    
-    zap.start(.{
-        .threads = 2,
-        .workers = 2,
-    });
-}
+这里真正稳定的知识，不是某个 helper 的名字，而是：
 
-fn onRequest(r: zap.Request) void {
-    r.sendBody("Hello from Zig with Zap!\n") catch return;
-}
-```
+> **构建脚本在描述“目标之间如何组织”，而不是简单拼接编译命令。**
 
-## 高级构建主题
+## `build.zig.zon`：项目清单与依赖来源
 
-> 📖 **本节内容来源**：整合自 [Zig 官方构建系统文档](https://ziglang.org/learn/build-system/) 和 [Pedro Park 的 Zig Book](https://pedropark99.github.io/zig-book/Chapters/07-build-system.html)
+`build.zig.zon` 经常用于记录：
 
-本节将介绍 Zig 构建系统的高级特性，包括用户选项、交叉编译、条件编译和多目标构建等。
+- 项目名称和版本
+- 远程依赖
+- 本地路径依赖
+- 发布时包含哪些路径
 
-### 用户选项
-
-构建脚本可以定义用户可配置的选项：
-
-**布尔选项**：
-```zig
-// 🚫 已废弃：0.15.x 已移除
-const std = @import("std");
-
-pub fn build(b: *std.Build) void {
-    // 定义布尔选项
-    const enable_logging = b.option(bool, "logging", "Enable logging") orelse false;
-    const enable_debug = b.option(bool, "debug", "Enable debug mode") orelse false;
-    
-    const exe = b.addExecutable(.{
-        .name = "my-app",
-        .root_module = b.createModule(.{
-            .root_source_file = b.path("src/main.zig"),
-            .target = b.standardTargetOptions(.{}),
-            .optimize = b.standardOptimizeOption(.{}),
-        }),
-    });
-    
-    // 将选项传递给编译器
-    const options = b.addOptions();
-    options.addOption(bool, "enable_logging", enable_logging);
-    options.addOption(bool, "enable_debug", enable_debug);
-    
-    exe.root_module.addOptions("config", options);
-    b.installArtifact(exe);
-}
-```
-
-**使用方法**：
-```bash
-# 启用日志
-zig build -Dlogging=true
-
-# 启用调试模式
-zig build -Ddebug=true
-
-# 同时启用多个选项
-zig build -Dlogging=true -Ddebug=true
-```
-
-**在代码中使用选项**：
-```zig
-const std = @import("std");
-const config = @import("config");
-
-pub fn main() void {
-    if (config.enable_logging) {
-        std.debug.print("Logging enabled\n", .{});
-    }
-    
-    if (config.enable_debug) {
-        std.debug.print("Debug mode enabled\n", .{});
-    }
-}
-```
-
-**字符串选项**：
-```zig
-// 🚫 已废弃：0.15.x 已移除
-const std = @import("std");
-
-pub fn build(b: *std.Build) void {
-    const app_name = b.option([]const u8, "name", "Application name") orelse "my-app";
-    const version = b.option([]const u8, "version", "Application version") orelse "0.1.0";
-    
-    const exe = b.addExecutable(.{
-        .name = app_name,
-        .root_module = b.createModule(.{
-            .root_source_file = b.path("src/main.zig"),
-            .target = b.standardTargetOptions(.{}),
-            .optimize = b.standardOptimizeOption(.{}),
-        }),
-    });
-    
-    const options = b.addOptions();
-    options.addOption([]const u8, "app_name", app_name);
-    options.addOption([]const u8, "version", version);
-    
-    exe.root_module.addOptions("config", options);
-    b.installArtifact(exe);
-}
-```
-
-### 交叉编译
-
-Zig 的交叉编译能力是其核心优势之一。构建系统支持轻松配置交叉编译：
-
-**指定目标平台**：
-```zig
-// 🚫 已废弃：0.15.x 已移除
-const std = @import("std");
-
-pub fn build(b: *std.Build) void {
-    // 允许用户通过命令行指定目标
-    const target = b.standardTargetOptions(.{});
-    const optimize = b.standardOptimizeOption(.{});
-    
-    const exe = b.addExecutable(.{
-        .name = "my-app",
-        .root_module = b.createModule(.{
-            .root_source_file = b.path("src/main.zig"),
-            .target = target,
-            .optimize = optimize,
-        }),
-    });
-    
-    b.installArtifact(exe);
-}
-```
-
-**交叉编译命令**：
-```bash
-# 编译为 Linux x86_64
-zig build -Dtarget=x86_64-linux
-
-# 编译为 Windows x86_64
-zig build -Dtarget=x86_64-windows
-
-# 编译为 macOS aarch64 (Apple Silicon)
-zig build -Dtarget=aarch64-macos
-
-# 编译为 Linux ARM
-zig build -Dtarget=arm-linux
-
-# 编译为 WebAssembly
-zig build -Dtarget=wasm32-freestanding
-```
-
-**多目标构建**：
-```zig
-// 🚫 已废弃：0.15.x 已移除
-const std = @import("std");
-
-pub fn build(b: *std.Build) void {
-    const optimize = b.standardOptimizeOption(.{});
-    
-    // 定义目标平台列表
-    const targets = [_]std.Target.Query{
-        .{ .cpu_arch = .x86_64, .os_tag = .linux },
-        .{ .cpu_arch = .x86_64, .os_tag = .windows },
-        .{ .cpu_arch = .aarch64, .os_tag = .macos },
-        .{ .cpu_arch = .aarch64, .os_tag = .linux },
-    };
-    
-    // 为每个目标创建构建步骤
-    for (targets) |t| {
-        const exe = b.addExecutable(.{
-            .name = "my-app",
-            .root_module = b.createModule(.{
-                .root_source_file = b.path("src/main.zig"),
-                .target = b.resolveTargetQuery(t),
-                .optimize = optimize,
-            }),
-        });
-        
-        // 为每个目标创建安装步骤
-        const target_name = b.fmt("{s}-{s}", .{
-            @tagName(t.cpu_arch.?),
-            @tagName(t.os_tag.?),
-        });
-        
-        const install_step = b.addInstallArtifact(exe, .{
-            .dest_dir = .{
-                .override = .{
-                    .custom = target_name,
-                },
-            },
-        });
-        
-        b.getInstallStep().dependOn(&install_step.step);
-    }
-}
-```
-
-**构建输出**：
-```
-zig-out/
-├── bin/
-│   ├── x86_64-linux/
-│   │   └── my-app
-│   ├── x86_64-windows/
-│   │   └── my-app.exe
-│   ├── aarch64-macos/
-│   │   └── my-app
-│   └── aarch64-linux/
-│       └── my-app
-```
-
-### 条件编译
-
-使用构建选项实现条件编译：
-
-```zig
-// 🚫 已废弃：0.15.x 已移除
-const std = @import("std");
-
-pub fn build(b: *std.Build) void {
-    const target = b.standardTargetOptions(.{});
-    const optimize = b.standardOptimizeOption(.{});
-    
-    // 定义条件编译选项
-    const use_ssl = b.option(bool, "ssl", "Enable SSL support") orelse false;
-    const backend = b.option(
-        []const u8,
-        "backend",
-        "Backend implementation (epoll, kqueue, iocp)"
-    ) orelse "auto";
-    
-    const exe = b.addExecutable(.{
-        .name = "my-server",
-        .root_module = b.createModule(.{
-            .root_source_file = b.path("src/main.zig"),
-            .target = target,
-            .optimize = optimize,
-        }),
-    });
-    
-    // 添加编译时选项
-    const options = b.addOptions();
-    options.addOption(bool, "use_ssl", use_ssl);
-    options.addOption([]const u8, "backend", backend);
-    exe.root_module.addOptions("build_options", options);
-    
-    // 根据条件链接库
-    if (use_ssl) {
-        exe.linkSystemLibrary("ssl");
-        exe.linkSystemLibrary("crypto");
-        exe.linkLibC();
-    }
-    
-    b.installArtifact(exe);
-}
-```
-
-**在代码中使用条件编译**：
-```zig
-const std = @import("std");
-const build_options = @import("build_options");
-
-pub fn main() !void {
-    if (build_options.use_ssl) {
-        std.debug.print("SSL support enabled\n", .{});
-    }
-    
-    // 根据后端选择不同的实现
-    const backend = build_options.backend;
-    if (std.mem.eql(u8, backend, "epoll")) {
-        // Linux epoll 实现
-    } else if (std.mem.eql(u8, backend, "kqueue")) {
-        // macOS/BSD kqueue 实现
-    } else if (std.mem.eql(u8, backend, "iocp")) {
-        // Windows IOCP 实现
-    }
-}
-```
-
-### 生成文件
-
-构建系统可以在构建过程中生成源代码文件：
-
-**生成配置文件**：
-```zig
-// 🚫 已废弃：0.15.x 已移除
-const std = @import("std");
-
-pub fn build(b: *std.Build) void {
-    // 生成 config.zig 文件
-    const config_file = b.addWriteFile("config.zig", b.fmt(
-        \\pub const APP_NAME = "{s}";
-        \\pub const VERSION = "{s}";
-        \\pub const BUILD_TIME = "{s}";
-    , .{
-        "my-app",
-        "1.0.0",
-        "2024-01-01",
-    }));
-    
-    const exe = b.addExecutable(.{
-        .name = "my-app",
-        .root_module = b.createModule(.{
-            .root_source_file = b.path("src/main.zig"),
-            .target = b.standardTargetOptions(.{}),
-            .optimize = b.standardOptimizeOption(.{}),
-        }),
-    });
-    
-    // 将生成的文件添加到模块
-    exe.root_module.addAnonymousImport("config", .{
-        .root_source_file = config_file.get(),
-    });
-    
-    b.installArtifact(exe);
-}
-```
-
-**使用生成的文件**：
-```zig
-const std = @import("std");
-const config = @import("config");
-
-pub fn main() void {
-    std.debug.print("App: {s}\n", .{config.APP_NAME});
-    std.debug.print("Version: {s}\n", .{config.VERSION});
-    std.debug.print("Build time: {s}\n", .{config.BUILD_TIME});
-}
-```
-
-### 运行外部命令
-
-构建系统可以在构建过程中运行外部命令：
-
-```zig
-// 🚫 已废弃：0.15.x 已移除
-const std = @import("std");
-
-pub fn build(b: *std.Build) void {
-    const target = b.standardTargetOptions(.{});
-    const optimize = b.standardOptimizeOption(.{});
-    
-    // 运行 Git 命令获取版本信息
-    const git_version = b.addSystemCommand(&.{
-        "git",
-        "describe",
-        "--tags",
-        "--always",
-    });
-    
-    // 捕获命令输出
-    const version_output = git_version.captureStdOut();
-    
-    const exe = b.addExecutable(.{
-        .name = "my-app",
-        .root_module = b.createModule(.{
-            .root_source_file = b.path("src/main.zig"),
-            .target = target,
-            .optimize = optimize,
-        }),
-    });
-    
-    // 将版本信息传递给编译器
-    const options = b.addOptions();
-    options.addOption([]const u8, "version", version_output);
-    exe.root_module.addOptions("build_config", options);
-    
-    b.installArtifact(exe);
-}
-```
-
-### 安装和发布
-
-构建系统支持灵活的安装配置：
-
-**自定义安装路径**：
-```zig
-// 🚫 已废弃：0.15.x 已移除
-const std = @import("std");
-
-pub fn build(b: *std.Build) void {
-    const exe = b.addExecutable(.{
-        .name = "my-app",
-        .root_module = b.createModule(.{
-            .root_source_file = b.path("src/main.zig"),
-            .target = b.standardTargetOptions(.{}),
-            .optimize = b.standardOptimizeOption(.{}),
-        }),
-    });
-    
-    // 自定义安装路径
-    const install_exe = b.addInstallArtifact(exe, .{
-        .dest_dir = .{
-            .override = .{
-                .custom = "bin",
-            },
-        },
-    });
-    
-    // 安装配置文件
-    const install_config = b.addInstallFile(
-        b.path("config/default.conf"),
-        "etc/my-app.conf",
-    );
-    
-    // 安装文档
-    const install_docs = b.addInstallFile(
-        b.path("README.md"),
-        "share/doc/my-app/README.md",
-    );
-    
-    b.getInstallStep().dependOn(&install_exe.step);
-    b.getInstallStep().dependOn(&install_config.step);
-    b.getInstallStep().dependOn(&install_docs.step);
-}
-```
-
-**安装目录结构**：
-```
-zig-out/
-├── bin/
-│   └── my-app
-├── etc/
-│   └── my-app.conf
-└── share/
-    └── doc/
-        └── my-app/
-            └── README.md
-```
-
-### 最佳实践
-
-**1. 使用标准选项**：
-```zig
-// ✅ 推荐：使用标准选项
-// ❌ 错误示例
-const target = b.standardTargetOptions(.{});
-const optimize = b.standardOptimizeOption(.{});
-
-// ❌ 不推荐：硬编码目标
-const target = b.resolveTargetQuery(.{
-    .cpu_arch = .x86_64,
-    .os_tag = .linux,
-});
-```
-
-**2. 提供合理的默认值**：
-```zig
-// ✅ 推荐：提供默认值
-// ❌ 错误示例
-const enable_logging = b.option(bool, "logging", "Enable logging") orelse false;
-
-// ❌ 不推荐：强制用户指定
-const enable_logging = b.option(bool, "logging", "Enable logging").?;
-```
-
-**3. 模块化构建脚本**：
-```zig
-// 将复杂逻辑提取为函数
-// 🚫 已废弃：0.15.x 已移除
-fn buildExe(b: *std.Build, name: []const u8, target: std.Build.ResolvedTarget, optimize: std.builtin.OptimizeMode) *std.Build.Step.Compile {
-    return b.addExecutable(.{
-        .name = name,
-        .root_module = b.createModule(.{
-            .root_source_file = b.path(b.fmt("src/{s}.zig", .{name})),
-            .target = target,
-            .optimize = optimize,
-        }),
-    });
-}
-```
-
-**4. 文档化构建选项**：
-```zig
-const std = @import("std");
-
-pub fn build(b: *std.Build) void {
-    // 清晰的选项描述
-    const enable_ssl = b.option(
-        bool,
-        "ssl",
-        "Enable SSL/TLS support (default: false)"
-    ) orelse false;
-    
-    const backend = b.option(
-        []const u8,
-        "backend",
-        "Select backend: 'epoll' (Linux), 'kqueue' (macOS/BSD), 'iocp' (Windows), or 'auto' (default: auto)"
-    ) orelse "auto";
-}
-```
-
-**5. 使用构建缓存**：
-```zig
-// 利用构建缓存加速构建
-// 🚫 已废弃：0.15.x 已移除
-const exe = b.addExecutable(.{
-    .name = "my-app",
-    .root_module = b.createModule(.{
-        .root_source_file = b.path("src/main.zig"),
-        .target = b.standardTargetOptions(.{}),
-        .optimize = b.standardOptimizeOption(.{}),
-    }),
-});
-
-// 构建系统会自动缓存编译结果
-// 只有源文件改变时才会重新编译
-```
-
-## 常用构建命令
-
-```bash
-# 获取依赖（根据 build.zig.zon）
-zig build --fetch
-
-# 构建项目
-zig build
-
-# 运行项目
-zig build run
-
-# 运行测试
-zig build test
-
-# 清理构建缓存
-zig build --clean
-
-# 查看所有可用构建步骤
-zig build --help
-```
-
-## 发布自己的包
-
-> 📖 **本节内容来源**：整合自 [Zig 官方构建系统文档](https://ziglang.org/learn/build-system/) 和社区最佳实践
-
-本节将详细介绍如何发布 Zig 包，让其他开发者可以使用您的代码。
-
-# 发布流程
-
-**1. 准备项目**
-
-在发布之前，确保项目满足以下条件：
-
-**项目结构**：
-```
-my-project/
-├── build.zig           # 构建脚本
-├── build.zig.zon       # 项目清单
-├── src/
-│   ├── root.zig        # 库根文件（导出公共 API）
-│   └── internal.zig    # 内部实现
-├── README.md           # 项目说明
-├── LICENSE             # 许可证文件
-└── examples/           # 示例代码（可选）
-    └── example.zig
-```
-
-**README.md 内容建议**：
-```markdown
-# my-project
-
-简短的项目描述
-
-## 功能特性
-
-- 功能 1
-- 功能 2
-- 功能 3
-
-## 安装
-
-在 `build.zig.zon` 中添加依赖：
-
-```zig
-.dependencies = .{
-    .my_project = .{
-        .url = "https://github.com/username/my-project/archive/refs/tags/v1.0.0.tar.gz",
-        .hash = "1220...",
-    },
-},
-```
-
-## 使用方法
-
-```zig
-const my_project = @import("my-project");
-
-pub fn main() !void {
-    // 使用示例
-}
-```
-
-## API 文档
-
-（详细说明公共 API）
-
-## 许可证
-
-MIT
-```
-
-**2. 配置 build.zig.zon**
-
-确保 `build.zig.zon` 配置正确：
+一个“最小但真实”的示意写法可以长这样：
 
 ```zig
 .{
     .name = "my-project",
-    .version = "1.0.0",
-    
-    // 不要包含开发依赖
+    .version = "0.1.0",
     .dependencies = .{
-        // 只包含库用户需要的依赖
+        .zap = .{
+            .url = "https://github.com/zigzap/zap/archive/refs/tags/v0.8.0.tar.gz",
+            .hash = "<实际由本地工具得到的哈希>",
+        },
+        .my_local_lib = .{
+            .path = "../my-local-lib",
+        },
     },
-    
-    // 明确指定包含的文件
     .paths = .{
         "build.zig",
         "build.zig.zon",
         "src",
-        "LICENSE",
         "README.md",
     },
 }
 ```
 
-**3. 创建 Git 标签**
+> ⚠️ **注意**
+>
+> 上面 `hash` 字段里的内容是**占位说明**，不是可直接复制的真实哈希。真正项目里应当用你本地工具得到的实际值填入。
 
-使用语义化版本号创建 Git 标签：
+## 依赖应该如何固定？
 
-```bash
-# 创建带注释的标签
-git tag -a v1.0.0 -m "Release version 1.0.0"
+对于教程读者来说，依赖管理里最值得建立的习惯有四个。
 
-# 推送标签到远程仓库
-git push origin v1.0.0
-```
+### 1. 尽量固定具体来源
+优先使用：
 
-**语义化版本号规范**：
-- `MAJOR.MINOR.PATCH`（如 1.0.0）
-- `MAJOR`：不兼容的 API 变更
-- `MINOR`：向后兼容的功能新增
-- `PATCH`：向后兼容的问题修复
+- 具体版本标签
+- 具体提交对应的归档
 
-**4. 创建 GitHub Release**
+谨慎使用：
 
-在 GitHub 上创建 Release：
+- `main`
+- `master`
+- 任何会不断漂移的分支 tarball
 
-1. 进入仓库的 "Releases" 页面
-2. 点击 "Draft a new release"
-3. 选择刚创建的标签（v1.0.0）
-4. 填写 Release 标题和说明
-5. 点击 "Publish release"
+原因很简单：如果依赖来源会变，那么你今天能构建，不代表明天还能构建。
 
-**Release 说明模板**：
-```markdown
-## v1.0.0
+### 2. 哈希不是装饰，它是可重复构建的一部分
+哈希值的作用，不只是“防篡改”，也是让你知道：
 
-### 新增功能
-- 功能 1
-- 功能 2
+- 你拿到的是不是同一份归档
+- 构建是否可重现
+- 某次依赖更新是否真的发生了变化
 
-### 变更
-- 变更 1
+### 3. 本地路径依赖适合开发，不适合假装发布稳定版本
+本地依赖在这些场景里很好用：
 
-### 修复
-- 修复 1
+- 同时开发多个本地项目
+- 教程实验
+- 内部工具组合
 
-### 安装
+但如果你要分享项目或保证其他人可复现，就应当清楚说明这种依赖关系。
 
-在 `build.zig.zon` 中添加：
+### 4. 一个项目尽量固定一个 Zig 版本语境
+当构建系统、依赖管理和标准库 API 都处于演进中时，最稳妥的做法通常是：
 
-```zig
-.my_project = .{
-    .url = "https://github.com/username/my-project/archive/refs/tags/v1.0.0.tar.gz",
-    .hash = "1220...",
-},
-```
+- 选定一个 Zig 版本
+- 在这个版本上把项目维护稳定
+- 升级时集中修一轮
 
-获取哈希值：
-```bash
-zig fetch https://github.com/username/my-project/archive/refs/tags/v1.0.0.tar.gz
-```
-```
+而不是在多个版本写法之间长期混用。
 
-**5. 获取并分享哈希值**
+## 如何获取依赖哈希？
 
-```bash
-# 获取依赖的哈希值
-zig fetch https://github.com/username/my-project/archive/refs/tags/v1.0.0.tar.gz
+在很多版本语境下，一个常见工作流是：
 
-# 输出示例：
-# 1220fe3c8e4b3d7a8c9f1e2d3c4b5a6e7f8g9h0i1j2k3l4m5n6o7p8q9r0s1t2u3v4
-```
+1. 确认依赖归档的 URL
+2. 通过本地 Zig 工具获取该归档的哈希
+3. 把输出结果填回 `build.zig.zon`
 
-将哈希值添加到 README 和 Release 说明中。
+你可能会在资料中看到类似 `zig fetch <url>` 这样的工作流说明。由于相关命令体验和依赖细节也可能随着版本演进而变化，因此最稳妥的做法仍然是：
 
-# 最佳实践
+- 以你本地版本帮助信息为准
+- 以当前项目所处的 Zig 版本语境为准
 
-**1. API 稳定性**
+本章更希望你记住的是：**依赖哈希应该来自工具输出，而不是手写、猜写或随便复制。**
+
+## 在 `build.zig` 中接入依赖
+
+当某个依赖已经写进 `build.zig.zon` 之后，常见的下一步是在 `build.zig` 中获取它，并把模块接入自己的目标。
+
+示意写法通常类似：
 
 ```zig
-// src/root.zig
-
-// ✅ 导出稳定的公共 API
-// ❌ 错误示例
-pub const Server = @import("server.zig").Server;
-pub const Config = @import("config.zig").Config;
-
-// ❌ 不要导出内部实现
-// pub const internal = @import("internal.zig");
-```
-
-**2. 版本兼容性**
-
-```zig
-// ✅ 保持向后兼容
-// 💡 最佳实践
-pub fn init(config: Config) !Server {
-    // 新实现
-}
-
-// 保留旧 API（标记为废弃）
-pub const initLegacy = init;
-```
-
-**3. 文档化 API**
-
-```zig
-/// 创建新的服务器实例
-/// 
-/// 参数：
-///   - config: 服务器配置
-/// 
-/// 返回：
-///   - 成功：Server 实例
-///   - 失败：错误
-/// 
-/// 示例：
-///   ```zig
-///   var server = try Server.init(.{
-///       .port = 8080,
-///   });
-///   ```
-pub fn init(config: Config) !Server {
-    // 实现
-}
-```
-
-**4. 提供示例**
-
-在 `examples/` 目录中提供使用示例：
-
-```zig
-// examples/basic.zig
 const std = @import("std");
-const my_project = @import("my-project");
 
-pub fn main() !void {
-    var server = try my_project.Server.init(.{
-        .port = 8080,
+pub fn build(b: *std.Build) void {
+    const target = b.standardTargetOptions(.{});
+    const optimize = b.standardOptimizeOption(.{});
+
+    const dep = b.dependency("zap", .{
+        .target = target,
+        .optimize = optimize,
     });
-    defer server.deinit();
-    
-    try server.start();
+
+    const exe = b.addExecutable(.{
+        .name = "my-app",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/main.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+
+    exe.root_module.addImport("zap", dep.module("zap"));
+    b.installArtifact(exe);
 }
 ```
 
-**5. 测试覆盖**
+### 这里要抓住什么？
 
-确保代码有充分的测试：
+- 依赖不是“自动魔法导入”的
+- 你仍然需要在构建脚本中明确接入它
+- 目标平台和优化级别往往也会传递给依赖
+- 模块名和导入名都应当保持清楚一致
 
-```zig
-// src/root.zig
+## 系统库链接与 Zig 依赖不是一回事
 
-test "Server.init" {
-    const server = try Server.init(.{
-        .port = 8080,
-    });
-    defer server.deinit();
-    
-    try std.testing.expect(server.port == 8080);
-}
-```
+教程里很容易把“拉一个 Zig 依赖”和“链接一个系统库”混成同一件事，但它们其实不同。
 
-**6. 持续集成**
+### Zig 依赖
+通常指：
 
-使用 GitHub Actions 自动化测试：
+- 一个带 `build.zig.zon` / `build.zig` 的 Zig 项目
+- 你通过清单和构建脚本把它加入当前项目
 
-```yaml
-# .github/workflows/test.yml
-name: Test
+### 系统库
+通常指：
 
-on: [push, pull_request]
+- 系统已经安装好的 C 库或平台库
+- 你在构建脚本中显式声明链接需求
 
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Setup Zig
-        uses: goto-bus-stop/setup-zig@v2
-        with:
-          version: master
-      
-      - name: Run tests
-        run: zig build test
-```
-
-# 发布检查清单
-
-发布前检查以下项目：
-
-**项目结构**：
-- [ ] `build.zig` 存在且正确
-- [ ] `build.zig.zon` 存在且正确
-- [ ] `src/root.zig` 导出公共 API
-- [ ] `README.md` 包含安装和使用说明
-- [ ] `LICENSE` 文件存在
-- [ ] 示例代码可运行
-
-**代码质量**：
-- [ ] 所有测试通过
-- [ ] 代码格式化（`zig fmt`）
-- [ ] 无编译警告
-- [ ] 文档完整
-
-**发布准备**：
-- [ ] 更新版本号
-- [ ] 更新 CHANGELOG
-- [ ] 创建 Git 标签
-- [ ] 创建 GitHub Release
-- [ ] 获取并分享哈希值
-
-**发布后**：
-- [ ] 在社区分享（Zig Discord、Reddit 等）
-- [ ] 回复用户问题
-- [ ] 收集反馈并改进
-
-# 常见问题
-
-**Q: 如何更新已发布的包？**
-
-A: 创建新的版本标签并发布：
-
-```bash
-# 更新版本号
-# build.zig.zon: .version = "1.1.0"
-
-# 创建新标签
-git tag -a v1.1.0 -m "Release version 1.1.0"
-git push origin v1.1.0
-
-# 创建 GitHub Release
-# 获取新的哈希值
-zig fetch https://github.com/username/my-project/archive/refs/tags/v1.1.0.tar.gz
-```
-
-**Q: 如何处理破坏性变更？**
-
-A: 遵循语义化版本：
-
-```bash
-# 破坏性变更：增加 MAJOR 版本
-v1.0.0 → v2.0.0
-
-# 新功能：增加 MINOR 版本
-v1.0.0 → v1.1.0
-
-# Bug 修复：增加 PATCH 版本
-v1.0.0 → v1.0.1
-```
-
-**Q: 如何废弃旧的 API？**
-
-A: 使用文档标记废弃：
+示意写法通常类似：
 
 ```zig
-/// 已废弃：请使用 `newFunction` 代替
-/// 将在 v2.0.0 中移除
-pub const oldFunction = newFunction;
+exe.root_module.linkSystemLibrary("z", .{});
+exe.root_module.link_libc = true;
 ```
 
-# 示例：完整的发布流程
+这类写法也可能随着版本演进出现细节调整，但你至少应当先理解：
 
-```bash
-# 1. 准备发布
-git checkout main
-git pull origin main
+- 这是在链接系统提供的库
+- 不是在导入一个 Zig 模块仓库
+- 构建失败时，问题可能来自系统环境而不是 Zig 语法
 
-# 2. 更新版本号
-# 编辑 build.zig.zon: .version = "1.0.0"
+## 真实项目里常见的几个构建步骤
 
-# 3. 更新 CHANGELOG
-# 编辑 CHANGELOG.md
+随着项目变大，你通常会逐步把 `build.zig` 组织成几个常见 step：
 
-# 4. 提交变更
-git add .
-git commit -m "chore: release v1.0.0"
+- 构建主程序
+- 构建并运行测试
+- 运行示例
+- 生成文件或代码
+- 安装构建产物
 
-# 5. 创建标签
-git tag -a v1.0.0 -m "Release version 1.0.0"
+最重要的不是“step 越多越高级”，而是：
 
-# 6. 推送
-git push origin main
-git push origin v1.0.0
+- 每个 step 的职责清楚
+- 依赖关系明确
+- 团队或未来的你能一眼看懂工作流
 
-# 7. 获取哈希值
-zig fetch https://github.com/username/my-project/archive/refs/tags/v1.0.0.tar.gz
+## 什么时候该继续拆分模块和目标？
 
-# 8. 在 GitHub 上创建 Release
-# 填写 Release 说明，包含哈希值
+你不需要一开始就做复杂构建图。
 
-# 9. 在社区分享
-# Discord、Reddit、Twitter 等
-```
+通常在出现这些信号时，再考虑拆分会更合适：
+
+- 同一份代码既要做库，又要做可执行文件
+- 你有多个二进制目标
+- 测试、示例、代码生成之间已经有明显分工
+- 某些模块需要被多个目标共享
+
+如果项目还很小，保持 `build.zig` 简洁通常比“为了工程感而过度设计”更重要。
+
+## 构建系统里最容易踩的坑
+
+### 1. 把版本敏感 API 当成永久稳定写法
+尤其是在 `0.x` 阶段，这是非常常见的误区。
+
+### 2. 复制教程里的占位哈希
+如果你把示意用的占位符直接复制到项目里，构建当然会失败。
+
+### 3. 使用漂移的依赖来源
+例如直接依赖某个仓库的主分支归档。这样最容易引入“昨天能用、今天突然坏掉”的问题。
+
+### 4. 把构建问题都当成代码问题
+很多构建失败其实来自：
+
+- Zig 版本不一致
+- 依赖版本漂移
+- 系统库没装
+- 目标平台配置不匹配
+
+### 5. `build.zig` 写得过于炫技
+构建脚本也是给人维护的。比起堆很多 helper 和分支，更重要的是让意图清楚。
+
+## 当构建失败时，可以先这样排查
+
+1. **先确认 Zig 版本**
+2. **再确认项目依赖是否针对该版本维护**
+3. **检查 `build.zig.zon` 里的 URL 和哈希是否一致**
+4. **检查系统库是否真的已安装且可被链接**
+5. **最后再看是否是 `build.zig` API 本身发生了版本差异**
+
+这个顺序很重要，因为很多时候问题根本不在你的业务代码里。
+
+## 本章小结
+
+对 Zig 的构建系统与包管理来说，最重要的不是记住多少字段名，而是建立这几层判断：
+
+- `build.zig` 负责构建逻辑，`build.zig.zon` 负责项目清单与依赖来源
+- 依赖管理的关键是**固定来源、固定哈希、可重复构建**
+- 系统库链接和 Zig 依赖接入是两类不同问题
+- 构建 API 可能会演进，但“构建图、目标、模块关系、步骤依赖”这些概念更稳定
+- 构建失败时，应优先按“版本 → 依赖 → 系统环境 → 构建脚本”的顺序排查
+
+如果你已经建立了这些直觉，那么后续在真实项目里阅读 `build.zig`、接入依赖、组织测试和产物时，就会更容易看清“这段构建脚本到底在描述什么”。

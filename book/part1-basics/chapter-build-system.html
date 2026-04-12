@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>【draft】构建系统入门 - Zig 编程语言入门教程</title>
+        <title>构建系统入门 - Zig 编程语言入门教程</title>
 
 
         <!-- Custom HTML head -->
@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-a9ca16c2.js";
+            window.path_to_searchindex_js = "../searchindex-35211ac1.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-2fc75e4c.js"></script>
+        <script src="../toc-6dcbe846.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -181,11 +181,12 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="draft构建系统入门"><a class="header" href="#draft构建系统入门">【draft】构建系统入门</a></h1>
+                        <h1 id="构建系统入门"><a class="header" href="#构建系统入门">构建系统入门</a></h1>
 <blockquote>
 <p>💡 <strong>重要章节</strong>：构建系统是 Zig 的核心特性之一，掌握基本的构建命令对于项目开发至关重要。</p>
-<p><strong>章节定位</strong>：本章是基础部分，只介绍基本的构建命令和简单配置。关于构建系统的高级特性（如交叉编译、包管理、复杂构建配置等），请参见高级部分的<a href="../part2-advanced/chapter-package-management.html">构建系统与包管理</a>章节。</p>
+<p><strong>章节定位</strong>：本章属于基础部分，重点是把你从“单文件练习”带到“项目化开发”。关于交叉编译、依赖管理、复杂构建配置等高级主题，请参见高级部分的<a href="../part2-advanced/chapter-package-management.html">构建系统与包管理</a>章节。</p>
 </blockquote>
+<p>如果你已经在上一章通过 <code>zig init</code> 看过一个 Zig 项目的基本结构，本章可以理解为对那部分内容的<strong>正式展开</strong>：我们不再停留在“看到这些文件”，而是进一步解释它们分别做什么，以及你最常用的构建命令应该怎么用。</p>
 <h2 id="构建系统概述"><a class="header" href="#构建系统概述">构建系统概述</a></h2>
 <h3 id="为什么-zig-内置构建系统"><a class="header" href="#为什么-zig-内置构建系统">为什么 Zig 内置构建系统？</a></h3>
 <p>与其他语言不同，Zig 将构建系统作为语言的核心特性：</p>
@@ -203,7 +204,7 @@
 <li><strong>模块（Module）</strong>：编译单元，包含源文件和依赖</li>
 </ul>
 <h2 id="基础项目结构"><a class="header" href="#基础项目结构">基础项目结构</a></h2>
-<p>使用 <code>zig init</code> 创建项目：</p>
+<p>如果你已经运行过 <code>zig init</code>，下面这部分内容会是一次更系统的回顾；如果还没有，也可以把它当作第一次正式认识 Zig 项目布局。</p>
 <pre><code class="language-bash">mkdir my-project
 cd my-project
 zig init
@@ -277,7 +278,7 @@ pub fn build(b: *std.Build) void {
 <p>在代码中使用选项：</p>
 <pre><code class="language-zig">const config = @import("config");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     if (config.enable_logging) {
         std.debug.print("Logging enabled\n", .{});
     }
@@ -334,7 +335,7 @@ pub fn build(b: *std.Build) void {
 <pre><code class="language-zig">const std = @import("std");
 const lib = @import("lib");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     lib.someFunction();
 }
 </code></pre>
@@ -387,12 +388,12 @@ zig build -Doptimize=ReleaseFast
 # 指定目标平台
 zig build -Dtarget=x86_64-windows
 
-# 清理构建产物
-zig build clean
-
-# 查看所有可用步骤
+# 查看当前项目定义了哪些步骤
 zig build --help
 </code></pre>
+<blockquote>
+<p>⚠️ <code>zig build</code> 能使用哪些步骤，取决于当前项目的 <code>build.zig</code> 里定义了什么。<br>例如 <code>zig init</code> 生成的默认项目通常会提供 <code>run</code>、<code>test</code>、<code>install</code> 等步骤，但不会默认提供 <code>clean</code> 这样的自定义步骤。</p>
+</blockquote>
 <h2 id="构建系统参考资源"><a class="header" href="#构建系统参考资源">构建系统参考资源</a></h2>
 <ul>
 <li><strong>官方文档</strong>：https://ziglang.org/learn/build-system/</li>
@@ -443,7 +444,9 @@ pub fn build(b: *std.Build) void {
 <li>输出当前优化级别</li>
 </ul>
 <p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">pub fn build(b: *std.Build) void {
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
     
     // 输出优化级别（仅用于演示）
@@ -469,11 +472,12 @@ pub fn build(b: *std.Build) void {
 </code></pre>
 <hr>
 <h2 id="下一步学习"><a class="header" href="#下一步学习">下一步学习</a></h2>
-<p>恭喜您完成了构建系统入门！接下来您可以：</p>
+<p>恭喜您完成了构建系统入门。到这里，第一部分的主线也基本闭合了：你已经接触了基础语法、控制流、错误处理，以及如何把这些代码组织成一个真正的项目。</p>
+<p>接下来你可以按下面的顺序继续：</p>
 <ol>
-<li><strong>实践练习</strong>：完成章节练习题，巩固所学知识</li>
-<li><strong>深入学习</strong>：阅读<a href="../part2-advanced/chapter-package-management.html">构建系统与包管理</a>章节，了解高级特性</li>
-<li><strong>项目实战</strong>：尝试构建一个多文件项目，体验完整的开发流程</li>
+<li><strong>实践练习</strong>：完成本章练习题，把 <code>build.zig</code> 和项目结构真正跑一遍</li>
+<li><strong>回看第一部分</strong>：如果你对错误处理、切片、函数参数等概念还不够稳，建议在进入高级主题前先补一遍基础</li>
+<li><strong>深入学习</strong>：阅读<a href="../part2-advanced/chapter-package-management.html">构建系统与包管理</a>章节，继续了解更复杂的构建配置与依赖管理</li>
 </ol>
 
                     </main>
@@ -484,7 +488,7 @@ pub fn build(b: *std.Build) void {
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../part2-advanced/chapter-standard-library.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../part2-advanced/part-overview.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -498,7 +502,7 @@ pub fn build(b: *std.Build) void {
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../part2-advanced/chapter-standard-library.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../part2-advanced/part-overview.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>

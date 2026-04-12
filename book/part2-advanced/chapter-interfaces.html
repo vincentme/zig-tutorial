@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>【draft】接口、组合与设计模式 - Zig 编程语言入门教程</title>
+        <title>接口、组合与设计模式 - Zig 编程语言入门教程</title>
 
 
         <!-- Custom HTML head -->
@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-a9ca16c2.js";
+            window.path_to_searchindex_js = "../searchindex-35211ac1.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-2fc75e4c.js"></script>
+        <script src="../toc-6dcbe846.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -181,1509 +181,485 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="draft接口组合与设计模式"><a class="header" href="#draft接口组合与设计模式">【draft】接口、组合与设计模式</a></h1>
+                        <h1 id="接口组合与设计模式"><a class="header" href="#接口组合与设计模式">接口、组合与设计模式</a></h1>
+<p>这一章不再把重点放在“把别的语言里的面向对象模式原样搬到 Zig”，而是要回答一个更贴近 Zig 风格的问题：</p>
 <blockquote>
-<p>💡 <strong>重要章节</strong>：本章系统性地讲解 Zig 中的对象设计策略，包括运行时多态（接口）和编译期组合两大机制，以及常见设计模式的应用。</p>
+<p><strong>当你想抽象一组行为时，应该优先选择泛型、联合类型，还是手写 VTable？</strong></p>
 </blockquote>
-<h2 id="为什么需要多种对象设计策略"><a class="header" href="#为什么需要多种对象设计策略">为什么需要多种对象设计策略？</a></h2>
-<p>Zig 没有类继承机制，因此需要通过以下方式构建复杂系统：</p>
+<p>对很多刚接触 Zig 的读者来说，“接口”这个词很容易让人立刻联想到：</p>
+<ul>
+<li>继承</li>
+<li>trait</li>
+<li>class hierarchy</li>
+<li>runtime polymorphism</li>
+<li>一套默认就该存在的接口系统</li>
+</ul>
+<p>但 Zig 的思路并不是这样。<br>它更强调：</p>
+<ul>
+<li>先看问题是否能在编译期解决</li>
+<li>先用最简单、最清楚的抽象</li>
+<li>只有在确实需要运行时切换实现时，才引入更动态的方案</li>
+</ul>
+<p>因此，本章最重要的目标，不是教你“如何模拟某种传统 OOP 体系”，而是帮助你建立下面这条判断主线：</p>
 <ol>
-<li><strong>接口与多态</strong>：实现运行时灵活性</li>
-<li><strong>对象组合</strong>：实现编译期代码复用</li>
-<li><strong>设计模式</strong>：解决常见设计问题</li>
+<li><strong>类型在编译期已知吗？</strong></li>
+<li><strong>分支集合是封闭的吗？</strong></li>
+<li><strong>是否真的需要运行时替换实现？</strong></li>
+<li><strong>抽象带来的复杂度，是否值得？</strong></li>
 </ol>
-<p>本章将系统性地讲解这三种策略，帮助您设计出灵活、高效的 Zig 程序。</p>
-<h2 id="接口与多态概述"><a class="header" href="#接口与多态概述">接口与多态概述</a></h2>
-<h1 id="为什么需要接口与多态"><a class="header" href="#为什么需要接口与多态">为什么需要接口与多态？</a></h1>
-<p>在实际编程中，我们经常遇到这样的问题：</p>
-<pre><code class="language-zig">// 为每种写入器写专门的函数
-fn writeToFile(file: *std.fs.File, data: []const u8) !void {
-    _ = try file.write(data);
-}
-
-fn writeToBuffer(buffer: *Buffer, data: []const u8) !void {
-    try buffer.append(data);
-}
-
-fn writeToNetwork(socket: *Socket, data: []const u8) !void {
-    _ = try socket.write(data);
-}
-</code></pre>
-<p><strong>问题</strong>：</p>
-<ul>
-<li>代码重复，维护困难</li>
-<li>无法统一处理不同类型</li>
-<li>难以扩展新的实现类型</li>
-</ul>
-<p><strong>解决方案</strong>：使用接口实现运行时多态，编写一次代码，适用于多种类型。</p>
-<h1 id="接口-vs-泛型"><a class="header" href="#接口-vs-泛型">接口 vs 泛型</a></h1>
-<p><strong>泛型（编译期多态）</strong>：</p>
-<pre><code class="language-zig">fn writeData(writer: anytype, data: []const u8) !void {
-    try writer.writeAll(data);
-}
-</code></pre>
-<ul>
-<li>✅ 零运行时开销</li>
-<li>✅ 编译期类型检查</li>
-<li>❌ 类型在编译期固定，无法运行时切换</li>
-</ul>
-<p><strong>接口（运行时多态）</strong>：</p>
-<pre><code class="language-zig">fn writeData(writer: Writer, data: []const u8) !void {
-    _ = try writer.write(data);
-}
-</code></pre>
-<ul>
-<li>✅ 运行时可以切换实现</li>
-<li>✅ 支持动态加载插件</li>
-<li>❌ 小的性能开销（函数指针调用）</li>
-</ul>
-<p><strong>选择依据</strong>：</p>
-<ul>
-<li>如果类型在编译期确定 → 使用泛型</li>
-<li>如果需要运行时切换 → 使用接口</li>
-</ul>
-<h1 id="zig-的接口哲学"><a class="header" href="#zig-的接口哲学">Zig 的接口哲学</a></h1>
-<p>Zig 没有内置的接口概念，而是通过以下机制实现：</p>
-<ol>
-<li><strong>Trait 模式</strong>：使用结构体定义行为契约</li>
-<li><strong>函数指针表（VTable）</strong>：实现运行时分发</li>
-<li><strong>类型擦除</strong>：使用 <code>*anyopaque</code> 存储任意类型</li>
-</ol>
-<p>这种设计体现了 Zig 的核心理念：<strong>显式优于隐式</strong>。</p>
-<h2 id="接口基础概念"><a class="header" href="#接口基础概念">接口基础概念</a></h2>
-<h1 id="什么是接口"><a class="header" href="#什么是接口">什么是接口？</a></h1>
-<p>接口是一种<strong>行为契约</strong>，定义了一组方法签名，而不关心具体实现：</p>
-<pre><code class="language-zig">// 接口定义：Writer 行为契约
-const Writer = struct {
-    // 存储具体实现的指针
-    ptr: *anyopaque,
-    // 函数指针：写入数据
-    writeFn: *const fn (ptr: *anyopaque, data: []const u8) anyerror!usize,
-    
-    // 接口方法：调用具体实现
-    pub fn write(self: Writer, data: []const u8) !usize {
-        return self.writeFn(self.ptr, data);
-    }
-};
-</code></pre>
-<p><strong>关键概念</strong>：</p>
-<ul>
-<li><code>*anyopaque</code>：类型擦除，存储任意类型指针</li>
-<li>函数指针：实现运行时分发</li>
-<li>接口方法：封装函数指针调用</li>
-</ul>
-<h1 id="类型擦除与恢复"><a class="header" href="#类型擦除与恢复">类型擦除与恢复</a></h1>
-<pre><code class="language-zig">const std = @import("std");
-
-// 具体类型
-const FileWriter = struct {
-    file: std.fs.File,
-    
-    // 实现方法
-    pub fn write(ptr: *anyopaque, data: []const u8) anyerror!usize {
-        // 类型恢复：从 *anyopaque 恢复为 *FileWriter
-        const self: *FileWriter = @ptrCast(@alignCast(ptr));
-        return self.file.write(data);
-    }
-    
-    // 转换为接口
-    pub fn writer(self: *FileWriter) Writer {
-        return .{
-            .ptr = self,  // 类型擦除：*FileWriter → *anyopaque
-            .writeFn = write,
-        };
-    }
-};
-</code></pre>
-<p><strong>关键操作</strong>：</p>
-<ul>
-<li><strong>类型擦除</strong>：<code>*FileWriter → *anyopaque</code>（自动转换）</li>
-<li><strong>类型恢复</strong>：<code>*anyopaque → *FileWriter</code>（使用 <code>@ptrCast</code> 和 <code>@alignCast</code>）</li>
-</ul>
-<h2 id="trait-模式详解"><a class="header" href="#trait-模式详解">Trait 模式详解</a></h2>
-<h1 id="基本实现"><a class="header" href="#基本实现">基本实现</a></h1>
-<p>让我们实现一个完整的 Writer trait：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-// 示例：Zig 0.16.0-dev
-// 定义 Writer trait
-const Writer = struct {
-    ptr: *anyopaque,
-    writeFn: *const fn (ptr: *anyopaque, data: []const u8) anyerror!usize,
-    
-    pub fn write(self: Writer, data: []const u8) !usize {
-        return self.writeFn(self.ptr, data);
-    }
-};
-
-// 实现1：文件写入器
-const FileWriter = struct {
-    file: std.fs.File,
-    
-    pub fn write(ptr: *anyopaque, data: []const u8) anyerror!usize {
-        const self: *FileWriter = @ptrCast(@alignCast(ptr));
-        return self.file.write(data);
-    }
-    
-    pub fn writer(self: *FileWriter) Writer {
-        return .{
-            .ptr = self,
-            .writeFn = write,
-        };
-    }
-};
-
-// 实现2：缓冲写入器
-const BufferWriter = struct {
-    buffer: []u8,
-    pos: usize,
-    
-    pub fn write(ptr: *anyopaque, data: []const u8) anyerror!usize {
-        const self: *BufferWriter = @ptrCast(@alignCast(ptr));
-        const available = self.buffer.len - self.pos;
-        const to_write = @min(data.len, available);
-        @memcpy(self.buffer[self.pos..][0..to_write], data[0..to_write]);
-        self.pos += to_write;
-        return to_write;
-    }
-    
-    pub fn writer(self: *BufferWriter) Writer {
-        return .{
-            .ptr = self,
-            .writeFn = write,
-        };
-    }
-};
-
-// 使用示例
-pub fn main(_: std.process.Init.Minimal) !void {
-    // 文件写入器
-    var file_writer = FileWriter{
-        .file = try std.fs.cwd().createFile("test.txt", .{}),
-    };
-    defer file_writer.file.close();
-    
-    const w1 = file_writer.writer();
-    _ = try w1.write("Hello from file!\n");
-    
-    // 缓冲写入器
-    var buffer: [1024]u8 = undefined;
-    var buffer_writer = BufferWriter{
-        .buffer = &amp;buffer,
-        .pos = 0,
-    };
-    
-    const w2 = buffer_writer.writer();
-    _ = try w2.write("Hello from buffer!\n");
-    
-    std.debug.print("Buffer: {s}\n", .{buffer[0..buffer_writer.pos]});
-}
-</code></pre>
-<p><strong>讲解要点</strong>：</p>
-<ul>
-<li>每个 trait 实现都需要提供转换函数（如 <code>writer()</code>）</li>
-<li><code>@ptrCast</code> 和 <code>@alignCast</code> 必须成对使用</li>
-<li>接口调用通过函数指针间接进行</li>
-</ul>
-<h1 id="多方法接口vtable-模式"><a class="header" href="#多方法接口vtable-模式">多方法接口（VTable 模式）</a></h1>
-<p>当接口包含多个方法时，使用 VTable 模式更清晰：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-// 示例：Zig 0.16.0-dev
-// 定义 Writer 接口（VTable 模式）
-const Writer = struct {                                    // ①
-    ptr: *anyopaque,                                       // ②
-    vtable: *const VTable,                                 // ③
-    
-    const VTable = struct {                                // ④
-        write: *const fn (ptr: *anyopaque, data: []const u8) anyerror!usize,
-        flush: *const fn (ptr: *anyopaque) anyerror!void,
-        close: *const fn (ptr: *anyopaque) void,
-    };
-    
-    pub fn write(self: Writer, data: []const u8) !usize { // ⑤
-        return self.vtable.write(self.ptr, data);
-    }
-    
-    pub fn flush(self: Writer) !void {
-        return self.vtable.flush(self.ptr);
-    }
-    
-    pub fn close(self: Writer) void {
-        self.vtable.close(self.ptr);
-    }
-};
-
-// 实现文件写入器
-const FileWriter = struct {                                // ⑥
-    file: std.fs.File,
-    
-    // 定义 vtable 实例（所有实例共享）
-    const vtable = Writer.VTable{                          // ⑦
-        .write = write,
-        .flush = flush,
-        .close = close,
-    };
-    
-    fn write(ptr: *anyopaque, data: []const u8) anyerror!usize {  // ⑧
-        const self: *FileWriter = @ptrCast(@alignCast(ptr));
-        return self.file.write(data);
-    }
-    
-    fn flush(ptr: *anyopaque) anyerror!void {
-        const self: *FileWriter = @ptrCast(@alignCast(ptr));
-        return self.file.sync();
-    }
-    
-    fn close(ptr: *anyopaque) void {
-        const self: *FileWriter = @ptrCast(@alignCast(ptr));
-        self.file.close();
-    }
-    
-    pub fn writer(self: *FileWriter) Writer {              // ⑨
-        return .{
-            .ptr = self,
-            .vtable = &amp;vtable,
-        };
-    }
-};
-
-// 使用示例：多态函数
-fn writeMessage(w: Writer, message: []const u8) !void {    // ⑩
-    _ = try w.write(message);
-    try w.flush();
-}
-
-pub fn main(_: std.process.Init.Minimal) !void {
-    var file_writer = FileWriter{
-        .file = try std.fs.cwd().createFile("test.txt", .{}),
-    };
-    
-    const w = file_writer.writer();
-    try writeMessage(w, "Hello, World!\n");
-    
-    w.close();
-}
-</code></pre>
-<p><strong>代码解析</strong>：</p>
-<p><strong>① Writer 接口结构体</strong></p>
-<ul>
-<li>定义接口类型，包含两个关键字段</li>
-<li>这是“类型擦除“后的统一接口</li>
-</ul>
-<p>*<em>② ptr: <em>anyopaque</em></em></p>
-<ul>
-<li>类型擦除后的指针，可以指向任何具体类型</li>
-<li>类似 C 语言的 <code>void*</code>，但更安全</li>
-<li>在调用时需要恢复为具体类型</li>
-</ul>
-<p>*<em>③ vtable: <em>const VTable</em></em></p>
-<ul>
-<li>指向虚函数表的指针</li>
-<li>VTable 包含所有接口方法的函数指针</li>
-<li>每个具体类型都有自己的 VTable 实例</li>
-</ul>
-<p><strong>④ VTable 结构体</strong></p>
-<ul>
-<li>定义所有接口方法的函数签名</li>
-<li>所有方法都接收 <code>*anyopaque</code> 作为第一个参数</li>
-<li>这是实现多态的关键</li>
-</ul>
-<p><strong>⑤ 接口方法</strong></p>
-<ul>
-<li>通过 vtable 间接调用具体实现</li>
-<li>将 ptr 传递给具体实现函数</li>
-<li>提供统一的调用接口</li>
-</ul>
-<p><strong>⑥ FileWriter 具体实现</strong></p>
-<ul>
-<li>实现接口的具体类型</li>
-<li>包含实际的数据字段</li>
-<li>提供所有接口方法的实现</li>
-</ul>
-<p><strong>⑦ vtable 实例</strong></p>
-<ul>
-<li>所有 FileWriter 实例共享同一个 vtable</li>
-<li>节省内存，避免每个实例都存储函数指针</li>
-<li>编译期常量，性能优化</li>
-</ul>
-<p><strong>⑧ 具体方法实现</strong></p>
-<ul>
-<li>接收 <code>*anyopaque</code> 参数</li>
-<li>使用 <code>@ptrCast</code> 和 <code>@alignCast</code> 恢复具体类型</li>
-<li>调用实际的方法实现</li>
-</ul>
-<p><strong>⑨ 类型转换函数</strong></p>
-<ul>
-<li>将具体类型转换为接口类型</li>
-<li>设置 ptr 指向 self</li>
-<li>设置 vtable 指向类型的 vtable 实例</li>
-</ul>
-<p><strong>⑩ 多态函数</strong></p>
-<ul>
-<li>接收接口类型参数</li>
-<li>可以处理任何实现了该接口的类型</li>
-<li>实现运行时多态</li>
-</ul>
-<p><strong>关键要点</strong>：</p>
-<ol>
-<li><strong>类型擦除</strong>：<code>*anyopaque</code> 隐藏具体类型信息</li>
-<li><strong>类型恢复</strong>：<code>@ptrCast</code> + <code>@alignCast</code> 恢复具体类型</li>
-<li><strong>间接调用</strong>：通过 vtable 实现多态</li>
-<li><strong>内存效率</strong>：vtable 在所有实例间共享</li>
-</ol>
-<p><strong>预期输出</strong>：</p>
-<pre><code>文件 test.txt 已创建并写入内容
-</code></pre>
-<p><strong>下一步</strong>：</p>
-<ul>
-<li>尝试实现其他类型的 Writer（如 NetworkWriter）</li>
-<li>理解 VTable 模式与其他接口模式的区别</li>
-<li>参考标准库中的接口设计（如 std.mem.Allocator）</li>
-</ul>
-<p><strong>VTable 模式优势</strong>：</p>
-<ul>
-<li>所有函数指针集中管理</li>
-<li>每个 trait 实现共享同一个 vtable 实例（节省内存）</li>
-<li>接口方法通过 vtable 进行间接调用</li>
-<li>更容易扩展新方法</li>
-</ul>
-<h2 id="接口组合"><a class="header" href="#接口组合">接口组合</a></h2>
-<h1 id="多接口实现"><a class="header" href="#多接口实现">多接口实现</a></h1>
-<p>一个类型可以实现多个接口：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-// 示例：Zig 0.16.0-dev
-// 定义 Reader 接口
-const Reader = struct {
-    ptr: *anyopaque,
-    vtable: *const VTable,
-    
-    const VTable = struct {
-        read: *const fn (ptr: *anyopaque, buffer: []u8) anyerror!usize,
-        close: *const fn (ptr: *anyopaque) void,
-    };
-    
-    pub fn read(self: Reader, buffer: []u8) !usize {
-        return self.vtable.read(self.ptr, buffer);
-    }
-    
-    pub fn close(self: Reader) void {
-        self.vtable.close(self.ptr);
-    }
-};
-
-// 定义 Writer 接口
-const Writer = struct {
-    ptr: *anyopaque,
-    vtable: *const VTable,
-    
-    const VTable = struct {
-        write: *const fn (ptr: *anyopaque, data: []const u8) anyerror!usize,
-        close: *const fn (ptr: *anyopaque) void,
-    };
-    
-    pub fn write(self: Writer, data: []const u8) !usize {
-        return self.vtable.write(self.ptr, data);
-    }
-    
-    pub fn close(self: Writer) void {
-        self.vtable.close(self.ptr);
-    }
-};
-
-// 组合接口：ReadWriter
-const ReadWriter = struct {
-    ptr: *anyopaque,
-    reader_vtable: *const Reader.VTable,
-    writer_vtable: *const Writer.VTable,
-    
-    pub fn reader(self: ReadWriter) Reader {
-        return .{
-            .ptr = self.ptr,
-            .vtable = self.reader_vtable,
-        };
-    }
-    
-    pub fn writer(self: ReadWriter) Writer {
-        return .{
-            .ptr = self.ptr,
-            .vtable = self.writer_vtable,
-        };
-    }
-};
-
-// 实现文件 ReadWriter
-const FileReadWriter = struct {
-    file: std.fs.File,
-    
-    const reader_vtable = Reader.VTable{
-        .read = read,
-        .close = close,
-    };
-    
-    const writer_vtable = Writer.VTable{
-        .write = write,
-        .close = close,
-    };
-    
-    fn read(ptr: *anyopaque, buffer: []u8) anyerror!usize {
-        const self: *FileReadWriter = @ptrCast(@alignCast(ptr));
-        return self.file.read(buffer);
-    }
-    
-    fn write(ptr: *anyopaque, data: []const u8) anyerror!usize {
-        const self: *FileReadWriter = @ptrCast(@alignCast(ptr));
-        return self.file.write(data);
-    }
-    
-    fn close(ptr: *anyopaque) void {
-        const self: *FileReadWriter = @ptrCast(@alignCast(ptr));
-        self.file.close();
-    }
-    
-    pub fn readWriter(self: *FileReadWriter) ReadWriter {
-        return .{
-            .ptr = self,
-            .reader_vtable = &amp;reader_vtable,
-            .writer_vtable = &amp;writer_vtable,
-        };
-    }
-};
-
-// 使用示例
-pub fn main(_: std.process.Init.Minimal) !void {
-    var file_rw = FileReadWriter{
-        .file = try std.fs.cwd().createFile("test.txt", .{
-            .read = true,
-        }),
-    };
-    defer file_rw.file.close();
-    
-    const rw = file_rw.readWriter();
-    
-    // 写入
-    _ = try rw.writer().write("Hello, World!\n");
-    
-    // 读取
-    var buffer: [100]u8 = undefined;
-    _ = try rw.reader().read(&amp;buffer);
-    
-    std.debug.print("Read: {s}\n", .{buffer});
-}
-</code></pre>
-<p><strong>接口组合要点</strong>：</p>
-<ul>
-<li>组合接口包含多个 vtable</li>
-<li>同一个类型可以实现多个接口</li>
-<li>接口之间可以相互转换</li>
-</ul>
-<h2 id="设计模式应用"><a class="header" href="#设计模式应用">设计模式应用</a></h2>
-<h1 id="策略模式"><a class="header" href="#策略模式">策略模式</a></h1>
-<p>策略模式允许在运行时切换算法：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-// 示例：Zig 0.16.0-dev
-// 定义排序策略接口
-const SortStrategy = struct {
-    ptr: *anyopaque,
-    vtable: *const VTable,
-    
-    const VTable = struct {
-        sort: *const fn (ptr: *anyopaque, items: []i32) void,
-        name: *const fn (ptr: *anyopaque) []const u8,
-    };
-    
-    pub fn sort(self: SortStrategy, items: []i32) void {
-        self.vtable.sort(self.ptr, items);
-    }
-    
-    pub fn name(self: SortStrategy) []const u8 {
-        return self.vtable.name(self.ptr);
-    }
-};
-
-// 实现快速排序
-const QuickSort = struct {
-    const vtable = SortStrategy.VTable{
-        .sort = sort,
-        .name = name,
-    };
-    
-    fn sort(ptr: *anyopaque, items: []i32) void {
-        _ = ptr;
-        // 简化示例：实际应实现快速排序
-        std.debug.print("QuickSort: sorting {} items\n", .{items.len});
-    }
-    
-    fn name(ptr: *anyopaque) []const u8 {
-        _ = ptr;
-        return "QuickSort";
-    }
-    
-    pub fn strategy(self: *QuickSort) SortStrategy {
-        return .{
-            .ptr = self,
-            .vtable = &amp;vtable,
-        };
-    }
-};
-
-// 实现归并排序
-const MergeSort = struct {
-    const vtable = SortStrategy.VTable{
-        .sort = sort,
-        .name = name,
-    };
-    
-    fn sort(ptr: *anyopaque, items: []i32) void {
-        _ = ptr;
-        // 简化示例：实际应实现归并排序
-        std.debug.print("MergeSort: sorting {} items\n", .{items.len});
-    }
-    
-    fn name(ptr: *anyopaque) []const u8 {
-        _ = ptr;
-        return "MergeSort";
-    }
-    
-    pub fn strategy(self: *MergeSort) SortStrategy {
-        return .{
-            .ptr = self,
-            .vtable = &amp;vtable,
-        };
-    }
-};
-
-// 使用示例
-pub fn main(_: std.process.Init.Minimal) !void {
-    var items = [_]i32{ 5, 2, 8, 1, 9 };
-    
-    var quick = QuickSort{};
-    var merge = MergeSort{};
-    
-    // 运行时切换策略
-    var strategy = quick.strategy();
-    std.debug.print("Using: {s}\n", .{strategy.name()});
-    strategy.sort(&amp;items);
-    
-    strategy = merge.strategy();
-    std.debug.print("Using: {s}\n", .{strategy.name()});
-    strategy.sort(&amp;items);
-}
-</code></pre>
-<h1 id="工厂模式"><a class="header" href="#工厂模式">工厂模式</a></h1>
-<p>工厂模式用于创建多态对象：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-// 示例：Zig 0.16.0-dev
-// 定义形状接口
-const Shape = struct {
-    ptr: *anyopaque,
-    vtable: *const VTable,
-    
-    const VTable = struct {
-        area: *const fn (ptr: *anyopaque) f64,
-        perimeter: *const fn (ptr: *anyopaque) f64,
-        deinit: *const fn (ptr: *anyopaque, allocator: std.mem.Allocator) void,
-    };
-    
-    pub fn area(self: Shape) f64 {
-        return self.vtable.area(self.ptr);
-    }
-    
-    pub fn perimeter(self: Shape) f64 {
-        return self.vtable.perimeter(self.ptr);
-    }
-    
-    pub fn deinit(self: Shape, allocator: std.mem.Allocator) void {
-        self.vtable.deinit(self.ptr, allocator);
-    }
-};
-
-// 实现圆形
-const Circle = struct {
-    radius: f64,
-    
-    const vtable = Shape.VTable{
-        .area = area,
-        .perimeter = perimeter,
-        .deinit = deinit,
-    };
-    
-    fn area(ptr: *anyopaque) f64 {
-        const self: *Circle = @ptrCast(@alignCast(ptr));
-        return std.math.pi * self.radius * self.radius;
-    }
-    
-    fn perimeter(ptr: *anyopaque) f64 {
-        const self: *Circle = @ptrCast(@alignCast(ptr));
-        return 2 * std.math.pi * self.radius;
-    }
-    
-    fn deinit(ptr: *anyopaque, allocator: std.mem.Allocator) void {
-        const self: *Circle = @ptrCast(@alignCast(ptr));
-        allocator.destroy(self);
-    }
-    
-    pub fn shape(self: *Circle) Shape {
-        return .{
-            .ptr = self,
-            .vtable = &amp;vtable,
-        };
-    }
-};
-
-// 实现矩形
-const Rectangle = struct {
-    width: f64,
-    height: f64,
-    
-    const vtable = Shape.VTable{
-        .area = area,
-        .perimeter = perimeter,
-        .deinit = deinit,
-    };
-    
-    fn area(ptr: *anyopaque) f64 {
-        const self: *Rectangle = @ptrCast(@alignCast(ptr));
-        return self.width * self.height;
-    }
-    
-    fn perimeter(ptr: *anyopaque) f64 {
-        const self: *Rectangle = @ptrCast(@alignCast(ptr));
-        return 2 * (self.width + self.height);
-    }
-    
-    fn deinit(ptr: *anyopaque, allocator: std.mem.Allocator) void {
-        const self: *Rectangle = @ptrCast(@alignCast(ptr));
-        allocator.destroy(self);
-    }
-    
-    pub fn shape(self: *Rectangle) Shape {
-        return .{
-            .ptr = self,
-            .vtable = &amp;vtable,
-        };
-    }
-};
-
-// 形状工厂
-const ShapeType = enum {
-    circle,
-    rectangle,
-};
-
-fn createShape(allocator: std.mem.Allocator, shape_type: ShapeType, params: anytype) !Shape {
-    return switch (shape_type) {
-        .circle =&gt; {
-            const circle = try allocator.create(Circle);
-            circle.* = .{ .radius = params.radius };
-            return circle.shape();
-        },
-        .rectangle =&gt; {
-            const rect = try allocator.create(Rectangle);
-            rect.* = .{ .width = params.width, .height = params.height };
-            return rect.shape();
-        },
-    };
-}
-
-// 使用示例
-pub fn main(_: std.process.Init.Minimal) !void {
-    var gpa: std.heap.DebugAllocator(.{}) = .init;
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
-    
-    // 使用工厂创建形状
-    const circle = try createShape(allocator, .circle, .{ .radius = 5.0 });
-    defer circle.deinit(allocator);
-    
-    const rect = try createShape(allocator, .rectangle, .{ .width = 4.0, .height = 3.0 });
-    defer rect.deinit(allocator);
-    
-    // 多态调用
-    std.debug.print("Circle area: {:.2}\n", .{circle.area()});
-    std.debug.print("Rectangle area: {:.2}\n", .{rect.area()});
-}
-</code></pre>
-<h2 id="复杂对象设计模式"><a class="header" href="#复杂对象设计模式">复杂对象设计模式</a></h2>
-<blockquote>
-<p>💡 <strong>核心概念</strong>：Zig 没有类继承机制，<strong>组合是构建复杂对象的核心策略</strong>。本节将系统性地讲解组合模式及其应用。</p>
-</blockquote>
-<h3 id="组合优于继承"><a class="header" href="#组合优于继承">组合优于继承</a></h3>
-<p>在面向对象编程中，“组合优于继承”（Composition over Inheritance）是一条重要的设计原则。在 Zig 中，由于没有继承机制，组合成为唯一的选择，这也带来了独特的设计优势：</p>
-<p><strong>继承的问题</strong>：</p>
-<ul>
-<li>耦合度高：子类依赖父类实现细节</li>
-<li>脆弱基类：父类修改影响所有子类</li>
-<li>多重继承复杂：菱形继承等问题</li>
-</ul>
-<p><strong>组合的优势</strong>：</p>
-<ul>
-<li>灵活性高：运行时可以替换组件</li>
-<li>低耦合：组件之间相互独立</li>
-<li>易于测试：组件可独立测试</li>
-<li>符合 Zig 哲学：显式优于隐式</li>
-</ul>
-<h3 id="基本组合模式"><a class="header" href="#基本组合模式">基本组合模式</a></h3>
-<p>通过将其他结构体作为字段嵌入来实现功能复用：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-// 组件1：位置信息
-const Position = struct {
-    x: f32,
-    y: f32,
-    
-    fn move(self: *Position, dx: f32, dy: f32) void {
-        self.x += dx;
-        self.y += dy;
-    }
-    
-    fn distanceFromOrigin(self: Position) f32 {
-        return @sqrt(self.x * self.x + self.y * self.y);
-    }
-};
-
-// 组件2：速度信息
-const Velocity = struct {
-    dx: f32,
-    dy: f32,
-    
-    fn update(self: Velocity, pos: *Position, dt: f32) void {
-        pos.move(self.dx * dt, self.dy * dt);
-    }
-};
-
-// 组件3：渲染属性
-const Renderable = struct {
-    color: u32,
-    width: f32,
-    height: f32,
-    
-    fn render(self: Renderable, pos: Position) void {
-        std.debug.print("Rendering at ({d}, {d}) with color #{x:0&gt;6}\n", .{
-            pos.x, pos.y, self.color,
-        });
-    }
-};
-
-// 复杂对象：通过组合构建
-const GameObject = struct {
-    name: []const u8,
-    position: Position,      // 组合位置组件
-    velocity: Velocity,      // 组合速度组件
-    renderable: Renderable,  // 组合渲染组件
-    
-    fn update(self: *GameObject, dt: f32) void {
-        self.velocity.update(&amp;self.position, dt);
-    }
-    
-    fn render(self: GameObject) void {
-        self.renderable.render(self.position);
-    }
-};
-
-pub fn main() void {
-    var player = GameObject{
-        .name = "Player",
-        .position = .{ .x = 0.0, .y = 0.0 },
-        .velocity = .{ .dx = 10.0, .dy = 5.0 },
-        .renderable = .{ .color = 0xFF0000, .width = 32.0, .height = 32.0 },
-    };
-    
-    player.update(1.0);
-    player.render();
-}
-</code></pre>
-<p><strong>组合的优势</strong>：</p>
-<ul>
-<li>✅ 清晰的所有权关系：父对象拥有子对象</li>
-<li>✅ 组件可独立测试和复用</li>
-<li>✅ 编译期确定内存布局</li>
-<li>✅ 零运行时开销</li>
-</ul>
-<h3 id="委托模式"><a class="header" href="#委托模式">委托模式</a></h3>
-<p>通过方法委托暴露组件功能，提供清晰的 API 边界：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-// 日志组件
-const Logger = struct {
-    prefix: []const u8,
-    
-    fn log(self: Logger, message: []const u8) void {
-        std.debug.print("[{s}] {s}\n", .{ self.prefix, message });
-    }
-};
-
-// 缓存组件
-const Cache = struct {
-    data: std.StringHashMap([]const u8),
-    allocator: std.mem.Allocator,
-    
-    fn init(allocator: std.mem.Allocator) Cache {
-        return .{
-            .data = std.StringHashMap([]const u8).init(allocator),
-            .allocator = allocator,
-        };
-    }
-    
-    fn deinit(self: *Cache) void {
-        self.data.deinit();
-    }
-    
-    fn get(self: *Cache, key: []const u8) ?[]const u8 {
-        return self.data.get(key);
-    }
-    
-    fn set(self: *Cache, key: []const u8, value: []const u8) !void {
-        try self.data.put(key, value);
-    }
-};
-
-// 复杂服务：组合日志和缓存
-const DataService = struct {
-    logger: Logger,
-    cache: Cache,
-    
-    fn init(allocator: std.mem.Allocator, name: []const u8) DataService {
-        return .{
-            .logger = .{ .prefix = name },
-            .cache = Cache.init(allocator),
-        };
-    }
-    
-    fn deinit(self: *DataService) void {
-        self.cache.deinit();
-    }
-    
-    // 委托方法：暴露缓存功能
-    fn getData(self: *DataService, key: []const u8) ?[]const u8 {
-        self.logger.log("Fetching data");
-        return self.cache.get(key);
-    }
-    
-    fn setData(self: *DataService, key: []const u8, value: []const u8) !void {
-        self.logger.log("Storing data");
-        try self.cache.set(key, value);
-    }
-    
-    // 业务逻辑方法
-    fn processRequest(self: *DataService, key: []const u8) ![]const u8 {
-        if (self.getData(key)) |cached| {
-            self.logger.log("Cache hit");
-            return cached;
-        }
-        
-        self.logger.log("Cache miss, computing...");
-        const result = "computed_value";
-        try self.setData(key, result);
-        return result;
-    }
-};
-
-pub fn main() !void {
-    var gpa: std.heap.DebugAllocator(.{}) = .init;
-    defer _ = gpa.deinit();
-    
-    var service = DataService.init(gpa.allocator(), "DataService");
-    defer service.deinit();
-    
-    _ = try service.processRequest("key1");
-    _ = try service.processRequest("key1");
-}
-</code></pre>
-<p><strong>委托模式的优势</strong>：</p>
-<ul>
-<li>封装内部实现细节</li>
-<li>提供清晰的 API 边界</li>
-<li>易于重构和修改实现</li>
-</ul>
-<h3 id="mixin-模式"><a class="header" href="#mixin-模式">Mixin 模式</a></h3>
-<p>使用泛型实现跨类型的代码复用：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-// Mixin 1：计数器功能
-fn CounterMixin(comptime T: type) type {
-    return struct {
-        counter: usize = 0,
-        
-        fn increment(self: *T) void {
-            self.counter += 1;
-        }
-        
-        fn decrement(self: *T) void {
-            self.counter -= 1;
-        }
-        
-        fn getCount(self: *const T) usize {
-            return self.counter;
-        }
-    };
-}
-
-// Mixin 2：命名功能
-fn NamedMixin(comptime T: type) type {
-    return struct {
-        name: []const u8 = "",
-        
-        fn setName(self: *T, new_name: []const u8) void {
-            self.name = new_name;
-        }
-        
-        fn getName(self: *const T) []const u8 {
-            return self.name;
-        }
-    };
-}
-
-// 使用 Mixin 的复杂对象
-const Entity = struct {
-    const Self = @This();
-    
-    // 嵌入 Mixin 字段
-    usingnamespace CounterMixin(Self);
-    usingnamespace NamedMixin(Self);
-    
-    id: u32,
-    
-    fn init(id: u32) Self {
-        return .{
-            .id = id,
-            .counter = 0,
-            .name = "",
-        };
-    }
-};
-
-pub fn main() void {
-    var entity = Entity.init(1);
-    
-    entity.setName("Entity1");
-    entity.increment();
-    entity.increment();
-    
-    std.debug.print("Entity: id={}, name={s}, count={}\n", .{
-        entity.id,
-        entity.getName(),
-        entity.getCount(),
-    });
-}
-</code></pre>
-<p><strong>Mixin 模式的优势</strong>：</p>
-<ul>
-<li>跨类型共享行为</li>
-<li>编译期代码生成</li>
-<li>零运行时开销</li>
-</ul>
-<h3 id="策略对比与选择"><a class="header" href="#策略对比与选择">策略对比与选择</a></h3>
+<hr>
+<h2 id="先给结论三种常见抽象手段怎么选"><a class="header" href="#先给结论三种常见抽象手段怎么选">先给结论：三种常见抽象手段怎么选？</a></h2>
+<p>在 Zig 中，最常见的三类方案可以先这样理解：</p>
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th>策略</th><th>适用场景</th><th>优势</th><th>劣势</th><th>性能开销</th></tr>
+<tr><th>方案</th><th>更适合什么场景</th><th>成本与特点</th></tr>
 </thead>
 <tbody>
-<tr><td><strong>基本组合</strong></td><td>组件关系清晰、编译期确定</td><td>零开销、类型安全、编译期优化</td><td>缺乏灵活性、类型耦合</td><td>无</td></tr>
-<tr><td><strong>委托模式</strong></td><td>需要封装内部实现</td><td>清晰的API边界、易于重构</td><td>需要编写委托代码</td><td>无</td></tr>
-<tr><td><strong>接口组合</strong></td><td>运行时多态、插件系统</td><td>灵活性高、支持动态加载</td><td>运行时开销、代码复杂</td><td>VTable查找</td></tr>
-<tr><td><strong>Mixin 模式</strong></td><td>跨类型共享行为</td><td>代码复用、灵活组合</td><td>可能导致命名冲突</td><td>无（编译期展开）</td></tr>
+<tr><td>泛型 / <code>anytype</code></td><td>类型在编译期已知</td><td>零或接近零运行时开销，最符合 Zig 的默认风格</td></tr>
+<tr><td><code>union(enum)</code> / tagged union</td><td>变体集合有限且封闭</td><td>结构清楚，适合有限分支的运行时选择</td></tr>
+<tr><td>VTable / <code>*anyopaque</code> + 函数指针</td><td>需要运行时动态替换实现</td><td>更灵活，但更复杂，也更容易写出难维护代码</td></tr>
 </tbody>
 </table>
 </div>
-<h3 id="选择策略的决策树"><a class="header" href="#选择策略的决策树">选择策略的决策树</a></h3>
-<pre><code>需要运行时多态？
-├─ 是 → 使用接口组合
-└─ 否 → 需要跨类型共享行为？
-         ├─ 是 → 使用 Mixin 模式
-         └─ 否 → 组件关系是否复杂？
-                  ├─ 是 → 使用委托模式封装
-                  └─ 否 → 使用基本组合
-</code></pre>
-<h3 id="最佳实践"><a class="header" href="#最佳实践">最佳实践</a></h3>
-<p><strong>1. 优先使用组合而非继承</strong></p>
-<pre><code class="language-zig">// ❌ 其他语言的继承方式（Zig 不支持）
-// class Player extends GameObject { ... }
-
-// ✅ Zig 的组合方式
-const Player = struct {
-    game_object: GameObject,  // 组合
-    health: u32,
-    inventory: Inventory,
-};
-</code></pre>
-<p><strong>2. 显式优于隐式</strong></p>
-<pre><code class="language-zig">// ❌ 避免过度使用 usingnamespace
-const Player = struct {
-    usingnamespace GameObject;  // 隐式混入所有字段和方法
-};
-
-// ✅ 显式组合更清晰
-const Player = struct {
-    game_object: GameObject,  // 显式字段
-    
-    fn move(self: *Player, dx: f32, dy: f32) void {
-        self.game_object.move(dx, dy);  // 显式调用
-    }
-};
-</code></pre>
-<p><strong>3. 明确所有权</strong></p>
-<pre><code class="language-zig">// ✅ 清晰的所有权关系
-const Server = struct {
-    config: Config,        // 拥有配置
-    logger: *Logger,       // 借用日志器（不拥有）
-    connections: ArrayList, // 拥有连接列表
-};
-</code></pre>
-<p><strong>4. 接口隔离</strong></p>
-<pre><code class="language-zig">// ❌ 接口过于庞大
-const ReadWriteSeeker = struct {
-    read: fn() void,
-    write: fn() void,
-    seek: fn() void,
-    flush: fn() void,
-    close: fn() void,
-    // ... 太多方法
-};
-
-// ✅ 接口小而专注
-const Reader = struct { read: fn() void };
-const Writer = struct { write: fn() void };
-const Seeker = struct { seek: fn() void };
-</code></pre>
-<p><strong>5. 性能优先</strong></p>
-<pre><code class="language-zig">// 编译期多态（优先）
-fn process(comptime T: type, item: T) void {
-    item.process();
-}
-
-// 运行时多态（必要时）
-fn processInterface(item: Processor) void {
-    item.process();  // 通过 vtable 调用
-}
-</code></pre>
-<h3 id="反模式警示"><a class="header" href="#反模式警示">反模式警示</a></h3>
-<p><strong>过度嵌套</strong>：</p>
-<pre><code class="language-zig">// ❌ 反模式：过度嵌套
-const A = struct { b: B };
-const B = struct { c: C };
-const C = struct { d: D };
-const D = struct { value: i32 };
-
-// ✅ 推荐：扁平化设计
-const Config = struct {
-    network: NetworkConfig,
-    database: DatabaseConfig,
-    logging: LoggingConfig,
-};
-</code></pre>
-<p><strong>循环依赖</strong>：</p>
-<pre><code class="language-zig">// ❌ 反模式：循环依赖
-const A = struct { b: *B };
-const B = struct { a: *A };
-
-// ✅ 推荐：使用接口解耦
-const A = struct { b: BInterface };
-const B = struct { a: AInterface };
-</code></pre>
-<h2 id="接口与错误处理"><a class="header" href="#接口与错误处理">接口与错误处理</a></h2>
-<p>接口方法可以返回错误：</p>
+<p>如果只记一条经验，那就是：</p>
+<blockquote>
+<p><strong>优先从泛型开始；只有在问题明确要求运行时抽象时，再考虑 VTable。</strong></p>
+</blockquote>
+<hr>
+<h2 id="为什么-zig-不把接口当默认起手式"><a class="header" href="#为什么-zig-不把接口当默认起手式">为什么 Zig 不把“接口”当默认起手式？</a></h2>
+<p>很多语言会把“接口 / trait / 基类”当成抽象的默认入口。<br>但 Zig 更倾向于先问：</p>
+<ul>
+<li>你真的需要运行时多态吗？</li>
+<li>你只是想复用代码，还是想在运行时替换行为？</li>
+<li>这组实现是开放集合，还是封闭集合？</li>
+<li>你是不是只是习惯性地想“先造接口”？</li>
+</ul>
+<p>这是一个很重要的风格差异。</p>
+<p>在 Zig 里，很多问题其实只需要：</p>
+<ul>
+<li>一个泛型函数</li>
+<li>一个带回调的结构体</li>
+<li>一个 <code>union(enum)</code></li>
+<li>一个清晰的模块边界</li>
+</ul>
+<p>而不需要一开始就上 <code>*anyopaque</code>、函数指针和手写 VTable。</p>
+<hr>
+<h2 id="第一种方案泛型是默认首选"><a class="header" href="#第一种方案泛型是默认首选">第一种方案：泛型是默认首选</a></h2>
+<p>如果一个抽象的具体类型在编译期就已知，那么通常应优先使用泛型。</p>
+<h3 id="一个最小例子"><a class="header" href="#一个最小例子">一个最小例子</a></h3>
 <pre><code class="language-zig">const std = @import("std");
 
-// 示例：Zig 0.16.0-dev
-const Database = struct {
-    ptr: *anyopaque,
-    vtable: *const VTable,
-    
-    const VTable = struct {
-        connect: *const fn (ptr: *anyopaque) anyerror!void,
-        query: *const fn (ptr: *anyopaque, sql: []const u8) anyerror!QueryResult,
-        close: *const fn (ptr: *anyopaque) void,
-    };
-    
-    const QueryResult = struct {
-        rows: usize,
-        data: []const u8,
-    };
-    
-    pub fn connect(self: Database) !void {
-        return self.vtable.connect(self.ptr);
-    }
-    
-    pub fn query(self: Database, sql: []const u8) !QueryResult {
-        return self.vtable.query(self.ptr, sql);
-    }
-    
-    pub fn close(self: Database) void {
-        self.vtable.close(self.ptr);
-    }
-};
-
-// 使用示例
-fn executeQuery(db: Database, sql: []const u8) !void {
-    try db.connect();
-    defer db.close();
-    
-    const result = try db.query(sql);
-    std.debug.print("Query returned {} rows\n", .{result.rows});
+fn writeLine(writer: anytype, line: []const u8) !void {
+    try writer.writeAll(line);
+    try writer.writeAll("\n");
 }
 </code></pre>
-<h2 id="接口与内存管理"><a class="header" href="#接口与内存管理">接口与内存管理</a></h2>
-<p>接口对象的生命周期管理：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-// 示例：Zig 0.16.0-dev
-const Plugin = struct {
-    ptr: *anyopaque,
-    vtable: *const VTable,
-    
-    const VTable = struct {
-        init: *const fn (ptr: *anyopaque, allocator: std.mem.Allocator) anyerror!void,
-        process: *const fn (ptr: *anyopaque, data: []const u8) anyerror![]u8,
-        deinit: *const fn (ptr: *anyopaque, allocator: std.mem.Allocator) void,
-    };
-    
-    pub fn init(self: Plugin, allocator: std.mem.Allocator) !void {
-        return self.vtable.init(self.ptr, allocator);
-    }
-    
-    pub fn process(self: Plugin, allocator: std.mem.Allocator, data: []const u8) ![]u8 {
-        return self.vtable.process(self.ptr, data);
-    }
-    
-    pub fn deinit(self: Plugin, allocator: std.mem.Allocator) void {
-        self.vtable.deinit(self.ptr, allocator);
-    }
+<p>这个函数的价值在于：</p>
+<ul>
+<li>不要求你先定义统一接口类型</li>
+<li>只要求调用方传进来的对象“看起来像能写”</li>
+<li>编译器会在实例化时检查它是否真的有 <code>writeAll</code></li>
+</ul>
+<p>这正体现了 Zig 中非常常见的一种风格：</p>
+<blockquote>
+<p><strong>如果你只需要“某个类型具备某种能力”，而这个类型在编译期已知，那么先用泛型。</strong></p>
+</blockquote>
+<h3 id="泛型的优点"><a class="header" href="#泛型的优点">泛型的优点</a></h3>
+<ul>
+<li>不需要额外运行时分发</li>
+<li>类型检查发生在编译期</li>
+<li>代码往往更短、更直接</li>
+<li>很适合小型工具函数和局部抽象</li>
+</ul>
+<h3 id="泛型的限制"><a class="header" href="#泛型的限制">泛型的限制</a></h3>
+<p>它不适合下面这种场景：</p>
+<ul>
+<li>你要把不同实现放进同一个运行时容器</li>
+<li>你要在运行时决定“现在到底用哪种实现”</li>
+<li>你需要跨动态边界擦除具体类型</li>
+</ul>
+<p>换句话说，泛型解决的是：</p>
+<blockquote>
+<p><strong>“同一份逻辑如何适配多个编译期已知类型？”</strong></p>
+</blockquote>
+<p>而不是：</p>
+<blockquote>
+<p><strong>“运行时我现在到底拿到的是哪一种实现？”</strong></p>
+</blockquote>
+<hr>
+<h2 id="第二种方案tagged-union-适合封闭变体"><a class="header" href="#第二种方案tagged-union-适合封闭变体">第二种方案：tagged union 适合封闭变体</a></h2>
+<p>如果你面对的是一个<strong>有限且封闭</strong>的实现集合，那么 <code>union(enum)</code> 往往比 VTable 更清楚。</p>
+<h3 id="一个典型场景"><a class="header" href="#一个典型场景">一个典型场景</a></h3>
+<p>比如你要表示几种固定的输出目标：</p>
+<ul>
+<li>写到控制台</li>
+<li>写到缓冲区</li>
+<li>写到文件</li>
+</ul>
+<p>而且你知道这几种情况就是全部，不准备让用户以后再自由扩展更多第三方实现。</p>
+<p>这时，可以优先考虑：</p>
+<pre><code class="language-zig">const Output = union(enum) {
+    stdout,
+    buffer: []u8,
+    file: std.fs.File,
 };
-
-// 使用示例
-fn usePlugin(allocator: std.mem.Allocator, plugin: Plugin, input: []const u8) !void {
-    try plugin.init(allocator);
-    defer plugin.deinit(allocator);
-    
-    const result = try plugin.process(allocator, input);
-    defer allocator.free(result);
-    
-    std.debug.print("Result: {s}\n", .{result});
+</code></pre>
+<p>然后用 <code>switch</code> 来分发逻辑：</p>
+<pre><code class="language-zig">fn writeMessage(output: *Output, msg: []const u8) !void {
+    switch (output.*) {
+        .stdout =&gt; std.debug.print("{s}\n", .{msg}),
+        .buffer =&gt; |buf| {
+            _ = buf;
+            // 写入缓冲区
+        },
+        .file =&gt; |*file| {
+            try file.writeAll(msg);
+        },
+    }
 }
 </code></pre>
-<h2 id="接口与测试"><a class="header" href="#接口与测试">接口与测试</a></h2>
-<p>使用 Mock 对象进行测试：</p>
+<h3 id="为什么这比-vtable-更适合某些场景"><a class="header" href="#为什么这比-vtable-更适合某些场景">为什么这比 VTable 更适合某些场景？</a></h3>
+<p>因为它明确表达了：</p>
+<ul>
+<li>这里只有这几种分支</li>
+<li>分支集合是封闭的</li>
+<li>运行时只是在这几个已知情况之间切换</li>
+</ul>
+<p>它的优势在于：</p>
+<ul>
+<li>结构明确</li>
+<li>分支可穷尽检查</li>
+<li>容易阅读和调试</li>
+<li>不需要自己维护函数指针表</li>
+</ul>
+<h3 id="什么时候适合优先考虑-union"><a class="header" href="#什么时候适合优先考虑-union">什么时候适合优先考虑 union？</a></h3>
+<p>当你面对的是：</p>
+<ul>
+<li>AST 节点</li>
+<li>命令类型</li>
+<li>有限状态机状态</li>
+<li>有限种类的后端</li>
+<li>项目内部固定几种策略</li>
+</ul>
+<p>如果实现集合就是固定几种，那么 <code>union(enum)</code> 往往比“手写接口系统”更符合 Zig 的表达方式。</p>
+<hr>
+<h2 id="第三种方案vtable-适合开放集合与运行时抽象"><a class="header" href="#第三种方案vtable-适合开放集合与运行时抽象">第三种方案：VTable 适合开放集合与运行时抽象</a></h2>
+<p>只有当你真的需要下面这些能力时，VTable 才更值得引入：</p>
+<ul>
+<li>运行时动态替换实现</li>
+<li>擦除具体类型</li>
+<li>将不同实现统一存入一个容器</li>
+<li>跨模块边界暴露稳定的运行时接口</li>
+<li>插件式架构或类似需求</li>
+</ul>
+<p>这时，才适合考虑 <code>*anyopaque</code> + 函数指针表。</p>
+<hr>
+<h2 id="一个最小-vtable-模式"><a class="header" href="#一个最小-vtable-模式">一个最小 VTable 模式</a></h2>
+<p>先看一个尽量简化的写法：</p>
 <pre><code class="language-zig">const std = @import("std");
 
-// 示例：Zig 0.16.0-dev
 const Writer = struct {
     ptr: *anyopaque,
     vtable: *const VTable,
-    
+
     const VTable = struct {
-        write: *const fn (ptr: *anyopaque, data: []const u8) anyerror!usize,
+        writeAll: *const fn (ptr: *anyopaque, data: []const u8) anyerror!void,
     };
-    
-    pub fn write(self: Writer, data: []const u8) !usize {
-        return self.vtable.write(self.ptr, data);
+
+    pub fn writeAll(self: Writer, data: []const u8) !void {
+        try self.vtable.writeAll(self.ptr, data);
     }
 };
+</code></pre>
+<p>这段代码表达的是：</p>
+<ul>
+<li><code>Writer</code> 自己并不知道具体实现类型</li>
+<li>它只持有一个被擦除后的指针</li>
+<li>以及一张“怎么调用它”的函数表</li>
+</ul>
+<p>具体实现可以这样接进去：</p>
+<pre><code class="language-zig">const BufferWriter = struct {
+    list: *std.ArrayList(u8),
 
-// Mock 对象用于测试
-const MockWriter = struct {
-    written_data: []const u8,
-    
-    const vtable = Writer.VTable{
-        .write = write,
-    };
-    
-    fn write(ptr: *anyopaque, data: []const u8) anyerror!usize {
-        const self: *MockWriter = @ptrCast(@alignCast(ptr));
-        self.written_data = data;
-        return data.len;
+    fn writeAll(ptr: *anyopaque, data: []const u8) anyerror!void {
+        const self: *BufferWriter = @ptrCast(@alignCast(ptr));
+        try self.list.appendSlice(data);
     }
-    
-    pub fn writer(self: *MockWriter) Writer {
+
+    const vtable = Writer.VTable{
+        .writeAll = writeAll,
+    };
+
+    pub fn writer(self: *BufferWriter) Writer {
         return .{
             .ptr = self,
             .vtable = &amp;vtable,
         };
     }
 };
-
-// 测试用例
-test "write with mock" {
-    var mock = MockWriter{ .written_data = "" };
-    const w = mock.writer();
-    
-    const written = try w.write("test data");
-    try std.testing.expectEqual(@as(usize, 9), written);
-    try std.testing.expectEqualStrings("test data", mock.written_data);
-}
 </code></pre>
-<h2 id="实践练习"><a class="header" href="#实践练习">实践练习</a></h2>
-<h1 id="练习1基础练习难度简单"><a class="header" href="#练习1基础练习难度简单">练习1：基础练习（难度：简单）</a></h1>
-<p><strong>练习目标</strong>：掌握 trait 的基本实现</p>
-<pre><code class="language-zig">// 练习1.1：实现 Stringer trait
-const Stringer = struct {
-    ptr: *anyopaque,
-    toStringFn: *const fn (ptr: *anyopaque, buffer: []u8) usize,
-    
-    pub fn toString(self: Stringer, buffer: []u8) usize {
-        return self.toStringFn(self.ptr, buffer);
-    }
-};
-
-// 为 Point 实现 Stringer
-const Point = struct {
-    x: i32,
-    y: i32,
-    
-    // TODO: 实现 Stringer trait
-};
-
-// 练习1.2：实现 Equaler trait
-const Equaler = struct {
-    ptr: *anyopaque,
-    equalsFn: *const fn (ptr: *anyopaque, other: *anyopaque) bool,
-    
-    pub fn equals(self: Equaler, other: Equaler) bool {
-        return self.equalsFn(self.ptr, other.ptr);
-    }
-};
-
-// 为 Point 实现 Equaler
-// TODO: 实现 Equaler trait
-</code></pre>
-<h1 id="练习2进阶练习难度中等"><a class="header" href="#练习2进阶练习难度中等">练习2：进阶练习（难度：中等）</a></h1>
-<p><strong>练习目标</strong>：掌握多方法接口和接口组合</p>
-<pre><code class="language-zig">// 练习2.1：实现完整的文件系统接口
-const FileSystem = struct {
-    ptr: *anyopaque,
-    vtable: *const VTable,
-    
-    const VTable = struct {
-        // TODO: 定义 open, close, read, write, seek 方法
-    };
-    
-    // TODO: 实现所有方法
-};
-
-// 练习2.2：实现内存文件系统
-const MemoryFileSystem = struct {
-    // TODO: 实现所有方法
-};
-
-// 练习2.3：实现日志系统接口
-const Logger = struct {
-    // TODO: 定义 VTable 包含 debug, info, warn, error 方法
-};
-</code></pre>
-<h1 id="练习3高级练习难度困难"><a class="header" href="#练习3高级练习难度困难">练习3：高级练习（难度：困难）</a></h1>
-<p><strong>练习目标</strong>：掌握设计模式和高级用法</p>
-<pre><code class="language-zig">// 练习3.1：实现观察者模式
-const Observer = struct {
-    // TODO: 定义观察者接口
-};
-
-const Subject = struct {
-    // TODO: 实现主题，支持注册/注销观察者
-};
-
-// 练习3.2：实现插件系统
-const Plugin = struct {
-    // TODO: 定义插件接口
-};
-
-const PluginManager = struct {
-    // TODO: 实现插件管理器，支持动态加载
-};
-</code></pre>
-<h2 id="接口编程最佳实践"><a class="header" href="#接口编程最佳实践">接口编程最佳实践</a></h2>
-<h1 id="1-明确接口边界"><a class="header" href="#1-明确接口边界">1. 明确接口边界</a></h1>
-<pre><code class="language-zig">// ✅ 好的做法：接口职责单一
-// ❌ 错误示例
-const Reader = struct {
-    ptr: *anyopaque,
-    vtable: *const VTable,
-    
-    const VTable = struct {
-        read: *const fn (ptr: *anyopaque, buffer: []u8) anyerror!usize,
-    };
-};
-
-const Writer = struct {
-    ptr: *anyopaque,
-    vtable: *const VTable,
-    
-    const VTable = struct {
-        write: *const fn (ptr: *anyopaque, data: []const u8) anyerror!usize,
-    };
-};
-
-// ❌ 不好的做法：接口过于庞大
-const ReadWriteSeeker = struct {
-    ptr: *anyopaque,
-    vtable: *const VTable,
-    
-    const VTable = struct {
-        read: *const fn (...) anyerror!usize,
-        write: *const fn (...) anyerror!usize,
-        seek: *const fn (...) anyerror!void,
-        flush: *const fn (...) anyerror!void,
-        close: *const fn (...) void,
-        // ... 太多方法
-    };
-};
-</code></pre>
-<h1 id="2-使用-vtable-模式"><a class="header" href="#2-使用-vtable-模式">2. 使用 VTable 模式</a></h1>
-<pre><code class="language-zig">// ✅ 好的做法：使用 VTable 集中管理
-// ❌ 错误示例
-const Writer = struct {
-    ptr: *anyopaque,
-    vtable: *const VTable,
-    
-    const VTable = struct {
-        write: *const fn (...) anyerror!usize,
-        flush: *const fn (...) anyerror!void,
-    };
-};
-
-// ❌ 不好的做法：分散的函数指针
-const Writer = struct {
-    ptr: *anyopaque,
-    writeFn: *const fn (...) anyerror!usize,
-    flushFn: *const fn (...) anyerror!void,
-};
-</code></pre>
-<h1 id="3-明确生命周期"><a class="header" href="#3-明确生命周期">3. 明确生命周期</a></h1>
-<pre><code class="language-zig">// ✅ 好的做法：明确资源管理
-// 💡 最佳实践
-const Resource = struct {
-    ptr: *anyopaque,
-    vtable: *const VTable,
-    
-    const VTable = struct {
-        use: *const fn (ptr: *anyopaque) void,
-        deinit: *const fn (ptr: *anyopaque, allocator: std.mem.Allocator) void,
-    };
-    
-    pub fn deinit(self: Resource, allocator: std.mem.Allocator) void {
-        self.vtable.deinit(self.ptr, allocator);
-    }
-};
-
-// 使用示例
-var resource = createResource(allocator);
-defer resource.deinit(allocator);
-</code></pre>
-<h1 id="4-提供清晰的错误信息"><a class="header" href="#4-提供清晰的错误信息">4. 提供清晰的错误信息</a></h1>
-<pre><code class="language-zig">// ✅ 好的做法：提供类型检查
-// 💡 最佳实践
-const Writer = struct {
-    ptr: *anyopaque,
-    vtable: *const VTable,
-    
-    pub fn write(self: Writer, data: []const u8) !usize {
-        if (self.vtable == null or self.ptr == null) {
-            return error.NullInterface;
-        }
-        return self.vtable.write(self.ptr, data);
-    }
-};
-</code></pre>
-<h1 id="5-编写测试"><a class="header" href="#5-编写测试">5. 编写测试</a></h1>
-<pre><code class="language-zig">// ✅ 好的做法：为接口编写测试
-// 💡 最佳实践
-test "Writer interface" {
-    var mock = MockWriter{};
-    const w = mock.writer();
-    
-    const written = try w.write("test");
-    try std.testing.expectEqual(@as(usize, 4), written);
-}
-</code></pre>
-<h2 id="小结"><a class="header" href="#小结">小结</a></h2>
-<p>本章介绍了 Zig 的接口与多态，包括：</p>
+<h3 id="这个模式的核心是什么"><a class="header" href="#这个模式的核心是什么">这个模式的核心是什么？</a></h3>
+<p>有三件事要看清：</p>
 <ol>
-<li>
-<p><strong>接口基础概念</strong>：</p>
+<li><strong>类型擦除</strong>
 <ul>
-<li>什么是接口</li>
-<li>类型擦除与恢复</li>
-<li>接口 vs 泛型</li>
+<li>具体实现被装进 <code>*anyopaque</code></li>
 </ul>
 </li>
-<li>
-<p><strong>Trait 模式</strong>：</p>
+<li><strong>运行时分发</strong>
 <ul>
-<li>基本实现</li>
-<li>VTable 模式</li>
-<li>多方法接口</li>
+<li>调用通过函数指针完成</li>
 </ul>
 </li>
-<li>
-<p><strong>接口组合</strong>：</p>
+<li><strong>类型恢复</strong>
 <ul>
-<li>多接口实现</li>
-<li>接口转换</li>
-</ul>
-</li>
-<li>
-<p><strong>设计模式应用</strong>：</p>
-<ul>
-<li>策略模式</li>
-<li>工厂模式</li>
-</ul>
-</li>
-<li>
-<p><strong>最佳实践</strong>：</p>
-<ul>
-<li>明确接口边界</li>
-<li>使用 VTable 模式</li>
-<li>明确生命周期</li>
-<li>提供清晰的错误信息</li>
-<li>编写测试</li>
+<li>实现函数里再把 <code>*anyopaque</code> 转回具体类型</li>
 </ul>
 </li>
 </ol>
-<p><strong>关键要点</strong>：</p>
+<p>这确实能实现运行时接口，但也带来明显复杂度：</p>
 <ul>
-<li>Zig 没有内置接口，通过 trait 和 VTable 实现</li>
-<li><code>*anyopaque</code> 用于类型擦除，<code>@ptrCast/@alignCast</code> 用于类型恢复</li>
-<li>VTable 模式更适合多方法接口</li>
-<li>接口提供运行时多态，但有小的性能开销</li>
-<li>明确生命周期和资源管理责任</li>
+<li>你要自己维护 vtable</li>
+<li>你要确保类型恢复正确</li>
+<li>你要自己处理生命周期边界</li>
+<li>你要承担更高的阅读和调试成本</li>
 </ul>
-<p><strong>下一步学习</strong>：</p>
+<p>所以，VTable 很有用，但不应该是默认起手式。</p>
+<hr>
+<h2 id="抽象选择的核心判断编译期还是运行时"><a class="header" href="#抽象选择的核心判断编译期还是运行时">抽象选择的核心判断：编译期还是运行时？</a></h2>
+<p>本章最重要的一条主线，就是学会不断问自己：</p>
+<h3 id="1-这个类型在编译期已知吗"><a class="header" href="#1-这个类型在编译期已知吗">1. 这个类型在编译期已知吗？</a></h3>
+<p>如果是，优先用泛型。</p>
+<h3 id="2-这组实现是封闭的吗"><a class="header" href="#2-这组实现是封闭的吗">2. 这组实现是封闭的吗？</a></h3>
+<p>如果是，优先考虑 <code>union(enum)</code>。</p>
+<h3 id="3-我真的需要运行时替换实现吗"><a class="header" href="#3-我真的需要运行时替换实现吗">3. 我真的需要运行时替换实现吗？</a></h3>
+<p>如果需要，才考虑 VTable。</p>
+<h3 id="4-这个抽象是在解决真实问题还是只是看起来更高级"><a class="header" href="#4-这个抽象是在解决真实问题还是只是看起来更高级">4. 这个抽象是在解决真实问题，还是只是“看起来更高级”？</a></h3>
+<p>如果只是后者，那通常说明抽象过度了。</p>
+<hr>
+<h2 id="一个更具体的对比同一个需求用三种方式实现"><a class="header" href="#一个更具体的对比同一个需求用三种方式实现">一个更具体的对比：同一个需求用三种方式实现</a></h2>
+<p>假设你想实现“记录一段日志”，可能会有三种方案。</p>
+<h3 id="方案一泛型"><a class="header" href="#方案一泛型">方案一：泛型</a></h3>
+<pre><code class="language-zig">fn log(writer: anytype, msg: []const u8) !void {
+    try writer.writeAll("[log] ");
+    try writer.writeAll(msg);
+    try writer.writeAll("\n");
+}
+</code></pre>
+<p>适合：</p>
 <ul>
-<li>第十章：内存管理模型 - 深入理解内存管理</li>
-<li>第十一章：指针与引用类型 - 掌握指针操作</li>
-<li>第十二章：并发编程模型 - 学习并发编程</li>
+<li>调用点的 writer 类型明确</li>
+<li>不需要运行时切换</li>
+</ul>
+<h3 id="方案二union"><a class="header" href="#方案二union">方案二：union</a></h3>
+<pre><code class="language-zig">const LoggerTarget = union(enum) {
+    stdout,
+    stderr,
+};
+</code></pre>
+<p>再用 <code>switch</code> 决定写到哪里。</p>
+<p>适合：</p>
+<ul>
+<li>目标集合有限且封闭</li>
+<li>运行时只在少数已知情况中切换</li>
+</ul>
+<h3 id="方案三vtable"><a class="header" href="#方案三vtable">方案三：VTable</a></h3>
+<pre><code class="language-zig">const Logger = struct {
+    ptr: *anyopaque,
+    vtable: *const VTable,
+    // ...
+};
+</code></pre>
+<p>适合：</p>
+<ul>
+<li>不同 logger 来自不同模块</li>
+<li>需要在运行时注入实现</li>
+<li>未来还希望开放更多实现</li>
+</ul>
+<p>这三种方案没有谁“绝对更高级”，关键只在于：</p>
+<blockquote>
+<p><strong>它们解决的是不同层次的问题。</strong></p>
+</blockquote>
+<hr>
+<h2 id="组合比继承更重要"><a class="header" href="#组合比继承更重要">组合比继承更重要</a></h2>
+<p>虽然这一章标题里有“接口”，但对 Zig 来说，<strong>组合</strong>往往比“模拟继承体系”更重要。</p>
+<h3 id="什么叫组合"><a class="header" href="#什么叫组合">什么叫组合？</a></h3>
+<p>组合的意思通常是：</p>
+<ul>
+<li>一个结构体持有另一个结构体</li>
+<li>一个模块调用另一个模块</li>
+<li>一个功能通过显式依赖组装出来</li>
+</ul>
+<p>例如：</p>
+<pre><code class="language-zig">const Service = struct {
+    allocator: std.mem.Allocator,
+    cache: Cache,
+    logger: Logger,
+};
+</code></pre>
+<p>这里表达的不是“Service 继承了什么”，而是：</p>
+<ul>
+<li>Service 依赖哪些能力</li>
+<li>这些能力如何被显式传入</li>
+<li>模块边界在哪里</li>
+</ul>
+<p>这比“我是不是需要一个抽象基类”更符合 Zig 的工程组织方式。</p>
+<h3 id="组合的好处"><a class="header" href="#组合的好处">组合的好处</a></h3>
+<ul>
+<li>依赖关系更清楚</li>
+<li>生命周期更容易追踪</li>
+<li>更适合显式资源管理</li>
+<li>测试时更容易替换部件</li>
+</ul>
+<p>所以在很多 Zig 代码里，更常见的问题不是“如何设计继承层次”，而是：</p>
+<blockquote>
+<p><strong>如何把分配器、I/O、缓存、状态和策略组合成一个边界清楚的系统。</strong></p>
+</blockquote>
+<hr>
+<h2 id="不要急着谈设计模式大全"><a class="header" href="#不要急着谈设计模式大全">不要急着谈“设计模式大全”</a></h2>
+<p>很多教程讲“接口与设计模式”时，容易立刻进入：</p>
+<ul>
+<li>工厂模式</li>
+<li>观察者模式</li>
+<li>策略模式</li>
+<li>装饰器模式</li>
+<li>适配器模式</li>
+<li>访问者模式</li>
+</ul>
+<p>这些词本身不是错的，但在 Zig 里更重要的是先学会：</p>
+<ul>
+<li>这个问题是否真的需要抽象</li>
+<li>这个抽象是编译期还是运行时</li>
+<li>这组实现是开放还是封闭</li>
+<li>这段代码是否因为抽象而更清楚了</li>
+</ul>
+<p>如果这些问题还没想明白，就急着套模式名，通常只会让代码变复杂。</p>
+<hr>
+<h2 id="在-zig-里更值得优先掌握的三种抽象手段"><a class="header" href="#在-zig-里更值得优先掌握的三种抽象手段">在 Zig 里，更值得优先掌握的三种抽象手段</a></h2>
+<p>如果要把这一章压缩成最值得先掌握的三件事，我会建议优先熟悉：</p>
+<h3 id="1-anytype--泛型"><a class="header" href="#1-anytype--泛型">1. <code>anytype</code> / 泛型</a></h3>
+<p>这是最符合 Zig 默认风格的抽象工具。</p>
+<p>适合：</p>
+<ul>
+<li>类型在编译期已知</li>
+<li>想复用逻辑</li>
+<li>不需要运行时擦除类型</li>
+</ul>
+<h3 id="2-unionenum"><a class="header" href="#2-unionenum">2. <code>union(enum)</code></a></h3>
+<p>适合：</p>
+<ul>
+<li>有限分支</li>
+<li>运行时在封闭集合中切换</li>
+<li>想要穷尽性和清晰状态表达</li>
+</ul>
+<h3 id="3-vtable"><a class="header" href="#3-vtable">3. VTable</a></h3>
+<p>适合：</p>
+<ul>
+<li>开放实现集合</li>
+<li>插件式结构</li>
+<li>运行时接口边界</li>
+<li>明确需要类型擦除</li>
+</ul>
+<p>如果你先把这三种工具的边界弄清楚，很多“接口设计问题”其实已经解决了一大半。</p>
+<hr>
+<h2 id="什么时候不要用运行时接口"><a class="header" href="#什么时候不要用运行时接口">什么时候不要用运行时接口？</a></h2>
+<p>这个问题比“什么时候该用”还重要。</p>
+<p>你通常不该急着上 VTable，如果：</p>
+<ul>
+<li>只有两三个固定实现</li>
+<li>调用点的具体类型本来就已知</li>
+<li>只是想少写几遍相似函数</li>
+<li>只是因为“别的语言会先定义接口”</li>
+<li>当前项目规模还很小，抽象边界并不稳定</li>
+</ul>
+<p>这类场景里，运行时接口往往只会带来：</p>
+<ul>
+<li>更多样板代码</li>
+<li>更复杂的调试路径</li>
+<li>更模糊的生命周期边界</li>
+<li>更难理解的类型恢复过程</li>
 </ul>
 <hr>
-<blockquote>
-<p>💡 <strong>章节过渡</strong>：从接口与多态到内存管理模型</p>
-<p>在<a href="chapter-interfaces.html">接口与多态</a>中，我们学习了接口与多态，掌握了如何使用 trait 和 VTable 模式设计灵活的系统架构。
-现在，我们将学习内存管理模型，深入了解 Zig 如何实现内存安全和资源管理。</p>
-<p><strong>为什么接口与多态是内存管理的基础？</strong></p>
-<ol>
-<li><strong>资源管理</strong>：接口设计需要明确生命周期和资源所有权</li>
-<li><strong>分配器接口</strong>：内存分配器本身就是接口设计的重要案例</li>
-<li><strong>安全抽象</strong>：良好的接口设计可以防止内存错误</li>
-</ol>
-<p><strong>学习建议</strong>：</p>
+<h2 id="vtable-模式最容易踩的坑"><a class="header" href="#vtable-模式最容易踩的坑">VTable 模式最容易踩的坑</a></h2>
+<p>如果你真的要用 VTable，那么至少要特别注意下面几个风险。</p>
+<h3 id="1-生命周期不清楚"><a class="header" href="#1-生命周期不清楚">1. 生命周期不清楚</a></h3>
+<p><code>ptr: *anyopaque</code> 指向的对象到底由谁拥有？<br>谁负责释放？<br>接口值是否可能比底层对象活得更久？</p>
+<p>如果这些问题不清楚，代码就很危险。</p>
+<h3 id="2-类型恢复写错"><a class="header" href="#2-类型恢复写错">2. 类型恢复写错</a></h3>
+<p><code>@ptrCast(@alignCast(ptr))</code> 这类写法不是“装饰品”，而是在恢复具体类型。<br>如果对象类型和你假设的不一致，就会出严重问题。</p>
+<h3 id="3-把简单问题抽象复杂了"><a class="header" href="#3-把简单问题抽象复杂了">3. 把简单问题抽象复杂了</a></h3>
+<p>很多时候，你只是需要一个泛型函数，却提前上了整套 VTable。</p>
+<h3 id="4-错误边界过于宽泛"><a class="header" href="#4-错误边界过于宽泛">4. 错误边界过于宽泛</a></h3>
+<p>如果所有函数都返回特别宽泛的错误类型，也会让接口变得模糊。</p>
+<h3 id="5-误把能做运行时多态当成应该做运行时多态"><a class="header" href="#5-误把能做运行时多态当成应该做运行时多态">5. 误把“能做运行时多态”当成“应该做运行时多态”</a></h3>
+<p>这是最常见的设计误区之一。</p>
+<hr>
+<h2 id="一个实用的选择流程"><a class="header" href="#一个实用的选择流程">一个实用的选择流程</a></h2>
+<p>以后当你再次遇到“我是不是该设计接口？”这个问题时，可以先按这个顺序判断：</p>
+<h3 id="第一步先试泛型"><a class="header" href="#第一步先试泛型">第一步：先试泛型</a></h3>
+<p>如果能用 <code>anytype</code> 或泛型写清楚，就先停在这里。</p>
+<h3 id="第二步如果有有限几种运行时分支考虑-union"><a class="header" href="#第二步如果有有限几种运行时分支考虑-union">第二步：如果有有限几种运行时分支，考虑 union</a></h3>
+<p>如果问题本质上是“已知几种状态 / 几种后端 / 几种命令”，那么优先试 <code>union(enum)</code>。</p>
+<h3 id="第三步只有在确实需要开放运行时抽象时再上-vtable"><a class="header" href="#第三步只有在确实需要开放运行时抽象时再上-vtable">第三步：只有在确实需要开放运行时抽象时，再上 VTable</a></h3>
+<p>这时你要愿意承担：</p>
 <ul>
-<li>回顾接口中的生命周期管理</li>
-<li>理解资源所有权的概念</li>
-<li>准备学习 Zig 的显式内存管理哲学</li>
+<li>样板代码</li>
+<li>生命周期管理</li>
+<li>类型擦除与恢复</li>
+<li>更复杂的调试成本</li>
 </ul>
+<p>这个流程并不是死规则，但对大多数教程读者和多数工程场景都很有帮助。</p>
+<hr>
+<h2 id="本章小结"><a class="header" href="#本章小结">本章小结</a></h2>
+<p>这一章最重要的结论，不是“Zig 如何模拟传统接口系统”，而是：</p>
+<blockquote>
+<p><strong>在 Zig 中，接口问题本质上是“抽象层次选择问题”。</strong></p>
+</blockquote>
+<p>你需要优先判断的是：</p>
+<ul>
+<li>编译期还是运行时？</li>
+<li>封闭集合还是开放集合？</li>
+<li>需要复用逻辑，还是需要替换实现？</li>
+<li>抽象是否真的让代码更清楚？</li>
+</ul>
+<p>对应到三种常见工具：</p>
+<ul>
+<li><strong>泛型 / <code>anytype</code></strong>
+<ul>
+<li>默认首选</li>
+<li>适合编译期已知类型</li>
+</ul>
+</li>
+<li><strong><code>union(enum)</code></strong>
+<ul>
+<li>适合封闭变体集合</li>
+<li>适合有限运行时分支</li>
+</ul>
+</li>
+<li><strong>VTable</strong>
+<ul>
+<li>适合真正需要运行时开放抽象的场景</li>
+<li>最灵活，也最复杂</li>
+</ul>
+</li>
+</ul>
+<p>如果你能把这三种方案的边界区分清楚，那么你在 Zig 中做“接口、组合与设计”时，就已经走上了一条更稳妥的路。</p>
+<hr>
+<blockquote>
+<p>💡 <strong>下一章预告</strong></p>
+<p>下一章我们将学习 <a href="chapter-c-interop.html">与 C 语言的互操作性</a>，从“如何在 Zig 中组织抽象边界”继续推进到“如何跨 ABI 边界与 C 世界协作”。</p>
 </blockquote>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../part2-advanced/chapter-generics.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../part2-advanced/chapter-memory-management.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../part2-advanced/chapter-memory-management.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../part2-advanced/chapter-c-interop.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -1693,11 +669,11 @@ test "Writer interface" {
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../part2-advanced/chapter-generics.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../part2-advanced/chapter-memory-management.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../part2-advanced/chapter-memory-management.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../part2-advanced/chapter-c-interop.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>

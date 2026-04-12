@@ -1,13 +1,15 @@
-# 控制流与资源管理
+# 控制流、可选类型与资源管理
 
-本章介绍 Zig 的控制流语句和资源管理机制，包括可选类型、条件判断 if、循环（for 和 while）、分支选择 switch、资源管理 defer 和块表达式。Zig 的所有控制流语句都是表达式，可以返回值；结合穷尽性检查和编译期验证，确保代码的安全性和可维护性。资源管理方面，Zig 通过 `defer` 和 `errdefer` 机制确保资源的正确释放，避免内存泄漏和资源泄漏问题。
+本章介绍 Zig 中最常用的控制流与资源管理机制，包括可选类型、`if`、`while`、`for`、`switch`、`defer` 和块表达式。你可以把这一章理解为“如何组织程序执行过程”的入门：条件怎么分支、循环怎么展开、值不存在时怎么处理、资源在作用域结束时如何可靠释放。
+
+Zig 的很多控制流结构不只是语句，也是表达式，可以直接返回值；再配合穷尽性检查、显式解包和作用域化的资源清理，代码的行为会更清楚、更容易验证。关于 `errdefer` 的完整展开会放在错误处理章节，本章先聚焦于建立控制流与资源管理的整体直觉。
 
 ## 可选类型（Optional）
 
 Zig 的可选类型使用 `?T` 表示，用于表示值可能存在或不存在的情况。C 语言使用特殊值（如 `-1`、`NULL`）表示"不存在"，容易出错；Java 的 `null` 引用导致 `NullPointerException`。Zig 通过可选类型在编译期强制处理"不存在"的情况，避免空指针异常。
 
 **核心概念**：
-- `?T` 表示类型 `T` 或 `null`，内存布局额外存储一个标志位指示值是否存在
+- `?T` 表示类型 `T` 或 `null`；从语义上看，它表示“这个值可能存在，也可能不存在”
 - 不能直接使用可选值，必须先解包（通过 `if`、`orelse`、`.?` 等操作）
 - 类型系统区分 `T` 和 `?T`，意图清晰，代码显式可读
 
@@ -18,7 +20,7 @@ Zig 的可选类型使用 `?T` 表示，用于表示值可能存在或不存在�
 | `?T` | 值可能存在或不存在 | 查找操作、可选配置 |
 | `!T` | 操作可能成功或失败 | 可能出错的操作     |
 
-> 📖 **深入学习**：错误联合类型的详细用法将在[错误处理基础](chapter-error-handling.md)中讲解。
+> **深入学习**：错误联合类型的详细用法将在[错误处理基础](chapter-error-handling.md)中讲解。
 
 ### 解包操作
 
@@ -31,7 +33,7 @@ Zig 提供了三种解包可选类型的方式：`if` 模式匹配、`.?` 操作
 ```zig
 const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const maybe_number: ?i32 = 42;
     
     const value = maybe_number.?;
@@ -57,7 +59,7 @@ pub fn main(_: std.process.Init.Minimal) void {
 ```zig
 const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const maybe_null: ?i32 = null;
     
     // 使用 orelse 提供默认值
@@ -103,7 +105,7 @@ Zig 的 if 语句相对于其他语言，具有以下特性：
 ```zig
 const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const number: i32 = 42;
     
     // 基本 if 语句：控制流
@@ -148,7 +150,7 @@ Zig 的 if 可以直接解构可选类型，这是 Zig 的重要特性：
 ```zig
 const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const maybe_number: ?i32 = 42;
 
     // 如果 maybe_number 不为 null，number 绑定到内部值
@@ -192,7 +194,7 @@ fn divide(a: i32, b: i32) !i32 {
     return @divTrunc(a, b);
 }
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const result = divide(10, 2);
     
     // 成功时 |value| 获取值，失败时 |err| 获取错误
@@ -209,7 +211,7 @@ pub fn main(_: std.process.Init.Minimal) void {
 结果：5
 ```
 
-> 📖 **深入学习**：错误联合类型的完整用法请参考[错误处理基础](chapter-error-handling.md)。
+> **深入学习**：错误联合类型的完整用法请参考[错误处理基础](chapter-error-handling.md)。
 
 ## while 循环
 
@@ -226,7 +228,7 @@ Zig 的 while 循环支持：
 ```zig
 const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     var i: usize = 0;
 
     // 基本 while 循环
@@ -310,7 +312,7 @@ fn readByte() !u8 {
     return 'A'; // 模拟读取操作
 }
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     // while 解包错误联合类型
     while (readByte()) |byte| {
         std.debug.print("读取到：{c}\n", .{byte});
@@ -326,7 +328,7 @@ pub fn main(_: std.process.Init.Minimal) void {
 读取到：A
 ```
 
-> 📖 **深入学习**：错误联合类型的详细用法请参考[错误处理基础](chapter-error-handling.md)。
+> **深入学习**：错误联合类型的详细用法请参考[错误处理基础](chapter-error-handling.md)。
 
 ### while 作为表达式
 
@@ -335,7 +337,7 @@ while 循环支持 `else` 分支，在循环正常结束（没有 `break`）时�
 ```zig
 const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     var i: usize = 0;
     const result = while (i < 10) : (i += 1) {
         if (i == 5) break i * 2;
@@ -379,7 +381,7 @@ Zig 的 for 循环支持：
 ```zig
 const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const array = [_]i32{ 1, 2, 3, 4, 5 };
 
     // 遍历数组：只获取元素
@@ -463,7 +465,7 @@ for 循环可以使用 `else` 分支处理循环正常结束的情况（与 whil
 ```zig
 const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const items = [_]i32{ 1, 3, 5, 7, 9 };
     
     // for 循环直接作为表达式
@@ -501,14 +503,14 @@ if 语句适合处理简单的条件判断，而 switch 语句则更适合处理
 
 Zig 的 switch 语句特性：
 - **穷尽性检查**：编译器强制要求处理所有可能的情况，避免遗漏分支
-- **模式匹配**：支持范围匹配（`1..10`）、多值匹配（`1, 2, 3`）、枚举匹配等
+- **模式匹配**：支持范围匹配（`1...10`）、多值匹配（`1, 2, 3`）、枚举匹配等
 - **表达式**：可以返回值，支持函数式编程风格
 - **无隐式 fallthrough**：每个 case 自动 break
 
 ```zig
 const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const number: i32 = 2;
     
     // 基本 switch：必须穷尽所有情况，使用 else 处理其他
@@ -520,13 +522,13 @@ pub fn main(_: std.process.Init.Minimal) void {
     };
     std.debug.print("结果：{s}\n", .{result});
     
-    // 范围匹配：使用 .. 操作符（闭区间，包含两端）
+    // 范围匹配：使用 ... 操作符（闭区间，包含两端）
     const grade: u8 = 85;
     const level = switch (grade) {
-        90..100 => "A",
-        80..89 => "B",
-        70..79 => "C",
-        60..69 => "D",
+        90...100 => "A",
+        80...89 => "B",
+        70...79 => "C",
+        60...69 => "D",
         else => "F",
     };
     std.debug.print("等级：{s}\n", .{level});
@@ -569,11 +571,11 @@ fn colorToHex(color: Color) u32 {
 fn classifyNumber(n: i32) []const u8 {
     return switch (n) {
         0 => "零",
-        1..10 => |val| blk: {
+        1...10 => |val| blk: {
             std.debug.print("小数字：{}\n", .{val});
             break :blk "小";
         },
-        11..100 => "中",
+        11...100 => "中",
         else => "大",
     };
 }
@@ -582,13 +584,13 @@ fn classifyNumber(n: i32) []const u8 {
 fn doublePositive(numbers: []i32) void {
     for (numbers) |*n| {
         switch (n.*) {
-            1..100 => |*val| val.* *= 2,  // 通过指针捕获修改原值
+            1...100 => |*val| val.* *= 2,  // 通过指针捕获修改原值
             else => {},
         }
     }
 }
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     std.debug.print("红色：0x{X}\n", .{colorToHex(.red)});
     std.debug.print("分类：{s}\n", .{classifyNumber(5)});
     
@@ -606,7 +608,7 @@ pub fn main(_: std.process.Init.Minimal) void {
 翻倍后：{ 6, 100, -1, 198 }
 ```
 
-> 📖 **深入学习**：枚举与 switch 配合使用的更多示例请参考[复合类型](chapter-compound-types.md#枚举)。
+> **深入学习**：枚举与 switch 配合使用的更多示例请参考[复合类型](chapter-compound-types.md#枚举)。
 
 ## defer 语句
 
@@ -617,7 +619,7 @@ if、while、for、switch 等控制流语句用于控制代码的执行路径，
 ```zig
 const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     defer std.debug.print("主函数结束\n", .{});
     std.debug.print("开始\n", .{});
 
@@ -664,7 +666,7 @@ fn protectedOperation(mutex: *std.Thread.Mutex) void {
 }
 ```
 
-> 📖 **相关章节**：并发编程的详细讲解请参考[并发编程模型](../part2-advanced/chapter-concurrency.md)。
+> **相关章节**：并发编程的详细讲解请参考[并发编程模型](../part2-advanced/chapter-concurrency.md)。
 
 ### LIFO（后进先出）原则
 
@@ -673,7 +675,7 @@ fn protectedOperation(mutex: *std.Thread.Mutex) void {
 ```zig
 const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     defer std.debug.print("第一个 defer\n", .{});
     defer std.debug.print("第二个 defer\n", .{});
     defer std.debug.print("第三个 defer\n", .{});
@@ -709,7 +711,7 @@ fn allocateAndInit(allocator: std.mem.Allocator) !*Resource {
 }
 ```
 
-> 📖 **深入学习**：errdefer 的完整用法（多资源管理、错误捕获 `|err|` 等）请参考[错误处理基础](chapter-error-handling.md#errdefer)。
+> **深入学习**：errdefer 的完整用法（多资源管理、错误捕获 `|err|` 等）请参考[错误处理基础](chapter-error-handling.md#errdefer)。
 
 ## 块表达式（Block Expression）
 
@@ -759,7 +761,7 @@ const category = blk: {
 ```zig
 const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     // 基本用法：计算并返回值
     const result = blk: {
         const a = 10;

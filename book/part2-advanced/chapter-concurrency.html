@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>【draft】并发编程概述 - Zig 编程语言入门教程</title>
+        <title>并发编程概述 - Zig 编程语言入门教程</title>
 
 
         <!-- Custom HTML head -->
@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-a9ca16c2.js";
+            window.path_to_searchindex_js = "../searchindex-35211ac1.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-2fc75e4c.js"></script>
+        <script src="../toc-6dcbe846.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -181,1897 +181,376 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="draft并发编程概述"><a class="header" href="#draft并发编程概述">【draft】并发编程概述</a></h1>
+                        <h1 id="并发编程概述"><a class="header" href="#并发编程概述">并发编程概述</a></h1>
 <blockquote>
-<p>💡 <strong>重要章节</strong>：并发编程是现代系统编程的核心技能，掌握它对于构建高性能、响应迅速的应用程序至关重要。</p>
-<p><strong>章节定位</strong>：本章是高级特性部分，侧重于并发编程的理论、模型和基本用法。关于异步 I/O 的实践应用，请参见实战部分的<a href="../part3-practice/chapter-async.html">异步IO编程</a>章节。</p>
+<p>💡 <strong>章节定位</strong></p>
+<p>本章的重点是建立 Zig 中并发编程的<strong>稳定概念框架</strong>：线程、共享状态、同步原语、原子操作与常见取舍。</p>
+<p>与 I/O 相关的“异步方向”在开发版语境下仍然更容易演进，因此本章不会把某些 dev 版接口当作稳定 API 手册来讲解。关于这一方向的阅读建议，请结合第三部分的<a href="../part3-practice/chapter-async.html">异步 I/O：现状与未来方向</a>一起看。</p>
 </blockquote>
-<h2 id="核心概念异步并发与并行"><a class="header" href="#核心概念异步并发与并行">核心概念：异步、并发与并行</a></h2>
-<blockquote>
-<p>📖 <strong>关键区分</strong>：在深入学习并发编程之前，必须理解三个容易混淆的概念：异步（Asynchrony）、并发（Concurrency）和并行（Parallelism）。</p>
-</blockquote>
-<h1 id="三个概念的定义"><a class="header" href="#三个概念的定义">三个概念的定义</a></h1>
+<h2 id="先区分三个容易混淆的概念"><a class="header" href="#先区分三个容易混淆的概念">先区分三个容易混淆的概念</a></h2>
+<p>在进入具体代码之前，必须先分清：<strong>异步（asynchrony）</strong>、<strong>并发（concurrency）</strong>、<strong>并行（parallelism）</strong>。</p>
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th>概念</th><th>定义</th><th>例子</th></tr>
+<tr><th>概念</th><th>更关注什么</th><th>一个直观例子</th></tr>
 </thead>
 <tbody>
-<tr><td><strong>异步</strong></td><td>任务可以乱序执行且仍然正确</td><td>保存两个文件，顺序不重要</td></tr>
-<tr><td><strong>并发</strong></td><td>系统能够同时推进多个任务（通过并行或任务切换）</td><td>服务器同时处理多个客户端连接</td></tr>
-<tr><td><strong>并行</strong></td><td>系统在物理层面同时执行多个任务</td><td>多核 CPU 同时执行多个线程</td></tr>
+<tr><td>异步</td><td>顺序是否可以被放宽</td><td>两个互不依赖的文件保存任务，谁先完成都可以</td></tr>
+<tr><td>并发</td><td>多个任务能否被同时推进</td><td>服务器同时处理多个客户端请求</td></tr>
+<tr><td>并行</td><td>多个任务是否真的在物理上同时运行</td><td>多核 CPU 上多个线程同时执行</td></tr>
 </tbody>
 </table>
 </div>
-<h1 id="深入理解"><a class="header" href="#深入理解">深入理解</a></h1>
-<p><strong>异步（Asynchrony）</strong>：</p>
+<h3 id="异步先关注顺序是否重要"><a class="header" href="#异步先关注顺序是否重要">异步：先关注“顺序是否重要”</a></h3>
+<p>异步首先讨论的是<strong>正确性约束</strong>，而不是“有没有多线程”。</p>
+<p>如果两个操作只要最终都完成即可，中间顺序并不重要，那么它们就具有异步性。</p>
+<h3 id="并发先关注系统是否能同时推进多个任务"><a class="header" href="#并发先关注系统是否能同时推进多个任务">并发：先关注“系统是否能同时推进多个任务”</a></h3>
+<p>并发讨论的是<strong>组织方式</strong>。</p>
+<p>即使只有一个 CPU 核心，系统也可以通过任务切换，在时间上交替推进多个任务。这仍然是并发，但不一定是并行。</p>
+<h3 id="并行先关注硬件层面是否真的同时执行"><a class="header" href="#并行先关注硬件层面是否真的同时执行">并行：先关注“硬件层面是否真的同时执行”</a></h3>
+<p>并行强调的是<strong>物理同时执行</strong>。这通常依赖多核 CPU，或者其他底层并行资源。</p>
+<p>因此，常见的关系可以这样理解：</p>
 <ul>
-<li>关注的是<strong>正确性</strong>：任务可以乱序执行而不会出错</li>
-<li>例如：保存文件 A 和文件 B，谁先谁后都可以</li>
-<li>不需要任务执行时间重叠</li>
+<li>并发不一定并行</li>
+<li>异步不一定并发</li>
+<li>并行通常是实现并发的一种方式</li>
 </ul>
-<p><strong>并发（Concurrency）</strong>：</p>
+<h2 id="zig-中并发编程的阅读重点"><a class="header" href="#zig-中并发编程的阅读重点">Zig 中并发编程的阅读重点</a></h2>
+<p>Zig 在并发上的一个重要特点是：<strong>尽量把成本和机制显式化</strong>。</p>
+<p>这意味着你在 Zig 中更常直接面对：</p>
 <ul>
-<li>关注的是<strong>进度</strong>：多个任务可以同时推进</li>
-<li>例如：TCP 服务器必须同时接受连接和处理请求</li>
-<li>可以通过任务切换（单核）或并行（多核）实现</li>
+<li>线程</li>
+<li>锁</li>
+<li>条件变量</li>
+<li>原子操作</li>
+<li>共享数据和生命周期边界</li>
 </ul>
-<p><strong>并行（Parallelism）</strong>：</p>
+<p>而不是一开始就被隐藏在“自动调度器”或“语言级运行时”之后。</p>
+<p>这有两个直接后果：</p>
+<ol>
+<li>你能更清楚地看到并发成本和数据边界</li>
+<li>你也更需要自己做出正确的设计判断</li>
+</ol>
+<h2 id="什么时候需要并发"><a class="header" href="#什么时候需要并发">什么时候需要并发？</a></h2>
+<p>不是所有程序都需要并发。</p>
+<p>更准确地说，你通常在下面这些场景里才真的需要它：</p>
 <ul>
-<li>关注的是<strong>物理执行</strong>：真正的同时执行</li>
-<li>例如：4 核 CPU 同时运行 4 个线程</li>
-<li>需要硬件支持</li>
+<li>需要同时处理多个任务</li>
+<li>存在明显的等待时间，希望程序更有响应性</li>
+<li>希望利用多核 CPU 加速独立计算任务</li>
+<li>希望把某些后台工作与主流程解耦</li>
 </ul>
-<h1 id="zig-的独特设计异步不等于并发"><a class="header" href="#zig-的独特设计异步不等于并发">Zig 的独特设计：异步不等于并发</a></h1>
-<p>在 Zig 中，<strong>异步不等于并发</strong>。这是一个重要的设计理念：</p>
-<pre><code class="language-zig">// 这段代码表达了异步性（顺序不重要）
-io.async(saveFileA, .{io});
-io.async(saveFileB, .{io});
+<p>常见例子包括：</p>
+<ul>
+<li>多客户端服务器</li>
+<li>并行数据处理</li>
+<li>图像、音频、视频处理</li>
+<li>后台日志、监控、缓存刷新</li>
+</ul>
+<p>而对于很小的 CLI 工具或纯串行的数据转换脚本，并发往往不是起点。</p>
+<h2 id="最基础的并发工具线程"><a class="header" href="#最基础的并发工具线程">最基础的并发工具：线程</a></h2>
+<p>在 Zig 中，最直接的并发入口通常是 <code>std.Thread</code>。</p>
+<h3 id="创建线程"><a class="header" href="#创建线程">创建线程</a></h3>
+<pre><code class="language-zig">const std = @import("std");
+
+fn worker(id: usize) void {
+    std.debug.print("worker {} start\n", .{id});
+    std.time.sleep(200 * std.time.ns_per_ms);
+    std.debug.print("worker {} done\n", .{id});
+}
+
+pub fn main() !void {
+    const t1 = try std.Thread.spawn(.{}, worker, .{1});
+    const t2 = try std.Thread.spawn(.{}, worker, .{2});
+
+    t1.join();
+    t2.join();
+}
 </code></pre>
-<p><strong>关键点</strong>：</p>
+<p>这段代码展示了最基本的线程模型：</p>
 <ul>
-<li>使用 <code>io.async</code> <strong>不强制并发</strong></li>
-<li>这段代码可以在<strong>单线程阻塞模式</strong>下运行</li>
-<li>在阻塞模式下，<code>io.async</code> 会立即执行函数（相当于顺序调用）</li>
-<li>在事件循环模式下，<code>io.async</code> 会调度任务（实现并发）</li>
+<li>主线程创建两个工作线程</li>
+<li>每个线程执行自己的任务</li>
+<li>主线程通过 <code>join()</code> 等待它们结束</li>
 </ul>
-<p><strong>实际意义</strong>：</p>
+<h3 id="join-与-detach"><a class="header" href="#join-与-detach"><code>join()</code> 与 <code>detach()</code></a></h3>
+<p>线程创建之后，你通常要明确选择如何结束它的生命周期。</p>
+<h4 id="join等待线程完成"><a class="header" href="#join等待线程完成"><code>join()</code>：等待线程完成</a></h4>
+<p>适用于：</p>
 <ul>
-<li>库作者可以使用 <code>io.async</code> 而不强制用户使用事件循环</li>
-<li>用户可以选择阻塞 I/O 或事件循环 I/O</li>
-<li>避免了库需要提供同步/异步两个版本的问题</li>
+<li>你需要确认工作已经完成</li>
+<li>后续逻辑依赖线程结果</li>
+<li>你希望生命周期最清晰</li>
 </ul>
-<h2 id="线程基础理论"><a class="header" href="#线程基础理论">线程基础理论</a></h2>
+<h4 id="detach让线程独立运行"><a class="header" href="#detach让线程独立运行"><code>detach()</code>：让线程独立运行</a></h4>
+<p>适用于：</p>
+<ul>
+<li>你不打算等待该线程</li>
+<li>它确实是一个后台任务</li>
+<li>你能保证它不会访问已经释放的资源</li>
+</ul>
 <blockquote>
-<p>📖 <strong>内容来源</strong>：本节内容整合自 <a href="https://pedropark99.github.io/zig-book/Chapters/14-threads.html">Zig Book - Introducing threads and parallelism in Zig</a></p>
+<p>⚠️ <strong>实践建议</strong></p>
+<p>大多数教程和普通工程代码里，<strong>优先选择 <code>join()</code></strong> 会更安全。<code>detach()</code> 更容易引入生命周期错误，尤其是后台线程引用了栈对象、临时缓冲区或即将销毁的分配器时。</p>
 </blockquote>
-<h1 id="什么是线程"><a class="header" href="#什么是线程">什么是线程？</a></h1>
-<p>线程（Thread）本质上是一个独立的执行上下文。我们使用线程在程序中引入并行性，在大多数情况下，这会使程序运行得更快，因为我们可以同时执行多个任务，彼此并行运行。</p>
-<p>程序默认是单线程的。这意味着每个程序通常在单个线程上运行，或者说，在单个执行上下文中运行。当我们只有一个线程运行时，就没有并行性。当没有并行性时，命令是按顺序执行的，也就是说，一次只执行一个命令，一个接一个。通过在程序中创建多个线程，我们开始同时执行多个命令。</p>
-<p><strong>实际应用场景</strong>：</p>
-<p>创建多线程的程序在实际中非常常见。因为许多不同类型的应用程序都非常适合并行处理。很好的例子包括：</p>
-<ol>
-<li><strong>视频和照片编辑应用</strong>（如 Adobe Photoshop 或 DaVinci Resolve）</li>
-<li><strong>游戏</strong>（如 The Witcher 3）</li>
-<li><strong>网页浏览器</strong>（如 Google Chrome、Firefox、Microsoft Edge 等）</li>
-</ol>
-<p>例如，在网页浏览器中，线程通常用于实现标签页。浏览器中的标签页通常作为主进程中的独立线程运行。也就是说，你在浏览器中打开的每个新标签页通常都在一个独立的执行线程上运行。</p>
-<p>通过在每个标签页的独立线程中运行，我们允许浏览器中所有打开的标签页同时运行，并且彼此独立。例如，你可能当前在某个标签页中打开了 YouTube 或 Spotify，正在收听播客，同时又在另一个标签页中工作，在 Google Docs 上写文章。即使你没有查看 YouTube 标签页，你仍然可以听到播客，正是因为这个 YouTube 标签页与运行 Google Docs 的另一个标签页并行运行。</p>
-<p><strong>为什么使用线程而不是进程？</strong></p>
-<p>如果没有线程，另一个选择是将每个标签页作为计算机中完全独立的进程运行。但这将是一个糟糕的选择，因为仅仅几个标签页就会消耗计算机过多的电力和资源。换句话说，与创建新的执行线程相比，创建一个全新的进程非常昂贵。此外，你在使用浏览器时遇到延迟和开销的可能性会很大。线程创建速度更快，而且它们消耗的计算机资源也少得多，特别是因为它们与主进程共享一些资源。</p>
-<p>因此，现代网页浏览器中线程的使用使你能够在 Google Docs 上写东西的同时听到播客。如果没有线程，网页浏览器可能仅限于一个标签页。</p>
-<h1 id="线程-vs-进程"><a class="header" href="#线程-vs-进程">线程 vs 进程</a></h1>
-<p>当我们运行程序时，该程序作为操作系统中的一个进程执行。这是一对一的关系，你执行的每个程序或应用程序都是操作系统中的一个独立进程。但每个程序或每个进程可以在其中创建和包含多个线程。因此，进程和线程具有一对多的关系。</p>
-<p>这也意味着我们创建的每个线程总是与计算机中的特定进程相关联。换句话说，线程始终是现有进程的子集（或子项）。所有线程共享与创建它们的进程相关联的一些资源。因为线程与进程共享资源，它们非常有利于使任务之间的通信更容易。</p>
-<p><strong>关键区别</strong>：</p>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>特性</th><th>进程</th><th>线程</th></tr>
-</thead>
-<tbody>
-<tr><td><strong>创建成本</strong></td><td>高（需要独立的内存空间）</td><td>低（共享进程资源）</td></tr>
-<tr><td><strong>资源占用</strong></td><td>独立的内存空间、文件描述符</td><td>共享进程的堆、全局数据、文件描述符</td></tr>
-<tr><td><strong>通信方式</strong></td><td>IPC（进程间通信）复杂</td><td>直接通过共享内存通信</td></tr>
-<tr><td><strong>上下文切换</strong></td><td>慢（需要切换内存映射）</td><td>快（只需切换栈和寄存器）</td></tr>
-<tr><td><strong>独立性</strong></td><td>高（一个进程崩溃不影响其他进程）</td><td>低（一个线程崩溃可能导致整个进程崩溃）</td></tr>
-<tr><td><strong>适用场景</strong></td><td>需要高度隔离的任务</td><td>需要频繁通信和共享数据的任务</td></tr>
-</tbody>
-</table>
-</div>
-<p><strong>线程的内存模型</strong>：</p>
-<p>更详细地说，你创建的每个线程都有一个单独的栈帧专门为该线程保留，这本质上意味着你在这个线程内创建的每个局部对象都是该线程局部的，即其他线程无法看到这个局部对象。除非你创建的这个对象是存储在堆上的对象。换句话说，如果与该对象关联的内存位于堆上，那么其他线程可能可以访问该对象。</p>
-<p>因此：</p>
+<h2 id="共享状态为什么需要同步"><a class="header" href="#共享状态为什么需要同步">共享状态：为什么需要同步？</a></h2>
+<p>一旦多个线程访问同一份数据，就会出现并发编程里最核心的问题：</p>
 <ul>
-<li><strong>存储在栈上的对象</strong>是创建它们的线程局部的</li>
-<li><strong>存储在堆上的对象</strong>可能被其他线程访问</li>
-<li>每个线程都有自己的独立栈帧</li>
-<li>所有线程共享相同的堆、相同的标准文件描述符（意味着它们共享相同的 stdout、stdin、stderr）以及程序中相同的全局数据段</li>
+<li>数据竞争</li>
+<li>竞态条件</li>
+<li>内存可见性</li>
 </ul>
-<h1 id="线程的实际应用餐厅点餐系统"><a class="header" href="#线程的实际应用餐厅点餐系统">线程的实际应用：餐厅点餐系统</a></h1>
-<p>线程也非常适合任何涉及服务请求或订单的场景。因为服务请求需要时间，通常涉及大量的“等待时间“。换句话说，我们花费大量时间处于空闲状态，等待某事完成。</p>
-<p>例如，考虑一家餐厅。在餐厅服务订单通常涉及以下步骤：</p>
+<p>例如，下面这个“看起来很简单”的计数器递增，在多线程里其实并不安全：</p>
+<pre><code class="language-zig">counter += 1;
+</code></pre>
+<p>因为这并不是一个不可分割的操作。它至少包含：</p>
 <ol>
-<li>从客户接收订单</li>
-<li>将订单传递给厨房，等待食物烹饪</li>
-<li>在厨房开始烹饪食物</li>
-<li>当食物完全煮熟后，将食物送到客户手中</li>
+<li>读取旧值</li>
+<li>计算新值</li>
+<li>写回结果</li>
 </ol>
-<p>如果你思考上面的要点，你会注意到整个过程中存在一个大的等待时刻，那就是食物在厨房里烹饪的时候。在食物准备过程中，服务员和客户本人都在等待食物准备好并送达。</p>
-<p>如果我们编写一个程序来表示这家餐厅，更具体地说，一个单线程程序，那么这个程序将非常低效。因为程序会在“检查食物是否准备好“步骤上花费大量时间处于空闲等待状态。考虑下面可能代表这样一个程序的代码片段：</p>
+<p>多个线程交错执行时，最终结果就可能丢更新。</p>
+<h2 id="互斥锁最常见的共享数据保护方式"><a class="header" href="#互斥锁最常见的共享数据保护方式">互斥锁：最常见的共享数据保护方式</a></h2>
+<p>对于复杂共享数据，最常见的第一选择通常是互斥锁 <code>std.Thread.Mutex</code>。</p>
 <pre><code class="language-zig">const std = @import("std");
 
-const Order = struct {
-    name: []const u8,
-    quantity: u32,
-};
-
-fn serveOrder(order: Order) void {
-    std.debug.print("接收订单: {s} x {}\n", .{ order.name, order.quantity });
-    
-    // 等待食物烹饪（阻塞等待）
-    std.debug.print("等待厨房烹饪...\n", .{});
-    std.time.sleep(5 * std.time.ns_per_s);  // 模拟烹饪时间
-    
-    std.debug.print("食物已准备好，送餐到客户\n", .{});
-}
-
-pub fn main(_: std.process.Init.Minimal) void {
-    // 只能一次服务一个订单
-    serveOrder(.{ .name = "Pizza Margherita", .quantity = 1 });
-    // 第一个订单完成后才能服务第二个
-    serveOrder(.{ .name = "Pasta", .quantity = 2 });
-}
-</code></pre>
-<p>这个程序的问题在于它会花费大量时间在等待上，除了检查食物是否准备好之外什么都不做。这是时间的浪费。与其等待某事发生，服务员可以直接将订单发送到厨房，然后继续前进，继续从其他客户接收更多订单，并将更多订单发送到厨房，而不是什么都不做地等待食物准备好。</p>
-<p>这就是为什么线程非常适合这个程序。我们可以使用线程将服务员从他们的“等待职责“中解放出来，这样他们就可以继续进行其他任务，并接收更多订单。看看下一个示例，我已经将上面的程序重写为一个使用线程来烹饪和送餐订单的不同程序：</p>
-<pre><code class="language-zig">// ✅ 高效的多线程版本
-const std = @import("std");
-
-const Order = struct {
-    name: []const u8,
-    quantity: u32,
-};
-
-fn cookAndDeliver(order: Order) void {
-    const thread_id = std.Thread.getCurrentId();
-    std.debug.print("[线程 {}] 开始烹饪: {s}\n", .{ thread_id, order.name });
-    
-    // 模拟烹饪时间
-    std.time.sleep(5 * std.time.ns_per_s);
-    
-    std.debug.print("[线程 {}] 食物已准备好，送餐: {s}\n", .{ thread_id, order.name });
-}
-
-pub fn main(_: std.process.Init.Minimal) !void {
-    std.debug.print("=== 餐厅点餐系统（多线程版本）===\n", .{});
-    
-    // 可以同时服务多个订单
-    var threads: [3]std.Thread = undefined;
-    const orders = [_]Order{
-        .{ .name = "Pizza Margherita", .quantity = 1 },
-        .{ .name = "Pasta", .quantity = 2 },
-        .{ .name = "Salad", .quantity = 1 },
-    };
-    
-    // 为每个订单创建独立的线程
-    for (&amp;threads, orders) |*thread, order| {
-        std.debug.print("接收订单: {s} x {}\n", .{ order.name, order.quantity });
-        thread.* = try std.Thread.spawn(.{}, cookAndDeliver, .{order});
-    }
-    
-    // 等待所有订单完成
-    for (threads) |thread| {
-        thread.join();
-    }
-    
-    std.debug.print("所有订单已完成\n", .{});
-}
-</code></pre>
-<p><strong>关键改进</strong>：</p>
-<ol>
-<li><strong>并行处理</strong>：多个订单可以同时烹饪，不需要等待</li>
-<li><strong>资源利用</strong>：服务员（主线程）可以继续接收新订单</li>
-<li><strong>响应性</strong>：客户不需要等待前面的订单完成</li>
-<li><strong>效率提升</strong>：总时间从 15 秒（串行）降低到约 5 秒（并行）</li>
-</ol>
-<h2 id="并发编程概述"><a class="header" href="#并发编程概述">并发编程概述</a></h2>
-<h1 id="为什么需要并发编程"><a class="header" href="#为什么需要并发编程">为什么需要并发编程？</a></h1>
-<p>在实际编程中，我们经常遇到这样的问题：</p>
-<pre><code class="language-zig">// 串行执行：总时间 = 任务1时间 + 任务2时间
-// ⏪ 旧版本：0.11.0 已移除 async/await
-fn processData(data1: []const u8, data2: []const u8) !void {
-    try processTask1(data1);  // 耗时 100ms
-    try processTask2(data2);  // 耗时 100ms
-    // 总耗时：200ms
-}
-
-// 并发执行：总时间 ≈ max(任务1时间, 任务2时间)
-fn processDataConcurrent(io: *std.Io, data1: []const u8, data2: []const u8) !void {
-    var fut1 = io.async(processTask1, .{data1});
-    var fut2 = io.async(processTask2, .{data2});
-    try fut1.await(io);
-    try fut2.await(io);
-    // 总耗时：≈ 100ms（并行执行）
-}
-</code></pre>
-<p><strong>问题</strong>：</p>
-<ul>
-<li>串行执行效率低，无法充分利用多核CPU</li>
-<li>I/O操作阻塞整个程序，降低响应性</li>
-<li>难以处理大量并发请求</li>
-</ul>
-<p><strong>解决方案</strong>：使用并发编程，让多个任务同时执行，提高效率和响应性。</p>
-<h1 id="并发-vs-并行"><a class="header" href="#并发-vs-并行">并发 vs 并行</a></h1>
-<p><strong>并发（Concurrency）</strong>：</p>
-<ul>
-<li>多个任务在<strong>时间段上交替执行</strong></li>
-<li>单核CPU也可以实现并发（时间片轮转）</li>
-<li>关注的是<strong>结构</strong>：如何组织多个任务</li>
-</ul>
-<p><strong>并行（Parallelism）</strong>：</p>
-<ul>
-<li>多个任务在<strong>同一时刻同时执行</strong></li>
-<li>需要多核CPU才能真正并行</li>
-<li>关注的是<strong>执行</strong>：如何同时运行多个任务</li>
-</ul>
-<p><strong>关键区别</strong>：</p>
-<pre><code>并发：单线程处理多个任务（交替执行）
-┌─────────────────────────────────────┐
-│ Task A: ████░░░░░░░░████░░░░░░░░████ │
-│ Task B: ░░░░████░░░░░░░░████░░░░░░░░ │
-└─────────────────────────────────────┘
-
-并行：多线程同时执行多个任务
-┌─────────────────────────────────────┐
-│ Thread 1: ████████████████████████  │
-│ Thread 2: ████████████████████████  │
-└─────────────────────────────────────┘
-</code></pre>
-<h1 id="zig-的并发哲学"><a class="header" href="#zig-的并发哲学">Zig 的并发哲学</a></h1>
-<p>Zig 的并发设计遵循其核心理念：<strong>显式优于隐式</strong>。与 Go（goroutine）、Rust（async/await）不同，Zig 提供：</p>
-<ol>
-<li><strong>显式线程管理</strong>：线程创建、销毁都是显式的</li>
-<li><strong>无运行时调度器</strong>：没有隐藏的调度开销</li>
-<li><strong>低级原语</strong>：直接使用操作系统线程和同步原语</li>
-<li><strong>可预测性能</strong>：没有 GC 或运行时的不确定性</li>
-</ol>
-<p><strong>Zig 并发 vs 其他语言</strong>：</p>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>特性</th><th>Go</th><th>Rust</th><th>Zig</th></tr>
-</thead>
-<tbody>
-<tr><td>并发模型</td><td>Goroutine + Channel</td><td>async/await + Future</td><td>系统线程</td></tr>
-<tr><td>调度器</td><td>运行时调度</td><td>异步运行时</td><td>无（直接使用 OS）</td></tr>
-<tr><td>内存模型</td><td>GC</td><td>所有权系统</td><td>手动管理</td></tr>
-<tr><td>学习曲线</td><td>平缓</td><td>陡峭</td><td>中等</td></tr>
-</tbody>
-</table>
-</div>
-<p><strong>适用场景</strong>：</p>
-<ul>
-<li><strong>适合</strong>：系统编程、嵌入式、高性能服务器</li>
-<li><strong>不适合</strong>：需要大量轻量级协程的场景（可考虑使用第三方库）</li>
-</ul>
-<h1 id="zig-的并发模型"><a class="header" href="#zig-的并发模型">Zig 的并发模型</a></h1>
-<p>Zig 提供了两种并发机制：</p>
-<ol>
-<li>
-<p><strong>线程模型</strong>：基于操作系统线程</p>
-<ul>
-<li><code>std.Thread</code>：创建和管理线程</li>
-<li><code>std.Thread.Mutex</code>：互斥锁</li>
-<li><code>std.Thread.Condition</code>：条件变量</li>
-<li>适合CPU密集型任务</li>
-</ul>
-</li>
-<li>
-<p><strong>异步 I/O 模型</strong>：基于事件循环</p>
-<ul>
-<li><code>std.Io</code>：异步I/O接口</li>
-<li><code>io.async()</code>：异步操作</li>
-<li><code>io.concurrent()</code>：并发操作</li>
-<li>适合I/O密集型任务</li>
-</ul>
-</li>
-</ol>
-<p><strong>选择依据</strong>：</p>
-<ul>
-<li>CPU密集型任务 → 使用线程</li>
-<li>I/O密集型任务 → 使用异步I/O</li>
-<li>混合型任务 → 结合使用</li>
-</ul>
-<h2 id="线程基础"><a class="header" href="#线程基础">线程基础</a></h2>
-<h1 id="创建和管理线程"><a class="header" href="#创建和管理线程">创建和管理线程</a></h1>
-<pre><code class="language-zig">const std = @import("std");
-
-// 示例：Zig 0.16.0-dev
-pub fn main(_: std.process.Init.Minimal) !void {
-    // 创建线程
-    const thread = try std.Thread.spawn(.{}, worker, .{42});
-    
-    std.debug.print("Main thread: waiting for worker\n", .{});
-    
-    // 等待线程完成
-    thread.join();
-    
-    std.debug.print("Main thread: worker finished\n", .{});
-}
-
-fn worker(id: u32) void {
-    std.debug.print("Worker thread {}: starting\n", .{id});
-    std.time.sleep(1 * std.time.ns_per_s);
-    std.debug.print("Worker thread {}: finished\n", .{id});
-}
-</code></pre>
-<p><strong>关键概念</strong>：</p>
-<ul>
-<li><code>std.Thread.spawn(.{}, func, .{args})</code>：创建新线程</li>
-<li><code>.join()</code>：等待线程完成</li>
-<li>线程函数可以是任意函数</li>
-</ul>
-<h1 id="线程返回机制join-和-detach"><a class="header" href="#线程返回机制join-和-detach">线程返回机制：join 和 detach</a></h1>
-<blockquote>
-<p>📖 <strong>内容来源</strong>：本节内容整合自 <a href="https://pedropark99.github.io/zig-book/Chapters/14-threads.html">Zig Book - Introducing threads and parallelism in Zig</a></p>
-</blockquote>
-<p>当我们创建线程后，需要决定如何处理线程的返回。Zig 提供了两种机制：<code>join()</code> 和 <code>detach()</code>。</p>
-<p><strong>join：等待线程完成</strong></p>
-<p>当你调用 <code>join()</code> 时，你本质上是在说：“嘿！请等待线程完成，然后再继续执行”。例如，在下面的代码中，我们在 <code>main()</code> 函数中创建了一个线程，并在最后调用了 <code>join()</code>。</p>
-<p>因为我们在 <code>main()</code> 的作用域内 join 这个新线程，这意味着 <code>main()</code> 函数的执行会暂时停止，等待线程的执行完成。也就是说，<code>main()</code> 的执行会在调用 <code>join()</code> 的那一行暂时停止，只有在线程完成其任务后才会继续。</p>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn main(_: std.process.Init.Minimal) !void {
-    const thread = try std.Thread.spawn(.{}, doSomeWork, .{});
-    
-    std.debug.print("主线程：等待工作线程完成\n", .{});
-    
-    // join 会阻塞主线程，直到工作线程完成
-    thread.join();
-    
-    std.debug.print("主线程：工作线程已完成\n", .{});
-}
-
-fn doSomeWork() void {
-    std.debug.print("工作线程：开始工作\n", .{});
-    std.time.sleep(2 * std.time.ns_per_s);
-    std.debug.print("工作线程：工作完成\n", .{});
-}
-</code></pre>
-<p><strong>输出示例</strong>：</p>
-<pre><code>主线程：等待工作线程完成
-工作线程：开始工作
-工作线程：工作完成
-主线程：工作线程已完成
-</code></pre>
-<p>因为我们在这个线程上调用了 <code>join()</code>，所以我们有保证这个新线程会在 <code>main()</code> 执行结束之前完成。因为 <code>main()</code> 会等待线程完成其任务。</p>
-<p><strong>detach：让线程独立运行</strong></p>
-<p>当你调用 <code>detach()</code> 时，与该线程关联的资源会自动释放回系统，而不需要另一个线程来 join 这个已终止的线程。</p>
-<p>换句话说，当你在线程上调用 <code>detach()</code> 时，就像你的孩子长大成人，变得独立于你。一个 detached 的线程会自我释放，当这个线程完成其任务时，它不会将结果报告给你。因此，你通常在线程不需要返回值，或者你不关心线程何时完成时，将线程标记为 detached。</p>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn main(_: std.process.Init.Minimal) !void {
-    const thread = try std.Thread.spawn(.{}, independentWork, .{});
-    
-    // detach 线程，让它独立运行
-    thread.detach();
-    
-    std.debug.print("主线程：继续执行，不等待工作线程\n", .{});
-    std.time.sleep(1 * std.time.ns_per_s);
-    std.debug.print("主线程：结束\n", .{});
-}
-
-fn independentWork() void {
-    std.debug.print("独立线程：开始工作\n", .{});
-    std.time.sleep(2 * std.time.ns_per_s);
-    std.debug.print("独立线程：工作完成\n", .{});
-}
-</code></pre>
-<p><strong>输出示例</strong>：</p>
-<pre><code>主线程：继续执行，不等待工作线程
-独立线程：开始工作
-主线程：结束
-独立线程：工作完成
-</code></pre>
-<p>注意，“独立线程：工作完成” 可能会在 “主线程：结束” 之后出现，因为主线程不会等待独立线程完成。</p>
-<p><strong>join vs detach 对比</strong>：</p>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>特性</th><th>join</th><th>detach</th></tr>
-</thead>
-<tbody>
-<tr><td><strong>行为</strong></td><td>阻塞当前线程，等待目标线程完成</td><td>让线程独立运行，不阻塞</td></tr>
-<tr><td><strong>资源释放</strong></td><td>线程完成后自动释放资源</td><td>线程完成后自动释放资源</td></tr>
-<tr><td><strong>结果获取</strong></td><td>可以获取线程的执行结果</td><td>无法获取线程的执行结果</td></tr>
-<tr><td><strong>使用场景</strong></td><td>需要等待线程完成或获取结果</td><td>后台任务、不需要结果的任务</td></tr>
-<tr><td><strong>生命周期</strong></td><td>线程必须在 join 之前完成</td><td>线程可以比主线程存活更长时间</td></tr>
-</tbody>
-</table>
-</div>
-<p><strong>重要规则</strong>：</p>
-<ol>
-<li><strong>每个线程必须被 join 或 detach</strong>：如果你不对线程调用 <code>join()</code> 或 <code>detach()</code>，会引入未定义行为</li>
-<li><strong>不能同时 join 和 detach</strong>：一个线程不能既是 joinable 又是 detached</li>
-<li><strong>只能调用一次</strong>：<code>join()</code> 和 <code>detach()</code> 都只能调用一次</li>
-</ol>
-<p><strong>实际应用示例</strong>：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn main(_: std.process.Init.Minimal) !void {
-    // 场景1：需要结果的线程 - 使用 join
-    const result_thread = try std.Thread.spawn(.{}, calculateResult, .{});
-    result_thread.join();
-    std.debug.print("计算线程已完成\n", .{});
-    
-    // 场景2：后台日志记录 - 使用 detach
-    const log_thread = try std.Thread.spawn(.{}, backgroundLogging, .{});
-    log_thread.detach();
-    std.debug.print("日志线程已启动，主线程继续\n", .{});
-    
-    std.debug.print("主线程继续执行其他任务\n", .{});
-}
-
-fn calculateResult() void {
-    std.debug.print("开始计算...\n", .{});
-    std.time.sleep(1 * std.time.ns_per_s);
-    std.debug.print("计算完成\n", .{});
-}
-
-fn backgroundLogging() void {
-    for (0..5) |i| {
-        std.debug.print("日志记录: {}\n", .{i});
-        std.time.sleep(500 * std.time.ns_per_ms);
-    }
-}
-</code></pre>
-<p><strong>最佳实践</strong>：</p>
-<ol>
-<li><strong>优先使用 join</strong>：在大多数情况下，使用 <code>join()</code> 更安全，可以确保线程正确完成</li>
-<li><strong>谨慎使用 detach</strong>：只在确定不需要等待线程完成时使用 <code>detach()</code></li>
-<li><strong>资源管理</strong>：确保 detached 线程不会访问已经释放的资源</li>
-<li><strong>错误处理</strong>：detached 线程中的错误需要在线程内部处理</li>
-</ol>
-<h1 id="线程安全的数据共享"><a class="header" href="#线程安全的数据共享">线程安全的数据共享</a></h1>
-<pre><code class="language-zig">const std = @import("std");
-
-// 示例：Zig 0.16.0-dev
 const Counter = struct {
-    mutex: std.Thread.Mutex,
-    value: i32,
-    
-    pub fn init() Counter {
-        return .{
-            .mutex = .{},
-            .value = 0,
-        };
-    }
-    
+    mutex: std.Thread.Mutex = .{},
+    value: usize = 0,
+
     pub fn increment(self: *Counter) void {
         self.mutex.lock();
         defer self.mutex.unlock();
         self.value += 1;
     }
-    
-    pub fn get(self: *Counter) i32 {
+
+    pub fn get(self: *Counter) usize {
         self.mutex.lock();
         defer self.mutex.unlock();
         return self.value;
     }
 };
 
-pub fn main(_: std.process.Init.Minimal) !void {
-    var counter = Counter.init();
-    
-    // 创建多个线程
-    var threads: [10]std.Thread = undefined;
-    for (&amp;threads, 0..) |*t, i| {
-        t.* = try std.Thread.spawn(.{}, incrementWorker, .{ &amp;counter, i });
-    }
-    
-    // 等待所有线程完成
-    for (threads) |t| {
-        t.join();
-    }
-    
-    std.debug.print("Final counter value: {}\n", .{counter.get()});
-}
-
-fn incrementWorker(counter: *Counter, id: usize) void {
-    for (0..1000) |i| {
-        counter.increment();
-        if (i % 100 == 0) {
-            std.debug.print("Thread {}: incrementing\n", .{id});
-        }
-    }
-}
-</code></pre>
-<p><strong>讲解要点</strong>：</p>
-<ul>
-<li><code>std.Thread.Mutex</code> 保护共享数据</li>
-<li><code>lock()</code> 和 <code>unlock()</code> 必须成对使用</li>
-<li><code>defer</code> 确保锁一定会释放</li>
-<li>多线程环境下必须同步访问共享数据</li>
-</ul>
-<h1 id="线程局部变量thread-local-storage-tls"><a class="header" href="#线程局部变量thread-local-storage-tls">线程局部变量（Thread-Local Storage, TLS）</a></h1>
-<p>除了使用互斥锁保护共享数据，另一种避免数据竞争的方法是使用线程局部变量，让每个线程拥有独立的数据副本。</p>
-<h3 id="基本语法"><a class="header" href="#基本语法">基本语法</a></h3>
-<p>使用 <code>threadlocal</code> 关键字声明线程局部变量：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-// 线程局部变量：每个线程有独立的副本
-threadlocal var counter: i32 = 0;
-
-fn incrementCounter() void {
-    counter += 1;
-    std.debug.print("计数器值: {}\n", .{counter});
-}
-
-pub fn main(_: std.process.Init.Minimal) void {
-    // 主线程
-    incrementCounter(); // 输出: 1
-    incrementCounter(); // 输出: 2
-}
-</code></pre>
-<h3 id="多线程示例"><a class="header" href="#多线程示例">多线程示例</a></h3>
-<pre><code class="language-zig">const std = @import("std");
-
-threadlocal var thread_id: usize = 0;
-
-fn worker(id: usize) void {
-    thread_id = id;  // 每个线程设置自己的 ID
-    
-    for (0..3) |i| {
-        std.debug.print("线程 {}: 第 {} 次执行\n", .{ thread_id, i });
-        std.time.sleep(100 * std.time.ns_per_ms);
-    }
-}
-
-pub fn main(_: std.process.Init.Minimal) !void {
-    var threads: [3]std.Thread = undefined;
-    
-    for (&amp;threads, 0..) |*t, i| {
-        t.* = try std.Thread.spawn(.{}, worker, .{i});
-    }
-    
-    for (threads) |t| {
-        t.join();
-    }
-}
-</code></pre>
-<p><strong>预期输出</strong>：</p>
-<pre><code>线程 0: 第 0 次执行
-线程 1: 第 0 次执行
-线程 2: 第 0 次执行
-线程 0: 第 1 次执行
-线程 1: 第 1 次执行
-线程 2: 第 1 次执行
-...
-</code></pre>
-<h3 id="线程局部变量-vs-互斥锁"><a class="header" href="#线程局部变量-vs-互斥锁">线程局部变量 vs 互斥锁</a></h3>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>特性</th><th>线程局部变量</th><th>互斥锁</th></tr>
-</thead>
-<tbody>
-<tr><td><strong>数据共享</strong></td><td>每个线程独立副本</td><td>线程间共享</td></tr>
-<tr><td><strong>同步开销</strong></td><td>无</td><td>有（锁竞争）</td></tr>
-<tr><td><strong>适用场景</strong></td><td>线程特定状态、避免竞争</td><td>需要线程间共享数据</td></tr>
-<tr><td><strong>内存占用</strong></td><td>每个线程一份</td><td>只有一份</td></tr>
-</tbody>
-</table>
-</div>
-<h3 id="实际应用场景"><a class="header" href="#实际应用场景">实际应用场景</a></h3>
-<ol>
-<li>
-<p><strong>线程特定的日志缓冲区</strong>：</p>
-<pre><code class="language-zig">threadlocal var log_buffer: [1024]u8 = undefined;
-</code></pre>
-</li>
-<li>
-<p><strong>随机数生成器</strong>：</p>
-<pre><code class="language-zig">threadlocal var rng: std.Random.DefaultPrng = undefined;
-</code></pre>
-</li>
-<li>
-<p><strong>线程 ID 或状态</strong>：</p>
-<pre><code class="language-zig">threadlocal var thread_local_id: usize = 0;
-</code></pre>
-</li>
-</ol>
-<h3 id="注意事项"><a class="header" href="#注意事项">注意事项</a></h3>
-<ul>
-<li>线程局部变量的初始化在第一次访问时发生</li>
-<li>需要平台支持 TLS</li>
-<li>在单线程程序中，行为与普通全局变量相同</li>
-<li>不能用于需要线程间共享的数据</li>
-</ul>
-<h2 id="同步机制"><a class="header" href="#同步机制">同步机制</a></h2>
-<h1 id="为什么需要同步"><a class="header" href="#为什么需要同步">为什么需要同步？</a></h1>
-<p>多线程访问共享数据时，需要同步机制来避免数据竞争：</p>
-<ol>
-<li><strong>数据竞争</strong>：多个线程同时读写同一数据</li>
-<li><strong>竞态条件</strong>：结果依赖于线程执行顺序</li>
-<li><strong>内存可见性</strong>：一个线程的修改对其他线程不可见</li>
-</ol>
-<h1 id="互斥锁mutex"><a class="header" href="#互斥锁mutex">互斥锁（Mutex）</a></h1>
-<p>互斥锁确保同一时间只有一个线程可以访问共享数据：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-var counter: usize = 0;
-var mutex: std.Thread.Mutex = .{};
-
-fn incrementCounter() void {
+fn worker(counter: *Counter) void {
     for (0..1000) |_| {
-        mutex.lock();
-        defer mutex.unlock();
-        counter += 1;
+        counter.increment();
     }
 }
 
-pub fn main(_: std.process.Init.Minimal) !void {
-    const thread_count = 4;
-    var threads: [thread_count]std.Thread = undefined;
-    
-    for (0..thread_count) |i| {
-        threads[i] = try std.Thread.spawn(.{}, incrementCounter, .{});
+pub fn main() !void {
+    var counter = Counter{};
+    var threads: [4]std.Thread = undefined;
+
+    for (&amp;threads) |*thread| {
+        thread.* = try std.Thread.spawn(.{}, worker, .{&amp;counter});
     }
-    
+
     for (threads) |thread| {
         thread.join();
     }
-    
-    std.debug.print("计数器：{}\n", .{counter});
+
+    std.debug.print("final = {}\n", .{counter.get()});
 }
 </code></pre>
-<h1 id="条件变量condition-variable"><a class="header" href="#条件变量condition-variable">条件变量（Condition Variable）</a></h1>
-<p>条件变量用于线程间的等待/通知机制：</p>
+<h3 id="这段代码体现了什么"><a class="header" href="#这段代码体现了什么">这段代码体现了什么？</a></h3>
+<ul>
+<li>锁保护的是<strong>共享状态</strong>，不是“线程本身”</li>
+<li><code>defer</code> 能帮助你减少忘记解锁的风险</li>
+<li>把锁和数据封装在一起，通常比在外面散落管理更清晰</li>
+</ul>
+<h3 id="什么时候优先用锁"><a class="header" href="#什么时候优先用锁">什么时候优先用锁？</a></h3>
+<p>当你面对的是：</p>
+<ul>
+<li>结构体</li>
+<li>map / list / 缓冲区</li>
+<li>需要多个步骤组成的修改操作</li>
+<li>不容易用单个原子变量表达的共享状态</li>
+</ul>
+<p>这时，锁往往比“试图全部用原子操作硬拼”更清晰、更可靠。</p>
+<h2 id="条件变量让线程等待某个条件成立"><a class="header" href="#条件变量让线程等待某个条件成立">条件变量：让线程等待“某个条件成立”</a></h2>
+<p>有时线程不是要“抢同一把锁”，而是要等待某个状态变化，例如：</p>
+<ul>
+<li>队列里终于有数据了</li>
+<li>某个后台步骤完成了</li>
+<li>生产者已经放入新任务</li>
+</ul>
+<p>这时可以使用 <code>std.Thread.Condition</code>。</p>
 <pre><code class="language-zig">const std = @import("std");
 
-var counter: usize = 0;
 var mutex: std.Thread.Mutex = .{};
 var cond: std.Thread.Condition = .{};
-var done: bool = false;
+var ready = false;
 
-// 生产者：增加计数器
 fn producer() void {
-    for (0..10) |_| {
-        mutex.lock();
-        defer mutex.unlock();
-        
-        counter += 1;
-        std.debug.print("生产：counter = {}\n", .{counter});
-        
-        // 通知等待的消费者
-        cond.signal();
-        std.time.sleep(50 * std.time.ns_per_ms);
-    }
-    
-    // 标记完成
     mutex.lock();
     defer mutex.unlock();
-    done = true;
+
+    ready = true;
     cond.signal();
 }
 
-// 消费者：减少计数器
 fn consumer() void {
-    while (true) {
-        mutex.lock();
-        defer mutex.unlock();
-        
-        // 等待条件：counter &gt; 0 或 done
-        while (counter == 0 and !done) {
-            cond.wait(&amp;mutex); // 释放锁并等待
-        }
-        
-        if (done and counter == 0) break;
-        
-        counter -= 1;
-        std.debug.print("消费：counter = {}\n", .{counter});
+    mutex.lock();
+    defer mutex.unlock();
+
+    while (!ready) {
+        cond.wait(&amp;mutex);
     }
-}
 
-pub fn main(_: std.process.Init.Minimal) !void {
-    const producer_thread = try std.Thread.spawn(.{}, producer, .{});
-    const consumer_thread = try std.Thread.spawn(.{}, consumer, .{});
-    
-    producer_thread.join();
-    consumer_thread.join();
-    
-    std.debug.print("生产者-消费者完成\n", .{});
+    std.debug.print("resource is ready\n", .{});
 }
 </code></pre>
-<p><strong>关键要点</strong>：</p>
+<h3 id="这里最重要的不是函数名而是模式"><a class="header" href="#这里最重要的不是函数名而是模式">这里最重要的不是函数名，而是模式</a></h3>
+<p>请特别记住这一点：</p>
 <ul>
-<li><code>cond.wait(&amp;mutex)</code> 会自动释放锁并等待通知</li>
-<li>收到通知后，会重新获取锁</li>
-<li>使用 <code>while</code> 循环检查条件，避免虚假唤醒</li>
-<li><code>signal()</code> 唤醒一个等待线程，<code>broadcast()</code> 唤醒所有等待线程</li>
+<li>等待条件变量时，要和一把互斥锁配合使用</li>
+<li>条件检查通常写在 <code>while</code> 循环里，而不是 <code>if</code></li>
+<li>条件变量不是“数据本身”，而是“状态变化的通知机制”</li>
 </ul>
-<h2 id="zig-0160-异步-io"><a class="header" href="#zig-0160-异步-io">Zig 0.16.0 异步 I/O</a></h2>
-<blockquote>
-<p>⚠️ <strong>重要说明</strong>：Zig 0.16.0 引入了全新的异步I/O设计，与旧版本的 <code>async</code>/<code>await</code> 关键字完全不同。</p>
-</blockquote>
-<h1 id="异步-io-的核心理念"><a class="header" href="#异步-io-的核心理念">异步 I/O 的核心理念</a></h1>
-<p><strong>关键概念</strong>：<strong>异步 ≠ 并发</strong></p>
+<h2 id="原子操作适合小而明确的共享状态"><a class="header" href="#原子操作适合小而明确的共享状态">原子操作：适合小而明确的共享状态</a></h2>
+<p>如果共享状态非常简单，例如：</p>
 <ul>
-<li><code>async</code>：操作<strong>可以</strong>乱序执行（顺序等待也是有效的）</li>
-<li><code>concurrent</code>：操作<strong>必须</strong>同时执行（需要并行性）</li>
+<li>计数器</li>
+<li>标志位</li>
+<li>统计值</li>
 </ul>
-<p><strong>设计哲学</strong>：</p>
-<ul>
-<li>将并发表达与执行模型解耦</li>
-<li>代码可以在同步、多线程、事件驱动环境中无缝工作</li>
-<li>没有函数着色问题</li>
-</ul>
-<h1 id="stdio-接口"><a class="header" href="#stdio-接口">std.Io 接口</a></h1>
-<pre><code class="language-zig">// ⏪ 旧版本：0.11.0 已移除 async/await
-const std = @import("std");
-
-// 示例：Zig 0.16.0-dev
-const Io = struct {
-    /// 生成异步工作（可能立即执行或被调度）
-    fn async(self: *Io, func: anytype, args: anytype) Future
-    
-    /// 生成并发工作（如果并行性不可用则失败）
-    fn concurrent(self: *Io, func: anytype, args: anytype) !Future
-    
-    /// 消息传递原语
-    fn Queue(comptime T: type) type
-};
-</code></pre>
-<h1 id="future-操作"><a class="header" href="#future-操作">Future 操作</a></h1>
-<pre><code class="language-zig">// ⏪ 旧版本：0.11.0 已移除 async/await
-const Future = struct {
-    /// 等待结果（幂等）
-    fn await(self: *Future, io: *Io) !T
-    
-    /// 取消并检索结果（幂等）
-    fn cancel(self: *Future, io: *Io) !T
-};
-</code></pre>
-<h1 id="基本异步操作"><a class="header" href="#基本异步操作">基本异步操作</a></h1>
-<pre><code class="language-zig">// ⏪ 旧版本：0.11.0 已移除 async/await
-const std = @import("std");
-
-// 示例：Zig 0.16.0-dev
-pub fn main(_: std.process.Init.Minimal) !void {
-    var gpa: std.heap.DebugAllocator(.{}) = .init;
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
-    
-    // 创建 I/O 上下文
-    var io = std.Io.Threaded.init(allocator);
-    defer io.deinit();
-    
-    // 异步文件操作
-    var fut1 = io.async(saveFile, .{ &amp;io, "file1.txt", "Hello" });
-    var fut2 = io.async(saveFile, .{ &amp;io, "file2.txt", "World" });
-    
-    // 等待结果
-    try fut1.await(&amp;io);
-    try fut2.await(&amp;io);
-    
-    std.debug.print("Files saved concurrently\n", .{});
-}
-
-fn saveFile(io: *std.Io, filename: []const u8, content: []const u8) !void {
-    _ = io;
-    const file = try std.fs.cwd().createFile(filename, .{});
-    defer file.close();
-    try file.writeAll(content);
-}
-</code></pre>
-<h1 id="资源管理模式"><a class="header" href="#资源管理模式">资源管理模式</a></h1>
-<pre><code class="language-zig">// ⏪ 旧版本：0.11.0 已移除 async/await
-const std = @import("std");
-
-// 示例：Zig 0.16.0-dev
-pub fn processWithCleanup(io: *std.Io) !void {
-    var future = io.async(longOperation, .{io});
-    
-    // 使用 defer 确保资源清理
-    defer if (future.cancel(io)) |result| {
-        cleanup(result);
-    } else |_| {}
-    
-    // 使用 future...
-    try future.await(io);
-}
-
-fn longOperation(io: *std.Io) !i32 {
-    _ = io;
-    // 模拟长时间操作
-    std.time.sleep(1 * std.time.ns_per_s);
-    return 42;
-}
-
-fn cleanup(result: i32) void {
-    std.debug.print("Cleaning up result: {}\n", .{result});
-}
-</code></pre>
-<p><strong>讲解要点</strong>：</p>
-<ul>
-<li><code>io.async()</code> 用于可能并发的操作</li>
-<li><code>future.await(io)</code> 等待结果</li>
-<li><code>defer</code> + <code>cancel()</code> 模式处理资源清理</li>
-<li>传递 <code>io</code> 参数就像传递 <code>allocator</code> 一样</li>
-</ul>
-<h1 id="async-vs-concurrent-的选择"><a class="header" href="#async-vs-concurrent-的选择">async vs concurrent 的选择</a></h1>
-<p><strong>使用 <code>io.async()</code> 当</strong>：</p>
-<ul>
-<li>操作可以以任何顺序进行</li>
-<li>顺序等待是可接受的</li>
-<li>想要与阻塞I/O实现一起工作</li>
-</ul>
-<p><strong>使用 <code>io.concurrent()</code> 当</strong>：</p>
-<ul>
-<li>操作必须同时运行</li>
-<li>解决生产者-消费者死锁</li>
-<li>需要真正的并行性</li>
-</ul>
-<pre><code class="language-zig">// ⏪ 旧版本：0.11.0 已移除 async/await
-const std = @import("std");
-
-// 示例：Zig 0.16.0-dev
-pub fn demonstrateAsyncVsConcurrent(io: *std.Io) !void {
-    // async: 操作可以顺序执行
-    var async_fut = io.async(task, .{io, "async task"});
-    
-    // concurrent: 操作必须并行执行
-    var concurrent_fut = try io.concurrent(task, .{io, "concurrent task"});
-    
-    try async_fut.await(io);
-    try concurrent_fut.await(io);
-}
-
-fn task(io: *std.Io, name: []const u8) !void {
-    _ = io;
-    std.debug.print("Executing: {s}\n", .{name});
-}
-</code></pre>
-<h2 id="原子操作"><a class="header" href="#原子操作">原子操作</a></h2>
-<h1 id="原子类型"><a class="header" href="#原子类型">原子类型</a></h1>
+<p>那么原子操作往往比锁更轻量。</p>
 <pre><code class="language-zig">const std = @import("std");
 
-// 示例：Zig 0.16.0-dev
 const AtomicCounter = struct {
-    value: std.atomic.Value(i32),
-    
-    pub fn init() AtomicCounter {
-        return .{
-            .value = std.atomic.Value(i32).init(0),
-        };
-    }
-    
+    value: std.atomic.Value(usize) = std.atomic.Value(usize).init(0),
+
     pub fn increment(self: *AtomicCounter) void {
         _ = self.value.fetchAdd(1, .monotonic);
     }
-    
-    pub fn decrement(self: *AtomicCounter) void {
-        _ = self.value.fetchSub(1, .monotonic);
-    }
-    
-    pub fn get(self: *AtomicCounter) i32 {
-        return self.value.load(.monotonic);
-    }
-    
-    pub fn set(self: *AtomicCounter, new_value: i32) void {
-        self.value.store(new_value, .monotonic);
-    }
-};
 
-pub fn main(_: std.process.Init.Minimal) !void {
-    var counter = AtomicCounter.init();
-    
-    var threads: [10]std.Thread = undefined;
-    for (&amp;threads) |*t| {
-        t.* = try std.Thread.spawn(.{}, atomicIncrementWorker, .{&amp;counter});
-    }
-    
-    for (threads) |t| {
-        t.join();
-    }
-    
-    std.debug.print("Final atomic counter: {}\n", .{counter.get()});
-}
-
-fn atomicIncrementWorker(counter: *AtomicCounter) void {
-    for (0..1000) |_| {
-        counter.increment();
-    }
-}
-</code></pre>
-<h1 id="内存序"><a class="header" href="#内存序">内存序</a></h1>
-<p>Zig 支持多种内存序，影响可见性和性能：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-// 示例：Zig 0.16.0-dev
-const Data = struct {
-    ready: std.atomic.Value(bool),
-    value: i32,
-    
-    pub fn init() Data {
-        return .{
-            .ready = std.atomic.Value(bool).init(false),
-            .value = 0,
-        };
-    }
-    
-    // 写入者
-    pub fn write(self: *Data, v: i32) void {
-        self.value = v;
-        // Release: 确保前面的写入对其他线程可见
-        self.ready.store(true, .release);
-    }
-    
-    // 读取者
-    pub fn read(self: *Data) ?i32 {
-        // Acquire: 确保看到最新的写入
-        if (self.ready.load(.acquire)) {
-            return self.value;
-        }
-        return null;
-    }
-};
-</code></pre>
-<p><strong>内存序说明</strong>：</p>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>内存序</th><th>说明</th><th>使用场景</th></tr>
-</thead>
-<tbody>
-<tr><td><code>.monotonic</code></td><td>最弱，只保证原子性</td><td>简单计数器</td></tr>
-<tr><td><code>.acquire</code></td><td>读操作，防止后续操作重排到前面</td><td>读取共享数据</td></tr>
-<tr><td><code>.release</code></td><td>写操作，防止前面操作重排到后面</td><td>写入共享数据</td></tr>
-<tr><td><code>.acq_rel</code></td><td>Acquire + Release</td><td>读-改-写操作</td></tr>
-<tr><td><code>.seq_cst</code></td><td>最强，全局顺序一致</td><td>需要严格顺序的场景</td></tr>
-</tbody>
-</table>
-</div>
-<h1 id="自旋锁实现"><a class="header" href="#自旋锁实现">自旋锁实现</a></h1>
-<pre><code class="language-zig">const std = @import("std");
-
-// 示例：Zig 0.16.0-dev
-const SpinLock = struct {
-    flag: std.atomic.Value(bool),
-    
-    pub fn init() SpinLock {
-        return .{
-            .flag = std.atomic.Value(bool).init(false),
-        };
-    }
-    
-    pub fn lock(self: *SpinLock) void {
-        // CAS 循环：尝试将 false 改为 true
-        while (self.flag.compareAndSwap(
-            false,  // 期望值
-            true,   // 新值
-            .acquire,  // 成功时的内存序
-            .monotonic, // 失败时的内存序
-        )) |_| {
-            // 自旋等待
-            std.Thread.spinLoopHint();
-        }
-    }
-    
-    pub fn unlock(self: *SpinLock) void {
-        // Release: 确保前面的操作对其他线程可见
-        self.flag.store(false, .release);
-    }
-};
-
-pub fn main(_: std.process.Init.Minimal) !void {
-    var spinlock = SpinLock.init();
-    var protected_value: i32 = 0;
-    
-    {
-        spinlock.lock();
-        defer spinlock.unlock();
-        protected_value = 42;
-        std.debug.print("Protected value: {}\n", .{protected_value});
-    }
-}
-</code></pre>
-<p><strong>讲解要点</strong>：</p>
-<ul>
-<li><code>compareAndSwap</code> 是 CAS 操作，用于无锁编程</li>
-<li><code>spinLoopHint()</code> 提示CPU优化自旋等待</li>
-<li>自旋锁适合短时间持有锁的场景</li>
-</ul>
-<h2 id="无锁数据结构"><a class="header" href="#无锁数据结构">无锁数据结构</a></h2>
-<h1 id="无锁栈"><a class="header" href="#无锁栈">无锁栈</a></h1>
-<pre><code class="language-zig">const std = @import("std");
-
-// 示例：Zig 0.16.0-dev
-fn LockFreeStack(comptime T: type) type {
-    return struct {
-        const Self = @This();
-        const Node = struct {
-            data: T,
-            next: ?*Node,
-        };
-        
-        head: std.atomic.Value(?*Node),
-        
-        pub fn init() Self {
-            return .{
-                .head = std.atomic.Value(?*Node).init(null),
-            };
-        }
-        
-        pub fn push(self: *Self, node: *Node) void {
-            var current = self.head.load(.monotonic);
-            while (true) {
-                node.next = current;
-                // CAS: 尝试更新 head
-                if (self.head.compareAndSwap(
-                    current,
-                    node,
-                    .release,
-                    .monotonic,
-                )) |new_current| {
-                    // CAS 失败，重试
-                    current = new_current;
-                } else {
-                    // CAS 成功
-                    break;
-                }
-            }
-        }
-        
-        pub fn pop(self: *Self) ?*Node {
-            var current = self.head.load(.monotonic);
-            while (current) |node| {
-                // CAS: 尝试更新 head
-                if (self.head.compareAndSwap(
-                    current,
-                    node.next,
-                    .acquire,
-                    .monotonic,
-                )) |_| {
-                    // CAS 成功
-                    return node;
-                } else |new_current| {
-                    // CAS 失败，重试
-                    current = new_current;
-                }
-            }
-            return null;
-        }
-    };
-}
-
-pub fn main(_: std.process.Init.Minimal) !void {
-    var stack = LockFreeStack(i32).init();
-    
-    var nodes: [10]LockFreeStack(i32).Node = undefined;
-    for (&amp;nodes, 0..) |*node, i| {
-        node.* = .{
-            .data = @intCast(i),
-            .next = null,
-        };
-        stack.push(node);
-    }
-    
-    while (stack.pop()) |node| {
-        std.debug.print("Popped: {}\n", .{node.data});
-    }
-}
-</code></pre>
-<p><strong>讲解要点</strong>：</p>
-<ul>
-<li>CAS 循环是无锁编程的核心模式</li>
-<li>无锁数据结构避免了锁的开销</li>
-<li>注意 ABA 问题：节点被释放后重新分配，CAS 可能误判</li>
-<li>内存回收是无锁数据结构的难点</li>
-</ul>
-<h2 id="自旋锁实现-1"><a class="header" href="#自旋锁实现-1">自旋锁实现</a></h2>
-<p>自旋锁是一种简单的锁机制，线程在获取锁失败时会循环等待（自旋），而不是阻塞。</p>
-<pre><code class="language-zig">const std = @import("std");
-
-const SpinLock = struct {
-    locked: std.atomic.Value(bool) = std.atomic.Value(bool).init(false),
-    
-    fn acquire(self: *SpinLock) void {
-        while (self.locked.cmpxchgWeak(
-            false,
-            true,
-            .acquire,
-            .relaxed,
-        ) != null) {
-            // 自旋等待
-            std.atomic.spinLoopHint();
-        }
-    }
-    
-    fn release(self: *SpinLock) void {
-        self.locked.store(false, .release);
-    }
-};
-
-pub fn main(_: std.process.Init.Minimal) !void {
-    var lock: SpinLock = .{};
-    var counter: usize = 0;
-    
-    const worker = struct {
-        fn work(l: *SpinLock, c: *usize) void {
-            for (0..1000) |_| {
-                l.acquire();
-                defer l.release();
-                c.* += 1;
-            }
-        }
-    }.work;
-    
-    const thread1 = try std.Thread.spawn(.{}, worker, .{ &amp;lock, &amp;counter });
-    const thread2 = try std.Thread.spawn(.{}, worker, .{ &amp;lock, &amp;counter });
-    
-    thread1.join();
-    thread2.join();
-    
-    std.debug.print("计数器：{}\n", .{counter});
-}
-</code></pre>
-<p><strong>自旋锁 vs 互斥锁</strong>：</p>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>特性</th><th>自旋锁</th><th>互斥锁</th></tr>
-</thead>
-<tbody>
-<tr><td><strong>等待方式</strong></td><td>忙等待（占用 CPU）</td><td>阻塞等待（释放 CPU）</td></tr>
-<tr><td><strong>上下文切换</strong></td><td>无</td><td>有</td></tr>
-<tr><td><strong>适用场景</strong></td><td>短时间持有锁</td><td>长时间持有锁</td></tr>
-<tr><td><strong>CPU 开销</strong></td><td>高（等待时占用 CPU）</td><td>低（等待时释放 CPU）</td></tr>
-<tr><td><strong>实现复杂度</strong></td><td>简单</td><td>复杂</td></tr>
-</tbody>
-</table>
-</div>
-<p><strong>使用建议</strong>：</p>
-<ul>
-<li>✅ <strong>适合</strong>：锁持有时间极短（&lt; 100 条指令）</li>
-<li>❌ <strong>不适合</strong>：锁持有时间较长，或竞争激烈</li>
-<li>⚠️ <strong>注意</strong>：在单核 CPU 上，自旋锁可能导致死锁</li>
-</ul>
-<h2 id="并发模式"><a class="header" href="#并发模式">并发模式</a></h2>
-<h1 id="生产者-消费者模式"><a class="header" href="#生产者-消费者模式">生产者-消费者模式</a></h1>
-<pre><code class="language-zig">const std = @import("std");
-
-// 示例：Zig 0.16.0-dev
-fn BoundedQueue(comptime T: type) type {
-    return struct {
-        mutex: std.Thread.Mutex,
-        not_empty: std.Thread.Condition,
-        not_full: std.Thread.Condition,
-        buffer: []T,
-        head: usize,
-        tail: usize,
-        count: usize,
-        
-        pub fn init(allocator: std.mem.Allocator, capacity: usize) !@This() {
-            return .{
-                .mutex = .{},
-                .not_empty = .{},
-                .not_full = .{},
-                .buffer = try allocator.alloc(T, capacity),
-                .head = 0,
-                .tail = 0,
-                .count = 0,
-            };
-        }
-        
-        pub fn deinit(self: *@This(), allocator: std.mem.Allocator) void {
-            allocator.free(self.buffer);
-        }
-        
-        pub fn enqueue(self: *@This(), item: T) void {
-            self.mutex.lock();
-            defer self.mutex.unlock();
-            
-            // 等待队列不满
-            while (self.count == self.buffer.len) {
-                self.not_full.wait(&amp;self.mutex);
-            }
-            
-            self.buffer[self.tail] = item;
-            self.tail = (self.tail + 1) % self.buffer.len;
-            self.count += 1;
-            
-            // 通知消费者
-            self.not_empty.signal();
-        }
-        
-        pub fn dequeue(self: *@This()) T {
-            self.mutex.lock();
-            defer self.mutex.unlock();
-            
-            // 等待队列不空
-            while (self.count == 0) {
-                self.not_empty.wait(&amp;self.mutex);
-            }
-            
-            const item = self.buffer[self.head];
-            self.head = (self.head + 1) % self.buffer.len;
-            self.count -= 1;
-            
-            // 通知生产者
-            self.not_full.signal();
-            
-            return item;
-        }
-    };
-}
-
-pub fn main(_: std.process.Init.Minimal) !void {
-    var gpa: std.heap.DebugAllocator(.{}) = .init;
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
-    
-    var queue = try BoundedQueue(i32).init(allocator, 10);
-    defer queue.deinit(allocator);
-    
-    // 生产者线程
-    const producer = try std.Thread.spawn(.{}, producerWorker, .{&amp;queue});
-    
-    // 消费者线程
-    const consumer = try std.Thread.spawn(.{}, consumerWorker, .{&amp;queue});
-    
-    producer.join();
-    consumer.join();
-}
-
-fn producerWorker(queue: *BoundedQueue(i32)) void {
-    for (0..20) |i| {
-        queue.enqueue(@intCast(i));
-        std.debug.print("Produced: {}\n", .{i});
-        std.time.sleep(100 * std.time.ns_per_ms);
-    }
-}
-
-fn consumerWorker(queue: *BoundedQueue(i32)) void {
-    for (0..20) |_| {
-        const item = queue.dequeue();
-        std.debug.print("Consumed: {}\n", .{item});
-        std.time.sleep(150 * std.time.ns_per_ms);
-    }
-}
-</code></pre>
-<p><strong>讲解要点</strong>：</p>
-<ul>
-<li>条件变量用于线程间通信</li>
-<li><code>wait()</code> 会释放锁并等待信号</li>
-<li><code>signal()</code> 唤醒等待的线程</li>
-<li>循环队列实现有界缓冲</li>
-</ul>
-<h1 id="使用-ioqueue-进行消息传递"><a class="header" href="#使用-ioqueue-进行消息传递">使用 Io.Queue 进行消息传递</a></h1>
-<pre><code class="language-zig">// ⏪ 旧版本：0.11.0 已移除 async/await
-const std = @import("std");
-
-// 示例：Zig 0.16.0-dev
-pub fn main(_: std.process.Init.Minimal) !void {
-    var gpa: std.heap.DebugAllocator(.{}) = .init;
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
-    
-    var io = std.Io.Threaded.init(allocator);
-    defer io.deinit();
-    
-    // 创建消息队列
-    var queue = io.Queue(i32).init();
-    
-    // 生产者
-    var producer = try io.concurrent(produce, .{ &amp;io, &amp;queue });
-    
-    // 消费者
-    var consumer = try io.concurrent(consume, .{ &amp;io, &amp;queue });
-    
-    try producer.await(&amp;io);
-    try consumer.await(&amp;io);
-}
-
-fn produce(io: *std.Io, queue: *std.Io.Queue(i32)) !void {
-    for (0..10) |i| {
-        try queue.write(io, @intCast(i));
-        std.debug.print("Produced: {}\n", .{i});
-    }
-}
-
-fn consume(io: *std.Io, queue: *std.Io.Queue(i32)) !void {
-    for (0..10) |_| {
-        const item = try queue.read(io);
-        std.debug.print("Consumed: {}\n", .{item});
-    }
-}
-</code></pre>
-<h2 id="实践练习"><a class="header" href="#实践练习">实践练习</a></h2>
-<h1 id="练习1基础练习难度简单"><a class="header" href="#练习1基础练习难度简单">练习1：基础练习（难度：简单）</a></h1>
-<p><strong>练习目标</strong>：掌握线程和互斥锁的使用</p>
-<pre><code class="language-zig">// 练习1.1：实现线程安全的计数器
-const ThreadSafeCounter = struct {
-    mutex: std.Thread.Mutex,
-    value: i32,
-    
-    // TODO: 实现 init, increment, decrement, get
-};
-
-// 练习1.2：实现线程安全的链表
-const ThreadSafeList = struct {
-    mutex: std.Thread.Mutex,
-    head: ?*Node,
-    
-    // TODO: 实现 insert, remove, find
-};
-
-// 练习1.3：实现线程安全的哈希表
-const ThreadSafeHashMap = struct {
-    mutex: std.Thread.Mutex,
-    buckets: []?Entry,
-    
-    // TODO: 实现 put, get, remove
-};
-</code></pre>
-<h1 id="练习2进阶练习难度中等"><a class="header" href="#练习2进阶练习难度中等">练习2：进阶练习（难度：中等）</a></h1>
-<p><strong>练习目标</strong>：掌握原子操作和无锁编程</p>
-<pre><code class="language-zig">// 练习2.1：实现自旋锁
-const SpinLock = struct {
-    flag: std.atomic.Value(bool),
-    
-    // TODO: 实现 lock, unlock
-};
-
-// 练习2.2：实现无锁队列
-const LockFreeQueue = struct {
-    head: std.atomic.Value(?*Node),
-    tail: std.atomic.Value(?*Node),
-    
-    // TODO: 实现 enqueue, dequeue
-};
-
-// 练习2.3：实现读写锁
-const ReadWriteLock = struct {
-    readers: std.atomic.Value(i32),
-    writer: std.atomic.Value(bool),
-    
-    // TODO: 实现 readLock, readUnlock, writeLock, writeUnlock
-};
-</code></pre>
-<h1 id="练习3高级练习难度困难"><a class="header" href="#练习3高级练习难度困难">练习3：高级练习（难度：困难）</a></h1>
-<p><strong>练习目标</strong>：掌握复杂并发模式</p>
-<pre><code class="language-zig">// 练习3.1：实现线程池
-const ThreadPool = struct {
-    workers: []std.Thread,
-    tasks: BoundedQueue(Task),
-    
-    // TODO: 实现 init, deinit, submit, shutdown
-};
-
-// 练习3.2：实现工作窃取调度器
-const WorkStealingScheduler = struct {
-    queues: []ThreadLocalQueue,
-    
-    // TODO: 实现 submit, steal, run
-};
-
-// 练习3.3：实现并发哈希表
-const ConcurrentHashMap = struct {
-    segments: []Segment,
-    
-    // TODO: 实现 put, get, remove（使用分段锁）
-};
-</code></pre>
-<h2 id="线程安全的数据结构"><a class="header" href="#线程安全的数据结构">线程安全的数据结构</a></h2>
-<p>在实际项目中，经常需要线程安全的数据结构。以下是线程安全计数器的实现：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-const ThreadSafeCounter = struct {
-    value: std.atomic.Value(usize),
-    mutex: std.Thread.Mutex,
-    
-    fn init() ThreadSafeCounter {
-        return .{
-            .value = std.atomic.Value(usize).init(0),
-            .mutex = .{},
-        };
-    }
-    
-    fn increment(self: *ThreadSafeCounter) void {
-        _ = self.value.fetchAdd(1, .monotonic);
-    }
-    
-    fn incrementComplex(self: *ThreadSafeCounter) void {
-        self.mutex.lock();
-        defer self.mutex.unlock();
-        const current = self.value.load(.monotonic);
-        self.value.store(current + 1, .monotonic);
-    }
-    
-    fn get(self: *const ThreadSafeCounter) usize {
-        return self.value.load(.monotonic);
-    }
-};
-
-pub fn main(_: std.process.Init.Minimal) !void {
-    var counter = ThreadSafeCounter.init();
-    
-    const worker = struct {
-        fn work(c: *ThreadSafeCounter) void {
-            for (0..1000) |_| {
-                c.increment();
-            }
-        }
-    }.work;
-    
-    var threads: [10]std.Thread = undefined;
-    for (&amp;threads, 0..) |*thread, i| {
-        _ = i;
-        thread.* = try std.Thread.spawn(.{}, worker, .{&amp;counter});
-    }
-    
-    for (threads) |thread| {
-        thread.join();
-    }
-    
-    std.debug.print("最终计数：{}\n", .{counter.get()});
-}
-</code></pre>
-<p><strong>选择同步原语的原则</strong>：</p>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>场景</th><th>推荐方案</th><th>原因</th></tr>
-</thead>
-<tbody>
-<tr><td>简单计数器</td><td>原子操作</td><td>性能最优，无锁</td></tr>
-<tr><td>复杂临界区</td><td>互斥锁</td><td>保证互斥访问</td></tr>
-<tr><td>读多写少</td><td>读写锁</td><td>提高并发度</td></tr>
-<tr><td>等待条件</td><td>条件变量</td><td>高效等待</td></tr>
-</tbody>
-</table>
-</div>
-<p><strong>线程安全检查清单</strong>：</p>
-<ol>
-<li>✅ <strong>识别共享数据</strong>：明确哪些数据会被多个线程访问</li>
-<li>✅ <strong>选择同步原语</strong>：根据访问模式选择合适的锁或原子操作</li>
-<li>✅ <strong>最小化临界区</strong>：锁的范围越小越好</li>
-<li>✅ <strong>避免嵌套锁</strong>：防止死锁</li>
-<li>✅ <strong>使用 defer 确保释放</strong>：确保锁一定会释放</li>
-</ol>
-<h2 id="常见并发陷阱"><a class="header" href="#常见并发陷阱">常见并发陷阱</a></h2>
-<h1 id="死锁deadlock"><a class="header" href="#死锁deadlock">死锁（Deadlock）</a></h1>
-<p>死锁是指两个或多个线程互相等待对方释放资源，导致所有线程都无法继续执行。</p>
-<p><strong>死锁示例</strong>：</p>
-<pre><code class="language-zig">// ❌ 错误示例
-fn deadlockExample() void {
-    var mutex1: std.Thread.Mutex = .{};
-    var mutex2: std.Thread.Mutex = .{};
-    
-    // 线程1：先锁 mutex1，再锁 mutex2
-    const thread1 = std.Thread.spawn(.{}, struct {
-        fn work(m1: *std.Thread.Mutex, m2: *std.Thread.Mutex) void {
-            m1.lock();
-            defer m1.unlock();
-            
-            std.time.sleep(100 * std.time.ns_per_ms);
-            
-            m2.lock();
-            defer m2.unlock();
-        }
-    }.work, .{ &amp;mutex1, &amp;mutex2 });
-    
-    // 线程2：先锁 mutex2，再锁 mutex1（相反顺序）
-    const thread2 = std.Thread.spawn(.{}, struct {
-        fn work(m1: *std.Thread.Mutex, m2: *std.Thread.Mutex) void {
-            m2.lock();
-            defer m2.unlock();
-            
-            std.time.sleep(100 * std.time.ns_per_ms);
-            
-            m1.lock();
-            defer m1.unlock();
-        }
-    }.work, .{ &amp;mutex1, &amp;mutex2 });
-    
-    thread1.join();
-    thread2.join();
-}
-</code></pre>
-<p><strong>避免死锁的方法</strong>：</p>
-<pre><code class="language-zig">// ✅ 方法1：统一加锁顺序
-fn noDeadlockMethod1() void {
-    var mutex1: std.Thread.Mutex = .{};
-    var mutex2: std.Thread.Mutex = .{};
-    
-    mutex1.lock();
-    defer mutex1.unlock();
-    
-    mutex2.lock();
-    defer mutex2.unlock();
-}
-
-// ✅ 方法2：使用 tryLock 避免阻塞
-fn noDeadlockMethod2() void {
-    var mutex1: std.Thread.Mutex = .{};
-    var mutex2: std.Thread.Mutex = .{};
-    
-    mutex1.lock();
-    errdefer mutex1.unlock();
-    
-    if (mutex2.tryLock()) {
-        defer mutex2.unlock();
-    } else {
-        mutex1.unlock();
-    }
-}
-</code></pre>
-<h1 id="竞态条件race-condition"><a class="header" href="#竞态条件race-condition">竞态条件（Race Condition）</a></h1>
-<p>竞态条件是指多个线程访问共享数据，且至少有一个线程在写入，导致结果依赖于执行顺序。</p>
-<pre><code class="language-zig">// ❌ 错误示例
-var counter: usize = 0;
-
-fn unsafeIncrement() void {
-    for (0..1000) |_| {
-        counter += 1;
-    }
-}
-
-// ✅ 正确做法：使用原子操作
-var safe_counter: std.atomic.Value(usize) = std.atomic.Value(usize).init(0);
-
-fn safeIncrement() void {
-    for (0..1000) |_| {
-        _ = safe_counter.fetchAdd(1, .monotonic);
-    }
-}
-</code></pre>
-<h1 id="活锁livelock"><a class="header" href="#活锁livelock">活锁（Livelock）</a></h1>
-<p>活锁是指线程不断改变状态但无法取得进展，类似于两个人在走廊里互相让路。</p>
-<pre><code class="language-zig">// ❌ 错误示例：立即重试可能导致活锁
-fn livelockExample() void {
-    var mutex: std.Thread.Mutex = .{};
-    var should_retry = true;
-    
-    while (should_retry) {
-        if (mutex.tryLock()) {
-            defer mutex.unlock();
-            should_retry = false;
-        }
-    }
-}
-
-// ✅ 正确做法：添加退避策略
-fn noLivelock() void {
-    var mutex: std.Thread.Mutex = .{};
-    var retry_count: usize = 0;
-    
-    while (retry_count &lt; 10) : (retry_count += 1) {
-        if (mutex.tryLock()) {
-            defer mutex.unlock();
-            break;
-        }
-        std.time.sleep(std.time.ns_per_ms * @as(u64, 1) &lt;&lt; @intCast(retry_count));
-    }
-}
-</code></pre>
-<h2 id="性能优化建议"><a class="header" href="#性能优化建议">性能优化建议</a></h2>
-<h1 id="1-减少锁竞争"><a class="header" href="#1-减少锁竞争">1. 减少锁竞争</a></h1>
-<pre><code class="language-zig">// ❌ 错误示例：整个操作都在临界区内
-fn inefficientLock(data: *Data) void {
-    var mutex: std.Thread.Mutex = .{};
-    mutex.lock();
-    defer mutex.unlock();
-    
-    processData(data);
-    saveResult(data);
-}
-
-// ✅ 最小化临界区
-fn efficientLock(data: *Data) void {
-    var mutex: std.Thread.Mutex = .{};
-    
-    mutex.lock();
-    const local_copy = data.value;
-    mutex.unlock();
-    
-    const result = processData(local_copy);
-    
-    mutex.lock();
-    data.result = result;
-    mutex.unlock();
-}
-</code></pre>
-<h1 id="2-使用无锁数据结构"><a class="header" href="#2-使用无锁数据结构">2. 使用无锁数据结构</a></h1>
-<p>对于简单操作，优先使用原子操作：</p>
-<pre><code class="language-zig">const LockFreeCounter = struct {
-    value: std.atomic.Value(usize),
-    
-    fn increment(self: *LockFreeCounter) void {
-        _ = self.value.fetchAdd(1, .monotonic);
-    }
-    
-    fn get(self: *const LockFreeCounter) usize {
+    pub fn get(self: *AtomicCounter) usize {
         return self.value.load(.monotonic);
     }
 };
 </code></pre>
-<h1 id="3-避免伪共享false-sharing"><a class="header" href="#3-避免伪共享false-sharing">3. 避免伪共享（False Sharing）</a></h1>
-<p>伪共享是指多个线程访问同一缓存行的不同变量，导致缓存频繁失效。</p>
-<pre><code class="language-zig">// ❌ 错误示例
-const Data = struct {
-    counter1: usize,
-    counter2: usize,
-};
-
-// ✅ 使用缓存行对齐
-const CACHE_LINE_SIZE = 64;
-
-const AlignedData = struct {
-    counter1: usize align(CACHE_LINE_SIZE),
-    counter2: usize align(CACHE_LINE_SIZE),
-};
-</code></pre>
-<h1 id="4-性能对比"><a class="header" href="#4-性能对比">4. 性能对比</a></h1>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>同步方式</th><th>性能</th><th>适用场景</th></tr>
-</thead>
-<tbody>
-<tr><td>无锁（原子操作）</td><td>⭐⭐⭐⭐⭐</td><td>简单计数、标志位</td></tr>
-<tr><td>自旋锁</td><td>⭐⭐⭐⭐</td><td>短临界区、低竞争</td></tr>
-<tr><td>互斥锁</td><td>⭐⭐⭐</td><td>长临界区、高竞争</td></tr>
-<tr><td>读写锁</td><td>⭐⭐⭐</td><td>读多写少</td></tr>
-</tbody>
-</table>
-</div>
-<h1 id="5-性能测试建议"><a class="header" href="#5-性能测试建议">5. 性能测试建议</a></h1>
-<pre><code class="language-zig">const std = @import("std");
-
-fn benchmarkMutex(allocator: std.mem.Allocator) !void {
-    var mutex: std.Thread.Mutex = .{};
-    var counter: usize = 0;
-    
-    const start = std.time.nanoTimestamp();
-    
-    var threads: [4]std.Thread = undefined;
-    for (&amp;threads) |*thread| {
-        thread.* = try std.Thread.spawn(.{}, struct {
-            fn work(m: *std.Thread.Mutex, c: *usize) void {
-                for (0..100000) |_| {
-                    m.lock();
-                    defer m.unlock();
-                    c.* += 1;
-                }
-            }
-        }.work, .{ &amp;mutex, &amp;counter });
-    }
-    
-    for (threads) |thread| thread.join();
-    
-    const end = std.time.nanoTimestamp();
-    const elapsed = @as(f64, @floatFromInt(end - start)) / 1_000_000.0;
-    
-    std.debug.print("互斥锁耗时：{d:.2}ms\n", .{elapsed});
-}
-</code></pre>
-<h2 id="并发编程最佳实践"><a class="header" href="#并发编程最佳实践">并发编程最佳实践</a></h2>
-<h1 id="1-避免数据竞争"><a class="header" href="#1-避免数据竞争">1. 避免数据竞争</a></h1>
-<pre><code class="language-zig">// ✅ 好的做法：使用锁保护共享数据
-// ❌ 错误示例
-const SharedData = struct {
-    mutex: std.Thread.Mutex,
-    value: i32,
-    
-    pub fn update(self: *SharedData, new_value: i32) void {
-        self.mutex.lock();
-        defer self.mutex.unlock();
-        self.value = new_value;
-    }
-};
-
-// ❌ 不好的做法：直接访问共享数据
-const SharedData = struct {
-    value: i32,
-    
-    pub fn update(self: *SharedData, new_value: i32) void {
-        self.value = new_value;  // 数据竞争！
-    }
-};
-</code></pre>
-<h1 id="2-最小化锁的持有时间"><a class="header" href="#2-最小化锁的持有时间">2. 最小化锁的持有时间</a></h1>
-<pre><code class="language-zig">// ✅ 好的做法：减少锁的持有时间
-// ❌ 错误示例
-fn processData(data: *SharedData) !void {
-    // 先在锁外准备数据
-    const prepared = try prepareData();
-    
-    // 只在必要时持有锁
-    data.mutex.lock();
-    defer data.mutex.unlock();
-    data.value = prepared;
-}
-
-// ❌ 不好的做法：长时间持有锁
-fn processData(data: *SharedData) !void {
-    data.mutex.lock();
-    defer data.mutex.unlock();
-    
-    // 在锁内进行耗时操作
-    const prepared = try prepareData();  // 不应该在这里
-    data.value = prepared;
-}
-</code></pre>
-<h1 id="3-避免死锁"><a class="header" href="#3-避免死锁">3. 避免死锁</a></h1>
-<pre><code class="language-zig">// ✅ 好的做法：按固定顺序获取锁
-// ❌ 错误示例
-fn transfer(from: *Account, to: *Account, amount: i32) void {
-    const lock1 = if (@intFromPtr(from) &lt; @intFromPtr(to)) from else to;
-    const lock2 = if (@intFromPtr(from) &lt; @intFromPtr(to)) to else from;
-    
-    lock1.mutex.lock();
-    defer lock1.mutex.unlock();
-    lock2.mutex.lock();
-    defer lock2.mutex.unlock();
-    
-    from.balance -= amount;
-    to.balance += amount;
-}
-
-// ❌ 不好的做法：随机顺序获取锁（可能死锁）
-fn transfer(from: *Account, to: *Account, amount: i32) void {
-    from.mutex.lock();
-    defer from.mutex.unlock();
-    to.mutex.lock();  // 可能死锁！
-    defer to.mutex.unlock();
-    
-    from.balance -= amount;
-    to.balance += amount;
-}
-</code></pre>
-<h1 id="4-使用-defer-确保资源释放"><a class="header" href="#4-使用-defer-确保资源释放">4. 使用 defer 确保资源释放</a></h1>
-<pre><code class="language-zig">// ✅ 好的做法：使用 defer
-// ❌ 错误示例
-fn safeOperation(data: *SharedData) void {
-    data.mutex.lock();
-    defer data.mutex.unlock();  // 确保一定会释放
-    
-    // 可能提前返回的代码
-    if (data.value == 0) return;
-    
-    // 其他操作...
-}
-
-// ❌ 不好的做法：手动释放（容易忘记）
-fn unsafeOperation(data: *SharedData) void {
-    data.mutex.lock();
-    
-    if (data.value == 0) {
-        data.mutex.unlock();  // 容易忘记
-        return;
-    }
-    
-    // 其他操作...
-    data.mutex.unlock();  // 可能不会执行
-}
-</code></pre>
-<h1 id="5-选择合适的同步机制"><a class="header" href="#5-选择合适的同步机制">5. 选择合适的同步机制</a></h1>
-<pre><code class="language-zig">// 简单计数器 → 原子操作
-var counter = std.atomic.Value(i32).init(0);
-_ = counter.fetchAdd(1, .monotonic);
-
-// 复杂操作 → 互斥锁
-var data = struct {
-    mutex: std.Thread.Mutex,
-    map: std.StringHashMap(i32),
-}{ .mutex = .{}, .map = undefined };
-
-// 生产者-消费者 → 条件变量或 Io.Queue
-var queue = BoundedQueue(i32).init(allocator, 10);
-
-// 高性能场景 → 无锁数据结构
-var stack = LockFreeStack(i32).init();
-</code></pre>
-<h2 id="小结"><a class="header" href="#小结">小结</a></h2>
-<p>本章介绍了 Zig 的并发编程，包括：</p>
-<ol>
-<li>
-<p><strong>并发基础概念</strong>：</p>
+<h3 id="什么时候适合用原子操作"><a class="header" href="#什么时候适合用原子操作">什么时候适合用原子操作？</a></h3>
+<p>适合：</p>
 <ul>
-<li>并发 vs 并行</li>
-<li>Zig 的并发模型</li>
-<li>线程创建和管理</li>
+<li>单个数值</li>
+<li>简单状态位</li>
+<li>不需要把多个字段作为一个整体同时维护</li>
 </ul>
-</li>
-<li>
-<p><strong>Zig 0.16.0 异步 I/O</strong>：</p>
+<p>不适合：</p>
 <ul>
-<li>std.Io 接口</li>
-<li>Future 操作</li>
-<li>async vs concurrent</li>
-<li>资源管理模式</li>
+<li>复杂结构体的一致性维护</li>
+<li>多字段必须一起更新的状态</li>
+<li>逻辑已经很难一眼看懂的并发代码</li>
 </ul>
-</li>
-<li>
-<p><strong>原子操作</strong>：</p>
-<ul>
-<li>原子类型</li>
-<li>内存序</li>
-<li>CAS 操作</li>
-</ul>
-</li>
-<li>
-<p><strong>无锁数据结构</strong>：</p>
-<ul>
-<li>无锁栈</li>
-<li>CAS 循环模式</li>
-<li>ABA 问题</li>
-</ul>
-</li>
-<li>
-<p><strong>并发模式</strong>：</p>
-<ul>
-<li>生产者-消费者</li>
-<li>消息传递</li>
-</ul>
-</li>
-<li>
-<p><strong>最佳实践</strong>：</p>
-<ul>
-<li>避免数据竞争</li>
-<li>最小化锁持有时间</li>
-<li>避免死锁</li>
-<li>使用 defer</li>
-<li>选择合适的同步机制</li>
-</ul>
-</li>
-</ol>
-<p><strong>关键要点</strong>：</p>
-<ul>
-<li>Zig 提供线程和异步 I/O 两种并发机制</li>
-<li>Zig 0.16.0 的异步 I/O 解耦了并发表达和执行模型</li>
-<li>原子操作是无锁编程的基础</li>
-<li>内存序影响可见性和性能</li>
-<li>并发编程需要特别注意正确性</li>
-</ul>
-<p><strong>下一步学习</strong>：</p>
-<ul>
-<li>第十一章：指针与引用类型 - 深入理解指针</li>
-<li>第十二章：与 C 语言互操作 - 学习与 C 库交互</li>
-<li>第十三章：测试与基准测试 - 学习测试并发代码</li>
-</ul>
-<hr>
 <blockquote>
-<p>💡 <strong>章节过渡</strong>：从并发编程到指针与引用类型</p>
-<p>在<a href="chapter-concurrency.html">并发编程概述</a>中，我们学习了并发编程概述，掌握了线程、互斥锁、原子操作等基本概念。
-现在，我们将深入学习指针与引用类型，了解 Zig 如何通过指针类型系统保证内存安全。</p>
-<p><strong>为什么并发编程需要深入理解指针？</strong></p>
-<ol>
-<li><strong>共享内存</strong>：多线程访问同一数据需要通过指针</li>
-<li><strong>数据竞争</strong>：指针的不当使用会导致并发问题</li>
-<li><strong>原子操作</strong>：理解指针是理解原子操作的前提</li>
-<li><strong>无锁数据结构</strong>：高级并发模式需要指针操作</li>
-</ol>
-<p><strong>学习建议</strong>：</p>
-<ul>
-<li>确保你已经理解了并发编程的基本概念</li>
-<li>注意指针在并发环境下的安全问题</li>
-<li>理解不同指针类型的安全保证</li>
-</ul>
+<p>💡 一个实用经验：</p>
+<p>如果你在写原子代码时已经开始怀疑“这到底是否还容易验证”，那通常就该重新评估，看看是不是应该回到锁。</p>
 </blockquote>
+<h2 id="线程局部变量避免不必要的共享"><a class="header" href="#线程局部变量避免不必要的共享">线程局部变量：避免不必要的共享</a></h2>
+<p>并发设计里，一个很重要的思路是：<strong>如果能不共享，就尽量不共享。</strong></p>
+<p>线程局部变量（<code>threadlocal</code>）正是这个方向的一种工具。</p>
+<pre><code class="language-zig">const std = @import("std");
+
+threadlocal var local_counter: usize = 0;
+
+fn worker(id: usize) void {
+    for (0..3) |_| {
+        local_counter += 1;
+        std.debug.print("thread {} local = {}\n", .{ id, local_counter });
+    }
+}
+</code></pre>
+<p>每个线程都会拥有自己独立的一份 <code>local_counter</code>，因此它不需要互斥锁保护。</p>
+<h3 id="它适合什么场景"><a class="header" href="#它适合什么场景">它适合什么场景？</a></h3>
+<ul>
+<li>每个线程自己的缓存区</li>
+<li>线程自己的临时状态</li>
+<li>每个线程独立的统计信息</li>
+</ul>
+<h3 id="它不适合什么场景"><a class="header" href="#它不适合什么场景">它不适合什么场景？</a></h3>
+<ul>
+<li>多个线程必须共享和协调的数据</li>
+<li>需要全局一致性的计数或状态</li>
+</ul>
+<h2 id="该选线程锁原子还是条件变量"><a class="header" href="#该选线程锁原子还是条件变量">该选线程、锁、原子，还是条件变量？</a></h2>
+<p>可以先用下面这张表建立直觉：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>场景</th><th>更常见的起点</th></tr>
+</thead>
+<tbody>
+<tr><td>把几个独立计算任务分给多个 CPU 核心</td><td>线程</td></tr>
+<tr><td>多线程共享复杂结构体</td><td>互斥锁</td></tr>
+<tr><td>只维护一个计数器或标志位</td><td>原子操作</td></tr>
+<tr><td>一个线程等待另一个线程准备好数据</td><td>条件变量</td></tr>
+<tr><td>每个线程维护自己的临时状态</td><td><code>threadlocal</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>这张表不是绝对规则，但很适合作为第一判断。</p>
+<h2 id="当前语境下如何看待异步-io方向"><a class="header" href="#当前语境下如何看待异步-io方向">当前语境下，如何看待“异步 I/O”方向？</a></h2>
+<p>你可能已经在博客、issue、标准库源码或开发版讨论中看到过与异步 I/O 相关的方向性接口。</p>
+<p>对于本教程读者，更重要的是建立一个<strong>稳妥认知</strong>：</p>
+<ol>
+<li>这属于更容易演进的区域</li>
+<li>它和线程模型不是简单替代关系</li>
+<li>教学上更适合先掌握线程、锁、条件变量、原子这些稳定概念</li>
+<li>真要落地具体 API，必须以你本地版本和源码为准</li>
+</ol>
+<p>因此，本章不把某个开发版里的 I/O 并发接口当作“你现在必须背下来的主线知识”。</p>
+<h2 id="并发编程最常见的几个坑"><a class="header" href="#并发编程最常见的几个坑">并发编程最常见的几个坑</a></h2>
+<h3 id="1-把睡眠等待当同步机制"><a class="header" href="#1-把睡眠等待当同步机制">1. 把“睡眠等待”当同步机制</a></h3>
+<p><code>std.time.sleep()</code> 可以模拟场景，但不能代替真正的同步原语。</p>
+<p>如果一个线程要等待另一个线程完成工作，应优先考虑：</p>
+<ul>
+<li><code>join()</code></li>
+<li>条件变量</li>
+<li>队列 / 通知机制</li>
+</ul>
+<p>而不是“睡一会儿大概就好了”。</p>
+<h3 id="2-锁持有时间过长"><a class="header" href="#2-锁持有时间过长">2. 锁持有时间过长</a></h3>
+<p>如果线程拿着锁做了太多事：</p>
+<ul>
+<li>其他线程会被阻塞更久</li>
+<li>争用变多</li>
+<li>程序更容易出现性能问题或死锁风险</li>
+</ul>
+<p>经验上，锁保护的临界区越小越好。</p>
+<h3 id="3-分不清共享数据和只读数据"><a class="header" href="#3-分不清共享数据和只读数据">3. 分不清共享数据和只读数据</a></h3>
+<p>如果数据根本不需要修改，或者天然可以复制给线程，那么就不该急着把它做成共享可变状态。</p>
+<h3 id="4-detach-线程访问了已经失效的资源"><a class="header" href="#4-detach-线程访问了已经失效的资源">4. <code>detach()</code> 线程访问了已经失效的资源</a></h3>
+<p>这是非常常见的生命周期错误来源。后台线程引用：</p>
+<ul>
+<li>栈变量</li>
+<li>临时切片</li>
+<li>已经 <code>deinit()</code> 的分配器</li>
+<li>已关闭文件/连接</li>
+</ul>
+<p>都可能导致非常难查的问题。</p>
+<h3 id="5-过早使用更高级的并发技巧"><a class="header" href="#5-过早使用更高级的并发技巧">5. 过早使用“更高级”的并发技巧</a></h3>
+<p>在你还没完全掌握线程、锁、条件变量之前，过早上复杂 lock-free 结构、复杂原子协议，通常只会让代码更难验证。</p>
+<h2 id="本章小结"><a class="header" href="#本章小结">本章小结</a></h2>
+<p>本章最重要的目标，不是让你一次掌握所有并发技巧，而是建立这几个核心判断：</p>
+<ul>
+<li>并发、并行、异步不是一回事</li>
+<li>Zig 中更常从<strong>显式线程模型</strong>开始理解并发</li>
+<li>复杂共享状态优先考虑锁</li>
+<li>简单计数和标志位可以考虑原子操作</li>
+<li>能不共享，就尽量不共享</li>
+<li>对版本敏感的异步 I/O 方向，先把它当作“需要结合本地版本核对的高级主题”</li>
+</ul>
+<p>如果你已经能看清这些边界，那么在后续阅读测试、构建、网络和实战章节时，就更不容易把“并发写法”误当成“只是语法技巧”。</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../part2-advanced/chapter-memory-management.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../part2-advanced/chapter-c-interop.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../part2-advanced/chapter-pointers.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../part2-advanced/chapter-testing.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -2081,11 +560,11 @@ var stack = LockFreeStack(i32).init();
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../part2-advanced/chapter-memory-management.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../part2-advanced/chapter-c-interop.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../part2-advanced/chapter-pointers.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../part2-advanced/chapter-testing.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>

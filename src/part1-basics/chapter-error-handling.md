@@ -1,17 +1,24 @@
-# 【draft】错误处理基础
+# 错误处理：!T、try 与 errdefer
 
-错误处理是系统编程的核心课题之一。与许多语言使用异常（exception）或可选值（option）不同，Zig 采用了一套独特的错误处理机制，将错误作为语言的一等公民，通过**错误集合（Error Set）**和**错误联合类型（Error Union）**实现显式、零开销的错误处理。
+错误处理是 Zig 最有辨识度的语言特性之一。与许多语言依赖异常（exception）或约定俗成的特殊返回值不同，Zig 把“失败”直接纳入类型系统：一个操作是否可能失败、失败后由谁处理、失败时资源如何清理，都应该在代码中清楚地体现出来。
 
-Zig 错误处理的核心设计理念：
+Zig 的错误处理主要围绕三组概念展开：
 
-- **显式优于隐式**：函数签名必须声明可能返回的错误，调用者无法忽略错误
-- **零开销**：错误类型在编译时确定，不引入运行时额外开销（如异常表、栈展开）
-- **组合性**：错误集合可以合并、子集化，灵活应对不同层级的错误抽象需求
-- **与 `try`/`catch` 配合**：提供简洁的错误传播和处理语法，同时保持控制流清晰可读
+- **错误集合（Error Set）**：用来定义“可能出现哪些错误”
+- **错误联合类型（Error Union）**：用来表示“这个操作可能返回错误，也可能返回正常值”
+- **`try` / `catch` / `errdefer`**：分别用于传播错误、处理错误和在失败路径上清理资源
 
-本章将介绍 Zig 错误处理的基础概念，包括错误集合定义、错误联合类型、`try`/`catch` 语法、`errdefer` 资源清理，以及错误处理的最佳实践。
+本章的目标不是一次讲完所有进阶细节，而是帮助你建立一套稳定的基础认知：
 
-## 为什么Zig不用异常？
+- 为什么 Zig 不用异常作为主线机制
+- `!T` 到底表示什么，什么时候应该使用
+- `try` 和 `catch` 如何影响控制流
+- `errdefer` 为什么是系统编程里很有价值的工具
+- 什么时候该用 `?T`，什么时候该用 `!T`
+
+如果你在前面的章节里已经见过 `!void`、`try`、`catch` 或 `errdefer`，这一章会把这些零散出现的写法系统串起来，让你真正理解它们背后的模型。
+
+## 为什么 Zig 不用异常？
 
 Zig 选择显式错误处理而非异常机制，原因如下：
 
@@ -46,7 +53,7 @@ const FileError = error{
     OutOfMemory,
 };
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const err: FileError = FileError.NotFound;
 
     // 错误比较
@@ -272,13 +279,18 @@ const err = someOperation() catch |e| {
 
 ## 错误联合类型
 
-错误联合类型表示可能返回错误或正常值的类型。
+错误集合解决的是“错误有哪些”，而错误联合类型解决的是“这个操作的结果到底是什么形状”。
 
-**为什么需要错误联合类型？**
+当一个函数既可能成功返回一个值，又可能失败返回一个错误时，就需要使用错误联合类型。
 
-错误集合定义了可能的错误类型，但函数需要一种方式来表示"可能返回错误，也可能返回正常值"。错误联合类型通过 `!` 操作符将错误集和正常类型组合在一起。
+**语法**：`ErrorSet!Type` 表示“返回 `Type`，或者返回 `ErrorSet` 中的某个错误”。
 
-**语法**：`ErrorSet!Type` 表示可能返回 `ErrorSet` 中的错误，或返回 `Type` 类型的正常值。
+你也可以先把它理解为：
+
+- 成功路径：得到一个正常值
+- 失败路径：得到一个错误值
+
+这也是 Zig 中 `try`、`catch`、`if (result) |value| else |err|` 等语法能够成立的基础。
 
 ### 基本语法
 
@@ -302,7 +314,16 @@ fn parseNumber(str: []const u8) ParseError!i32 {
 }
 ```
 
-**省略错误集的写法**：`!Type` 等价于 `anyerror!Type`，表示可以返回任何错误。在函数签名中，`!Type` 通常表示让编译器推断错误集。
+**省略显式错误集的写法**：在函数签名中，`!Type` 通常表示“让编译器根据函数体推断错误集”。
+
+也就是说：
+
+- `fn parse() ParseError!i32`：错误集由你显式写出
+- `fn parse() !i32`：错误集由编译器推断
+- `fn parse() anyerror!i32`：显式声明为非常宽泛的错误超集
+
+这三者不能简单看成完全等价。  
+尤其是 `anyerror!Type`，它表示“可以返回任意错误”，通常只应在确有必要时使用；而 `!Type` 在教学和实际代码里更常见的含义，是“让编译器推断一个具体错误集”。
 
 ## 错误传播和处理
 
@@ -340,12 +361,12 @@ const result = divide(10, 2) catch |err| {
 
 ```zig
 // ❌ 错误：main 返回 void，不能使用 try
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     try mightFail();  // 编译错误
 }
 
 // ✅ 正确：main 返回 !void
-pub fn main(_: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init) !void {
     try mightFail();
 }
 ```
@@ -435,6 +456,17 @@ fn example() void {
 - `if`：分别处理成功和失败，两者都可以有复杂逻辑
 
 ## errdefer
+
+在前面的控制流章节里，你已经见过 `defer` 和 `errdefer` 的基本区别。这里我们把视角聚焦到错误处理本身：当函数在中途失败时，哪些资源应该被回收、哪些清理逻辑只应出现在失败路径上，`errdefer` 就是专门为这类问题设计的。
+
+一个很重要的判断标准是：
+
+- **`defer`**：无论成功还是失败，作用域结束时都执行
+- **`errdefer`**：只有在当前函数以错误返回时才执行
+
+这也是为什么 `errdefer` 尤其适合“成功时把资源所有权交给调用者，失败时自己负责回收”的场景。
+
+### defer vs errdefer
 
 `errdefer` 用于在函数返回**错误**时执行清理操作。它与 `defer` 的关键区别是：`defer` 无论成功失败都会执行，而 `errdefer` **仅在返回错误时执行**。
 
@@ -635,7 +667,7 @@ fn createBuffer(allocator: std.mem.Allocator, content: []const u8, max_size: usi
     return Buffer{ .data = data, .len = content.len };
 }
 
-pub fn main(_: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init) !void {
     var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
@@ -675,6 +707,12 @@ pub fn main(_: std.process.Init.Minimal) !void {
 
 ## 最佳实践
 
+在进入具体建议前，先记住一个总原则：
+
+> **错误处理不是“补代码”，而是接口设计的一部分。**
+
+你越早想清楚“哪些地方可能失败、失败后谁负责处理、资源如何清理”，后面的代码就越清晰，也越不容易陷入重复和混乱。
+
 ### 定义清晰的错误类型
 
 ```zig
@@ -711,19 +749,19 @@ const Error = error{
 
 ```zig
 // ❌ 错误示例：main 返回 void，不能使用 try
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     try mightFail();  // 编译错误：try 在非错误联合返回类型函数中不可用
 }
 
 // ✅ 正确做法：将返回类型改为错误联合类型
-pub fn main(_: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init) !void {
     try mightFail();
 }
 ```
 
 #### 错误2：错误集不兼容
 
-超集不能隐式转换为子集，需要显式处理：
+超集不能隐式转换为子集，需要显式收窄或重新映射：
 
 ```zig
 const SpecificError = error{NotFound};
@@ -738,19 +776,22 @@ fn narrow() SpecificError!void {
     return broad();  // 编译错误：错误集不兼容
 }
 
-// ✅ 正确做法1：使用 @errorCast 显式转换（运行时安全检查）
-fn narrow() SpecificError!void {
+// ✅ 正确做法1：确认运行时错误一定属于目标错误集时，使用 @errorCast
+fn narrowWithCast() SpecificError!void {
     broad() catch |err| return @errorCast(err);
 }
 
-// ✅ 正确做法2：逐个映射错误
-fn narrow() SpecificError!void {
+// ✅ 正确做法2：显式映射到目标错误集
+fn narrowWithMapping() SpecificError!void {
     broad() catch |err| switch (err) {
         error.NotFound => return error.NotFound,
-        error.PermissionDenied => return error.PermissionDenied,  // 需要处理所有错误
+        error.PermissionDenied => return error.NotFound, // 根据你的 API 语义做映射
     };
 }
 ```
+
+这里最关键的点不是“把所有错误原样返回”，而是**目标函数的错误集必须和它的签名一致**。  
+如果你声明返回 `SpecificError!void`，那就只能返回 `SpecificError` 中定义过的错误。
 
 ### 常见运行时错误
 
@@ -830,7 +871,7 @@ fn allocateForCaller(allocator: std.mem.Allocator) ![]u8 {
 ```zig
 const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const result = riskyOperation() catch |err| {
         std.debug.print("错误: {}\n", .{err});
         return;
@@ -844,7 +885,7 @@ pub fn main(_: std.process.Init.Minimal) void {
 ```zig
 const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     riskyOperation() catch |err| {
         std.debug.print("错误: {}\n", .{err});
         std.debug.dumpCurrentStackTrace(null);

@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>【draft】指针与引用类型 - Zig 编程语言入门教程</title>
+        <title>指针、切片与对齐 - Zig 编程语言入门教程</title>
 
 
         <!-- Custom HTML head -->
@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-a9ca16c2.js";
+            window.path_to_searchindex_js = "../searchindex-35211ac1.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-2fc75e4c.js"></script>
+        <script src="../toc-6dcbe846.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -181,179 +181,278 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="draft指针与引用类型"><a class="header" href="#draft指针与引用类型">【draft】指针与引用类型</a></h1>
-<p>Zig 提供了多种指针类型，每种都有特定的用途和安全保证。</p>
-<h2 id="指针类型概览"><a class="header" href="#指针类型概览">指针类型概览</a></h2>
-<h1 id="为什么-zig-有这么多指针类型"><a class="header" href="#为什么-zig-有这么多指针类型">为什么 Zig 有这么多指针类型？</a></h1>
-<p>Zig 的指针设计体现了其核心哲学：<strong>显式优于隐式</strong>。不同的指针类型表达不同的意图：</p>
+                        <h1 id="指针切片与对齐"><a class="header" href="#指针切片与对齐">指针、切片与对齐</a></h1>
+<blockquote>
+<p><strong>章节定位</strong>：这一章是第二部分里的基础核心章节之一。<br>在 Zig 中，很多“看起来像语法问题”的困惑，最后其实都和<strong>数据布局、生命周期、可变性、边界信息以及所有权责任</strong>有关。<br>因此，本章的目标不是把所有指针写法都列一遍，而是帮助你建立一条更可靠的理解路径：</p>
 <ol>
-<li><strong><code>*T</code></strong>：我知道这里有一个值，我想操作它</li>
-<li><strong><code>[*]T</code></strong>：我有一个连续的内存区域，大小未知</li>
-<li><strong><code>*[N]T</code></strong>：我有一个固定大小的数组</li>
-<li><strong><code>[]T</code></strong>：我有一个动态大小的序列（胖指针）</li>
-<li><strong><code>?*T</code></strong>：我可能有一个值，也可能没有</li>
+<li>先理解最常见的单项指针 <code>*T</code></li>
+<li>再理解最常用的数据视图：切片 <code>[]T</code></li>
+<li>然后区分数组指针、多项指针、可选指针</li>
+<li>最后再进入对齐、裸指针转换、<code>volatile</code>、<code>@fieldParentPtr</code> 这些更偏底层的话题</li>
 </ol>
-<h1 id="zig-指针的安全性"><a class="header" href="#zig-指针的安全性">Zig 指针的安全性</a></h1>
-<p>与 C 语言不同，Zig 的指针设计注重安全性：</p>
+<p>如果你第一次系统接触 Zig 指针，请优先把前半章读扎实；后半章的高级内容更适合作为“按需深入”。</p>
+</blockquote>
+<hr>
+<h2 id="相关阅读与衔接建议"><a class="header" href="#相关阅读与衔接建议">相关阅读与衔接建议</a></h2>
+<ul>
+<li>如果你刚读完<a href="chapter-generics.html">泛型编程</a>，可以把这一章当成“编译期抽象”之后的下一步：开始把注意力从类型工厂与泛型接口，转向<strong>数据视图、可变性、边界信息和底层表示</strong>。</li>
+<li>如果你接下来准备读<a href="chapter-memory-management.html">内存管理模型</a>，那么这一章其实就是很重要的前置基础。<br>因为很多内存管理问题，最后都会落到：
+<ul>
+<li>你拿到的是值、指针还是切片</li>
+<li>这里表达的是拥有、借用还是共享访问</li>
+<li>生命周期和边界信息是否足够清楚</li>
+</ul>
+</li>
+<li>如果你目前只想抓主线，请优先掌握：
+<ul>
+<li><code>*T</code> / <code>*const T</code></li>
+<li><code>[]T</code> / <code>[]const T</code></li>
+<li><code>?*T</code></li>
+<li>数组指针与多项指针的基本区别<br>至于 <code>@ptrCast</code>、<code>@ptrFromInt</code>、<code>volatile</code>、<code>@fieldParentPtr</code>，更适合作为第二遍阅读时的“按需深入”。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="为什么这一章很重要"><a class="header" href="#为什么这一章很重要">为什么这一章很重要？</a></h2>
+<p>在 Zig 里，指针不是“高级技巧”，而是你迟早会稳定接触的基本工具。原因很简单：</p>
+<ul>
+<li>函数参数常常需要避免复制大对象</li>
+<li>数据结构往往需要共享、修改或借用同一块内存</li>
+<li>切片、字符串、容器、分配器接口都和内存视图密切相关</li>
+<li>与 C 互操作、系统编程、内存管理更离不开指针语义</li>
+</ul>
+<p>但更重要的是：</p>
+<blockquote>
+<p><strong>Zig 不希望你“模糊地用指针”，而是希望你明确表达自己手里拿到的到底是什么。</strong></p>
+</blockquote>
+<p>因此，学习指针时，最值得反复问自己的不是“这个语法怎么写”，而是：</p>
+<ul>
+<li>这里指向的是单个值，还是一段连续数据？</li>
+<li>这里有没有长度信息？</li>
+<li>这里能不能修改原值？</li>
+<li>这里可能为空吗？</li>
+<li>这里的生命周期由谁保证？</li>
+<li>这里有没有对齐、越界或悬空风险？</li>
+</ul>
+<hr>
+<h2 id="先建立总览常见相关类型有哪些"><a class="header" href="#先建立总览常见相关类型有哪些">先建立总览：常见相关类型有哪些？</a></h2>
+<p>Zig 中最常见的几类“指向数据”的类型如下：</p>
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th>安全特性</th><th>C 语言</th><th>Zig</th></tr>
+<tr><th>类型</th><th>语法</th><th>表达的含义</th><th>最常见用途</th></tr>
 </thead>
 <tbody>
-<tr><td>空指针检查</td><td>无</td><td>可选指针显式处理</td></tr>
-<tr><td>边界检查</td><td>无</td><td>切片有运行时检查</td></tr>
-<tr><td>别名分析</td><td>无</td><td>编译器可以优化</td></tr>
-<tr><td>对齐检查</td><td>无</td><td>编译期和运行时检查</td></tr>
+<tr><td>单项指针</td><td><code>*T</code></td><td>指向一个 <code>T</code> 值</td><td>传参、原地修改、避免复制</td></tr>
+<tr><td>只读单项指针</td><td><code>*const T</code></td><td>指向一个只读 <code>T</code> 值</td><td>只读借用</td></tr>
+<tr><td>可选指针</td><td><code>?*T</code></td><td>可能有一个 <code>T</code>，也可能没有</td><td>查找结果、可空句柄</td></tr>
+<tr><td>数组指针</td><td><code>*[N]T</code></td><td>指向一个固定长度数组</td><td>保留数组长度信息</td></tr>
+<tr><td>多项指针</td><td><code>[*]T</code></td><td>指向连续元素，但不携带长度</td><td>底层内存、C 互操作</td></tr>
+<tr><td>切片</td><td><code>[]T</code></td><td>指针 + 长度</td><td>最常见的动态序列视图</td></tr>
+<tr><td>只读切片</td><td><code>[]const T</code></td><td>只读的切片视图</td><td>字符串、只读序列参数</td></tr>
+<tr><td>哨兵切片</td><td><code>[:S]T</code></td><td>带长度，且约定以哨兵值结尾</td><td>与特定 C 风格数据协作</td></tr>
+<tr><td>哨兵多项指针</td><td><code>[*:S]T</code></td><td>无长度，但约定以哨兵值结尾</td><td>C 风格字符串、底层接口</td></tr>
 </tbody>
 </table>
 </div>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>指针类型</th><th>语法</th><th>说明</th><th>用途</th></tr>
-</thead>
-<tbody>
-<tr><td>单项指针</td><td><code>*T</code></td><td>指向单个值</td><td>函数参数传递、修改值</td></tr>
-<tr><td>多项指针</td><td><code>[*]T</code></td><td>指向多个连续元素</td><td>C互操作、低级内存操作</td></tr>
-<tr><td>数组指针</td><td><code>*[N]T</code></td><td>指向固定大小数组</td><td>数组操作</td></tr>
-<tr><td>切片</td><td><code>[]T</code></td><td>指针+长度</td><td>动态大小序列</td></tr>
-<tr><td>哨兵切片</td><td><code>[:N]T</code></td><td>以哨兵值结尾</td><td>C字符串兼容</td></tr>
-<tr><td>可选指针</td><td><code>?*T</code></td><td>可能为null的指针</td><td>安全的指针操作</td></tr>
-</tbody>
-</table>
-</div>
-<p><strong>基本操作</strong>：</p>
+<p>第一次阅读时，建议你先牢牢记住三件事：</p>
+<ol>
+<li><strong>日常最常用的是 <code>*T</code> 和 <code>[]T</code></strong></li>
+<li><strong>切片比多项指针更安全，也更常见</strong></li>
+<li><strong>多项指针、裸地址转换、<code>volatile</code> 更偏系统/底层场景</strong></li>
+</ol>
+<hr>
+<h2 id="第一部分单项指针-t"><a class="header" href="#第一部分单项指针-t">第一部分：单项指针 <code>*T</code></a></h2>
+<h3 id="什么是单项指针"><a class="header" href="#什么是单项指针">什么是单项指针？</a></h3>
+<p>单项指针 <code>*T</code> 表示：</p>
+<blockquote>
+<p><strong>这里有一个确定存在的 <code>T</code> 值，我拿到了它的地址。</strong></p>
+</blockquote>
+<p>它不表示“很多元素”，也不表示“可能为空”，更不附带长度信息。<br>它只是单纯地指向一个值。</p>
+<h3 id="基本操作"><a class="header" href="#基本操作">基本操作</a></h3>
 <ul>
-<li><strong>取地址</strong>：<code>&amp;variable</code></li>
-<li><strong>解引用</strong>：<code>ptr.*</code></li>
+<li>取地址：<code>&amp;value</code></li>
+<li>解引用：<code>ptr.*</code></li>
 </ul>
-<h2 id="指针基础"><a class="header" href="#指针基础">指针基础</a></h2>
-<h1 id="单项目指针详解"><a class="header" href="#单项目指针详解">单项目指针详解</a></h1>
-<p>单项目指针 <code>*T</code> 是最常用的指针类型，它：</p>
-<ul>
-<li>指向单个值</li>
-<li>不携带长度信息</li>
-<li>支持解引用操作</li>
-</ul>
-<p>Zig 有多种指针类型，每种都有不同的用途：</p>
-<p><strong>单项目指针 <code>*T</code>：</strong></p>
+<p>示例：</p>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+test "single item pointer basics" {
     var value: i32 = 42;
-    
-    // 创建指针：使用 &amp; 取地址
+
     const ptr: *i32 = &amp;value;
-    
-    // 解引用访问值：使用 .* 操作符
-    std.debug.print("值：{}\n", .{ptr.*});
-    
-    // 通过指针修改值
+    try std.testing.expect(ptr.* == 42);
+
     ptr.* = 100;
-    std.debug.print("修改后的值：{}\n", .{value});
-    
-    // 指针的类型信息
-    std.debug.print("指针大小：{} 字节\n", .{@sizeOf(*i32)});
-    
-    // 常量指针：不能修改指向的值
-    const const_ptr: *const i32 = &amp;value;
-    // const_ptr.* = 200; // 编译错误：常量指针不可修改
+    try std.testing.expect(value == 100);
 }
 </code></pre>
-<h1 id="多项目指针详解"><a class="header" href="#多项目指针详解">多项目指针详解</a></h1>
-<p>多项目指针 <code>[*]T</code> 用于：</p>
+<p>这个例子里最重要的不是语法，而是语义：</p>
 <ul>
-<li>指向连续内存区域</li>
-<li>与 C 代码互操作</li>
-<li>低级内存操作</li>
+<li><code>ptr</code> 和 <code>value</code> 指向的是同一个底层值</li>
+<li>修改 <code>ptr.*</code>，就是在修改原始变量</li>
+<li>没有复制出第二份 <code>i32</code></li>
 </ul>
-<p><strong>重要提示</strong>：多项目指针不携带长度信息，使用时需要小心！</p>
-<p><strong>多项目指针 <code>[*]T</code>：</strong></p>
+<hr>
+<h3 id="t-和-const-t-的区别"><a class="header" href="#t-和-const-t-的区别"><code>*T</code> 和 <code>*const T</code> 的区别</a></h3>
+<p>很多时候，你并不想允许函数修改传入的数据。<br>这时你应该使用只读指针 <code>*const T</code>。</p>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
-    var array = [_]i32{ 1, 2, 3, 4, 5 };
-    
-    // 多项目指针：指向数组的第一个元素
-    const ptr: [*]i32 = &amp;array;
-    
-    // 可以像数组一样索引（但没有边界检查！）
-    std.debug.print("第一个元素：{}\n", .{ptr[0]});
-    std.debug.print("第二个元素：{}\n", .{ptr[1]});
-    
-    // 指针算术：移动指针位置
-    const ptr2 = ptr + 2;
-    std.debug.print("第三个元素：{}\n", .{ptr2[0]});
-    
-    // ⚠️ 危险：没有边界检查
-    // std.debug.print("越界访问：{}\n", .{ptr[100]}); // 未定义行为！
-    
-    // 安全做法：转换为切片
-    const slice: []i32 = ptr[0..array.len];
-    // 现在有边界检查了
+const User = struct {
+    id: u32,
+    score: i32,
+};
+
+fn printUser(user: *const User) void {
+    std.debug.print("user id = {}, score = {}\n", .{ user.id, user.score });
+}
+
+fn bumpScore(user: *User) void {
+    user.score += 1;
+}
+
+test "mutable and const pointers" {
+    var user = User{
+        .id = 1,
+        .score = 10,
+    };
+
+    printUser(&amp;user);
+    bumpScore(&amp;user);
+
+    try std.testing.expect(user.score == 11);
 }
 </code></pre>
-<h1 id="指针类型选择指南"><a class="header" href="#指针类型选择指南">指针类型选择指南</a></h1>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>场景</th><th>推荐类型</th><th>原因</th></tr>
-</thead>
-<tbody>
-<tr><td>函数参数（只读）</td><td><code>*const T</code></td><td>明确意图，避免复制</td></tr>
-<tr><td>函数参数（修改）</td><td><code>*T</code></td><td>显式表达修改意图</td></tr>
-<tr><td>动态大小序列</td><td><code>[]T</code></td><td>有边界检查，更安全</td></tr>
-<tr><td>C 互操作</td><td><code>[*]T</code> 或 <code>[*:0]T</code></td><td>匹配 C 指针语义</td></tr>
-<tr><td>可能不存在的值</td><td><code>?*T</code></td><td>显式处理空指针</td></tr>
-</tbody>
-</table>
-</div>
-<h2 id="切片指针"><a class="header" href="#切片指针">切片指针</a></h2>
-<h1 id="什么是切片"><a class="header" href="#什么是切片">什么是切片？</a></h1>
-<p>切片是 Zig 中最常用的“指针“类型，它是一个胖指针，包含：</p>
+<p>这里表达得非常清楚：</p>
 <ul>
-<li><strong>指针</strong>：指向数据的起始位置</li>
-<li><strong>长度</strong>：数据的元素数量</li>
+<li><code>printUser</code> 只借用数据，只读不改</li>
+<li><code>bumpScore</code> 借用数据，并且会修改它</li>
 </ul>
-<p>切片是包含指针和长度的胖指针：</p>
+<p>这也是 Zig 一贯强调的风格：</p>
+<blockquote>
+<p><strong>把可变性写进类型里，而不是留给读者猜。</strong></p>
+</blockquote>
+<hr>
+<h3 id="什么时候用单项指针"><a class="header" href="#什么时候用单项指针">什么时候用单项指针？</a></h3>
+<p>常见场景有这些：</p>
+<ol>
+<li><strong>避免复制大对象</strong></li>
+<li><strong>需要原地修改数据</strong></li>
+<li><strong>数据结构之间需要建立链接</strong></li>
+<li><strong>明确表达“借用同一个对象”</strong></li>
+</ol>
+<p>比如函数参数：</p>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
-    var array = [_]i32{ 1, 2, 3, 4, 5 };
-    
-    // 创建切片：从数组中"切出"一部分
+const Big = struct {
+    data: [1024]u8,
+};
+
+fn inspect(big: *const Big) usize {
+    return big.data.len;
+}
+
+test "pass large value by pointer" {
+    const value = Big{ .data = [_]u8{0} ** 1024 };
+    try std.testing.expect(inspect(&amp;value) == 1024);
+}
+</code></pre>
+<p>如果你把这种对象按值传递，语义上就是复制；<br>而按指针传递，语义上则是“借用已有对象”。</p>
+<hr>
+<h2 id="第二部分切片-t"><a class="header" href="#第二部分切片-t">第二部分：切片 <code>[]T</code></a></h2>
+<h3 id="为什么切片比很多指针话题更重要"><a class="header" href="#为什么切片比很多指针话题更重要">为什么切片比很多指针话题更重要？</a></h3>
+<p>虽然“指针章节”往往让人先想到 <code>*T</code>，但在实际 Zig 代码里，你更高频接触的通常是：</p>
+<ul>
+<li><code>[]u8</code></li>
+<li><code>[]const u8</code></li>
+<li><code>[]T</code></li>
+<li><code>[]const T</code></li>
+</ul>
+<p>也就是切片。</p>
+<p>因为很多程序真正操作的不是“单个对象”，而是“一段连续数据”。<br>而切片正是 Zig 中最常用的这类数据视图。</p>
+<hr>
+<h3 id="什么是切片"><a class="header" href="#什么是切片">什么是切片？</a></h3>
+<p>切片 <code>[]T</code> 可以理解为：</p>
+<blockquote>
+<p><strong>一段连续 <code>T</code> 元素的视图，它同时携带起始地址和长度。</strong></p>
+</blockquote>
+<p>这和多项指针 <code>[*]T</code> 的关键区别在于：</p>
+<ul>
+<li>切片有长度</li>
+<li>切片的索引访问会做边界检查</li>
+<li>切片更适合作为普通代码中的序列视图</li>
+</ul>
+<p>示例：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+test "slice basics" {
+    var array = [_]i32{ 10, 20, 30, 40, 50 };
+
     const slice: []i32 = array[1..4];
-    
-    // 切片包含指针和长度
-    std.debug.print("切片长度：{}\n", .{slice.len});
-    std.debug.print("切片指针：{}\n", .{slice.ptr});
-    
-    // 访问元素：有边界检查
-    for (slice, 0..) |item, index| {
-        std.debug.print("slice[{}] = {}\n", .{ index, item });
-    }
-    
-    // 切片的内存布局
-    std.debug.print("切片大小：{} 字节（指针 + 长度）\n", .{@sizeOf([]i32)});
-    
-    // 修改元素
-    var mutable_slice: []i32 = array[0..];
-    mutable_slice[0] = 10;
-    std.debug.print("修改后：{}\n", .{array[0]});
+
+    try std.testing.expect(slice.len == 3);
+    try std.testing.expect(slice[0] == 20);
+    try std.testing.expect(slice[2] == 40);
+
+    slice[1] = 99;
+    try std.testing.expect(array[2] == 99);
 }
 </code></pre>
-<h1 id="切片的实际应用"><a class="header" href="#切片的实际应用">切片的实际应用</a></h1>
-<pre><code class="language-zig">// 场景1：安全的函数参数
-fn sumSlice(numbers: []const i32) i32 {
+<p>这段代码说明了几个核心点：</p>
+<ul>
+<li><code>array[1..4]</code> 得到的是一个切片</li>
+<li>它是对原数组的一段“视图”，不是复制</li>
+<li>修改切片中的元素，会反映到原数组上</li>
+</ul>
+<hr>
+<h3 id="切片的心智模型"><a class="header" href="#切片的心智模型">切片的心智模型</a></h3>
+<p>理解切片时，可以把它当成两部分：</p>
+<ol>
+<li>一个起始指针</li>
+<li>一个长度</li>
+</ol>
+<p>因此，切片不是“单纯的地址”。<br>它是<strong>带边界信息的视图</strong>。</p>
+<p>这正是为什么切片在普通代码里比 <code>[*]T</code> 更值得优先使用：</p>
+<ul>
+<li>更安全</li>
+<li>更易读</li>
+<li>更能表达意图</li>
+</ul>
+<hr>
+<h3 id="只读切片-const-t"><a class="header" href="#只读切片-const-t">只读切片 <code>[]const T</code></a></h3>
+<p>如果你只想读取一段数据，不允许修改，那么使用 <code>[]const T</code>。</p>
+<pre><code class="language-zig">const std = @import("std");
+
+fn sum(nums: []const i32) i32 {
     var total: i32 = 0;
-    for (numbers) |num| {
-        total += num;
+    for (nums) |n| {
+        total += n;
     }
     return total;
 }
 
-// 场景2：动态数据处理
+test "readonly slice parameter" {
+    const data = [_]i32{ 1, 2, 3, 4 };
+    try std.testing.expect(sum(&amp;data) == 10);
+}
+</code></pre>
+<p>这类写法在 Zig 中非常常见：</p>
+<ul>
+<li>字符串通常是 <code>[]const u8</code></li>
+<li>只读输入数据常用 <code>[]const T</code></li>
+<li>能只读时尽量只读，有助于减少误用</li>
+</ul>
+<hr>
+<h3 id="切片为什么适合作为函数参数"><a class="header" href="#切片为什么适合作为函数参数">切片为什么适合作为函数参数？</a></h3>
+<p>因为它能同时表达三件事：</p>
+<ol>
+<li>我拿到的是连续数据</li>
+<li>我知道长度</li>
+<li>我不拥有这块内存，只是借用它</li>
+</ol>
+<p>例如搜索：</p>
+<pre><code class="language-zig">const std = @import("std");
+
 fn findFirst(items: []const i32, target: i32) ?usize {
     for (items, 0..) |item, index| {
         if (item == target) return index;
@@ -361,104 +460,381 @@ fn findFirst(items: []const i32, target: i32) ?usize {
     return null;
 }
 
-// 场景3：子切片
-fn processSubslice(data: []u8) void {
-    const header = data[0..4];  // 前4字节
-    const body = data[4..];     // 剩余部分
-    // 处理 header 和 body...
+test "find in slice" {
+    const data = [_]i32{ 5, 8, 13, 21 };
+
+    try std.testing.expect(findFirst(&amp;data, 13).? == 2);
+    try std.testing.expect(findFirst(&amp;data, 99) == null);
 }
 </code></pre>
-<h2 id="可选指针"><a class="header" href="#可选指针">可选指针</a></h2>
-<h1 id="为什么需要可选指针"><a class="header" href="#为什么需要可选指针">为什么需要可选指针？</a></h1>
-<p>可选指针 <code>?*T</code> 解决了 C 语言中空指针的问题：</p>
+<p>从接口设计角度看，这个函数写得很清楚：</p>
 <ul>
-<li>显式表示指针可能为空</li>
-<li>编译器强制处理空指针情况</li>
-<li>避免空指针解引用错误</li>
+<li>它不拥有 <code>items</code></li>
+<li>它不修改 <code>items</code></li>
+<li>它按只读序列来处理输入</li>
 </ul>
-<p>可选指针可以表示可能为 null 的指针：</p>
+<hr>
+<h2 id="第三部分数组指针-nt"><a class="header" href="#第三部分数组指针-nt">第三部分：数组指针 <code>*[N]T</code></a></h2>
+<h3 id="数组指针和切片有什么区别"><a class="header" href="#数组指针和切片有什么区别">数组指针和切片有什么区别？</a></h3>
+<p>数组指针 <code>*[N]T</code> 表示：</p>
+<blockquote>
+<p><strong>我指向的是一个长度在类型层面就固定下来的数组。</strong></p>
+</blockquote>
+<p>比如：</p>
 <pre><code class="language-zig">const std = @import("std");
 
-// 返回可选指针的函数
-fn findValue(arr: []const i32, target: i32) ?*const i32 {
-    for (arr, 0..) |item, index| {
-        if (item == target) {
-            return &amp;arr[index];
-        }
+test "array pointer keeps array length in type" {
+    var data = [_]u8{ 1, 2, 3, 4 };
+
+    const ptr: *[4]u8 = &amp;data;
+
+    try std.testing.expect(ptr[0] == 1);
+    try std.testing.expect(ptr[3] == 4);
+
+    ptr[1] = 99;
+    try std.testing.expect(data[1] == 99);
+}
+</code></pre>
+<p>和切片相比，数组指针的区别主要在于：</p>
+<ul>
+<li>长度是类型的一部分</li>
+<li>更适合那些“长度必须静态已知”的场景</li>
+<li>不如切片灵活</li>
+</ul>
+<p>你可以这样记：</p>
+<ul>
+<li><code>*[N]T</code>：<strong>固定长度数组本体的地址</strong></li>
+<li><code>[]T</code>：<strong>一段运行时长度的序列视图</strong></li>
+</ul>
+<hr>
+<h3 id="什么时候数组指针有用"><a class="header" href="#什么时候数组指针有用">什么时候数组指针有用？</a></h3>
+<p>它适合这些情况：</p>
+<ol>
+<li>你明确要求某个固定长度</li>
+<li>你想在类型层面保留这个约束</li>
+<li>你处理的就是数组本身，而不是任意长度序列</li>
+</ol>
+<p>例如只接受 16 字节块：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+fn xorBlock(block: *[16]u8, value: u8) void {
+    for (block) |*byte| {
+        byte.* ^= value;
+    }
+}
+
+test "fixed size array pointer" {
+    var block = [_]u8{0} ** 16;
+    xorBlock(&amp;block, 0xff);
+
+    try std.testing.expect(block[0] == 0xff);
+    try std.testing.expect(block[15] == 0xff);
+}
+</code></pre>
+<hr>
+<h2 id="第四部分可选指针-t"><a class="header" href="#第四部分可选指针-t">第四部分：可选指针 <code>?*T</code></a></h2>
+<h3 id="为什么需要可选指针"><a class="header" href="#为什么需要可选指针">为什么需要可选指针？</a></h3>
+<p>很多语言里，空指针是一种隐患。<br>Zig 的做法不是“假装空指针不存在”，而是要求你显式写出来：</p>
+<ul>
+<li><code>*T</code>：一定有值</li>
+<li><code>?*T</code>：可能没有值</li>
+</ul>
+<p>这让接口的语义更清楚，也强迫调用者处理“没有找到”的情况。</p>
+<p>示例：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+fn findValue(items: []i32, target: i32) ?*i32 {
+    for (items) |*item| {
+        if (item.* == target) return item;
     }
     return null;
 }
 
-pub fn main(_: std.process.Init.Minimal) void {
-    var array = [_]i32{ 10, 20, 30, 40, 50 };
-    
-    // 查找存在的值
-    if (findValue(&amp;array, 30)) |ptr| {
-        std.debug.print("找到值：{}\n", .{ptr.*});
-    }
-    
-    // 查找不存在的值
-    if (findValue(&amp;array, 99)) |ptr| {
-        std.debug.print("找到值：{}\n", .{ptr.*});
+test "optional pointer" {
+    var data = [_]i32{ 10, 20, 30 };
+
+    if (findValue(&amp;data, 20)) |ptr| {
+        ptr.* = 99;
     } else {
-        std.debug.print("未找到值\n", .{});
+        return error.TestUnexpectedResult;
     }
+
+    try std.testing.expect(data[1] == 99);
+    try std.testing.expect(findValue(&amp;data, 100) == null);
 }
 </code></pre>
-<h2 id="指针类型转换"><a class="header" href="#指针类型转换">指针类型转换</a></h2>
+<hr>
+<h3 id="什么时候返回-t-合适"><a class="header" href="#什么时候返回-t-合适">什么时候返回 <code>?*T</code> 合适？</a></h3>
+<p>常见场景：</p>
+<ol>
+<li>在现有数据结构里查找元素</li>
+<li>返回“可能存在”的对象位置</li>
+<li>想让调用者原地修改找到的值</li>
+</ol>
+<p>但要注意一点：</p>
+<blockquote>
+<p>返回指针时，你同时也把生命周期约束暴露给了调用者。</p>
+</blockquote>
+<p>如果底层数据后续失效、被移动或被释放，那么这个指针也会失效。<br>所以返回 <code>?*T</code> 很强大，但也意味着你必须清楚底层存储的生命周期。</p>
+<hr>
+<h2 id="第五部分多项指针-t"><a class="header" href="#第五部分多项指针-t">第五部分：多项指针 <code>[*]T</code></a></h2>
+<h3 id="多项指针是什么"><a class="header" href="#多项指针是什么">多项指针是什么？</a></h3>
+<p>多项指针 <code>[*]T</code> 表示：</p>
+<blockquote>
+<p><strong>这里有一段连续的 <code>T</code> 元素，但当前类型里不包含长度。</strong></p>
+</blockquote>
+<p>它通常用于：</p>
+<ul>
+<li>与 C 互操作</li>
+<li>底层内存操作</li>
+<li>已经通过其他方式知道边界的场景</li>
+</ul>
+<p>示例：</p>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
-    var value: i32 = 0x12345678;
-    
-    // 整数到指针
-    const ptr: *i32 = @ptrFromInt(0x1000);
-    std.debug.print("指针地址：{x}\n", .{@intFromPtr(ptr)});
-    
-    // 指针到整数
-    const addr = @intFromPtr(&amp;value);
-    std.debug.print("value 的地址：{x}\n", .{addr});
-    
-    // 类型转换指针
+test "many item pointer from array" {
+    var array = [_]i32{ 1, 2, 3, 4 };
+
+    const ptr: [*]i32 = &amp;array;
+
+    try std.testing.expect(ptr[0] == 1);
+    try std.testing.expect(ptr[2] == 3);
+
+    const slice = ptr[0..array.len];
+    try std.testing.expect(slice.len == 4);
+}
+</code></pre>
+<hr>
+<h3 id="为什么普通代码里不应优先用-t"><a class="header" href="#为什么普通代码里不应优先用-t">为什么普通代码里不应优先用 <code>[*]T</code>？</a></h3>
+<p>因为它没有长度。<br>这意味着：</p>
+<ul>
+<li>读代码的人需要额外知道边界来自哪里</li>
+<li>越界风险更难识别</li>
+<li>接口语义不如切片清楚</li>
+</ul>
+<p>所以在普通业务代码里，更推荐：</p>
+<ul>
+<li>用 <code>[]T</code> / <code>[]const T</code> 表示序列</li>
+<li>只有在确实需要底层语义时再使用 <code>[*]T</code></li>
+</ul>
+<p>你可以把它理解为：</p>
+<blockquote>
+<p><strong><code>[*]T</code> 更像“底层原始视图”，<code>[]T</code> 更像“日常安全视图”。</strong></p>
+</blockquote>
+<hr>
+<h2 id="第六部分字符串字节序列与哨兵"><a class="header" href="#第六部分字符串字节序列与哨兵">第六部分：字符串、字节序列与哨兵</a></h2>
+<h3 id="const-u8-是什么"><a class="header" href="#const-u8-是什么"><code>[]const u8</code> 是什么？</a></h3>
+<p>在 Zig 中，最常见的“字符串”表示其实不是单独的字符串对象，而是：</p>
+<ul>
+<li><code>[]const u8</code></li>
+</ul>
+<p>也就是“只读字节切片”。</p>
+<p>例如：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+fn startsWithHello(s: []const u8) bool {
+    return std.mem.startsWith(u8, s, "hello");
+}
+
+test "string as readonly byte slice" {
+    try std.testing.expect(startsWithHello("hello zig"));
+    try std.testing.expect(!startsWithHello("world"));
+}
+</code></pre>
+<p>这很符合 Zig 的风格：</p>
+<ul>
+<li>不把字符串神秘化</li>
+<li>它本质上就是字节序列</li>
+<li>是否带长度、是否带哨兵，要看具体类型</li>
+</ul>
+<hr>
+<h3 id="什么是哨兵切片和哨兵指针"><a class="header" href="#什么是哨兵切片和哨兵指针">什么是哨兵切片和哨兵指针？</a></h3>
+<p>有些数据约定会使用结尾标记，例如 C 字符串常见的 <code>0</code> 结尾。<br>这时你可能会看到：</p>
+<ul>
+<li><code>[*:0]const u8</code></li>
+<li><code>[:0]const u8</code></li>
+</ul>
+<p>它们表达的是：</p>
+<ul>
+<li>元素序列以某个哨兵值结尾</li>
+<li>类型里显式保留了这个约定</li>
+</ul>
+<p>第一次学习时，你不必把哨兵系列语法全部背下来。<br>更重要的是理解：</p>
+<blockquote>
+<p><strong>长度信息和哨兵信息是两种不同的边界表达方式。</strong></p>
+</blockquote>
+<ul>
+<li>切片主要依赖长度</li>
+<li>C 风格字符串常依赖哨兵</li>
+<li>Zig 会把这些约束写进类型，而不是隐藏起来</li>
+</ul>
+<hr>
+<h2 id="第七部分对齐"><a class="header" href="#第七部分对齐">第七部分：对齐</a></h2>
+<h3 id="什么是对齐"><a class="header" href="#什么是对齐">什么是对齐？</a></h3>
+<p>对齐可以简单理解为：</p>
+<blockquote>
+<p><strong>某个值的地址是否满足该类型或该平台要求的特定倍数边界。</strong></p>
+</blockquote>
+<p>比如一个值可能要求地址是 4 的倍数、8 的倍数或 16 的倍数。</p>
+<p>大多数时候，正常声明的变量都会自然满足自己的基本对齐要求。<br>但在下面这些场景里，对齐会变得重要：</p>
+<ul>
+<li>手动做指针转换</li>
+<li>访问底层内存</li>
+<li>与外部 ABI 交互</li>
+<li>进行 SIMD、MMIO 或特殊平台优化</li>
+</ul>
+<hr>
+<h3 id="显式对齐示例"><a class="header" href="#显式对齐示例">显式对齐示例</a></h3>
+<pre><code class="language-zig">const std = @import("std");
+
+test "aligned value and aligned pointer" {
+    var value: i32 align(16) = 42;
+
+    const ptr: *align(16) i32 = &amp;value;
+
+    try std.testing.expect(ptr.* == 42);
+    try std.testing.expect(@intFromPtr(ptr) % 16 == 0);
+}
+</code></pre>
+<p>这个例子里：</p>
+<ul>
+<li><code>value</code> 被显式声明为 16 字节对齐</li>
+<li>因而取地址后，可以安全地得到 <code>*align(16) i32</code></li>
+</ul>
+<p>这里的重点不是“总要手动写对齐”，而是理解：</p>
+<blockquote>
+<p><strong>更强的对齐承诺必须有真实依据。</strong></p>
+</blockquote>
+<p>不能随意把一个普通 <code>*i32</code> 说成 <code>*align(16) i32</code>，<br>因为那等于你在对编译器做更强保证。</p>
+<hr>
+<h3 id="为什么对齐很重要"><a class="header" href="#为什么对齐很重要">为什么对齐很重要？</a></h3>
+<p>因为错误的对齐假设可能导致：</p>
+<ul>
+<li>性能下降</li>
+<li>某些平台直接崩溃</li>
+<li>未定义行为</li>
+<li>错误的代码生成假设</li>
+</ul>
+<p>所以只要你开始接触：</p>
+<ul>
+<li><code>@ptrCast</code></li>
+<li><code>@alignCast</code></li>
+<li>原始内存视图</li>
+<li>硬件寄存器映射</li>
+</ul>
+<p>就要把对齐问题认真看待。</p>
+<hr>
+<h2 id="第八部分指针转换"><a class="header" href="#第八部分指针转换">第八部分：指针转换</a></h2>
+<h3 id="指针转换为什么要谨慎"><a class="header" href="#指针转换为什么要谨慎">指针转换为什么要谨慎？</a></h3>
+<p>在 Zig 中，指针转换并不是“想转就转”的普通重命名。<br>它往往意味着你在说：</p>
+<ul>
+<li>我知道底层内存布局兼容</li>
+<li>我知道当前地址满足目标类型的对齐要求</li>
+<li>我知道这种解释方式在当前场景下是合法的</li>
+</ul>
+<p>因此，指针转换应该理解成一种<strong>显式承诺</strong>，而不是“方便写法”。</p>
+<hr>
+<h3 id="ptrcast改变解释方式"><a class="header" href="#ptrcast改变解释方式"><code>@ptrCast</code>：改变解释方式</a></h3>
+<p>示例：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+test "ptrCast should be treated as low level operation" {
+    var value: u32 = 0x11223344;
+
     const byte_ptr: *u8 = @ptrCast(&amp;value);
-    std.debug.print("第一个字节：{x}\n", .{byte_ptr.*});
+
+    _ = byte_ptr;
 }
 </code></pre>
-<h2 id="对齐和-volatile-指针"><a class="header" href="#对齐和-volatile-指针">对齐和 volatile 指针</a></h2>
-<p><strong>对齐指针：</strong></p>
+<p>这个例子只是为了说明语法存在。<br>它<strong>不适合</strong>被理解为“普通代码里推荐这样做字节检查”。</p>
+<p>为什么？</p>
+<ul>
+<li>它会让读者很快掉进别名、布局、端序等更复杂的问题里</li>
+<li>如果你只是想安全处理字节序列，通常更应该使用更明确的数据接口</li>
+<li>它属于底层能力，不是第一选择</li>
+</ul>
+<p>所以这里最值得记住的是：</p>
+<blockquote>
+<p><strong><code>@ptrCast</code> 不是禁用功能，但它属于需要清楚前提条件的低层工具。</strong></p>
+</blockquote>
+<hr>
+<h3 id="ptrfromint-和-intfromptr"><a class="header" href="#ptrfromint-和-intfromptr"><code>@ptrFromInt</code> 和 <code>@intFromPtr</code></a></h3>
+<p>这两个内置函数涉及“地址和整数之间的转换”。</p>
+<p>示例：</p>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
-    // 特殊对齐的变量
-    var aligned_value: i32 align(16) = 42;
-    
-    // 对齐指针
-    const ptr: *align(16) i32 = &amp;aligned_value;
-    
-    std.debug.print("对齐值：{}\n", .{ptr.*});
-    
-    // 检查对齐
-    const addr = @intFromPtr(ptr);
-    std.debug.print("地址对齐：{}\n", .{addr % 16 == 0});
+test "pointer to integer" {
+    var value: i32 = 123;
+    const addr = @intFromPtr(&amp;value);
+
+    try std.testing.expect(addr != 0);
 }
 </code></pre>
-<p><strong>Volatile 指针：</strong></p>
+<p>而把整数直接变成指针则要危险得多：</p>
 <pre><code class="language-zig">const std = @import("std");
 
-// 硬件寄存器地址
+test "ptrFromInt is for very specific low level cases" {
+    const raw_addr: usize = 0x1000;
+    const ptr: *u8 = @ptrFromInt(raw_addr);
+
+    _ = ptr;
+}
+</code></pre>
+<p>这里必须非常明确：</p>
+<blockquote>
+<p><strong>在普通用户态程序里，随意把整数转成指针几乎没有通用教学价值。</strong></p>
+</blockquote>
+<p>它通常只在这些场景下才有意义：</p>
+<ul>
+<li>裸机开发</li>
+<li>内核开发</li>
+<li>MMIO 寄存器映射</li>
+<li>你非常明确知道这个地址为何有效</li>
+</ul>
+<p>如果不是这些场景，请不要把它当成普通编程技巧。</p>
+<hr>
+<h2 id="第九部分volatile-指针"><a class="header" href="#第九部分volatile-指针">第九部分：<code>volatile</code> 指针</a></h2>
+<h3 id="volatile-是做什么的"><a class="header" href="#volatile-是做什么的"><code>volatile</code> 是做什么的？</a></h3>
+<p><code>volatile</code> 的核心意思不是“线程安全”，也不是“防竞态”。<br>它表达的是：</p>
+<blockquote>
+<p><strong>这个地址上的读写具有外部可观察语义，编译器不应把这些访问随意优化掉。</strong></p>
+</blockquote>
+<p>它常见于：</p>
+<ul>
+<li>内存映射寄存器（MMIO）</li>
+<li>特定硬件设备访问</li>
+<li>某些极底层同步场景</li>
+</ul>
+<p>示例：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+// 仅作语法示意，不适用于普通用户态程序。
 const UART_DR: *volatile u32 = @ptrFromInt(0x4000_1000);
 
-pub fn main(_: std.process.Init.Minimal) void {
-    // volatile 读写不会被编译器优化
-    UART_DR.* = 'A';
-    const received = UART_DR.*;
-
-    std.debug.print("接收到：{}\n", .{received});
+test "volatile pointer example is conceptual only" {
+    _ = UART_DR;
 }
 </code></pre>
-<h2 id="从字段指针获取结构体指针"><a class="header" href="#从字段指针获取结构体指针">从字段指针获取结构体指针</a></h2>
-<p>使用 <code>@fieldParentPtr</code> 可以从字段的指针反推出整个结构体的指针。这是一个高级指针操作技巧，常用于实现侵入式数据结构。</p>
-<h3 id="基本用法"><a class="header" href="#基本用法">基本用法</a></h3>
+<p>这里必须强调两次：</p>
+<ol>
+<li>这不是普通程序该模仿的写法</li>
+<li><code>volatile</code> 不等于并发同步原语</li>
+</ol>
+<p>如果你在处理线程同步，优先考虑锁、原子操作和并发模型；<br>如果你在处理硬件寄存器，才更可能需要 <code>volatile</code>。</p>
+<hr>
+<h2 id="第十部分从字段指针反推结构体fieldparentptr"><a class="header" href="#第十部分从字段指针反推结构体fieldparentptr">第十部分：从字段指针反推结构体：<code>@fieldParentPtr</code></a></h2>
+<h3 id="这个能力是做什么的"><a class="header" href="#这个能力是做什么的">这个能力是做什么的？</a></h3>
+<p><code>@fieldParentPtr</code> 允许你从某个字段的指针，反推出整个结构体对象的指针。</p>
+<p>这在下面这类场景里特别有用：</p>
+<ul>
+<li>侵入式链表</li>
+<li>侵入式队列</li>
+<li>回调上下文对象</li>
+<li>底层容器实现</li>
+</ul>
+<p>它是很强的工具，但也明显属于高级内容。<br>如果你现在还在巩固 <code>*T</code>、切片和生命周期，不必急着深挖。</p>
+<hr>
+<h3 id="基本示例"><a class="header" href="#基本示例">基本示例</a></h3>
 <pre><code class="language-zig">const std = @import("std");
 
 const Creature = struct {
@@ -468,787 +844,141 @@ const Creature = struct {
 };
 
 fn boostMana(mana_ptr: *u32, amount: u32) void {
-    // 从 mana 字段的指针，反推出整个 Creature 的指针
     const creature_ptr: *Creature = @fieldParentPtr("mana", mana_ptr);
     creature_ptr.mana += amount;
-    
-    // 也可以修改其他字段
-    creature_ptr.health -= 1.0;
 }
 
-pub fn main(_: std.process.Init.Minimal) void {
+test "fieldParentPtr basic example" {
     var elf = Creature{
-        .health = 150.0,
+        .health = 100.0,
         .mana = 10,
-        .stamina = 100,
+        .stamina = 50,
     };
-    
-    std.debug.print("强化前 - 生命: {}, 法力: {}\n", .{ elf.health, elf.mana });
-    
-    boostMana(&amp;elf.mana, 40);
-    
-    std.debug.print("强化后 - 生命: {}, 法力: {}\n", .{ elf.health, elf.mana });
+
+    boostMana(&amp;elf.mana, 20);
+
+    try std.testing.expect(elf.mana == 30);
 }
 </code></pre>
-<h3 id="工作原理"><a class="header" href="#工作原理">工作原理</a></h3>
-<p><code>@fieldParentPtr</code> 通过以下步骤工作：</p>
-<ol>
-<li><strong>编译期计算偏移量</strong>：编译器知道字段在结构体中的偏移量</li>
-<li><strong>指针算术</strong>：从字段指针减去偏移量，得到结构体起始地址</li>
-<li><strong>类型转换</strong>：返回结构体指针类型</li>
-</ol>
-<pre><code class="language-zig">const std = @import("std");
-
-const Node = struct {
-    value: i32,
-    next: ?*Node,
-};
-
-pub fn main(_: std.process.Init.Minimal) void {
-    var node = Node{ .value = 42, .next = null };
-    
-    // 获取字段指针
-    const value_ptr: *i32 = &amp;node.value;
-    
-    // 从字段指针获取结构体指针
-    const node_ptr: *Node = @fieldParentPtr("value", value_ptr);
-    
-    std.debug.print("节点值：{}\n", .{node_ptr.value});
-    std.debug.print("偏移量：{} 字节\n", .{@offsetOf(Node, "value")});
-}
-</code></pre>
-<h3 id="实际应用侵入式链表"><a class="header" href="#实际应用侵入式链表">实际应用：侵入式链表</a></h3>
-<p>侵入式链表是 <code>@fieldParentPtr</code> 的经典应用场景：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-// 侵入式链表节点（不包含数据，只包含指针）
-const IntrusiveNode = struct {
-    prev: ?*IntrusiveNode,
-    next: ?*IntrusiveNode,
-};
-
-// 实际数据结构
-const Task = struct {
-    node: IntrusiveNode,  // 嵌入链表节点
-    id: u32,
-    name: []const u8,
-};
-
-const TaskList = struct {
-    head: ?*IntrusiveNode,
-    
-    fn init() TaskList {
-        return .{ .head = null };
-    }
-    
-    fn push(self: *TaskList, task: *Task) void {
-        task.node.prev = null;
-        task.node.next = self.head;
-        if (self.head) |head| {
-            head.prev = &amp;task.node;
-        }
-        self.head = &amp;task.node;
-    }
-    
-    fn iterate(self: *TaskList) void {
-        var current = self.head;
-        while (current) |node| {
-            // 从链表节点指针获取 Task 指针
-            const task: *Task = @fieldParentPtr("node", node);
-            std.debug.print("任务 {}: {s}\n", .{ task.id, task.name });
-            current = node.next;
-        }
-    }
-};
-
-pub fn main(_: std.process.Init.Minimal) void {
-    var list = TaskList.init();
-    
-    var task1 = Task{ .node = .{ .prev = null, .next = null }, .id = 1, .name = "初始化" };
-    var task2 = Task{ .node = .{ .prev = null, .next = null }, .id = 2, .name = "处理数据" };
-    var task3 = Task{ .node = .{ .prev = null, .next = null }, .id = 3, .name = "清理资源" };
-    
-    list.push(&amp;task1);
-    list.push(&amp;task2);
-    list.push(&amp;task3);
-    
-    list.iterate();
-}
-</code></pre>
-<h3 id="安全性注意事项"><a class="header" href="#安全性注意事项">安全性注意事项</a></h3>
-<p><strong>1. 必须确保字段指针有效</strong></p>
-<pre><code class="language-zig">const std = @import("std");
-
-const Point = struct { x: f32, y: f32 };
-
-pub fn main(_: std.process.Init.Minimal) void {
-    var point = Point{ .x = 1.0, .y = 2.0 };
-    
-    // ✅ 正确：字段指针有效
-    const x_ptr = &amp;point.x;
-    const point_ptr: *Point = @fieldParentPtr("x", x_ptr);
-    std.debug.print("点：({}, {})\n", .{ point_ptr.x, point_ptr.y });
-    
-    // ❌ 危险：野指针会导致未定义行为
-    // var dangling: *f32 = undefined;
-    // const bad_ptr: *Point = @fieldParentPtr("x", dangling);
-}
-</code></pre>
-<p><strong>2. 字段名必须在编译期已知</strong></p>
-<pre><code class="language-zig">const std = @import("std");
-
-const Point = struct { x: f32, y: f32 };
-
-pub fn main(_: std.process.Init.Minimal) void {
-    var point = Point{ .x = 1.0, .y = 2.0 };
-    
-    // ✅ 正确：字段名是编译期常量
-    const ptr1: *Point = @fieldParentPtr("x", &amp;point.x);
-    
-    // ❌ 错误：字段名不能是运行时变量
-    // const field_name = "x";
-    // const ptr2: *Point = @fieldParentPtr(field_name, &amp;point.x);
-}
-</code></pre>
-<p><strong>3. 指针必须指向结构体的字段</strong></p>
-<pre><code class="language-zig">const std = @import("std");
-
-const Point = struct { x: f32, y: f32 };
-
-pub fn main(_: std.process.Init.Minimal) void {
-    var point = Point{ .x = 1.0, .y = 2.0 };
-    var standalone: f32 = 3.0;
-    
-    // ✅ 正确：指向结构体字段
-    const ptr1: *Point = @fieldParentPtr("x", &amp;point.x);
-    
-    // ❌ 错误：指向独立变量，会导致未定义行为
-    // const ptr2: *Point = @fieldParentPtr("x", &amp;standalone);
-}
-</code></pre>
-<h3 id="应用场景"><a class="header" href="#应用场景">应用场景</a></h3>
+<p>这个机制依赖的前提是：</p>
+<ul>
+<li><code>mana_ptr</code> 确实来自某个 <code>Creature</code> 的 <code>mana</code> 字段</li>
+<li>这个字段偏移关系在当前类型布局中成立</li>
+</ul>
+<p>如果这些前提不成立，那么推导出的“父对象指针”也就不可靠。</p>
+<hr>
+<h3 id="为什么说它是高级特性"><a class="header" href="#为什么说它是高级特性">为什么说它是高级特性？</a></h3>
+<p>因为它隐含了很多前提：</p>
+<ul>
+<li>你必须非常确定字段来源</li>
+<li>你必须理解对象布局</li>
+<li>你必须确认生命周期仍然有效</li>
+<li>你要承担更强的正确性责任</li>
+</ul>
+<p>所以对教程读者来说，更合适的定位是：</p>
+<blockquote>
+<p><strong>知道有这个能力，并理解它主要用于侵入式数据结构；普通业务代码不必优先依赖它。</strong></p>
+</blockquote>
+<hr>
+<h2 id="指针类型应该怎么选"><a class="header" href="#指针类型应该怎么选">指针类型应该怎么选？</a></h2>
+<p>这是本章最实用的问题之一。</p>
+<p>你可以先用下面这张表建立直觉：</p>
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th>场景</th><th>说明</th><th>优势</th></tr>
+<tr><th>场景</th><th>更推荐的类型</th><th>原因</th></tr>
 </thead>
 <tbody>
-<tr><td><strong>侵入式数据结构</strong></td><td>链表、树、图等数据结构</td><td>零额外内存分配</td></tr>
-<tr><td><strong>回调函数上下文</strong></td><td>将用户数据传递给回调函数</td><td>避免全局变量</td></tr>
-<tr><td><strong>内存池管理</strong></td><td>从对象指针获取内存池元数据</td><td>高效的内存管理</td></tr>
-<tr><td><strong>事件系统</strong></td><td>从事件处理器指针获取对象指针</td><td>灵活的事件处理</td></tr>
+<tr><td>只读借用单个值</td><td><code>*const T</code></td><td>清楚表达只读，不复制</td></tr>
+<tr><td>可修改单个值</td><td><code>*T</code></td><td>明确表达原地修改</td></tr>
+<tr><td>只读序列输入</td><td><code>[]const T</code></td><td>安全、常见、带长度</td></tr>
+<tr><td>可修改序列</td><td><code>[]T</code></td><td>适合批量处理连续数据</td></tr>
+<tr><td>固定长度数组</td><td><code>*[N]T</code></td><td>长度进入类型</td></tr>
+<tr><td>可能不存在的对象</td><td><code>?*T</code></td><td>显式处理空值</td></tr>
+<tr><td>底层原始连续内存</td><td><code>[*]T</code></td><td>无长度，偏底层</td></tr>
+<tr><td>MMIO / 硬件寄存器</td><td><code>*volatile T</code></td><td>外部可观察内存访问</td></tr>
 </tbody>
 </table>
 </div>
-<h3 id="性能考虑"><a class="header" href="#性能考虑">性能考虑</a></h3>
-<ul>
-<li><strong>编译期计算</strong>：偏移量在编译期计算，运行时无开销</li>
-<li><strong>指针算术</strong>：只是简单的指针减法，非常高效</li>
-<li><strong>类型安全</strong>：编译器确保类型正确</li>
-</ul>
-<h3 id="最佳实践"><a class="header" href="#最佳实践">最佳实践</a></h3>
-<ol>
-<li><strong>优先使用更简单的方法</strong>：如果能直接传递结构体指针，就不要使用 <code>@fieldParentPtr</code></li>
-<li><strong>文档化使用</strong>：明确说明为什么需要使用这个技巧</li>
-<li><strong>确保指针有效</strong>：只在确定指针有效的情况下使用</li>
-<li><strong>用于特定场景</strong>：主要用于侵入式数据结构等高级场景</li>
-</ol>
-<h2 id="alignment-对齐系统"><a class="header" href="#alignment-对齐系统">Alignment 对齐系统</a></h2>
-<h1 id="什么是-alignment"><a class="header" href="#什么是-alignment">什么是 Alignment？</a></h1>
-<p>每种类型都有一个 <strong>alignment</strong>（对齐值）——一个字节数，当该类型的值从内存加载或存储到内存时，内存地址必须能被这个数字整除。可以使用 <code>[@alignOf](#alignOf)</code> 获取任何类型的对齐值。</p>
-<p>Alignment 取决于 CPU 架构，但始终是 2 的幂，且小于 <code>1 &lt;&lt; 29</code>。</p>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn main(_: std.process.Init.Minimal) void {
-    // i32 类型默认对齐值
-    std.debug.print("@alignOf(i32) = {}\n", .{@alignOf(i32)});
-    std.debug.print("@alignOf(f64) = {}\n", .{@alignOf(f64)});
-    std.debug.print("@alignOf(u8) = {}\n", .{@alignOf(u8)});
-
-    var x: i32 = 1234;
-    std.debug.print("变量 x 的地址对齐：{}\n", .{@intFromPtr(&amp;x) % @alignOf(i32) == 0});
-}
-</code></pre>
-<h1 id="指针的对齐"><a class="header" href="#指针的对齐">指针的对齐</a></h1>
-<p>指针类型可以显式指定对齐字节数。如果未指定，则假定对齐值等于底层类型的对齐值：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn main(_: std.process.Init.Minimal) void {
-    var x: i32 = 1234;
-
-    // 隐式对齐指针（指向 i32 的指针默认对齐为 @alignOf(i32)）
-    const ptr: *i32 = &amp;x;
-
-    // 显式指定对齐的指针
-    const aligned_ptr: *align(@alignOf(i32)) i32 = &amp;x;
-
-    std.debug.print("ptr 类型：{}\n", .{@TypeOf(ptr)});
-    std.debug.print("aligned_ptr 类型：{}\n", .{@TypeOf(aligned_ptr)});
-}
-</code></pre>
-<h1 id="变量和函数的对齐"><a class="header" href="#变量和函数的对齐">变量和函数的对齐</a></h1>
-<p>可以对变量和函数指定对齐，这样指向它们的指针将获得指定的对齐：</p>
-<pre><code class="language-zig">const expectEqual = @import("std").testing.expectEqual;
-
-var global_var: u8 align(4) = 100;
-
-test "全局变量对齐" {
-    try expectEqual(4, @typeInfo(@TypeOf(&amp;global_var)).pointer.alignment);
-    try expectEqual(*align(4) u8, @TypeOf(&amp;global_var));
-}
-
-fn alignedFunction() align(@sizeOf(usize) * 2) i32 {
-    return 1234;
-}
-
-test "函数对齐" {
-    try expectEqual(1234, alignedFunction());
-    try expectEqual(*align(@sizeOf(usize) * 2) const fn () i32, @TypeOf(&amp;alignedFunction));
-}
-</code></pre>
-<h1 id="aligncast-和对齐转换"><a class="header" href="#aligncast-和对齐转换">@alignCast 和对齐转换</a></h1>
-<p>如果你有一个小对齐的指针或切片，但你知道它实际上有更大的对齐，可以使用 <code>[@alignCast](#alignCast)</code> 将指针转换为更大对齐的指针。这在运行时是 no-op，但会插入安全检查：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-test "指针对齐安全性" {
-    var array align(4) = [_]u32{ 0x11111111, 0x11111111 };
-    const bytes = std.mem.sliceAsBytes(array[0..]);
-    try std.testing.expectEqual(0x11111111, foo(bytes));
-}
-
-fn foo(bytes: []u8) u32 {
-    const slice4 = bytes[1..5];
-    // @alignCast 将 []u8 转换为 []align(4) u8
-    const int_slice = std.mem.bytesAsSlice(u32, @as([]align(4) u8, @alignCast(slice4)));
-    return int_slice[0];
-}
-</code></pre>
-<p>当对齐不正确时，在 Debug/ReleaseSafe 模式下会触发 panic：</p>
-<pre><code>$ zig test test_incorrect_pointer_alignment.zig
-1/1 test_incorrect_pointer_alignment.test.pointer alignment safety...thread 2247083 panic: incorrect alignment
-</code></pre>
-<h1 id="对齐转换规则"><a class="header" href="#对齐转换规则">对齐转换规则</a></h1>
-<ul>
-<li><code>*T</code> 可以<a href="#Type-Coercion">强制转换</a>为 <code>*const T</code></li>
-<li>具有更大对齐的指针可以隐式转换为具有更小对齐的指针，反之则不行</li>
-</ul>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn main(_: std.process.Init.Minimal) void {
-    var x: i32 = 1234;
-
-    // 更大对齐的指针可以转换为更小对齐
-    const ptr_align_8: *align(8) i32 = &amp;x;
-    const ptr_align_4: *i32 = ptr_align_8; // 合法：更大对齐 -&gt; 更小对齐
-
-    _ = ptr_align_4;
-
-    // 更小对齐的指针不能转换为更大对齐
-    // const ptr_align_16: *align(16) i32 = ptr_align_4; // 编译错误！
-}
-</code></pre>
-<hr>
-<h1 id="章节练习题"><a class="header" href="#章节练习题">章节练习题</a></h1>
-<h1 id="基础题"><a class="header" href="#基础题">基础题</a></h1>
-<p><strong>题目1</strong>：编写一个函数，使用指针交换两个变量的值。</p>
-<p><strong>要求</strong>：</p>
-<ul>
-<li>函数签名为 <code>fn swap(a: *i32, b: *i32) void</code></li>
-<li>使用指针参数</li>
-<li>交换两个变量的值</li>
-</ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-fn swap(a: *i32, b: *i32) void {
-    const temp = a.*;
-    a.* = b.*;
-    b.* = temp;
-}
-
-pub fn main(_: std.process.Init.Minimal) void {
-    var x: i32 = 10;
-    var y: i32 = 20;
-    
-    std.debug.print("交换前：x={}, y={}\n", .{ x, y });
-    swap(&amp;x, &amp;y);
-    std.debug.print("交换后：x={}, y={}\n", .{ x, y });
-}
-</code></pre>
-<p><strong>题目2</strong>：编写一个函数，使用指针修改数组元素。</p>
-<p><strong>要求</strong>：</p>
-<ul>
-<li>函数签名为 <code>fn doubleAll(arr: []i32) void</code></li>
-<li>将数组中所有元素乘以 2</li>
-<li>使用指针访问元素</li>
-</ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">fn doubleAll(arr: []i32) void {
-    for (arr) |*item| {
-        item.* *= 2;
-    }
-}
-
-pub fn main(_: std.process.Init.Minimal) void {
-    var arr = [_]i32{ 1, 2, 3, 4, 5 };
-    doubleAll(&amp;arr);
-    std.debug.print("结果：{any}\n", .{arr});
-}
-</code></pre>
-<p><strong>题目3</strong>：编写一个函数，使用 const 指针读取数据。</p>
-<p><strong>要求</strong>：</p>
-<ul>
-<li>函数签名为 <code>fn sum(arr: *const [5]i32) i32</code></li>
-<li>使用 const 指针参数</li>
-<li>计算数组元素之和</li>
-</ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">fn sum(arr: *const [5]i32) i32 {
-    var total: i32 = 0;
-    for (arr.*) |item| {
-        total += item;
-    }
-    return total;
-}
-
-pub fn main(_: std.process.Init.Minimal) void {
-    const arr = [_]i32{ 1, 2, 3, 4, 5 };
-    const result = sum(&amp;arr);
-    std.debug.print("总和：{}\n", .{result});
-}
-</code></pre>
-<h1 id="进阶题"><a class="header" href="#进阶题">进阶题</a></h1>
-<p><strong>题目1</strong>：实现一个简单的链表节点结构，使用指针链接。</p>
-<p><strong>要求</strong>：</p>
-<ul>
-<li>定义链表节点结构</li>
-<li>实现插入和遍历功能</li>
-<li>使用指针管理节点</li>
-</ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-const Node = struct {
-    value: i32,
-    next: ?*Node,
-    
-    fn init(value: i32) Node {
-        return Node{
-            .value = value,
-            .next = null,
-        };
-    }
-};
-
-pub fn main(_: std.process.Init.Minimal) void {
-    var node1 = Node.init(1);
-    var node2 = Node.init(2);
-    var node3 = Node.init(3);
-    
-    node1.next = &amp;node2;
-    node2.next = &amp;node3;
-    
-    var current: ?*Node = &amp;node1;
-    while (current) |node| {
-        std.debug.print("{} -&gt; ", .{node.value});
-        current = node.next;
-    }
-    std.debug.print("null\n", .{});
-}
-</code></pre>
-<p><strong>题目2</strong>：使用多级指针实现二维数组的动态分配。</p>
-<p><strong>要求</strong>：</p>
-<ul>
-<li>使用二级指针</li>
-<li>分配 3x3 的二维数组</li>
-<li>初始化并输出数组</li>
-</ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn main(_: std.process.Init.Minimal) !void {
-    var gpa: std.heap.DebugAllocator(.{}) = .init;
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
-    
-    const rows: usize = 3;
-    const cols: usize = 3;
-    
-    var matrix = try allocator.alloc([]i32, rows);
-    defer allocator.free(matrix);
-    
-    for (0..rows) |i| {
-        matrix[i] = try allocator.alloc(i32, cols);
-        for (0..cols) |j| {
-            matrix[i][j] = @intCast(i * cols + j);
-        }
-    }
-    
-    defer {
-        for (matrix) |row| {
-            allocator.free(row);
-        }
-    }
-    
-    for (matrix, 0..) |row, i| {
-        std.debug.print("行 {}: {any}\n", .{ i, row });
-    }
-}
-</code></pre>
-<h1 id="挑战题"><a class="header" href="#挑战题">挑战题</a></h1>
-<p><strong>题目</strong>：实现一个简单的二叉树结构，使用指针管理节点。</p>
-<p><strong>要求</strong>：</p>
-<ul>
-<li>定义二叉树节点结构</li>
-<li>实现插入和遍历功能</li>
-<li>使用递归遍历</li>
-</ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-const TreeNode = struct {
-    value: i32,
-    left: ?*TreeNode,
-    right: ?*TreeNode,
-    
-    fn init(value: i32) TreeNode {
-        return TreeNode{
-            .value = value,
-            .left = null,
-            .right = null,
-        };
-    }
-    
-    fn inorder(node: *const TreeNode) void {
-        if (node.left) |left| {
-            left.inorder();
-        }
-        std.debug.print("{} ", .{node.value});
-        if (node.right) |right| {
-            right.inorder();
-        }
-    }
-};
-
-pub fn main(_: std.process.Init.Minimal) void {
-    var root = TreeNode.init(5);
-    var left = TreeNode.init(3);
-    var right = TreeNode.init(7);
-    
-    root.left = &amp;left;
-    root.right = &amp;right;
-    
-    std.debug.print("中序遍历：", .{});
-    root.inorder();
-    std.debug.print("\n", .{});
-}
-</code></pre>
-<hr>
+<p>如果你拿不准，优先考虑这条经验：</p>
 <blockquote>
-<p>💡 <strong>章节过渡</strong>：从指针到并发编程</p>
-<p>在<a href="chapter-pointers.html">指针与引用类型</a>中，我们学习了 Zig 的指针系统，理解了如何安全地操作内存。现在，我们已经完成了并发编程的学习。</p>
-<p><strong>为什么指针是并发编程的基础？</strong></p>
-<ol>
-<li><strong>共享内存</strong>：多个线程访问同一数据需要通过指针</li>
-<li><strong>数据竞争</strong>：指针的不当使用会导致并发问题</li>
-<li><strong>原子操作</strong>：理解指针是理解原子操作的前提</li>
-<li><strong>无锁数据结构</strong>：高级并发模式需要指针操作</li>
-</ol>
-<p><strong>学习建议</strong>：</p>
-<ul>
-<li>确保你已经理解了指针的安全使用</li>
-<li>注意并发编程中的指针安全问题</li>
-<li>理解原子操作如何保证指针访问的安全性</li>
-</ul>
+<p><strong>普通代码优先：<code>*const T</code>、<code>*T</code>、<code>[]const T</code>、<code>[]T</code>。</strong><br>其他形式通常是更底层、更专业化的表达。</p>
 </blockquote>
 <hr>
-<h1 id="章节练习题-1"><a class="header" href="#章节练习题-1">章节练习题</a></h1>
-<h1 id="基础题-1"><a class="header" href="#基础题-1">基础题</a></h1>
-<p><strong>题目1</strong>：编写一个程序，创建两个线程，分别打印不同的消息。</p>
-<p><strong>要求</strong>：</p>
+<h2 id="学指针时最容易踩的坑"><a class="header" href="#学指针时最容易踩的坑">学指针时最容易踩的坑</a></h2>
+<h3 id="1-把切片和指针混为一谈"><a class="header" href="#1-把切片和指针混为一谈">1. 把切片和指针混为一谈</a></h3>
+<p>切片内部确实包含指针，但切片不是“只是一个指针”。<br>它还有长度，因此语义和安全边界都不同。</p>
+<h3 id="2-不区分拥有和借用"><a class="header" href="#2-不区分拥有和借用">2. 不区分拥有和借用</a></h3>
+<p>拿到指针不代表你拥有对象。<br>拿到切片也不代表你拥有底层缓冲区。<br>你必须始终知道：</p>
 <ul>
-<li>使用 <code>std.Thread.spawn</code> 创建线程</li>
-<li>每个线程打印 5 次消息</li>
-<li>使用 <code>join()</code> 等待线程完成</li>
+<li>谁创建了这块内存</li>
+<li>谁负责释放</li>
+<li>什么时候它会失效</li>
 </ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-fn printMessage(msg: []const u8) void {
-    for (0..5) |i| {
-        std.debug.print("线程 {s}: 第 {} 次\n", .{ msg, i + 1 });
-    }
-}
-
-pub fn main(_: std.process.Init.Minimal) !void {
-    const thread1 = try std.Thread.spawn(.{}, printMessage, .{"A"});
-    const thread2 = try std.Thread.spawn(.{}, printMessage, .{"B"});
-    
-    thread1.join();
-    thread2.join();
-    
-    std.debug.print("所有线程完成\n", .{});
-}
-</code></pre>
-<p><strong>题目2</strong>：使用 <code>std.atomic.Value</code> 实现一个简单的原子计数器。</p>
-<p><strong>要求</strong>：</p>
+<h3 id="3-过早沉迷底层技巧"><a class="header" href="#3-过早沉迷底层技巧">3. 过早沉迷底层技巧</a></h3>
+<p><code>@ptrCast</code>、<code>@ptrFromInt</code>、<code>volatile</code>、<code>@fieldParentPtr</code> 都很强，<br>但如果你还没把 <code>*T</code>、切片、可选指针读顺，太早进入这些内容只会让理解更乱。</p>
+<h3 id="4-误把-volatile-当线程安全工具"><a class="header" href="#4-误把-volatile-当线程安全工具">4. 误把 <code>volatile</code> 当线程安全工具</a></h3>
+<p>它不是锁，也不是原子操作，也不自动解决竞态条件。</p>
+<h3 id="5-忽略对齐"><a class="header" href="#5-忽略对齐">5. 忽略对齐</a></h3>
+<p>只要你开始手动做底层指针转换，就必须认真考虑：</p>
 <ul>
-<li>创建原子计数器</li>
-<li>使用 <code>fetchAdd</code> 进行原子递增</li>
-<li>输出最终结果</li>
+<li>地址是否满足目标类型对齐</li>
+<li>当前假设是否真的成立</li>
+<li>是否对编译器做了过强承诺</li>
 </ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn main(_: std.process.Init.Minimal) void {
-    var counter = std.atomic.Value(usize).init(0);
-    
-    _ = counter.fetchAdd(1, .monotonic);
-    _ = counter.fetchAdd(1, .monotonic);
-    _ = counter.fetchAdd(1, .monotonic);
-    
-    const value = counter.load(.monotonic);
-    std.debug.print("计数器值：{}\n", .{value});
-}
-</code></pre>
-<p><strong>题目3</strong>：使用 <code>std.Thread.Mutex</code> 保护共享数据。</p>
-<p><strong>要求</strong>：</p>
-<ul>
-<li>创建一个共享变量</li>
-<li>使用互斥锁保护访问</li>
-<li>确保线程安全</li>
-</ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn main(_: std.process.Init.Minimal) !void {
-    var mutex = std.Thread.Mutex{};
-    var counter: usize = 0;
-    
-    const worker = struct {
-        fn work(m: *std.Thread.Mutex, c: *usize) void {
-            for (0..100) |_| {
-                m.lock();
-                defer m.unlock();
-                c.* += 1;
-            }
-        }
-    }.work;
-    
-    const thread1 = try std.Thread.spawn(.{}, worker, .{ &amp;mutex, &amp;counter });
-    const thread2 = try std.Thread.spawn(.{}, worker, .{ &amp;mutex, &amp;counter });
-    
-    thread1.join();
-    thread2.join();
-    
-    std.debug.print("最终计数：{}\n", .{counter});
-}
-</code></pre>
-<h1 id="进阶题-1"><a class="header" href="#进阶题-1">进阶题</a></h1>
-<p><strong>题目1</strong>：实现一个简单的线程池，执行多个任务。</p>
-<p><strong>要求</strong>：</p>
-<ul>
-<li>创建固定数量的工作线程</li>
-<li>提交多个任务到任务队列</li>
-<li>等待所有任务完成</li>
-</ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-const ThreadPool = struct {
-    threads: []std.Thread,
-    mutex: std.Thread.Mutex,
-    condition: std.Thread.Condition,
-    tasks: std.ArrayList(fn () void),
-    running: bool,
-    
-    fn init(allocator: std.mem.Allocator, count: usize) !ThreadPool {
-        var pool = ThreadPool{
-            .threads = try allocator.alloc(std.Thread, count),
-            .mutex = .{},
-            .condition = .{},
-            .tasks = std.ArrayList(fn () void).init(allocator),
-            .running = true,
-        };
-        
-        for (0..count) |i| {
-            pool.threads[i] = try std.Thread.spawn(.{}, worker, .{&amp;pool});
-        }
-        
-        return pool;
-    }
-    
-    fn worker(pool: *ThreadPool) void {
-        while (true) {
-            pool.mutex.lock();
-            defer pool.mutex.unlock();
-            
-            while (pool.tasks.items.len == 0 and pool.running) {
-                pool.condition.wait(&amp;pool.mutex);
-            }
-            
-            if (!pool.running and pool.tasks.items.len == 0) {
-                return;
-            }
-            
-            if (pool.tasks.items.len &gt; 0) {
-                const task = pool.tasks.orderedRemove(0);
-                pool.mutex.unlock();
-                task();
-                pool.mutex.lock();
-            }
-        }
-    }
-    
-    fn submit(pool: *ThreadPool, task: fn () void) void {
-        pool.mutex.lock();
-        defer pool.mutex.unlock();
-        pool.tasks.append(task) catch return;
-        pool.condition.signal();
-    }
-    
-    fn deinit(pool: *ThreadPool) void {
-        pool.mutex.lock();
-        pool.running = false;
-        pool.condition.broadcast();
-        pool.mutex.unlock();
-        
-        for (pool.threads) |thread| {
-            thread.join();
-        }
-    }
-};
-</code></pre>
-<p><strong>题目2</strong>：使用 <code>std.Thread.WaitGroup</code> 等待多个线程完成。</p>
-<p><strong>要求</strong>：</p>
-<ul>
-<li>创建多个工作线程</li>
-<li>使用 WaitGroup 同步</li>
-<li>等待所有线程完成后再继续</li>
-</ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn main(_: std.process.Init.Minimal) !void {
-    var wg: std.Thread.WaitGroup = .{};
-    var counter: usize = 0;
-    var mutex = std.Thread.Mutex{};
-    
-    const worker = struct {
-        fn work(wg: *std.Thread.WaitGroup, m: *std.Thread.Mutex, c: *usize) void {
-            defer wg.finish();
-            m.lock();
-            defer m.unlock();
-            c.* += 1;
-        }
-    }.work;
-    
-    for (0..10) |_| {
-        wg.start();
-        _ = try std.Thread.spawn(.{}, worker, .{ &amp;wg, &amp;mutex, &amp;counter });
-    }
-    
-    wg.wait();
-    std.debug.print("最终计数：{}\n", .{counter});
-}
-</code></pre>
-<h1 id="挑战题-1"><a class="header" href="#挑战题-1">挑战题</a></h1>
-<p><strong>题目</strong>：实现一个生产者-消费者模型，使用通道进行通信。</p>
-<p><strong>要求</strong>：</p>
-<ul>
-<li>创建生产者线程和消费者线程</li>
-<li>使用线程安全的队列</li>
-<li>正确处理同步和互斥</li>
-</ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-const Channel = struct {
-    mutex: std.Thread.Mutex,
-    condition: std.Thread.Condition,
-    buffer: std.ArrayList(i32),
-    closed: bool,
-    
-    fn init(allocator: std.mem.Allocator) Channel {
-        return .{
-            .mutex = .{},
-            .condition = .{},
-            .buffer = std.ArrayList(i32).init(allocator),
-            .closed = false,
-        };
-    }
-    
-    fn send(self: *Channel, value: i32) void {
-        self.mutex.lock();
-        defer self.mutex.unlock();
-        self.buffer.append(value) catch return;
-        self.condition.signal();
-    }
-    
-    fn receive(self: *Channel) ?i32 {
-        self.mutex.lock();
-        defer self.mutex.unlock();
-        
-        while (self.buffer.items.len == 0 and !self.closed) {
-            self.condition.wait(&amp;self.mutex);
-        }
-        
-        if (self.buffer.items.len &gt; 0) {
-            return self.buffer.orderedRemove(0);
-        }
-        return null;
-    }
-    
-    fn close(self: *Channel) void {
-        self.mutex.lock();
-        defer self.mutex.unlock();
-        self.closed = true;
-        self.condition.broadcast();
-    }
-};
-
-pub fn main(_: std.process.Init.Minimal) !void {
-    var gpa: std.heap.DebugAllocator(.{}) = .init;
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
-    
-    var channel = Channel.init(allocator);
-    
-    const producer = struct {
-        fn work(ch: *Channel) void {
-            for (0..5) |i| {
-                ch.send(@intCast(i));
-                std.debug.print("生产：{}\n", .{i});
-            }
-            ch.close();
-        }
-    }.work;
-    
-    const consumer = struct {
-        fn work(ch: *Channel) void {
-            while (ch.receive()) |value| {
-                std.debug.print("消费：{}\n", .{value});
-            }
-        }
-    }.work;
-    
-    const p = try std.Thread.spawn(.{}, producer, .{&amp;channel});
-    const c = try std.Thread.spawn(.{}, consumer, .{&amp;channel});
-    
-    p.join();
-    c.join();
-}
-</code></pre>
 <hr>
+<h2 id="本章真正要记住什么"><a class="header" href="#本章真正要记住什么">本章真正要记住什么？</a></h2>
+<p>如果你读完这一章，只记住下面这几条，其实已经很够用了：</p>
+<ol>
+<li><strong><code>*T</code> 表示单个对象的地址</strong></li>
+<li><strong><code>[]T</code> 是日常最重要的序列视图，通常比 <code>[*]T</code> 更适合普通代码</strong></li>
+<li><strong><code>*const T</code> 和 <code>[]const T</code> 能更清楚地表达只读借用</strong></li>
+<li><strong><code>?*T</code> 用来显式表示“可能没有值”</strong></li>
+<li><strong>数组指针保留固定长度信息，切片保留运行时长度信息</strong></li>
+<li><strong>对齐、<code>@ptrCast</code>、<code>volatile</code>、<code>@fieldParentPtr</code> 都属于更底层、更需要前提意识的内容</strong></li>
+<li><strong>学习指针的关键不是记语法，而是始终搞清楚：我手里拿到的是哪种视图、边界在哪里、生命周期由谁负责</strong></li>
+</ol>
+<hr>
+<h2 id="建议的阅读顺序回顾"><a class="header" href="#建议的阅读顺序回顾">建议的阅读顺序回顾</a></h2>
+<p>如果你之后需要重新温习，建议按这个顺序回看：</p>
+<ol>
+<li>单项指针 <code>*T</code></li>
+<li>只读指针 <code>*const T</code></li>
+<li>切片 <code>[]T</code> / <code>[]const T</code></li>
+<li>可选指针 <code>?*T</code></li>
+<li>数组指针 <code>*[N]T</code></li>
+<li>多项指针 <code>[*]T</code></li>
+<li>对齐</li>
+<li>裸地址和 <code>volatile</code></li>
+<li><code>@fieldParentPtr</code></li>
+</ol>
+<p>这样的顺序更接近 Zig 的真实学习路径，也更有助于你把“常用表达”和“底层特例”区分开来。</p>
+<hr>
+<h2 id="小结"><a class="header" href="#小结">小结</a></h2>
+<p>这一章的主题虽然叫“指针、切片与对齐”，但它真正想帮助你建立的是一种更稳定的判断方式：</p>
+<ul>
+<li>什么时候我需要单个对象的地址？</li>
+<li>什么时候我其实需要的是一段数据视图？</li>
+<li>什么时候我需要长度？</li>
+<li>什么时候我需要显式表达“可能为空”？</li>
+<li>什么时候我已经进入底层系统编程语境，需要考虑对齐、寄存器、对象布局和更强约束？</li>
+</ul>
+<p>一旦这些判断开始清楚，你就会发现很多 Zig 代码不再“像一堆指针语法”，而更像是在明确地描述数据关系和资源边界。</p>
+<hr>
+<blockquote>
+<p>💡 <strong>下一章预告</strong></p>
+<p>下一章我们将进入<a href="chapter-memory-management.html">内存管理模型</a>，把这一章里建立的“数据视图与借用边界”继续推进到更完整的资源语义：谁拥有数据、谁负责释放、分配器如何参与接口设计，以及失败路径该如何收口。</p>
+</blockquote>
+
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../part2-advanced/chapter-concurrency.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../part2-advanced/chapter-generics.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../part2-advanced/chapter-c-interop.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../part2-advanced/chapter-memory-management.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -1258,11 +988,11 @@ pub fn main(_: std.process.Init.Minimal) !void {
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../part2-advanced/chapter-concurrency.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../part2-advanced/chapter-generics.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../part2-advanced/chapter-c-interop.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../part2-advanced/chapter-memory-management.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>

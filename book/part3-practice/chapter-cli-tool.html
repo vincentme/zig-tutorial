@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>【draft】实战案例 - CLI 工具 - Zig 编程语言入门教程</title>
+        <title>实战案例 - CLI 工具开发 - Zig 编程语言入门教程</title>
 
 
         <!-- Custom HTML head -->
@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-a9ca16c2.js";
+            window.path_to_searchindex_js = "../searchindex-35211ac1.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-2fc75e4c.js"></script>
+        <script src="../toc-6dcbe846.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -181,110 +181,200 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="draft实战案例---cli工具开发"><a class="header" href="#draft实战案例---cli工具开发">【draft】实战案例 - CLI工具开发</a></h1>
-<p>本节将通过构建一个实用的文件搜索工具，展示 Zig 在 CLI 工具开发方面的完整流程和最佳实践。</p>
-<h2 id="项目概述"><a class="header" href="#项目概述">项目概述</a></h2>
-<h1 id="项目目标"><a class="header" href="#项目目标">项目目标</a></h1>
-<p>构建一个类似 <code>find</code> 命令的文件搜索工具 <code>zfind</code>，具备以下功能：</p>
-<ol>
-<li><strong>按文件名模式搜索</strong>：支持通配符匹配</li>
-<li><strong>按文件类型过滤</strong>：文件、目录、符号链接</li>
-<li><strong>按文件大小过滤</strong>：大于、小于、等于指定大小</li>
-<li><strong>递归搜索目录</strong>：支持深度限制</li>
-<li><strong>格式化输出</strong>：支持不同输出格式</li>
-</ol>
-<h1 id="技术栈"><a class="header" href="#技术栈">技术栈</a></h1>
+                        <h1 id="实战案例---cli-工具开发"><a class="header" href="#实战案例---cli-工具开发">实战案例 - CLI 工具开发</a></h1>
+<p>这一章不把目标设成“做一个可以直接替代现有命令行工具的完整产品”，而是把重点放在：</p>
+<blockquote>
+<p><strong>如何把一个小而完整的命令行需求，拆成清楚的模块、明确的接口和可验证的最小原型。</strong></p>
+</blockquote>
+<p>为了和本部分的整体定位保持一致，本章更适合被理解为：</p>
 <ul>
-<li><strong>标准库</strong>：<code>std.fs</code>（文件系统）、<code>std.process</code>（命令行参数）、<code>std.mem</code>（字符串处理）</li>
-<li><strong>构建系统</strong>：<code>zig build</code></li>
-<li><strong>测试框架</strong>：<code>zig test</code></li>
+<li>一个<strong>最小可讨论的 CLI 原型</strong></li>
+<li>一个把参数解析、文件系统遍历、过滤逻辑和输出组织起来的教学案例</li>
+<li>一个练习“如何把 Zig 基础能力组合成小项目”的入口</li>
 </ul>
-<h1 id="项目结构"><a class="header" href="#项目结构">项目结构</a></h1>
-<pre><code>zfind/
-├── build.zig           # 构建脚本
-├── build.zig.zon       # 项目清单
+<p>而不是：</p>
+<ul>
+<li>生产级 <code>find</code> 替代品</li>
+<li>完整的 glob 引擎</li>
+<li>完整覆盖平台差异、符号链接、权限、错误恢复和输出规范的成熟工具</li>
+</ul>
+<h2 id="本章的学习目标"><a class="header" href="#本章的学习目标">本章的学习目标</a></h2>
+<p>读完这一章后，你应该重点掌握下面这些能力：</p>
+<ol>
+<li><strong>把 CLI 工具拆成几个职责清楚的模块</strong></li>
+<li><strong>围绕“输入 → 处理 → 输出”组织主流程</strong></li>
+<li><strong>理解参数解析和错误处理如何影响用户体验</strong></li>
+<li><strong>理解文件搜索为什么看起来简单，实际上有很多边界条件</strong></li>
+<li><strong>知道什么叫“教学原型”和“生产工具”的差别</strong></li>
+</ol>
+<p>如果你能在本章结束后说清楚：</p>
+<ul>
+<li>参数是怎么被解析成结构化选项的</li>
+<li>搜索逻辑为什么要和输出逻辑分开</li>
+<li>哪些行为是本章故意简化的</li>
+<li>如果继续扩展，这个原型下一步应该往哪里演进</li>
+</ul>
+<p>那么这一章就已经达到目标。</p>
+<h2 id="先定义案例范围我们到底要做什么"><a class="header" href="#先定义案例范围我们到底要做什么">先定义案例范围：我们到底要做什么？</a></h2>
+<p>本章要实现一个最小文件搜索工具，暂时叫它 <code>zfind</code>。<br>它支持下面几类能力：</p>
+<ul>
+<li>指定搜索起点目录</li>
+<li>按名称模式做简单匹配</li>
+<li>按文件类型过滤</li>
+<li>按文件大小过滤</li>
+<li>限制递归深度</li>
+<li>以简单文本、详细文本或“接近 JSON 的文本行”输出结果</li>
+</ul>
+<p>这里要特别强调两点。</p>
+<h3 id="1-这是最小搜索工具原型不是完整-find"><a class="header" href="#1-这是最小搜索工具原型不是完整-find">1. 这是“最小搜索工具原型”，不是完整 <code>find</code></a></h3>
+<p>虽然案例借用了常见命令行搜索工具的思路，但它并不追求完整兼容真实工具的所有行为。<br>例如本章不会覆盖：</p>
+<ul>
+<li>复杂 glob 语法</li>
+<li>正则表达式</li>
+<li>排除规则</li>
+<li>跟随或不跟随符号链接的完整策略</li>
+<li>精细的权限错误汇总</li>
+<li>平台差异下的全部文件类型</li>
+<li>严格的 JSON 文档输出格式</li>
+</ul>
+<h3 id="2-这里最重要的是结构和边界不是功能越多越好"><a class="header" href="#2-这里最重要的是结构和边界不是功能越多越好">2. 这里最重要的是“结构和边界”，不是功能越多越好</a></h3>
+<p>CLI 案例最容易出现的误区之一，是一上来就拼命加选项和功能。<br>结果往往是：</p>
+<ul>
+<li>主函数越来越长</li>
+<li>逻辑边界不清楚</li>
+<li>错误处理越来越混乱</li>
+<li>输出格式和搜索逻辑耦合在一起</li>
+<li>代码看起来“功能很多”，但实际上很难维护</li>
+</ul>
+<p>因此，本章反而会故意收缩范围，让你看清楚一个小工具最基本的组织方式。</p>
+<h2 id="教学约束这一章刻意简化了什么"><a class="header" href="#教学约束这一章刻意简化了什么">教学约束：这一章刻意简化了什么？</a></h2>
+<p>为了让案例保持清晰，本章采用了几项明确的教学约束：</p>
+<ol>
+<li>
+<p><strong>名称匹配只支持非常有限的通配模式</strong></p>
+<ul>
+<li>例如 <code>*suffix</code>、<code>prefix*</code>、<code>*middle*</code>、完全匹配</li>
+<li>它不是完整 glob 语法实现</li>
+</ul>
+</li>
+<li>
+<p><strong>“json” 输出只是逐行输出 JSON 风格对象</strong></p>
+<ul>
+<li>它更接近“方便机器读取的行格式”</li>
+<li>不是一个严格意义上的单一 JSON 数组文档</li>
+</ul>
+</li>
+<li>
+<p><strong>搜索过程优先强调结构清晰</strong></p>
+<ul>
+<li>不会为了极限性能一开始就引入并行遍历、工作队列或复杂缓存</li>
+</ul>
+</li>
+<li>
+<p><strong>错误处理以“教学上能看懂”为优先</strong></p>
+<ul>
+<li>不会构建完整的错误汇总系统</li>
+<li>某些目录或文件出错时，可能直接跳过</li>
+</ul>
+</li>
+<li>
+<p><strong>文件系统行为不追求生产级完整性</strong></p>
+<ul>
+<li>比如目录、符号链接、元信息获取等问题，这里只展示最小可理解路径</li>
+</ul>
+</li>
+</ol>
+<p>这些约束并不是缺点，而是这章作为“案例教学”的前提条件。</p>
+<h2 id="先从用户视角看这个工具怎么使用"><a class="header" href="#先从用户视角看这个工具怎么使用">先从用户视角看：这个工具怎么使用？</a></h2>
+<p>在进入代码之前，先把目标交互想清楚。</p>
+<p>我们希望用户能写出类似这样的命令：</p>
+<pre><code class="language-text">zfind .
+zfind -n "*.zig" .
+zfind -t dir /usr/local
+zfind -s +1048576 .
+zfind -d 3 -f detailed .
+</code></pre>
+<p>从这些命令出发，可以反推出程序至少需要回答几个问题：</p>
+<ul>
+<li>搜索路径是什么？</li>
+<li>有没有名字模式？</li>
+<li>要过滤哪种文件类型？</li>
+<li>有没有大小约束？</li>
+<li>递归深度是否有限制？</li>
+<li>结果应该怎么打印？</li>
+</ul>
+<p>于是，我们就有了一个很自然的设计方向：</p>
+<blockquote>
+<p><strong>先把命令行输入解析成一个清晰的配置结构，再把这个结构交给搜索逻辑。</strong></p>
+</blockquote>
+<p>这比在搜索过程中不断去问“用户传了哪个选项”要清楚得多。</p>
+<h2 id="模块划分先把职责拆开"><a class="header" href="#模块划分先把职责拆开">模块划分：先把职责拆开</a></h2>
+<p>一个很适合 CLI 原型的拆分方式是下面这样：</p>
+<pre><code class="language-text">zfind/
+├── build.zig
+├── build.zig.zon
 └── src/
-    ├── main.zig        # 主程序入口
-    ├── search.zig      # 搜索核心逻辑
-    ├── filter.zig      # 文件过滤逻辑
-    ├── cli.zig         # 命令行参数解析
-    └── output.zig      # 输出格式化
+    ├── main.zig
+    ├── cli.zig
+    ├── filter.zig
+    ├── search.zig
+    └── output.zig
 </code></pre>
-<h2 id="项目初始化"><a class="header" href="#项目初始化">项目初始化</a></h2>
-<h1 id="创建项目"><a class="header" href="#创建项目">创建项目</a></h1>
-<pre><code class="language-bash"># 创建项目目录
-mkdir zfind
-cd zfind
-
-# 初始化项目
-zig init
-
-# 查看项目结构
-tree
-</code></pre>
-<h1 id="配置-buildzigzon"><a class="header" href="#配置-buildzigzon">配置 build.zig.zon</a></h1>
-<pre><code class="language-zig">.{
-    .name = "zfind",
-    .version = "0.1.0",
-    .dependencies = .{},
-    .paths = .{
-        "build.zig",
-        "build.zig.zon",
-        "src",
-    },
-}
-</code></pre>
-<h1 id="配置-buildzig"><a class="header" href="#配置-buildzig">配置 build.zig</a></h1>
-<pre><code class="language-zig">// 🚫 已废弃：0.15.x 已移除
-const std = @import("std");
-
-pub fn build(b: *std.Build) void {
-    const target = b.standardTargetOptions(.{});
-    const optimize = b.standardOptimizeOption(.{});
-
-    // 可执行文件
-    const exe = b.addExecutable(.{
-        .name = "zfind",
-        .root_source_file = b.path("src/main.zig"),
-        .target = target,
-        .optimize = optimize,
-    });
-
-    b.installArtifact(exe);
-
-    // 运行命令
-    const run_cmd = b.addRunArtifact(exe);
-    run_cmd.step.dependOn(b.getInstallStep());
-
-    if (b.args) |args| {
-        run_cmd.addArgs(args);
-    }
-
-    const run_step = b.step("run", "Run the app");
-    run_step.dependOn(&amp;run_cmd.step);
-
-    // 测试
-    const unit_tests = b.addTest(.{
-        .root_source_file = b.path("src/main.zig"),
-        .target = target,
-        .optimize = optimize,
-    });
-
-    const run_unit_tests = b.addRunArtifact(unit_tests);
-    const test_step = b.step("test", "Run unit tests");
-    test_step.dependOn(&amp;run_unit_tests.step);
-}
-</code></pre>
-<h2 id="命令行参数解析"><a class="header" href="#命令行参数解析">命令行参数解析</a></h2>
-<h1 id="定义-cli-结构"><a class="header" href="#定义-cli-结构">定义 CLI 结构</a></h1>
-<p>创建 <code>src/cli.zig</code>：</p>
+<p>每个模块的职责分别是：</p>
+<ul>
+<li>
+<p><code>main.zig</code></p>
+<ul>
+<li>程序入口</li>
+<li>初始化分配器</li>
+<li>获取参数</li>
+<li>调用解析逻辑</li>
+<li>串起搜索和输出流程</li>
+</ul>
+</li>
+<li>
+<p><code>cli.zig</code></p>
+<ul>
+<li>命令行参数解析</li>
+<li>帮助信息和版本信息</li>
+<li>将命令行参数转换成结构化选项</li>
+</ul>
+</li>
+<li>
+<p><code>filter.zig</code></p>
+<ul>
+<li>名称匹配</li>
+<li>类型过滤</li>
+<li>大小过滤</li>
+</ul>
+</li>
+<li>
+<p><code>search.zig</code></p>
+<ul>
+<li>目录遍历</li>
+<li>递归搜索</li>
+<li>收集和输出结果</li>
+</ul>
+</li>
+<li>
+<p><code>output.zig</code></p>
+<ul>
+<li>不同格式的输出逻辑</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>💡 这里的重点不是“一定要拆成 5 个文件”，而是：</p>
+<ul>
+<li>参数解析不要和遍历逻辑混在一起</li>
+<li>搜索逻辑不要和输出细节绑死</li>
+<li>过滤规则最好能独立测试</li>
+</ul>
+</blockquote>
+<h2 id="第一步把命令行参数变成结构化选项"><a class="header" href="#第一步把命令行参数变成结构化选项">第一步：把命令行参数变成结构化选项</a></h2>
+<p>对于 CLI 工具来说，最关键的第一步不是“开始搜文件”，而是先把用户输入转成程序可理解的状态。</p>
+<p>一个最小选项结构可以类似这样：</p>
 <pre><code class="language-zig">const std = @import("std");
-
-pub const CliError = error{
-    InvalidArgument,
-    MissingValue,
-    UnknownOption,
-};
 
 pub const FileType = enum {
     all,
@@ -311,7 +401,7 @@ pub const OutputFormat = enum {
 };
 
 pub const CliOptions = struct {
-    search_path: []const u8,
+    search_path: []const u8 = ".",
     name_pattern: ?[]const u8 = null,
     file_type: FileType = .all,
     size_filter: ?SizeFilter = null,
@@ -320,129 +410,41 @@ pub const CliOptions = struct {
     show_help: bool = false,
     show_version: bool = false,
 };
-
-pub fn parseArgs(allocator: std.mem.Allocator, args: [][:0]u8) CliError!CliOptions {
-    var options = CliOptions{
-        .search_path = ".",
-    };
-
-    var i: usize = 1;
-    while (i &lt; args.len) {
-        const arg = std.mem.span(args[i]);
-
-        if (std.mem.eql(u8, arg, "-h") or std.mem.eql(u8, arg, "--help")) {
-            options.show_help = true;
-        } else if (std.mem.eql(u8, arg, "-v") or std.mem.eql(u8, arg, "--version")) {
-            options.show_version = true;
-        } else if (std.mem.eql(u8, arg, "-n") or std.mem.eql(u8, arg, "--name")) {
-            i += 1;
-            if (i &gt;= args.len) return error.MissingValue;
-            options.name_pattern = std.mem.span(args[i]);
-        } else if (std.mem.eql(u8, arg, "-t") or std.mem.eql(u8, arg, "--type")) {
-            i += 1;
-            if (i &gt;= args.len) return error.MissingValue;
-            const type_str = std.mem.span(args[i]);
-            if (std.mem.eql(u8, type_str, "file")) {
-                options.file_type = .file;
-            } else if (std.mem.eql(u8, type_str, "dir")) {
-                options.file_type = .dir;
-            } else if (std.mem.eql(u8, type_str, "symlink")) {
-                options.file_type = .symlink;
-            } else {
-                return error.InvalidArgument;
-            }
-        } else if (std.mem.eql(u8, arg, "-s") or std.mem.eql(u8, arg, "--size")) {
-            i += 1;
-            if (i &gt;= args.len) return error.MissingValue;
-            options.size_filter = try parseSizeFilter(std.mem.span(args[i]));
-        } else if (std.mem.eql(u8, arg, "-d") or std.mem.eql(u8, arg, "--max-depth")) {
-            i += 1;
-            if (i &gt;= args.len) return error.MissingValue;
-            options.max_depth = std.fmt.parseInt(u32, std.mem.span(args[i]), 10) catch return error.InvalidArgument;
-        } else if (std.mem.eql(u8, arg, "-f") or std.mem.eql(u8, arg, "--format")) {
-            i += 1;
-            if (i &gt;= args.len) return error.MissingValue;
-            const format_str = std.mem.span(args[i]);
-            if (std.mem.eql(u8, format_str, "simple")) {
-                options.output_format = .simple;
-            } else if (std.mem.eql(u8, format_str, "detailed")) {
-                options.output_format = .detailed;
-            } else if (std.mem.eql(u8, format_str, "json")) {
-                options.output_format = .json;
-            } else {
-                return error.InvalidArgument;
-            }
-        } else if (!std.mem.startsWith(u8, arg, "-")) {
-            options.search_path = arg;
-        } else {
-            return error.UnknownOption;
-        }
-
-        i += 1;
-    }
-
-    return options;
-}
-
-fn parseSizeFilter(size_str: []const u8) CliError!SizeFilter {
-    if (size_str.len &lt; 2) return error.InvalidArgument;
-
-    const comparator: SizeComparator = switch (size_str[0]) {
-        '+' =&gt; .greater,
-        '-' =&gt; .less,
-        '=' =&gt; .equal,
-        else =&gt; return error.InvalidArgument,
-    };
-
-    const size_part = size_str[1..];
-    const size = std.fmt.parseInt(u64, size_part, 10) catch return error.InvalidArgument;
-
-    return SizeFilter{
-        .comparator = comparator,
-        .size = size,
-    };
-}
-
-pub fn printHelp() void {
-    const help_text =
-        \\zfind - 文件搜索工具
-        \\
-        \\用法:
-        \\  zfind [选项] [搜索路径]
-        \\
-        \\选项:
-        \\  -n, --name &lt;pattern&gt;    按文件名模式搜索（支持通配符）
-        \\  -t, --type &lt;type&gt;       按文件类型过滤 (file|dir|symlink)
-        \\  -s, --size &lt;size&gt;       按文件大小过滤 (+大于|-小于|=等于)
-        \\  -d, --max-depth &lt;n&gt;     限制搜索深度
-        \\  -f, --format &lt;format&gt;   输出格式 (simple|detailed|json)
-        \\  -h, --help              显示帮助信息
-        \\  -v, --version           显示版本信息
-        \\
-        \\示例:
-        \\  zfind .                          # 搜索当前目录
-        \\  zfind -n "*.zig" .               # 搜索所有 .zig 文件
-        \\  zfind -t dir /usr/local          # 搜索所有目录
-        \\  zfind -s +1M .                   # 搜索大于 1MB 的文件
-        \\  zfind -d 3 -f detailed .         # 限制深度 3，详细输出
-        \\
-    ;
-
-    std.debug.print("{s}", .{help_text});
-}
-
-pub fn printVersion() void {
-    std.debug.print("zfind version 0.1.0\n", .{});
-}
 </code></pre>
-<h2 id="文件过滤逻辑"><a class="header" href="#文件过滤逻辑">文件过滤逻辑</a></h2>
-<p>创建 <code>src/filter.zig</code>：</p>
+<p>这段结构设计有几个教学上的好处：</p>
+<ol>
+<li><strong>主流程不再关心原始参数细节</strong></li>
+<li><strong>默认值清楚</strong></li>
+<li><strong>搜索逻辑只依赖结构化配置</strong></li>
+<li><strong>后续写测试会更方便</strong></li>
+</ol>
+<p>也就是说，参数解析的真正价值不是“把字符串拆开”，而是：</p>
+<blockquote>
+<p><strong>把混乱的命令行输入，整理成一个具有明确语义的数据结构。</strong></p>
+</blockquote>
+<h2 id="第二步限制模式匹配的野心"><a class="header" href="#第二步限制模式匹配的野心">第二步：限制模式匹配的野心</a></h2>
+<p>很多人做文件搜索工具时，最容易低估的部分就是“模式匹配”。</p>
+<p>如果你说自己支持：</p>
+<ul>
+<li><code>*.zig</code></li>
+<li><code>foo*</code></li>
+<li><code>*bar</code></li>
+<li><code>src/**/test*.zig</code></li>
+<li>字符类</li>
+<li>转义</li>
+<li>路径分段规则</li>
+</ul>
+<p>那你其实已经在往“做一个真正的 glob 引擎”走了。</p>
+<p>而本章不想把精力花在这里。<br>所以这里故意只做一个非常有限的匹配器，例如：</p>
+<ul>
+<li><code>*</code>：全部匹配</li>
+<li><code>*suffix</code>：后缀匹配</li>
+<li><code>prefix*</code>：前缀匹配</li>
+<li><code>*middle*</code>：包含匹配</li>
+<li>其他情况：精确匹配</li>
+</ul>
+<p>示意实现可以像这样：</p>
 <pre><code class="language-zig">const std = @import("std");
-const cli = @import("cli.zig");
-
-pub const FilterError = error{
-    PatternTooComplex,
-};
 
 pub fn matchesPattern(name: []const u8, pattern: []const u8) bool {
     if (std.mem.eql(u8, pattern, "*")) return true;
@@ -460,558 +462,294 @@ pub fn matchesPattern(name: []const u8, pattern: []const u8) bool {
         return std.mem.eql(u8, name, pattern);
     }
 }
-
-pub fn matchesFileType(stat: std.fs.File.Stat, file_type: cli.FileType) bool {
-    return switch (file_type) {
-        .all =&gt; true,
-        .file =&gt; stat.kind == .file,
-        .dir =&gt; stat.kind == .directory,
-        .symlink =&gt; stat.kind == .sym_link,
-    };
-}
-
-pub fn matchesSize(size: u64, size_filter: cli.SizeFilter) bool {
-    return switch (size_filter.comparator) {
-        .greater =&gt; size &gt; size_filter.size,
-        .less =&gt; size &lt; size_filter.size,
-        .equal =&gt; size == size_filter.size,
-    };
-}
-
-test "matchesPattern" {
-    try std.testing.expect(matchesPattern("test.zig", "*.zig"));
-    try std.testing.expect(matchesPattern("main.zig", "*.zig"));
-    try std.testing.expect(!matchesPattern("main.c", "*.zig"));
-
-    try std.testing.expect(matchesPattern("test_file.zig", "*file*"));
-    try std.testing.expect(matchesPattern("file_test.zig", "*file*"));
-    try std.testing.expect(!matchesPattern("test.zig", "*file*"));
-
-    try std.testing.expect(matchesPattern("main.zig", "main.*"));
-    try std.testing.expect(!matchesPattern("test.zig", "main.*"));
-
-    try std.testing.expect(matchesPattern("exact.zig", "exact.zig"));
-    try std.testing.expect(!matchesPattern("other.zig", "exact.zig"));
-}
-
-test "matchesSize" {
-    const filter_greater = cli.SizeFilter{ .comparator = .greater, .size = 100 };
-    try std.testing.expect(matchesSize(200, filter_greater));
-    try std.testing.expect(!matchesSize(50, filter_greater));
-
-    const filter_less = cli.SizeFilter{ .comparator = .less, .size = 100 };
-    try std.testing.expect(matchesSize(50, filter_less));
-    try std.testing.expect(!matchesSize(200, filter_less));
-
-    const filter_equal = cli.SizeFilter{ .comparator = .equal, .size = 100 };
-    try std.testing.expect(matchesSize(100, filter_equal));
-    try std.testing.expect(!matchesSize(99, filter_equal));
-}
 </code></pre>
-<h2 id="搜索核心逻辑"><a class="header" href="#搜索核心逻辑">搜索核心逻辑</a></h2>
-<p>创建 <code>src/search.zig</code>：</p>
-<pre><code class="language-zig">const std = @import("std");
-const cli = @import("cli.zig");
-const filter = @import("filter.zig");
-
-pub const SearchResult = struct {
-    path: []const u8,
-    stat: std.fs.File.Stat,
-};
-
-pub const SearchError = error{
-    PermissionDenied,
-    PathNotFound,
-    TooManyOpenFiles,
-};
-
-pub fn search(
+<h3 id="这里一定要对读者说清楚"><a class="header" href="#这里一定要对读者说清楚">这里一定要对读者说清楚</a></h3>
+<p>这不是完整 glob。<br>更准确地说，它只是一个<strong>教学用的最小通配匹配器</strong>。</p>
+<p>因此，像下面这些说法都应该避免：</p>
+<ul>
+<li>“支持通配符匹配”</li>
+<li>“兼容 shell glob”</li>
+<li>“可替代常见模式匹配工具”</li>
+</ul>
+<p>更准确的表达是：</p>
+<blockquote>
+<p><strong>本章支持少量最常见的名称模式，用来支撑 CLI 原型，而不是实现完整模式语法。</strong></p>
+</blockquote>
+<h2 id="第三步把搜索逻辑和过滤逻辑分开"><a class="header" href="#第三步把搜索逻辑和过滤逻辑分开">第三步：把搜索逻辑和过滤逻辑分开</a></h2>
+<p>一旦参数已经解析成 <code>CliOptions</code>，接下来最自然的做法，就是让搜索逻辑专注于：</p>
+<ul>
+<li>遍历目录</li>
+<li>判断是否递归进入子目录</li>
+<li>对当前条目应用过滤规则</li>
+<li>将结果交给输出逻辑</li>
+</ul>
+<p>一个很典型的接口可以长这样：</p>
+<pre><code class="language-zig">pub fn search(
     allocator: std.mem.Allocator,
-    options: cli.CliOptions,
+    options: CliOptions,
     writer: anytype,
-) SearchError!usize {
-    var dir = std.fs.cwd().openDir(options.search_path, .{
-        .iterate = true,
-    }) catch |err| {
-        return switch (err) {
-            error.FileNotFound =&gt; error.PathNotFound,
-            error.AccessDenied =&gt; error.PermissionDenied,
-            else =&gt; err,
-        };
-    };
-    defer dir.close();
+) !usize
+</code></pre>
+<p>这个签名背后的设计含义很值得注意：</p>
+<ul>
+<li><code>allocator</code>
+<ul>
+<li>搜索过程中可能需要构造路径、临时字符串</li>
+</ul>
+</li>
+<li><code>options</code>
+<ul>
+<li>所有用户输入都已经被整理好</li>
+</ul>
+</li>
+<li><code>writer</code>
+<ul>
+<li>搜索逻辑不关心结果是打印到终端、缓冲区，还是测试用内存输出</li>
+</ul>
+</li>
+</ul>
+<p>这就是一个典型的 Zig 风格设计点：</p>
+<blockquote>
+<p><strong>通过显式传入依赖，让逻辑更容易组合、替换和测试。</strong></p>
+</blockquote>
+<h2 id="递归搜索的最小思路"><a class="header" href="#递归搜索的最小思路">递归搜索的最小思路</a></h2>
+<p>一个教学用的递归搜索流程，通常可以概括成下面几步：</p>
+<ol>
+<li>打开当前目录</li>
+<li>遍历条目</li>
+<li>构造当前条目的相对路径</li>
+<li>应用名称、类型、大小等过滤条件</li>
+<li>如果匹配，则输出</li>
+<li>如果条目是目录且未超过最大深度，则递归进入</li>
+</ol>
+<p>示意伪代码如下：</p>
+<pre><code class="language-text">search(dir, current_depth):
+    if 超出最大深度:
+        return
 
-    var count: usize = 0;
-    try searchRecursive(allocator, dir, options, "", 0, &amp;count, writer);
+    for 每个目录项:
+        构造路径
+        判断是否匹配过滤条件
+        如果匹配:
+            输出结果
 
-    return count;
-}
-
-fn searchRecursive(
-    allocator: std.mem.Allocator,
-    dir: std.fs.Dir,
-    options: cli.CliOptions,
-    current_path: []const u8,
-    current_depth: u32,
-    count: *usize,
-    writer: anytype,
-) SearchError!void {
-    if (options.max_depth) |max_depth| {
-        if (current_depth &gt; max_depth) return;
-    }
-
-    var iter = dir.iterate();
-    while (try iter.next()) |entry| {
-        const entry_path = try std.fs.path.join(allocator, &amp;.{
-            if (current_path.len &gt; 0) current_path else ".",
-            entry.name,
-        });
-        defer allocator.free(entry_path);
-
-        var matches = true;
-        var stat: ?std.fs.File.Stat = null;
-
-        if (options.name_pattern) |pattern| {
-            if (!filter.matchesPattern(entry.name, pattern)) {
-                matches = false;
-            }
-        }
-
-        if (matches and options.file_type != .all) {
-            const file = dir.openFile(entry.name, .{}) catch continue;
-            defer file.close();
-            stat = file.stat() catch continue;
-
-            if (!filter.matchesFileType(stat.?, options.file_type)) {
-                matches = false;
-            }
-        }
-
-        if (matches and options.size_filter != null) {
-            if (stat == null) {
-                const file = dir.openFile(entry.name, .{}) catch continue;
-                defer file.close();
-                stat = file.stat() catch continue;
-            }
-
-            if (!filter.matchesSize(stat.?.size, options.size_filter.?)) {
-                matches = false;
-            }
-        }
-
-        if (matches) {
-            count.* += 1;
-            try printResult(writer, entry_path, stat, options.output_format);
-        }
-
-        if (entry.kind == .directory) {
-            var subdir = dir.openDir(entry.name, .{
-                .iterate = true,
-            }) catch continue;
-            defer subdir.close();
-
-            try searchRecursive(
-                allocator,
-                subdir,
-                options,
-                entry_path,
-                current_depth + 1,
-                count,
-                writer,
-            );
-        }
-    }
-}
-
-fn printResult(
+        如果是目录:
+            递归进入
+</code></pre>
+<p>这部分最重要的，不是“递归”本身，而是几个边界判断：</p>
+<ul>
+<li>深度什么时候停止？</li>
+<li>构造路径时谁负责释放内存？</li>
+<li>获取文件信息失败时怎么办？</li>
+<li>对目录和文件是否采用相同处理路径？</li>
+</ul>
+<p>这些问题比“怎么写 <code>while</code> 循环”更值得关注。</p>
+<h2 id="一个很重要的现实问题文件类型和元信息并不总是好拿"><a class="header" href="#一个很重要的现实问题文件类型和元信息并不总是好拿">一个很重要的现实问题：文件类型和元信息并不总是好拿</a></h2>
+<p>从教学角度看，“遍历目录 → 判断类型 → 判断大小”似乎很顺。<br>但在真实文件系统里，这一步其实很容易碰到复杂情况，例如：</p>
+<ul>
+<li>某些条目无法访问</li>
+<li>某些条目是符号链接</li>
+<li>某些平台下元信息行为不同</li>
+<li>目录和普通文件获取 size 的语义并不完全一样</li>
+</ul>
+<p>因此，本章中如果你看到某些逻辑采取了“获取不到就跳过”的策略，不要把它理解成“这是最完善的行为”，而要把它理解成：</p>
+<blockquote>
+<p><strong>这是为了保持案例主线清晰而做的简化。</strong></p>
+</blockquote>
+<p>真实项目里，你通常还要继续思考：</p>
+<ul>
+<li>是否把错误记录下来</li>
+<li>是否在最终汇总里告诉用户哪些路径失败了</li>
+<li>是否允许部分失败而继续执行</li>
+<li>是否区分“用户无权限”和“路径不存在”等错误</li>
+</ul>
+<h2 id="输出格式为什么要单独抽出来"><a class="header" href="#输出格式为什么要单独抽出来">输出格式：为什么要单独抽出来？</a></h2>
+<p>CLI 工具里一个非常常见的坏味道是：</p>
+<ul>
+<li>搜索逻辑里直接 <code>print</code></li>
+<li>每种格式都在主循环里分支</li>
+<li>结果一多，搜索和输出完全缠在一起</li>
+</ul>
+<p>这会导致两个问题：</p>
+<ol>
+<li>搜索逻辑变得很难读</li>
+<li>输出格式一改，核心流程也要跟着改</li>
+</ol>
+<p>因此，更合理的方式是把输出逻辑单独整理成一个函数，例如：</p>
+<pre><code class="language-zig">fn printResult(
     writer: anytype,
     path: []const u8,
     stat: ?std.fs.File.Stat,
-    format: cli.OutputFormat,
-) !void {
-    switch (format) {
-        .simple =&gt; {
-            try writer.print("{s}\n", .{path});
-        },
-        .detailed =&gt; {
-            if (stat) |s| {
-                const type_str = switch (s.kind) {
-                    .file =&gt; "FILE",
-                    .directory =&gt; "DIR ",
-                    .sym_link =&gt; "LINK",
-                    else =&gt; "????",
-                };
-                try writer.print("[{s}] {:&gt;10} bytes  {s}\n", .{
-                    type_str,
-                    s.size,
-                    path,
-                });
-            } else {
-                try writer.print("[????] {:&gt;10} bytes  {s}\n", .{
-                    @as(u64, 0),
-                    path,
-                });
-            }
-        },
-        .json =&gt; {
-            if (stat) |s| {
-                const type_str = switch (s.kind) {
-                    .file =&gt; "file",
-                    .directory =&gt; "directory",
-                    .sym_link =&gt; "symlink",
-                    else =&gt; "unknown",
-                };
-                try writer.print(
-                    \\{{"path":"{s}","type":"{s}","size":{}}}
-                    \\
-                , .{
-                    path,
-                    type_str,
-                    s.size,
-                });
-            } else {
-                try writer.print(
-                    \\{{"path":"{s}","type":"unknown","size":0}}
-                    \\
-                , .{path});
-            }
-        },
-    }
-}
+    format: OutputFormat,
+) !void
 </code></pre>
-<h2 id="主程序入口"><a class="header" href="#主程序入口">主程序入口</a></h2>
-<p>创建 <code>src/main.zig</code>：</p>
-<pre><code class="language-zig">// ✨ 新特性：std.Io 统一接口
-const std = @import("std");
-const cli = @import("cli.zig");
-const search = @import("search.zig");
-
-pub fn main(init: std.process.Init) !void {
-    var gpa: std.heap.DebugAllocator(.{}) = .init;
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
-
-    const args = try std.process.argsAlloc(allocator);
-    defer std.process.argsFree(allocator, args);
-
-    const options = cli.parseArgs(allocator, args) catch |err| {
-        switch (err) {
-            cli.CliError.InvalidArgument =&gt; {
-                std.debug.print("错误：无效的参数\n", .{});
-            },
-            cli.CliError.MissingValue =&gt; {
-                std.debug.print("错误：缺少参数值\n", .{});
-            },
-            cli.CliError.UnknownOption =&gt; {
-                std.debug.print("错误：未知的选项\n", .{});
-            },
-        }
-        std.debug.print("使用 --help 查看帮助信息\n", .{});
-        return;
-    };
-
-    if (options.show_help) {
-        cli.printHelp();
-        return;
-    }
-
-    if (options.show_version) {
-        cli.printVersion();
-        return;
-    }
-
-    const stdout = std.Io.File.stdout();
-    var buffered_writer = std.io.bufferedWriter(stdout.writer(init.io));
-
-    const count = search.search(allocator, options, buffered_writer.writer()) catch |err| {
-        switch (err) {
-            search.SearchError.PathNotFound =&gt; {
-                std.debug.print("错误：路径不存在: {s}\n", .{options.search_path});
-            },
-            search.SearchError.PermissionDenied =&gt; {
-                std.debug.print("错误：权限不足: {s}\n", .{options.search_path});
-            },
-            else =&gt; {
-                std.debug.print("错误：搜索失败\n", .{});
-            },
-        }
-        return;
-    };
-
-    try buffered_writer.flush();
-
-    std.debug.print("\n找到 {} 个结果\n", .{count});
-}
-
-test "CLI argument parsing" {
-    const allocator = std.testing.allocator;
-
-    var args = [_][0]u8{};
-    _ = args;
-
-    const options = try cli.parseArgs(allocator, &amp;args);
-    try std.testing.expectEqualStrings(".", options.search_path);
-    try std.testing.expect(options.name_pattern == null);
-    try std.testing.expect(options.file_type == .all);
-}
-
-test "Pattern matching" {
-    @import("filter.zig");
-}
+<h3 id="关于-json-输出一定要说实话"><a class="header" href="#关于-json-输出一定要说实话">关于 “json” 输出，一定要说实话</a></h3>
+<p>如果你的实现只是逐行打印：</p>
+<pre><code class="language-text">{"path":"a","type":"file","size":10}
+{"path":"b","type":"file","size":20}
 </code></pre>
-<h2 id="测试用例"><a class="header" href="#测试用例">测试用例</a></h2>
-<h1 id="单元测试"><a class="header" href="#单元测试">单元测试</a></h1>
-<pre><code class="language-zig">test "parseSizeFilter" {
-    const filter1 = try cli.parseSizeFilter("+100");
-    try std.testing.expectEqual(cli.SizeComparator.greater, filter1.comparator);
-    try std.testing.expectEqual(@as(u64, 100), filter1.size);
-
-    const filter2 = try cli.parseSizeFilter("-50");
-    try std.testing.expectEqual(cli.SizeComparator.less, filter2.comparator);
-    try std.testing.expectEqual(@as(u64, 50), filter2.size);
-
-    const filter3 = try cli.parseSizeFilter("=200");
-    try std.testing.expectEqual(cli.SizeComparator.equal, filter3.comparator);
-    try std.testing.expectEqual(@as(u64, 200), filter3.size);
-}
-
-test "matchesFileType" {
-    const file_stat = std.fs.File.Stat{
-        .size = 100,
-        .kind = .file,
-        .inode = 0,
-        .mtime = 0,
-    };
-    try std.testing.expect(filter.matchesFileType(file_stat, .file));
-    try std.testing.expect(!filter.matchesFileType(file_stat, .dir));
-
-    const dir_stat = std.fs.File.Stat{
-        .size = 0,
-        .kind = .directory,
-        .inode = 0,
-        .mtime = 0,
-    };
-    try std.testing.expect(filter.matchesFileType(dir_stat, .dir));
-    try std.testing.expect(!filter.matchesFileType(dir_stat, .file));
-}
-</code></pre>
-<h1 id="集成测试"><a class="header" href="#集成测试">集成测试</a></h1>
-<p>创建 <code>test/integration_test.zig</code>：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-test "搜索当前目录" {
-    const allocator = std.testing.allocator;
-
-    var args = [_][0]u8{};
-    _ = args;
-
-    const options = try @import("cli.zig").parseArgs(allocator, &amp;args);
-    var buffer: [1024]u8 = undefined;
-    var fbs = std.io.fixedBufferStream(&amp;buffer);
-
-    const count = try @import("search.zig").search(
-        allocator,
-        options,
-        fbs.writer(),
-    );
-
-    try std.testing.expect(count &gt; 0);
-}
-</code></pre>
-<h2 id="构建和运行"><a class="header" href="#构建和运行">构建和运行</a></h2>
-<h1 id="构建项目"><a class="header" href="#构建项目">构建项目</a></h1>
-<pre><code class="language-bash"># 构建项目
-zig build
-
-# 运行程序
-zig build run
-
-# 运行测试
-zig build test
-
-# 安装到系统路径
-zig build install
-</code></pre>
-<h1 id="使用示例"><a class="header" href="#使用示例">使用示例</a></h1>
-<pre><code class="language-bash"># 搜索当前目录
-./zig-out/bin/zfind .
-
-# 搜索所有 .zig 文件
-./zig-out/bin/zfind -n "*.zig" .
-
-# 搜索所有目录
-./zig-out/bin/zfind -t dir .
-
-# 搜索大于 1MB 的文件
-./zig-out/bin/zfind -s +1048576 .
-
-# 限制搜索深度
-./zig-out/bin/zfind -d 3 .
-
-# 详细输出
-./zig-out/bin/zfind -f detailed .
-
-# JSON 格式输出
-./zig-out/bin/zfind -f json .
-
-# 组合使用
-./zig-out/bin/zfind -n "*.zig" -t file -d 2 -f detailed .
-</code></pre>
-<h2 id="最佳实践总结"><a class="header" href="#最佳实践总结">最佳实践总结</a></h2>
-<h1 id="1-模块化设计"><a class="header" href="#1-模块化设计">1. 模块化设计</a></h1>
-<p>将功能拆分为独立模块：</p>
+<p>那么它更接近：</p>
 <ul>
-<li><code>cli.zig</code>：命令行参数解析</li>
-<li><code>filter.zig</code>：文件过滤逻辑</li>
-<li><code>search.zig</code>：搜索核心逻辑</li>
-<li><code>main.zig</code>：主程序入口</li>
+<li>JSON Lines 风格文本</li>
+<li>行分隔对象流</li>
+<li>“方便后处理”的近似格式</li>
 </ul>
-<p><strong>优点</strong>：</p>
-<ul>
-<li>代码职责清晰</li>
-<li>易于测试</li>
-<li>易于维护</li>
-</ul>
-<h1 id="2-错误处理"><a class="header" href="#2-错误处理">2. 错误处理</a></h1>
-<p>使用 Zig 的错误联合类型：</p>
-<pre><code class="language-zig">pub const SearchError = error{
-    PermissionDenied,
-    PathNotFound,
-    TooManyOpenFiles,
-};
-
-pub fn search(...) SearchError!usize {
-    // ...
-}
+<p>而不是一个严格的 JSON 文档数组：</p>
+<pre><code class="language-text">[
+  {"path":"a","type":"file","size":10},
+  {"path":"b","type":"file","size":20}
+]
 </code></pre>
-<p><strong>优点</strong>：</p>
+<p>所以本章更合适的说法是：</p>
 <ul>
-<li>错误类型明确</li>
-<li>编译期检查</li>
-<li>易于传播</li>
+<li>“提供一种 JSON 风格的行输出”</li>
+<li>或者“提供便于机器读取的逐行对象输出”</li>
 </ul>
-<h1 id="3-测试驱动开发"><a class="header" href="#3-测试驱动开发">3. 测试驱动开发</a></h1>
-<p>为每个模块编写测试：</p>
-<pre><code class="language-zig">test "matchesPattern" {
-    try std.testing.expect(matchesPattern("test.zig", "*.zig"));
-    try std.testing.expect(!matchesPattern("main.c", "*.zig"));
-}
-</code></pre>
-<p><strong>优点</strong>：</p>
-<ul>
-<li>确保代码质量</li>
-<li>快速验证修改</li>
-<li>文档化功能</li>
-</ul>
-<h1 id="4-分配器传递模式"><a class="header" href="#4-分配器传递模式">4. 分配器传递模式</a></h1>
-<p>显式传递分配器：</p>
-<pre><code class="language-zig">pub fn search(
-    allocator: std.mem.Allocator,
-    options: cli.CliOptions,
-    writer: anytype,
-) SearchError!usize {
-    // ...
-}
-</code></pre>
-<p><strong>优点</strong>：</p>
-<ul>
-<li>灵活的内存管理</li>
-<li>易于测试</li>
-<li>无全局状态</li>
-</ul>
-<h1 id="5-泛型编程"><a class="header" href="#5-泛型编程">5. 泛型编程</a></h1>
-<p>使用 <code>anytype</code> 实现泛型：</p>
-<pre><code class="language-zig">pub fn search(
-    allocator: std.mem.Allocator,
-    options: cli.CliOptions,
-    writer: anytype,  // 泛型写入器
-) SearchError!usize {
-    // ...
-}
-</code></pre>
-<p><strong>优点</strong>：</p>
-<ul>
-<li>代码复用</li>
-<li>类型安全</li>
-<li>零开销抽象</li>
-</ul>
-<h2 id="扩展方向"><a class="header" href="#扩展方向">扩展方向</a></h2>
-<p>完成基础版本后，可以考虑以下扩展：</p>
+<p>而不要直接说“支持 JSON 输出”，否则读者会默认它是严格 JSON。</p>
+<h2 id="主程序入口主函数真正该做什么"><a class="header" href="#主程序入口主函数真正该做什么">主程序入口：主函数真正该做什么？</a></h2>
+<p>一个清楚的 <code>main</code> 通常只需要做这几件事：</p>
 <ol>
-<li>
-<p><strong>性能优化</strong>：</p>
-<ul>
-<li>并行搜索</li>
-<li>缓存文件信息</li>
-<li>使用更高效的数据结构</li>
-</ul>
-</li>
-<li>
-<p><strong>功能增强</strong>：</p>
-<ul>
-<li>正则表达式支持</li>
-<li>按时间过滤</li>
-<li>按权限过滤</li>
-<li>排除模式</li>
-</ul>
-</li>
-<li>
-<p><strong>用户体验</strong>：</p>
-<ul>
-<li>彩色输出</li>
-<li>进度显示</li>
-<li>交互式模式</li>
-</ul>
-</li>
-<li>
-<p><strong>跨平台</strong>：</p>
-<ul>
-<li>Windows 支持</li>
-<li>平台特定优化</li>
-</ul>
-</li>
+<li>初始化分配器</li>
+<li>获取参数切片</li>
+<li>调用参数解析</li>
+<li>处理 <code>--help</code> / <code>--version</code></li>
+<li>创建输出 writer</li>
+<li>调用搜索逻辑</li>
+<li>打印汇总信息</li>
 </ol>
+<p>也就是说，主函数应该像一个<strong>流程编排器</strong>，而不是逻辑垃圾场。</p>
+<p>示意结构：</p>
+<pre><code class="language-zig">pub fn main(...) !void {
+    初始化分配器
+    获取参数
+    解析 options
+
+    如果需要帮助或版本信息:
+        输出并返回
+
+    创建输出 writer
+    调用 search(...)
+    输出搜索结果统计
+}
+</code></pre>
+<p>如果主函数开始承担：</p>
+<ul>
+<li>模式匹配</li>
+<li>文件系统遍历</li>
+<li>输出格式化细节</li>
+<li>各种过滤判断</li>
+</ul>
+<p>那通常就说明模块边界已经开始失控了。</p>
+<h2 id="这个原型的价值到底在哪里"><a class="header" href="#这个原型的价值到底在哪里">这个原型的价值到底在哪里？</a></h2>
+<p>本章真正想教给你的，并不是“怎么写一个半成品 find”。<br>它的价值主要体现在下面几个方面。</p>
+<h3 id="1-它展示了小工具的典型组织方式"><a class="header" href="#1-它展示了小工具的典型组织方式">1. 它展示了小工具的典型组织方式</a></h3>
+<p>你可以清楚看到：</p>
+<ul>
+<li>输入如何结构化</li>
+<li>搜索如何独立成模块</li>
+<li>输出如何解耦</li>
+<li>错误如何在边界上处理</li>
+</ul>
+<h3 id="2-它让你开始面对真实工程里的不完美"><a class="header" href="#2-它让你开始面对真实工程里的不完美">2. 它让你开始面对真实工程里的“不完美”</a></h3>
+<p>CLI 工具看起来简单，但其实很快就会碰到：</p>
+<ul>
+<li>文件系统边界</li>
+<li>路径构造和释放</li>
+<li>平台差异</li>
+<li>输出格式真实性</li>
+<li>用户输入错误处理</li>
+</ul>
+<p>这正是系统编程里很有代表性的现实问题。</p>
+<h3 id="3-它适合写测试"><a class="header" href="#3-它适合写测试">3. 它适合写测试</a></h3>
+<p>这个原型里有很多地方都很适合写单元测试：</p>
+<ul>
+<li><code>parseSizeFilter</code></li>
+<li><code>matchesPattern</code></li>
+<li><code>matchesSize</code></li>
+<li>参数解析的边界情况</li>
+</ul>
+<p>这比一上来写大型集成测试更适合作为学习起点。</p>
+<h2 id="这个原型不适合被误解成什么"><a class="header" href="#这个原型不适合被误解成什么">这个原型不适合被误解成什么？</a></h2>
+<p>为了避免教学预期错位，这里要明确列出来。</p>
+<p>本章的实现<strong>不应被理解为</strong>：</p>
+<ul>
+<li>生产级文件搜索器</li>
+<li>完整 glob 工具</li>
+<li>严格 JSON 输出工具</li>
+<li>完整跨平台文件系统抽象示例</li>
+<li>大目录高性能搜索方案</li>
+</ul>
+<p>尤其在下面这些点上，读者应主动保持警惕：</p>
+<h3 id="名称匹配被明显简化"><a class="header" href="#名称匹配被明显简化">名称匹配被明显简化</a></h3>
+<p>它只覆盖少量模式，不应过度外推。</p>
+<h3 id="文件系统错误处理被明显简化"><a class="header" href="#文件系统错误处理被明显简化">文件系统错误处理被明显简化</a></h3>
+<p>很多地方采取“跳过继续”的策略，更接近教学演示而非成熟产品决策。</p>
+<h3 id="输出格式被明显简化"><a class="header" href="#输出格式被明显简化">输出格式被明显简化</a></h3>
+<p>尤其是“json” 模式，教学上可以接受，但产品上需要更严格定义。</p>
+<h3 id="性能并不是这一版的主线"><a class="header" href="#性能并不是这一版的主线">性能并不是这一版的主线</a></h3>
+<p>这一章优先追求“结构清楚、便于理解”，而不是“海量目录下的极限吞吐”。</p>
+<h2 id="如果继续演进这个项目下一步该做什么"><a class="header" href="#如果继续演进这个项目下一步该做什么">如果继续演进，这个项目下一步该做什么？</a></h2>
+<p>如果你想把这个原型继续推进，可以考虑下面这些方向。</p>
+<h3 id="1-先把输出格式做扎实"><a class="header" href="#1-先把输出格式做扎实">1. 先把输出格式做扎实</a></h3>
+<p>比起继续加筛选条件，更值得优先做的是：</p>
+<ul>
+<li>真正输出合法 JSON 数组</li>
+<li>处理字符串转义</li>
+<li>明确机器可读格式和人类可读格式的边界</li>
+</ul>
+<h3 id="2-重新定义模式匹配能力"><a class="header" href="#2-重新定义模式匹配能力">2. 重新定义模式匹配能力</a></h3>
+<p>决定到底要支持：</p>
+<ul>
+<li>最小通配</li>
+<li>真正 glob</li>
+<li>正则表达式</li>
+</ul>
+<p>不要让“看起来好像支持一点”长期停在模糊状态。</p>
+<h3 id="3-补更清楚的错误汇总"><a class="header" href="#3-补更清楚的错误汇总">3. 补更清楚的错误汇总</a></h3>
+<p>例如：</p>
+<ul>
+<li>哪些路径访问失败</li>
+<li>为什么失败</li>
+<li>最终是否允许部分成功</li>
+</ul>
+<h3 id="4-为真实目录结构写集成测试"><a class="header" href="#4-为真实目录结构写集成测试">4. 为真实目录结构写集成测试</a></h3>
+<p>尤其是：</p>
+<ul>
+<li>多层目录</li>
+<li>空目录</li>
+<li>深度限制</li>
+<li>文件类型过滤</li>
+<li>大小过滤</li>
+</ul>
+<h3 id="5-如果性能真的成为问题再考虑并行"><a class="header" href="#5-如果性能真的成为问题再考虑并行">5. 如果性能真的成为问题，再考虑并行</a></h3>
+<p>在这之前，不要急着把并发加进来。<br>因为对于本章来说，先把边界写清楚比“并行搜索”更重要。</p>
 <h2 id="小结"><a class="header" href="#小结">小结</a></h2>
-<p>本节通过构建一个完整的 CLI 工具，展示了：</p>
-<ol>
-<li><strong>项目结构设计</strong>：模块化、清晰的职责划分</li>
-<li><strong>命令行参数解析</strong>：完整的选项处理和帮助信息</li>
-<li><strong>文件系统操作</strong>：递归搜索、文件过滤</li>
-<li><strong>错误处理</strong>：友好的错误信息和恢复机制</li>
-<li><strong>测试驱动开发</strong>：单元测试和集成测试</li>
-<li><strong>最佳实践</strong>：分配器传递、泛型编程、模块化设计</li>
-</ol>
-<p>这个案例展示了 Zig 在 CLI 工具开发方面的优势：</p>
+<p>这一章更合适的定位是：</p>
+<blockquote>
+<p><strong>一个围绕参数解析、目录遍历、过滤和输出组织起来的最小 CLI 原型。</strong></p>
+</blockquote>
+<p>它的教学重点不是“实现了多少功能”，而是：</p>
 <ul>
-<li><strong>零开销抽象</strong>：高性能</li>
-<li><strong>编译期检查</strong>：减少运行时错误</li>
-<li><strong>显式内存管理</strong>：可控的资源使用</li>
-<li><strong>强大的标准库</strong>：丰富的文件系统 API</li>
+<li>让命令行输入先变成结构化配置</li>
+<li>让搜索逻辑和输出逻辑分开</li>
+<li>让过滤规则可以独立测试</li>
+<li>让读者明确知道哪些是故意简化的边界</li>
 </ul>
+<p>如果你带着这个视角来读，那么本章最重要的收获通常不是“我做了一个小工具”，而是：</p>
+<blockquote>
+<p><strong>我开始知道一个小工具应该如何被组织，哪些地方需要诚实地承认它只是原型。</strong></p>
+</blockquote>
 <hr>
 <blockquote>
-<p>💡 <strong>章节过渡</strong>：从 CLI 工具到 HTTP 服务器</p>
-<p>在<a href="chapter-http-server.html">实战案例2 - HTTP服务器开发</a>中，我们开发了文件搜索工具 <code>zfind</code>，掌握了 CLI 工具开发的完整流程。
-现在，我们将学习 HTTP 服务器开发，了解网络编程的核心技术。</p>
-<p><strong>为什么 CLI 工具是网络编程的基础？</strong></p>
-<ol>
-<li><strong>参数解析</strong>：HTTP 服务器也需要解析命令行参数</li>
-<li><strong>文件系统</strong>：HTTP 服务器需要处理文件请求</li>
-<li><strong>错误处理</strong>：网络编程中的错误处理更加复杂</li>
-</ol>
-<p><strong>学习建议</strong>：</p>
-<ul>
-<li>回顾 CLI 工具中的错误处理和资源管理</li>
-<li>注意网络 API 的稳定性警告</li>
-<li>准备学习异步 I/O 和并发处理</li>
-</ul>
+<p>💡 <strong>下一章预告</strong></p>
+<p>下一章我们将学习 <a href="chapter-http-server.html">实战案例 - HTTP 服务器设计与最小实现</a>，把“本地文件系统中的输入/处理/输出”扩展到“网络连接中的请求/响应/资源生命周期”。</p>
 </blockquote>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../part2-advanced/chapter-testing.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../part3-practice/part-overview.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
@@ -1025,7 +763,7 @@ pub fn search(...) SearchError!usize {
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../part2-advanced/chapter-testing.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../part3-practice/part-overview.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 

@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>控制流与资源管理 - Zig 编程语言入门教程</title>
+        <title>控制流、可选类型与资源管理 - Zig 编程语言入门教程</title>
 
 
         <!-- Custom HTML head -->
@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-a9ca16c2.js";
+            window.path_to_searchindex_js = "../searchindex-35211ac1.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-2fc75e4c.js"></script>
+        <script src="../toc-6dcbe846.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -181,13 +181,14 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="控制流与资源管理"><a class="header" href="#控制流与资源管理">控制流与资源管理</a></h1>
-<p>本章介绍 Zig 的控制流语句和资源管理机制，包括可选类型、条件判断 if、循环（for 和 while）、分支选择 switch、资源管理 defer 和块表达式。Zig 的所有控制流语句都是表达式，可以返回值；结合穷尽性检查和编译期验证，确保代码的安全性和可维护性。资源管理方面，Zig 通过 <code>defer</code> 和 <code>errdefer</code> 机制确保资源的正确释放，避免内存泄漏和资源泄漏问题。</p>
+                        <h1 id="控制流可选类型与资源管理"><a class="header" href="#控制流可选类型与资源管理">控制流、可选类型与资源管理</a></h1>
+<p>本章介绍 Zig 中最常用的控制流与资源管理机制，包括可选类型、<code>if</code>、<code>while</code>、<code>for</code>、<code>switch</code>、<code>defer</code> 和块表达式。你可以把这一章理解为“如何组织程序执行过程”的入门：条件怎么分支、循环怎么展开、值不存在时怎么处理、资源在作用域结束时如何可靠释放。</p>
+<p>Zig 的很多控制流结构不只是语句，也是表达式，可以直接返回值；再配合穷尽性检查、显式解包和作用域化的资源清理，代码的行为会更清楚、更容易验证。关于 <code>errdefer</code> 的完整展开会放在错误处理章节，本章先聚焦于建立控制流与资源管理的整体直觉。</p>
 <h2 id="可选类型optional"><a class="header" href="#可选类型optional">可选类型（Optional）</a></h2>
 <p>Zig 的可选类型使用 <code>?T</code> 表示，用于表示值可能存在或不存在的情况。C 语言使用特殊值（如 <code>-1</code>、<code>NULL</code>）表示“不存在“，容易出错；Java 的 <code>null</code> 引用导致 <code>NullPointerException</code>。Zig 通过可选类型在编译期强制处理“不存在“的情况，避免空指针异常。</p>
 <p><strong>核心概念</strong>：</p>
 <ul>
-<li><code>?T</code> 表示类型 <code>T</code> 或 <code>null</code>，内存布局额外存储一个标志位指示值是否存在</li>
+<li><code>?T</code> 表示类型 <code>T</code> 或 <code>null</code>；从语义上看，它表示“这个值可能存在，也可能不存在”</li>
 <li>不能直接使用可选值，必须先解包（通过 <code>if</code>、<code>orelse</code>、<code>.?</code> 等操作）</li>
 <li>类型系统区分 <code>T</code> 和 <code>?T</code>，意图清晰，代码显式可读</li>
 </ul>
@@ -204,7 +205,7 @@
 </table>
 </div>
 <blockquote>
-<p>📖 <strong>深入学习</strong>：错误联合类型的详细用法将在<a href="chapter-error-handling.html">错误处理基础</a>中讲解。</p>
+<p><strong>深入学习</strong>：错误联合类型的详细用法将在<a href="chapter-error-handling.html">错误处理基础</a>中讲解。</p>
 </blockquote>
 <h3 id="解包操作"><a class="header" href="#解包操作">解包操作</a></h3>
 <p>Zig 提供了三种解包可选类型的方式：<code>if</code> 模式匹配、<code>.?</code> 操作符和 <code>orelse</code> 表达式。</p>
@@ -212,7 +213,7 @@
 <p><code>.?</code> 操作符用于解包可选类型，如果值为 <code>null</code> 则触发 panic：</p>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const maybe_number: ?i32 = 42;
     
     const value = maybe_number.?;
@@ -231,7 +232,7 @@ pub fn main(_: std.process.Init.Minimal) void {
 <p><code>orelse</code> 用于为 <code>null</code> 提供默认值：</p>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const maybe_null: ?i32 = null;
     
     // 使用 orelse 提供默认值
@@ -275,7 +276,7 @@ pub fn main(_: std.process.Init.Minimal) void {
 <h3 id="基本用法"><a class="header" href="#基本用法">基本用法</a></h3>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const number: i32 = 42;
     
     // 基本 if 语句：控制流
@@ -313,7 +314,7 @@ pub fn main(_: std.process.Init.Minimal) void {
 <p>Zig 的 if 可以直接解构可选类型，这是 Zig 的重要特性：</p>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const maybe_number: ?i32 = 42;
 
     // 如果 maybe_number 不为 null，number 绑定到内部值
@@ -351,7 +352,7 @@ fn divide(a: i32, b: i32) !i32 {
     return @divTrunc(a, b);
 }
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const result = divide(10, 2);
     
     // 成功时 |value| 获取值，失败时 |err| 获取错误
@@ -366,7 +367,7 @@ pub fn main(_: std.process.Init.Minimal) void {
 <pre><code>结果：5
 </code></pre>
 <blockquote>
-<p>📖 <strong>深入学习</strong>：错误联合类型的完整用法请参考<a href="chapter-error-handling.html">错误处理基础</a>。</p>
+<p><strong>深入学习</strong>：错误联合类型的完整用法请参考<a href="chapter-error-handling.html">错误处理基础</a>。</p>
 </blockquote>
 <h2 id="while-循环"><a class="header" href="#while-循环">while 循环</a></h2>
 <p>while 循环用于重复执行代码块，与 if 类似，while 也支持可选类型解包、错误联合类型解包和作为表达式使用。</p>
@@ -380,7 +381,7 @@ pub fn main(_: std.process.Init.Minimal) void {
 <h3 id="基本用法-1"><a class="header" href="#基本用法-1">基本用法</a></h3>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     var i: usize = 0;
 
     // 基本 while 循环
@@ -458,7 +459,7 @@ fn readByte() !u8 {
     return 'A'; // 模拟读取操作
 }
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     // while 解包错误联合类型
     while (readByte()) |byte| {
         std.debug.print("读取到：{c}\n", .{byte});
@@ -472,13 +473,13 @@ pub fn main(_: std.process.Init.Minimal) void {
 <pre><code>读取到：A
 </code></pre>
 <blockquote>
-<p>📖 <strong>深入学习</strong>：错误联合类型的详细用法请参考<a href="chapter-error-handling.html">错误处理基础</a>。</p>
+<p><strong>深入学习</strong>：错误联合类型的详细用法请参考<a href="chapter-error-handling.html">错误处理基础</a>。</p>
 </blockquote>
 <h3 id="while-作为表达式"><a class="header" href="#while-作为表达式">while 作为表达式</a></h3>
 <p>while 循环支持 <code>else</code> 分支，在循环正常结束（没有 <code>break</code>）时执行：</p>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     var i: usize = 0;
     const result = while (i &lt; 10) : (i += 1) {
         if (i == 5) break i * 2;
@@ -518,7 +519,7 @@ pub fn main(_: std.process.Init.Minimal) void {
 </ul>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const array = [_]i32{ 1, 2, 3, 4, 5 };
 
     // 遍历数组：只获取元素
@@ -596,7 +597,7 @@ i = 4
 <p>for 循环可以使用 <code>else</code> 分支处理循环正常结束的情况（与 while 的 <code>else</code> 语义一致）：</p>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const items = [_]i32{ 1, 3, 5, 7, 9 };
     
     // for 循环直接作为表达式
@@ -631,13 +632,13 @@ pub fn main(_: std.process.Init.Minimal) void {
 <p>Zig 的 switch 语句特性：</p>
 <ul>
 <li><strong>穷尽性检查</strong>：编译器强制要求处理所有可能的情况，避免遗漏分支</li>
-<li><strong>模式匹配</strong>：支持范围匹配（<code>1..10</code>）、多值匹配（<code>1, 2, 3</code>）、枚举匹配等</li>
+<li><strong>模式匹配</strong>：支持范围匹配（<code>1...10</code>）、多值匹配（<code>1, 2, 3</code>）、枚举匹配等</li>
 <li><strong>表达式</strong>：可以返回值，支持函数式编程风格</li>
 <li><strong>无隐式 fallthrough</strong>：每个 case 自动 break</li>
 </ul>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const number: i32 = 2;
     
     // 基本 switch：必须穷尽所有情况，使用 else 处理其他
@@ -649,13 +650,13 @@ pub fn main(_: std.process.Init.Minimal) void {
     };
     std.debug.print("结果：{s}\n", .{result});
     
-    // 范围匹配：使用 .. 操作符（闭区间，包含两端）
+    // 范围匹配：使用 ... 操作符（闭区间，包含两端）
     const grade: u8 = 85;
     const level = switch (grade) {
-        90..100 =&gt; "A",
-        80..89 =&gt; "B",
-        70..79 =&gt; "C",
-        60..69 =&gt; "D",
+        90...100 =&gt; "A",
+        80...89 =&gt; "B",
+        70...79 =&gt; "C",
+        60...69 =&gt; "D",
         else =&gt; "F",
     };
     std.debug.print("等级：{s}\n", .{level});
@@ -693,11 +694,11 @@ fn colorToHex(color: Color) u32 {
 fn classifyNumber(n: i32) []const u8 {
     return switch (n) {
         0 =&gt; "零",
-        1..10 =&gt; |val| blk: {
+        1...10 =&gt; |val| blk: {
             std.debug.print("小数字：{}\n", .{val});
             break :blk "小";
         },
-        11..100 =&gt; "中",
+        11...100 =&gt; "中",
         else =&gt; "大",
     };
 }
@@ -706,13 +707,13 @@ fn classifyNumber(n: i32) []const u8 {
 fn doublePositive(numbers: []i32) void {
     for (numbers) |*n| {
         switch (n.*) {
-            1..100 =&gt; |*val| val.* *= 2,  // 通过指针捕获修改原值
+            1...100 =&gt; |*val| val.* *= 2,  // 通过指针捕获修改原值
             else =&gt; {},
         }
     }
 }
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     std.debug.print("红色：0x{X}\n", .{colorToHex(.red)});
     std.debug.print("分类：{s}\n", .{classifyNumber(5)});
     
@@ -728,14 +729,14 @@ pub fn main(_: std.process.Init.Minimal) void {
 翻倍后：{ 6, 100, -1, 198 }
 </code></pre>
 <blockquote>
-<p>📖 <strong>深入学习</strong>：枚举与 switch 配合使用的更多示例请参考<a href="chapter-compound-types.html#枚举">复合类型</a>。</p>
+<p><strong>深入学习</strong>：枚举与 switch 配合使用的更多示例请参考<a href="chapter-compound-types.html#枚举">复合类型</a>。</p>
 </blockquote>
 <h2 id="defer-语句"><a class="header" href="#defer-语句">defer 语句</a></h2>
 <p>if、while、for、switch 等控制流语句用于控制代码的执行路径，而 <code>defer</code> 则用于确保代码在作用域结束时执行，无论控制流如何跳转。<code>defer</code> 是 Zig 资源管理的核心机制，类似于其他语言的 RAII 模式——确保资源安全释放、代码清晰（获取和释放放在一起）、减少遗忘。</p>
 <h3 id="基本用法-2"><a class="header" href="#基本用法-2">基本用法</a></h3>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     defer std.debug.print("主函数结束\n", .{});
     std.debug.print("开始\n", .{});
 
@@ -777,13 +778,13 @@ fn protectedOperation(mutex: *std.Thread.Mutex) void {
 }
 </code></pre>
 <blockquote>
-<p>📖 <strong>相关章节</strong>：并发编程的详细讲解请参考<a href="../part2-advanced/chapter-concurrency.html">并发编程模型</a>。</p>
+<p><strong>相关章节</strong>：并发编程的详细讲解请参考<a href="../part2-advanced/chapter-concurrency.html">并发编程模型</a>。</p>
 </blockquote>
 <h3 id="lifo后进先出原则"><a class="header" href="#lifo后进先出原则">LIFO（后进先出）原则</a></h3>
 <p>多个 defer 按照后进先出的顺序执行，确保资源的正确释放顺序：</p>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     defer std.debug.print("第一个 defer\n", .{});
     defer std.debug.print("第二个 defer\n", .{});
     defer std.debug.print("第三个 defer\n", .{});
@@ -819,7 +820,7 @@ pub fn main(_: std.process.Init.Minimal) void {
 }
 </code></pre>
 <blockquote>
-<p>📖 <strong>深入学习</strong>：errdefer 的完整用法（多资源管理、错误捕获 <code>|err|</code> 等）请参考<a href="chapter-error-handling.html#errdefer">错误处理基础</a>。</p>
+<p><strong>深入学习</strong>：errdefer 的完整用法（多资源管理、错误捕获 <code>|err|</code> 等）请参考<a href="chapter-error-handling.html#errdefer">错误处理基础</a>。</p>
 </blockquote>
 <h2 id="块表达式block-expression"><a class="header" href="#块表达式block-expression">块表达式（Block Expression）</a></h2>
 <p>if、while、for 等控制流语句都可以作为表达式返回值，而块表达式则提供了另一种创建表达式的方式。块表达式是一个带标签的作用域，可以包含多条语句和复杂的控制流逻辑，最终通过 <code>break :label value</code> 返回一个值。</p>
@@ -859,7 +860,7 @@ const category = blk: {
 <h3 id="完整示例"><a class="header" href="#完整示例">完整示例</a></h3>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     // 基本用法：计算并返回值
     const result = blk: {
         const a = 10;
@@ -918,7 +919,7 @@ pub fn main(_: std.process.Init.Minimal) void {
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../part1-basics/chapter-functions.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../part1-basics/chapter-error-handling.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -932,7 +933,7 @@ pub fn main(_: std.process.Init.Minimal) void {
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../part1-basics/chapter-functions.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../part1-basics/chapter-error-handling.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>

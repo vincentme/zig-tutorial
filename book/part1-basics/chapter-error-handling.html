@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>【draft】错误处理 - Zig 编程语言入门教程</title>
+        <title>错误处理：!T、try 与 errdefer - Zig 编程语言入门教程</title>
 
 
         <!-- Custom HTML head -->
@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-a9ca16c2.js";
+            window.path_to_searchindex_js = "../searchindex-35211ac1.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-2fc75e4c.js"></script>
+        <script src="../toc-6dcbe846.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -181,17 +181,24 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="draft错误处理基础"><a class="header" href="#draft错误处理基础">【draft】错误处理基础</a></h1>
-<p>错误处理是系统编程的核心课题之一。与许多语言使用异常（exception）或可选值（option）不同，Zig 采用了一套独特的错误处理机制，将错误作为语言的一等公民，通过**错误集合（Error Set）<strong>和</strong>错误联合类型（Error Union）**实现显式、零开销的错误处理。</p>
-<p>Zig 错误处理的核心设计理念：</p>
+                        <h1 id="错误处理ttry-与-errdefer"><a class="header" href="#错误处理ttry-与-errdefer">错误处理：!T、try 与 errdefer</a></h1>
+<p>错误处理是 Zig 最有辨识度的语言特性之一。与许多语言依赖异常（exception）或约定俗成的特殊返回值不同，Zig 把“失败”直接纳入类型系统：一个操作是否可能失败、失败后由谁处理、失败时资源如何清理，都应该在代码中清楚地体现出来。</p>
+<p>Zig 的错误处理主要围绕三组概念展开：</p>
 <ul>
-<li><strong>显式优于隐式</strong>：函数签名必须声明可能返回的错误，调用者无法忽略错误</li>
-<li><strong>零开销</strong>：错误类型在编译时确定，不引入运行时额外开销（如异常表、栈展开）</li>
-<li><strong>组合性</strong>：错误集合可以合并、子集化，灵活应对不同层级的错误抽象需求</li>
-<li><strong>与 <code>try</code>/<code>catch</code> 配合</strong>：提供简洁的错误传播和处理语法，同时保持控制流清晰可读</li>
+<li><strong>错误集合（Error Set）</strong>：用来定义“可能出现哪些错误”</li>
+<li><strong>错误联合类型（Error Union）</strong>：用来表示“这个操作可能返回错误，也可能返回正常值”</li>
+<li><strong><code>try</code> / <code>catch</code> / <code>errdefer</code></strong>：分别用于传播错误、处理错误和在失败路径上清理资源</li>
 </ul>
-<p>本章将介绍 Zig 错误处理的基础概念，包括错误集合定义、错误联合类型、<code>try</code>/<code>catch</code> 语法、<code>errdefer</code> 资源清理，以及错误处理的最佳实践。</p>
-<h2 id="为什么zig不用异常"><a class="header" href="#为什么zig不用异常">为什么Zig不用异常？</a></h2>
+<p>本章的目标不是一次讲完所有进阶细节，而是帮助你建立一套稳定的基础认知：</p>
+<ul>
+<li>为什么 Zig 不用异常作为主线机制</li>
+<li><code>!T</code> 到底表示什么，什么时候应该使用</li>
+<li><code>try</code> 和 <code>catch</code> 如何影响控制流</li>
+<li><code>errdefer</code> 为什么是系统编程里很有价值的工具</li>
+<li>什么时候该用 <code>?T</code>，什么时候该用 <code>!T</code></li>
+</ul>
+<p>如果你在前面的章节里已经见过 <code>!void</code>、<code>try</code>、<code>catch</code> 或 <code>errdefer</code>，这一章会把这些零散出现的写法系统串起来，让你真正理解它们背后的模型。</p>
+<h2 id="为什么-zig-不用异常"><a class="header" href="#为什么-zig-不用异常">为什么 Zig 不用异常？</a></h2>
 <p>Zig 选择显式错误处理而非异常机制，原因如下：</p>
 <ol>
 <li><strong>可预测性</strong>：控制流清晰可见，没有隐藏的跳转。C++ 异常可以在任意调用点抛出，调用者无法从函数签名得知可能的错误；Zig 的错误联合类型在签名中明确声明，<code>try</code>/<code>catch</code> 让错误传播路径一目了然</li>
@@ -219,7 +226,7 @@ const FileError = error{
     OutOfMemory,
 };
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const err: FileError = FileError.NotFound;
 
     // 错误比较
@@ -412,10 +419,15 @@ fn broad() BroadError!void {
 </code></pre>
 <p><strong>注意</strong>：<code>@intFromError</code> 和 <code>@errorFromInt</code> 的整数表示在不同编译之间不稳定，应避免依赖具体的整数值。</p>
 <h2 id="错误联合类型"><a class="header" href="#错误联合类型">错误联合类型</a></h2>
-<p>错误联合类型表示可能返回错误或正常值的类型。</p>
-<p><strong>为什么需要错误联合类型？</strong></p>
-<p>错误集合定义了可能的错误类型，但函数需要一种方式来表示“可能返回错误，也可能返回正常值“。错误联合类型通过 <code>!</code> 操作符将错误集和正常类型组合在一起。</p>
-<p><strong>语法</strong>：<code>ErrorSet!Type</code> 表示可能返回 <code>ErrorSet</code> 中的错误，或返回 <code>Type</code> 类型的正常值。</p>
+<p>错误集合解决的是“错误有哪些”，而错误联合类型解决的是“这个操作的结果到底是什么形状”。</p>
+<p>当一个函数既可能成功返回一个值，又可能失败返回一个错误时，就需要使用错误联合类型。</p>
+<p><strong>语法</strong>：<code>ErrorSet!Type</code> 表示“返回 <code>Type</code>，或者返回 <code>ErrorSet</code> 中的某个错误”。</p>
+<p>你也可以先把它理解为：</p>
+<ul>
+<li>成功路径：得到一个正常值</li>
+<li>失败路径：得到一个错误值</li>
+</ul>
+<p>这也是 Zig 中 <code>try</code>、<code>catch</code>、<code>if (result) |value| else |err|</code> 等语法能够成立的基础。</p>
 <h3 id="基本语法"><a class="header" href="#基本语法">基本语法</a></h3>
 <pre><code class="language-zig">const ParseError = error{
     InvalidFormat,
@@ -435,7 +447,14 @@ fn parseNumber(str: []const u8) ParseError!i32 {
     return result;
 }
 </code></pre>
-<p><strong>省略错误集的写法</strong>：<code>!Type</code> 等价于 <code>anyerror!Type</code>，表示可以返回任何错误。在函数签名中，<code>!Type</code> 通常表示让编译器推断错误集。</p>
+<p><strong>省略显式错误集的写法</strong>：在函数签名中，<code>!Type</code> 通常表示“让编译器根据函数体推断错误集”。</p>
+<p>也就是说：</p>
+<ul>
+<li><code>fn parse() ParseError!i32</code>：错误集由你显式写出</li>
+<li><code>fn parse() !i32</code>：错误集由编译器推断</li>
+<li><code>fn parse() anyerror!i32</code>：显式声明为非常宽泛的错误超集</li>
+</ul>
+<p>这三者不能简单看成完全等价。<br>尤其是 <code>anyerror!Type</code>，它表示“可以返回任意错误”，通常只应在确有必要时使用；而 <code>!Type</code> 在教学和实际代码里更常见的含义，是“让编译器推断一个具体错误集”。</p>
 <h2 id="错误传播和处理"><a class="header" href="#错误传播和处理">错误传播和处理</a></h2>
 <p><code>try</code> 和 <code>catch</code> 是 Zig 错误处理的核心操作符，用于错误传播和错误处理。</p>
 <h3 id="try错误传播"><a class="header" href="#try错误传播">try：错误传播</a></h3>
@@ -460,12 +479,12 @@ const result = divide(10, 2) catch |err| {
 </code></pre>
 <p><strong>使用限制</strong>：<code>try</code> 只能在返回错误联合类型的函数中使用。在返回 <code>void</code> 或其他非错误联合类型的函数中使用 <code>try</code> 会导致编译错误：</p>
 <pre><code class="language-zig">// ❌ 错误：main 返回 void，不能使用 try
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     try mightFail();  // 编译错误
 }
 
 // ✅ 正确：main 返回 !void
-pub fn main(_: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init) !void {
     try mightFail();
 }
 </code></pre>
@@ -535,8 +554,16 @@ fn example() void {
 <li><code>if</code>：分别处理成功和失败，两者都可以有复杂逻辑</li>
 </ul>
 <h2 id="errdefer"><a class="header" href="#errdefer">errdefer</a></h2>
-<p><code>errdefer</code> 用于在函数返回<strong>错误</strong>时执行清理操作。它与 <code>defer</code> 的关键区别是：<code>defer</code> 无论成功失败都会执行，而 <code>errdefer</code> <strong>仅在返回错误时执行</strong>。</p>
+<p>在前面的控制流章节里，你已经见过 <code>defer</code> 和 <code>errdefer</code> 的基本区别。这里我们把视角聚焦到错误处理本身：当函数在中途失败时，哪些资源应该被回收、哪些清理逻辑只应出现在失败路径上，<code>errdefer</code> 就是专门为这类问题设计的。</p>
+<p>一个很重要的判断标准是：</p>
+<ul>
+<li><strong><code>defer</code></strong>：无论成功还是失败，作用域结束时都执行</li>
+<li><strong><code>errdefer</code></strong>：只有在当前函数以错误返回时才执行</li>
+</ul>
+<p>这也是为什么 <code>errdefer</code> 尤其适合“成功时把资源所有权交给调用者，失败时自己负责回收”的场景。</p>
 <h3 id="defer-vs-errdefer"><a class="header" href="#defer-vs-errdefer">defer vs errdefer</a></h3>
+<p><code>errdefer</code> 用于在函数返回<strong>错误</strong>时执行清理操作。它与 <code>defer</code> 的关键区别是：<code>defer</code> 无论成功失败都会执行，而 <code>errdefer</code> <strong>仅在返回错误时执行</strong>。</p>
+<h3 id="defer-vs-errdefer-1"><a class="header" href="#defer-vs-errdefer-1">defer vs errdefer</a></h3>
 <pre><code class="language-zig">// defer：无论成功还是失败，都会执行
 fn withDefer(allocator: std.mem.Allocator) !void {
     const memory = try allocator.alloc(u8, 100);
@@ -712,7 +739,7 @@ fn createBuffer(allocator: std.mem.Allocator, content: []const u8, max_size: usi
     return Buffer{ .data = data, .len = content.len };
 }
 
-pub fn main(_: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init) !void {
     var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
@@ -749,6 +776,11 @@ pub fn main(_: std.process.Init.Minimal) !void {
 </li>
 </ul>
 <h2 id="最佳实践"><a class="header" href="#最佳实践">最佳实践</a></h2>
+<p>在进入具体建议前，先记住一个总原则：</p>
+<blockquote>
+<p><strong>错误处理不是“补代码”，而是接口设计的一部分。</strong></p>
+</blockquote>
+<p>你越早想清楚“哪些地方可能失败、失败后谁负责处理、资源如何清理”，后面的代码就越清晰，也越不容易陷入重复和混乱。</p>
 <h3 id="定义清晰的错误类型"><a class="header" href="#定义清晰的错误类型">定义清晰的错误类型</a></h3>
 <pre><code class="language-zig">// ✅ 好的做法：语义化的错误名称
 const ConfigError = error{
@@ -778,17 +810,17 @@ const Error = error{
 <h3 id="常见编译错误"><a class="header" href="#常见编译错误">常见编译错误</a></h3>
 <h4 id="错误1在非错误联合函数中使用-try"><a class="header" href="#错误1在非错误联合函数中使用-try">错误1：在非错误联合函数中使用 try</a></h4>
 <pre><code class="language-zig">// ❌ 错误示例：main 返回 void，不能使用 try
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     try mightFail();  // 编译错误：try 在非错误联合返回类型函数中不可用
 }
 
 // ✅ 正确做法：将返回类型改为错误联合类型
-pub fn main(_: std.process.Init.Minimal) !void {
+pub fn main(_: std.process.Init) !void {
     try mightFail();
 }
 </code></pre>
 <h4 id="错误2错误集不兼容"><a class="header" href="#错误2错误集不兼容">错误2：错误集不兼容</a></h4>
-<p>超集不能隐式转换为子集，需要显式处理：</p>
+<p>超集不能隐式转换为子集，需要显式收窄或重新映射：</p>
 <pre><code class="language-zig">const SpecificError = error{NotFound};
 const BroadError = error{NotFound, PermissionDenied};
 
@@ -801,19 +833,20 @@ fn narrow() SpecificError!void {
     return broad();  // 编译错误：错误集不兼容
 }
 
-// ✅ 正确做法1：使用 @errorCast 显式转换（运行时安全检查）
-fn narrow() SpecificError!void {
+// ✅ 正确做法1：确认运行时错误一定属于目标错误集时，使用 @errorCast
+fn narrowWithCast() SpecificError!void {
     broad() catch |err| return @errorCast(err);
 }
 
-// ✅ 正确做法2：逐个映射错误
-fn narrow() SpecificError!void {
+// ✅ 正确做法2：显式映射到目标错误集
+fn narrowWithMapping() SpecificError!void {
     broad() catch |err| switch (err) {
         error.NotFound =&gt; return error.NotFound,
-        error.PermissionDenied =&gt; return error.PermissionDenied,  // 需要处理所有错误
+        error.PermissionDenied =&gt; return error.NotFound, // 根据你的 API 语义做映射
     };
 }
 </code></pre>
+<p>这里最关键的点不是“把所有错误原样返回”，而是<strong>目标函数的错误集必须和它的签名一致</strong>。<br>如果你声明返回 <code>SpecificError!void</code>，那就只能返回 <code>SpecificError</code> 中定义过的错误。</p>
 <h3 id="常见运行时错误"><a class="header" href="#常见运行时错误">常见运行时错误</a></h3>
 <h4 id="错误1未处理的错误"><a class="header" href="#错误1未处理的错误">错误1：未处理的错误</a></h4>
 <pre><code class="language-zig">// ❌ 错误示例
@@ -878,7 +911,7 @@ fn allocateForCaller(allocator: std.mem.Allocator) ![]u8 {
 <h4 id="技巧1打印错误信息"><a class="header" href="#技巧1打印错误信息">技巧1：打印错误信息</a></h4>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const result = riskyOperation() catch |err| {
         std.debug.print("错误: {}\n", .{err});
         return;
@@ -889,7 +922,7 @@ pub fn main(_: std.process.Init.Minimal) void {
 <h4 id="技巧2打印堆栈追踪"><a class="header" href="#技巧2打印堆栈追踪">技巧2：打印堆栈追踪</a></h4>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     riskyOperation() catch |err| {
         std.debug.print("错误: {}\n", .{err});
         std.debug.dumpCurrentStackTrace(null);
@@ -911,7 +944,7 @@ zig build-exe app.zig -O ReleaseFast
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../part1-basics/chapter-functions.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../part1-basics/chapter-control-flow.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
@@ -925,7 +958,7 @@ zig build-exe app.zig -O ReleaseFast
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../part1-basics/chapter-functions.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../part1-basics/chapter-control-flow.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 

@@ -1,6 +1,16 @@
 # 函数定义与调用
 
-函数是 Zig 程序的基本构建块。Zig 的函数设计体现了语言的核心特性：显式错误处理通过错误联合类型实现、参数默认不可变确保安全性、无隐式内存分配保证性能可控。本章将介绍函数的定义、参数传递、内建函数和高级特性。
+函数是 Zig 程序组织逻辑的核心方式。本章首先关注**初学者最常用、最应该先掌握**的内容：函数的定义、调用、参数、返回值，以及如何用函数把代码拆得更清楚。
+
+你会在本章中先学会：
+
+- 如何声明和调用一个函数
+- 如何设计参数和返回值
+- 什么时候使用 `void`、`?T`、`!T`
+- 参数传递的基本思路
+- Zig 中几个常见但容易混淆的函数相关特性
+
+本章后半部分还会接触一些进阶主题，例如 `anytype`、`extern`、`export`、`inline` 和函数类型。第一次阅读时，你可以先把重点放在前半部分，先建立“如何写清楚一个函数”的基本感觉。
 
 ## 函数基础
 
@@ -57,7 +67,7 @@ fn safeDivide(a: i32, b: i32) MathError!i32 {
     return @divTrunc(a, b);
 }
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     // 调用基本函数
     const sum = add(10, 20);
     std.debug.print("sum: {}\n", .{sum});
@@ -87,9 +97,9 @@ Hello, Zig!
 安全除法: 5
 ```
 
-> 📖 **深入学习**：可选返回值和错误联合类型的详细用法请参考[控制流与资源管理](chapter-control-flow.md)和[错误处理基础](chapter-error-handling.md)。
+> **深入学习**：可选返回值和错误联合类型的详细用法请参考[控制流与资源管理](chapter-control-flow.md)和[错误处理基础](chapter-error-handling.md)。
 
-### Zig 函数的限制
+### Zig 函数的一些基础限制
 
 Zig 不支持以下特性：
 - **函数重载**：不能定义同名但参数不同的函数
@@ -122,7 +132,7 @@ fn greet(name: []const u8, greeting: ?[]const u8) void {
     std.debug.print("{s}, {s}!\n", .{ g, name });
 }
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const int_sum = add(10, 20);
     const float_sum = add(3.14, 2.86);
     std.debug.print("int: {}, float: {}\n", .{ int_sum, float_sum });
@@ -139,7 +149,7 @@ Hello, Zig!
 Hi, World!
 ```
 
-> 📖 **深入学习**：anytype 的详细内容请参考[编译期计算与元编程](../part2-advanced/chapter-comptime.md#anytype-与动态类型)章节。
+> **深入学习**：anytype 的详细内容请参考[编译期计算与元编程](../part2-advanced/chapter-comptime.md#anytype-与动态类型)章节。
 
 ### 递归函数
 
@@ -160,7 +170,7 @@ fn factorialTail(n: u32, acc: u32) u32 {
     return factorialTail(n - 1, n * acc);
 }
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const result1 = factorial(5);
     const result2 = factorialTail(5, 1);
     std.debug.print("阶乘(5): {}\n", .{result1});
@@ -179,15 +189,17 @@ pub fn main(_: std.process.Init.Minimal) void {
 - Zig 目前不保证尾调用优化，深度递归应优先使用迭代
 - 对于深度递归，考虑使用迭代替代
 
-## 函数参数传递
+## 函数参数与调用方式
 
 ### 参数传递核心原则
 
-Zig 采用独特的参数传递策略：
+理解 Zig 函数时，先抓住下面三条原则即可：
 
-1. **参数默认不可变**：防止意外修改调用者的数据，提高代码可预测性和编译器优化能力
-2. **值语义优先**：所有参数按值传递（语义上），编译器可能优化大结构体的传递为常量指针传递
-3. **显式传递意图**：需要修改时必须显式传递指针
+1. **参数默认不可变**：函数参数不能直接修改，这能减少意外副作用
+2. **优先按值语义理解代码**：阅读代码时，先把参数看作“传入了一个值”
+3. **需要修改调用者数据时，要显式传递指针**：修改行为必须清楚写出来
+
+> 对初学者来说，最重要的是先建立“什么时候传值、什么时候传指针”的直觉。至于底层 ABI 如何传参，那是实现细节，通常不需要在入门阶段纠结。
 
 ```zig
 const std = @import("std");
@@ -214,7 +226,7 @@ fn printBigStruct(data: *const BigStruct) void {
     // data.values[0] = 10; // 编译错误：常量指针不可修改
 }
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     var num: i32 = 10;
     
     // 值传递：num 不会被修改
@@ -285,9 +297,9 @@ fn divideWithRemainder(a: i32, b: i32, remainder: *i32) i32 {
 }
 ```
 
-> 📖 **深入学习**：资源管理相关的 `defer` 和 `errdefer` 机制请参考[控制流与资源管理](chapter-control-flow.md#defer-语句)。
+> **深入学习**：资源管理相关的 `defer` 和 `errdefer` 机制请参考[控制流与资源管理](chapter-control-flow.md#defer-语句)。
 
-## 内建函数
+## 内建函数（入门了解即可）
 
 ### 什么是内建函数？
 
@@ -297,6 +309,9 @@ fn divideWithRemainder(a: i32, b: i32, remainder: *i32) i32 {
 - 是 Zig 元编程的基础
 
 ### 常用内建函数分类
+
+> 💡 第一次阅读时，你不需要把这一节全部记住。  
+> 先知道：内建函数以 `@` 开头，用来完成类型操作、编译期检查、位级转换等“普通函数做不到或不适合做”的事情。后续随着你学习 `comptime`、指针和元编程，再回来看会更顺。
 
 | 类别     | 函数                          | 用途           |
 | -------- | ----------------------------- | -------------- |
@@ -309,7 +324,7 @@ fn divideWithRemainder(a: i32, b: i32, remainder: *i32) i32 {
 ```zig
 const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     // 类型信息：获取类型的详细信息
     const type_info = @typeInfo(i32);
     std.debug.print("i32 类型信息：{}\n", .{type_info});
@@ -346,7 +361,7 @@ i32 类型信息：.{ .int = .{ .signedness = .signed, .bits = 32 } }
 
 > ⚠️ **安全警告**：`@ptrFromInt` 将整数转换为指针，在非裸机环境下使用硬编码地址会导致未定义行为。仅在嵌入式开发等场景中使用，并确保地址有效。
 
-## 函数高级特性
+## 函数高级特性（可先略读）
 
 ### `pub` 关键字
 
@@ -379,14 +394,14 @@ fn print(value: anytype) void {
     std.debug.print("{}\n", .{value});
 }
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     print(42);      // 编译器生成 print(i32) 版本
     print(3.14);    // 编译器生成 print(f64) 版本
     print("hello"); // 编译器生成 print(*const [5:0]u8) 版本
 }
 ```
 
-> 📖 **深入学习**：anytype 的详细内容请参考[编译期计算与元编程](../part2-advanced/chapter-comptime.md#anytype-与动态类型)章节。
+> **深入学习**：anytype 的详细内容请参考[编译期计算与元编程](../part2-advanced/chapter-comptime.md#anytype-与动态类型)章节。
 
 ### noreturn 函数类型
 
@@ -397,7 +412,7 @@ pub fn main(_: std.process.Init.Minimal) void {
 ```zig
 const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const should_panic = false;
     
     if (should_panic) {
@@ -448,7 +463,7 @@ export fn incrementCounter() void {
     globalCounter += 1;
 }
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const result = addNumbers(10, 20);
     std.debug.print("结果: {}\n", .{result});
 }
@@ -468,7 +483,7 @@ extern "c" fn atan2(a: f64, b: f64) f64;
 // 声明外部变量
 extern "c" var errno: c_int;
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     // 调用 C 标准库函数
     _ = puts("Hello from C!");
     
@@ -477,17 +492,18 @@ pub fn main(_: std.process.Init.Minimal) void {
 }
 ```
 
-> 📖 **深入学习**：Zig 与 C 互操作的完整用法请参考[C 互操作](../part2-advanced/chapter-c-interop.md)。
+> **深入学习**：Zig 与 C 互操作的完整用法请参考[C 互操作](../part2-advanced/chapter-c-interop.md)。
 
 **链接外部库**：
 ```bash
-# 编译时链接数学库
 zig build-exe main.zig -lc -lm
 ```
 
 ### inline 关键字
 
-`inline` 强制函数内联，否则编译失败：
+`inline` 用于要求编译器以内联方式处理函数；这属于更偏性能和编译期语义的话题。对初学者来说，先知道它存在即可，不必在入门阶段频繁使用。
+
+在很多日常代码里，**是否内联通常应交给编译器判断**；只有在你明确知道自己为什么要这样做时，才考虑显式写出 `inline`。
 
 ```zig
 const std = @import("std");
@@ -497,7 +513,7 @@ inline fn square(x: i32) i32 {
     return x * x;
 }
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const result = square(5);
     std.debug.print("平方: {}\n", .{result});
     
@@ -526,6 +542,8 @@ pub fn main(_: std.process.Init.Minimal) void {
 
 ### 函数类型
 
+这一节展示“函数也是值”的基本概念。第一次阅读时，你只需要先理解：函数可以赋给变量、可以作为参数传递，也可以根据条件选择不同实现。
+
 Zig 支持将函数作为值传递，使用函数类型语法：
 
 ```zig
@@ -542,7 +560,7 @@ fn multiply(a: i32, b: i32) i32 {
     return a * b;
 }
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     // 将函数赋值给变量
     const op: BinaryOp = add;
     std.debug.print("add(3, 4) = {}\n", .{op(3, 4)});
@@ -559,9 +577,19 @@ add(3, 4) = 7
 multiply(3, 4) = 12
 ```
 
-> 📖 **深入学习**：函数指针在接口和 VTable 中的应用请参考[接口与多态](../part2-advanced/chapter-interfaces.md)。
+> **深入学习**：函数指针在接口和 VTable 中的应用请参考[接口与多态](../part2-advanced/chapter-interfaces.md)。
 
 ## 本章要点
+
+读完本章后，你应该优先掌握这些内容：
+
+- 会定义和调用基本函数
+- 理解参数、返回值和 `void`
+- 知道什么时候用 `?T`，什么时候用 `!T`
+- 知道参数默认不可变，修改调用者数据需要显式传指针
+- 能区分“入门必须掌握的函数知识”和“后续再深入的高级特性”
+
+如果你第一次阅读 Zig，这一章最重要的不是把所有高级特性都记住，而是学会**怎样把一段逻辑拆成清楚、可读、意图明确的函数**。
 
 | 主题           | 核心概念                                                |
 | -------------- | ------------------------------------------------------- |

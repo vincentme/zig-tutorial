@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>【draft】测试与基准测试 - Zig 编程语言入门教程</title>
+        <title>测试与验证：从单元测试到基准测量 - Zig 编程语言入门教程</title>
 
 
         <!-- Custom HTML head -->
@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-a9ca16c2.js";
+            window.path_to_searchindex_js = "../searchindex-35211ac1.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-2fc75e4c.js"></script>
+        <script src="../toc-6dcbe846.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -181,1502 +181,681 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="draft测试与基准测试"><a class="header" href="#draft测试与基准测试">【draft】测试与基准测试</a></h1>
+                        <h1 id="测试与验证从单元测试到基准测量"><a class="header" href="#测试与验证从单元测试到基准测量">测试与验证：从单元测试到基准测量</a></h1>
 <blockquote>
-<p>📖 <strong>章节概述</strong>：本章将全面介绍 Zig 的测试框架，包括单元测试、内存安全测试、基准测试以及测试与构建系统的集成。</p>
-</blockquote>
-<h2 id="单元测试基础"><a class="header" href="#单元测试基础">单元测试基础</a></h2>
-<blockquote>
-<p>📖 <strong>本节内容来源</strong>：整合自 Pedro Park 的 Zig Book 和官方文档</p>
-</blockquote>
-<h1 id="为什么需要单元测试"><a class="header" href="#为什么需要单元测试">为什么需要单元测试？</a></h1>
-<p>单元测试是软件质量保证的重要手段。在 Zig 中，单元测试具有特殊的重要性：</p>
-<ol>
-<li><strong>内存安全验证</strong>：检测内存泄漏、双重释放等问题</li>
-<li><strong>错误处理验证</strong>：确保错误路径正确处理</li>
-<li><strong>边界条件测试</strong>：验证边界情况的行为</li>
-<li><strong>重构保障</strong>：确保重构后功能不变</li>
-</ol>
-<blockquote>
-<p>📜 <strong>Zig Zen 原则关联</strong></p>
-<p>单元测试体现了以下 Zig Zen 原则：</p>
+<p><strong>章节定位</strong>：这一章是第二部分中非常重要的一环。<br>到了这里，测试已经不再只是“写完代码后顺手检查一下”，而是你设计 API、验证错误路径、约束资源释放行为的基本工具。</p>
+<p><strong>阅读目标</strong>：</p>
 <ul>
-<li><strong>“Edge cases matter.”</strong>（边界情况很重要）<br>单元测试帮助我们验证边界条件和异常情况，防止潜在 bug。</li>
-<li><strong>“Runtime crashes are better than bugs.”</strong>（运行时崩溃优于潜在的 bug）<br>测试可以及早发现问题，避免 bug 进入生产环境。</li>
-<li><strong>“Compile errors are better than runtime crashes.”</strong>（编译期错误优于运行时崩溃）<br>Zig 的测试框架可以在编译期捕获部分错误。</li>
+<li>理解 Zig 中 <code>test</code> 块的基本使用方式</li>
+<li>学会用 <code>std.testing</code> 编写清晰的断言</li>
+<li>知道如何测试错误路径、边界条件和内存释放责任</li>
+<li>了解嵌套测试、测试过滤和简单基准测量的定位</li>
+<li>区分“稳定的测试主线”和“版本更敏感的构建/集成细节”</li>
+</ul>
+<p><strong>相关阅读与衔接建议</strong>：</p>
+<ul>
+<li>如果你刚读完<a href="chapter-memory-management.html">内存管理模型</a>，可以重点关注本章中“错误路径”和“资源释放责任”的测试方式，这两章是直接连在一起的。</li>
+<li>如果你准备继续阅读<a href="chapter-package-management.html">构建系统与包管理</a>，可以把本章理解为“先把模块验证清楚，再把测试接入项目构建流程”的过渡章节。</li>
+<li>如果你准备进入第三部分实战案例，那么本章最值得反复回看的部分通常是：测试命名、错误路径验证、<code>std.testing.allocator</code> 和简单测量方法。</li>
 </ul>
 </blockquote>
-<h1 id="测试块语法"><a class="header" href="#测试块语法">测试块语法</a></h1>
-<p>Zig 使用 <code>test</code> 关键字定义测试块：</p>
-<pre><code class="language-zig">test "测试名称" {
-    // 测试代码
-}
-</code></pre>
-<p><strong>关键特性</strong>：</p>
+<hr>
+<h2 id="为什么测试在-zig-中尤其重要"><a class="header" href="#为什么测试在-zig-中尤其重要">为什么测试在 Zig 中尤其重要？</a></h2>
+<p>Zig 强调几件事：</p>
 <ul>
-<li>测试块在正常编译时被忽略</li>
-<li>只有使用 <code>zig test</code> 命令时才会编译和执行</li>
-<li>测试块可以与源代码混合编写</li>
-<li>测试块具有隐式的返回值类型 <code>anyerror!void</code></li>
+<li>显式错误处理</li>
+<li>显式资源管理</li>
+<li>显式分配器传递</li>
+<li>尽量让失败模式清楚可见</li>
 </ul>
-<h1 id="测试与源代码共存"><a class="header" href="#测试与源代码共存">测试与源代码共存</a></h1>
-<p>Zig 标准库采用测试与源代码共存的方式：</p>
-<pre><code class="language-zig">// src/math.zig
-
-/// 计算两个数的和
-pub fn add(a: i32, b: i32) i32 {
-    return a + b;
-}
-
-test "add function" {
-    try std.testing.expect(add(2, 3) == 5);
-}
-</code></pre>
-<p><strong>优势</strong>：</p>
+<p>这意味着很多代码的正确性，不只体现在“正常路径能跑通”，还体现在：</p>
 <ul>
-<li>测试代码紧邻被测试代码，易于维护</li>
-<li>文档化代码的预期行为</li>
-<li>便于重构时验证功能</li>
+<li>错误是否真的被正确返回</li>
+<li>资源是否在失败时也能被释放</li>
+<li>边界输入是否被正确处理</li>
+<li>抽象接口是否足够清晰，容易验证</li>
 </ul>
-<p><strong>最佳实践</strong>：</p>
+<p>换句话说，在 Zig 里，<strong>测试往往直接暴露设计是否清楚</strong>。</p>
+<p>例如，如果一个函数难以测试，常常说明它可能：</p>
 <ul>
-<li>将测试块放在被测试函数之后</li>
-<li>使用描述性的测试名称</li>
-<li>每个测试块专注于一个功能点</li>
+<li>隐含了过多全局状态</li>
+<li>混杂了太多职责</li>
+<li>所有权边界不清楚</li>
+<li>对失败路径缺乏明确约定</li>
 </ul>
-<h1 id="基本测试示例"><a class="header" href="#基本测试示例">基本测试示例</a></h1>
-<p>Zig 内置了测试框架：</p>
+<p>所以，测试不只是“质量保证”，也是一种<strong>设计反馈机制</strong>。</p>
+<hr>
+<h2 id="zig-测试的基本形式"><a class="header" href="#zig-测试的基本形式">Zig 测试的基本形式</a></h2>
+<p>Zig 使用 <code>test</code> 块定义测试：</p>
 <pre><code class="language-zig">const std = @import("std");
 
-// 被测试的函数
 fn add(a: i32, b: i32) i32 {
     return a + b;
 }
+
+test "add returns the sum of two integers" {
+    try std.testing.expect(add(2, 3) == 5);
+}
+</code></pre>
+<p>这段代码有几个关键点：</p>
+<ol>
+<li><code>test "..." { ... }</code> 是测试块</li>
+<li>测试名称应该描述行为，而不是只写一个模糊标签</li>
+<li>测试里通常使用 <code>try std.testing.*</code> 断言</li>
+<li>这些测试不会在普通构建里作为主程序入口运行，而是通过 <code>zig test</code> 执行</li>
+</ol>
+<h3 id="运行测试"><a class="header" href="#运行测试">运行测试</a></h3>
+<p>最基本的运行方式是：</p>
+<pre><code class="language-bash">zig test src/main.zig
+</code></pre>
+<p>如果你的测试写在某个模块文件里，也可以直接测试那个文件：</p>
+<pre><code class="language-bash">zig test src/math.zig
+</code></pre>
+<hr>
+<h2 id="把测试和代码放在一起"><a class="header" href="#把测试和代码放在一起">把测试和代码放在一起</a></h2>
+<p>Zig 很常见的一种风格，是让测试与被测代码放在同一个文件中：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn clamp(value: i32, min: i32, max: i32) i32 {
+    if (value &lt; min) return min;
+    if (value &gt; max) return max;
+    return value;
+}
+
+test "clamp returns min when value is below range" {
+    try std.testing.expectEqual(@as(i32, 0), clamp(-5, 0, 10));
+}
+
+test "clamp returns max when value is above range" {
+    try std.testing.expectEqual(@as(i32, 10), clamp(20, 0, 10));
+}
+
+test "clamp returns original value when already in range" {
+    try std.testing.expectEqual(@as(i32, 7), clamp(7, 0, 10));
+}
+</code></pre>
+<p>这种写法的优点是：</p>
+<ul>
+<li>被测代码与测试距离近，阅读成本低</li>
+<li>重构时更容易同步更新测试</li>
+<li>测试本身也能起到“行为文档”的作用</li>
+</ul>
+<p>当然，当模块很大、测试很多时，你也可以把测试拆到单独文件中。<br>但在本教程阶段，<strong>先理解“测试描述行为”这件事，比纠结文件布局更重要</strong>。</p>
+<hr>
+<h2 id="最常用的断言函数"><a class="header" href="#最常用的断言函数">最常用的断言函数</a></h2>
+<p>Zig 的测试辅助主要来自 <code>std.testing</code>。<br>第一次学习时，不需要把所有辅助函数都记住，先掌握下面这些最常用的即可。</p>
+<h3 id="expect"><a class="header" href="#expect"><code>expect</code></a></h3>
+<p>用于断言一个布尔表达式为真：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+test "expect checks boolean conditions" {
+    try std.testing.expect(1 + 1 == 2);
+    try std.testing.expect(true);
+}
+</code></pre>
+<p>适合：</p>
+<ul>
+<li>简单条件判断</li>
+<li>不需要特别展示“期望值/实际值”的场景</li>
+</ul>
+<h3 id="expectequal"><a class="header" href="#expectequal"><code>expectEqual</code></a></h3>
+<p>用于比较两个值是否相等：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+test "expectEqual compares values" {
+    try std.testing.expectEqual(@as(i32, 42), @as(i32, 42));
+}
+</code></pre>
+<p>相比直接写 <code>expect(a == b)</code>，<code>expectEqual</code> 的优点是：<br><strong>当失败时，通常更容易看出“期望值”和“实际值”分别是什么。</strong></p>
+<h3 id="expectequalstrings"><a class="header" href="#expectequalstrings"><code>expectEqualStrings</code></a></h3>
+<p>用于比较字符串：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+fn greet(name: []const u8) []const u8 {
+    if (std.mem.eql(u8, name, "zig")) return "hello, zig";
+    return "hello, world";
+}
+
+test "expectEqualStrings compares text content" {
+    try std.testing.expectEqualStrings("hello, zig", greet("zig"));
+}
+</code></pre>
+<h3 id="expectequalslices"><a class="header" href="#expectequalslices"><code>expectEqualSlices</code></a></h3>
+<p>用于比较切片内容：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+test "expectEqualSlices compares slice contents" {
+    const expected = [_]u8{ 1, 2, 3 };
+    const actual = [_]u8{ 1, 2, 3 };
+
+    try std.testing.expectEqualSlices(u8, &amp;expected, &amp;actual);
+}
+</code></pre>
+<h3 id="expecterror"><a class="header" href="#expecterror"><code>expectError</code></a></h3>
+<p>用于验证错误路径是否返回了预期错误：</p>
+<pre><code class="language-zig">const std = @import("std");
 
 fn divide(a: i32, b: i32) !i32 {
     if (b == 0) return error.DivisionByZero;
     return @divTrunc(a, b);
 }
 
-// 基本测试
-test "add function" {
-    try std.testing.expect(add(2, 3) == 5);
-    try std.testing.expect(add(-1, 1) == 0);
-    try std.testing.expect(add(0, 0) == 0);
+test "divide returns DivisionByZero when divisor is zero" {
+    try std.testing.expectError(error.DivisionByZero, divide(10, 0));
 }
+</code></pre>
+<p>这类测试在 Zig 中尤其重要，因为错误不是“例外情况可以不测”，而是接口契约的一部分。</p>
+<h3 id="浮点比较"><a class="header" href="#浮点比较">浮点比较</a></h3>
+<p>浮点数通常不适合直接用 <code>==</code>。<br>更稳妥的写法是使用近似比较：</p>
+<pre><code class="language-zig">const std = @import("std");
 
-// 测试错误处理
-test "divide function" {
-    const result = try divide(10, 2);
-    try std.testing.expect(result == 5);
-    
-    const err = divide(10, 0);
-    try std.testing.expectError(error.DivisionByZero, err);
-}
+test "floating-point values should use approximate comparison" {
+    const expected: f64 = 3.14159;
+    const actual: f64 = 3.14160;
 
-// 测试相等性
-test "expect equal" {
-    const expected: i32 = 42;
-    const actual: i32 = 42;
-    try std.testing.expectEqual(expected, actual);
-}
-
-// 测试近似相等（浮点数）
-test "expect approach" {
-    const expected: f32 = 3.14159;
-    const actual: f32 = 3.14160;
     try std.testing.expectApproxEqAbs(expected, actual, 0.001);
 }
 </code></pre>
-<h2 id="测试组织与嵌套测试"><a class="header" href="#测试组织与嵌套测试">测试组织与嵌套测试</a></h2>
-<blockquote>
-<p>📖 <strong>本节内容来源</strong>：整合自 Zig Language Bible</p>
-</blockquote>
-<h1 id="嵌套测试机制"><a class="header" href="#嵌套测试机制">嵌套测试机制</a></h1>
-<p>Zig 支持在结构体、枚举、联合等类型内部定义测试块：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-const Math = struct {
-    fn add(a: i32, b: i32) i32 {
-        return a + b;
-    }
-    
-    fn subtract(a: i32, b: i32) i32 {
-        return a - b;
-    }
-    
-    // 嵌套测试
-    test "Math operations" {
-        try std.testing.expect(add(5, 3) == 8);
-        try std.testing.expect(subtract(5, 3) == 2);
-    }
-};
-</code></pre>
-<p><strong>重要特性</strong>：</p>
-<ul>
-<li><code>zig test</code> 默认只执行顶级测试块</li>
-<li>嵌套测试需要显式引用才会执行</li>
-</ul>
-<h1 id="运行嵌套测试"><a class="header" href="#运行嵌套测试">运行嵌套测试</a></h1>
-<p><strong>方法 1：使用 refAllDecls</strong></p>
-<pre><code class="language-zig">const std = @import("std");
-
-test "all tests" {
-    // 引用所有声明，触发嵌套测试执行
-    std.testing.refAllDecls(Math);
-    _ = Math; // 确保类型被引用
-}
-</code></pre>
-<p><strong>refAllDecls 实现原理</strong>：</p>
-<pre><code class="language-zig">pub fn refAllDecls(comptime T: type) void {
-    if (!builtin.is_test) return;
-    inline for (comptime std.meta.declarations(T)) |decl| {
-        _ = &amp;@field(T, decl.name);
-    }
-}
-</code></pre>
-<p><strong>注意事项</strong>：</p>
-<ul>
-<li><code>refAllDecls</code> 只引用公共成员（pub 修饰）</li>
-<li>非公共成员需要手动引用</li>
-</ul>
-<p><strong>方法 2：手动引用</strong></p>
-<pre><code class="language-zig">test "all tests" {
-    _ = Math.add; // 手动引用特定成员
-    _ = Math.subtract;
-}
-</code></pre>
-<h1 id="测试过滤"><a class="header" href="#测试过滤">测试过滤</a></h1>
-<p>使用 <code>--test-filter</code> 运行特定测试：</p>
-<pre><code class="language-bash"># 只运行名称包含 "add" 的测试
-zig test src/main.zig --test-filter "add"
-
-# 只运行特定模块的测试
-zig test src/main.zig --test-filter "Math"
-</code></pre>
-<p><strong>注意</strong>：未命名的测试块（<code>test { }</code>）始终会运行，不受过滤影响。</p>
-<h1 id="跳过测试"><a class="header" href="#跳过测试">跳过测试</a></h1>
-<p><strong>方法 1：返回 error.SkipZigTest</strong></p>
-<pre><code class="language-zig">test "skip this test" {
-    return error.SkipZigTest; // 标记为跳过
-    // 后续代码不会执行
-}
-</code></pre>
-<p><strong>方法 2：使用 –test-filter 过滤</strong></p>
-<pre><code class="language-bash"># 通过过滤排除特定测试
-zig test src/main.zig --test-filter "其他测试"
-</code></pre>
-<h1 id="条件编译测试"><a class="header" href="#条件编译测试">条件编译测试</a></h1>
-<p>使用 <code>builtin.is_test</code> 检测测试模式：</p>
-<pre><code class="language-zig">const builtin = @import("builtin");
-
-const config = if (builtin.is_test) struct {
-    const debug_mode = true;
-} else struct {
-    const debug_mode = false;
-};
-</code></pre>
-<p><strong>应用场景</strong>：</p>
-<ul>
-<li>测试时使用不同的配置</li>
-<li>测试时跳过耗时的初始化</li>
-<li>测试时使用模拟数据</li>
-</ul>
-<h1 id="测试组织最佳实践"><a class="header" href="#测试组织最佳实践">测试组织最佳实践</a></h1>
-<p><strong>1. 按功能模块组织测试</strong></p>
-<pre><code class="language-zig">const std = @import("std");
-
-const StringUtils = struct {
-    fn isEmpty(s: []const u8) bool {
-        return s.len == 0;
-    }
-    
-    fn trim(s: []const u8) []const u8 {
-        // 实现
-    }
-    
-    test "StringUtils tests" {
-        try std.testing.expect(isEmpty(""));
-        try std.testing.expect(!isEmpty("hello"));
-    }
-};
-
-const MathUtils = struct {
-    fn add(a: i32, b: i32) i32 {
-        return a + b;
-    }
-    
-    test "MathUtils tests" {
-        try std.testing.expect(add(2, 3) == 5);
-    }
-};
-
-// 顶级测试块
-test "all tests" {
-    std.testing.refAllDecls(StringUtils);
-    std.testing.refAllDecls(MathUtils);
-}
-</code></pre>
-<p><strong>2. 使用命名约定</strong></p>
-<pre><code class="language-zig">test "StringUtils.isEmpty returns true for empty string" {
-    // 测试描述清晰
-}
-
-test "StringUtils.isEmpty returns false for non-empty string" {
-    // 测试描述清晰
-}
-</code></pre>
-<p><strong>3. 分离测试文件（可选）</strong></p>
-<p>如果偏好将测试分离到独立文件：</p>
-<pre><code>src/
-├── utils.zig        # 源代码
-└── utils_test.zig   # 测试代码
-</code></pre>
-<pre><code class="language-zig">// src/utils_test.zig
-const std = @import("std");
-const utils = @import("utils.zig");
-
-test "utils tests" {
-    // 测试代码
-}
-</code></pre>
-<h2 id="测试辅助函数"><a class="header" href="#测试辅助函数">测试辅助函数</a></h2>
-<p>Zig 标准库提供了丰富的测试辅助函数，位于 <code>std.testing</code> 模块：</p>
-<h1 id="核心断言函数"><a class="header" href="#核心断言函数">核心断言函数</a></h1>
-<pre><code class="language-zig">const std = @import("std");
-
-test "core assertions" {
-    // expect：断言布尔值为真
-    try std.testing.expect(true);
-    try std.testing.expect(1 + 1 == 2);
-    
-    // expectEqual：断言两个值相等（支持类型推断）
-    try std.testing.expectEqual(@as(i32, 42), 42);
-    try std.testing.expectEqual("hello", "hello");
-    
-    // expectEqualSlices：断言切片相等
-    const expected = [_]i32{ 1, 2, 3 };
-    const actual = [_]i32{ 1, 2, 3 };
-    try std.testing.expectEqualSlices(i32, &amp;expected, &amp;actual);
-    
-    // expectEqualStrings：断言字符串相等
-    try std.testing.expectEqualStrings("hello", "hello");
-    
-    // expectError：断言错误类型
-    const err = error.TestError;
-    try std.testing.expectError(err, error.TestError);
-}
-</code></pre>
-<h1 id="浮点数比较"><a class="header" href="#浮点数比较">浮点数比较</a></h1>
-<pre><code class="language-zig">const std = @import("std");
-
-test "float comparisons" {
-    // expectApproxEqAbs：绝对误差比较
-    const expected: f32 = 3.14159;
-    const actual: f32 = 3.14160;
-    try std.testing.expectApproxEqAbs(expected, actual, 0.001);
-    
-    // expectApproxEqRel：相对误差比较
-    // 适用于比较不同数量级的浮点数
-    const large: f64 = 1000000.0;
-    const large_approx: f64 = 1000001.0;
-    try std.testing.expectApproxEqRel(large, large_approx, 0.0001);
-}
-</code></pre>
-<h1 id="字符串断言"><a class="header" href="#字符串断言">字符串断言</a></h1>
-<pre><code class="language-zig">const std = @import("std");
-
-test "string assertions" {
-    // expectStringStartsWith：断言字符串前缀
-    try std.testing.expectStringStartsWith("hello world", "hello");
-    
-    // expectStringEndsWith：断言字符串后缀
-    try std.testing.expectStringEndsWith("hello world", "world");
-    
-    // expectFmt：断言格式化输出
-    try std.testing.expectFmt("42", "{}", .{@as(i32, 42)});
-}
-</code></pre>
-<h1 id="分配器测试"><a class="header" href="#分配器测试">分配器测试</a></h1>
-<pre><code class="language-zig">const std = @import("std");
-
-test "allocator testing" {
-    // testing.allocator：测试专用分配器
-    // 会检测内存泄漏和双重释放
-    const allocator = std.testing.allocator;
-    
-    const slice = try allocator.alloc(u8, 100);
-    defer allocator.free(slice); // 必须释放，否则测试失败
-    
-    // FailingAllocator：模拟分配失败
-    var failing = std.testing.FailingAllocator.init(
-        std.heap.page_allocator,
-        .{ .fail_index = 0 }, // 第 0 次分配失败
-    );
-    const fail_alloc = failing.allocator();
-    
-    const result = fail_alloc.alloc(u8, 10);
-    try std.testing.expectError(error.OutOfMemory, result);
-}
-</code></pre>
-<h1 id="测试组织函数"><a class="header" href="#测试组织函数">测试组织函数</a></h1>
-<pre><code class="language-zig">const std = @import("std");
-
-const MyModule = struct {
-    fn add(a: i32, b: i32) i32 {
-        return a + b;
-    }
-    
-    fn multiply(a: i32, b: i32) i32 {
-        return a * b;
-    }
-    
-    // 嵌套测试
-    test "Math operations" {
-        try std.testing.expect(add(5, 3) == 8);
-        try std.testing.expect(multiply(5, 3) == 15);
-    }
-};
-
-// refAllDecls：引用所有声明以运行嵌套测试
-test "all tests" {
-    std.testing.refAllDecls(MyModule);
-}
-</code></pre>
-<h1 id="测试辅助函数一览表"><a class="header" href="#测试辅助函数一览表">测试辅助函数一览表</a></h1>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>函数</th><th>用途</th><th>示例</th></tr>
-</thead>
-<tbody>
-<tr><td><code>expect</code></td><td>断言布尔值为真</td><td><code>try expect(true)</code></td></tr>
-<tr><td><code>expectEqual</code></td><td>断言两个值相等</td><td><code>try expectEqual(42, 42)</code></td></tr>
-<tr><td><code>expectEqualSlices</code></td><td>断言切片相等</td><td><code>try expectEqualSlices(u8, "a", "a")</code></td></tr>
-<tr><td><code>expectEqualStrings</code></td><td>断言字符串相等</td><td><code>try expectEqualStrings("a", "a")</code></td></tr>
-<tr><td><code>expectError</code></td><td>断言错误类型</td><td><code>try expectError(err, result)</code></td></tr>
-<tr><td><code>expectApproxEqAbs</code></td><td>绝对误差比较</td><td><code>try expectApproxEqAbs(1.0, 1.1, 0.2)</code></td></tr>
-<tr><td><code>expectApproxEqRel</code></td><td>相对误差比较</td><td><code>try expectApproxEqRel(100.0, 101.0, 0.02)</code></td></tr>
-<tr><td><code>expectStringStartsWith</code></td><td>断言前缀</td><td><code>try expectStringStartsWith("abc", "ab")</code></td></tr>
-<tr><td><code>expectStringEndsWith</code></td><td>断言后缀</td><td><code>try expectStringEndsWith("abc", "bc")</code></td></tr>
-<tr><td><code>expectFmt</code></td><td>断言格式化输出</td><td><code>try expectFmt("42", "{}", .{42})</code></td></tr>
-<tr><td><code>refAllDecls</code></td><td>运行嵌套测试</td><td><code>refAllDecls(MyStruct)</code></td></tr>
-</tbody>
-</table>
-</div>
-<h2 id="内存安全测试"><a class="header" href="#内存安全测试">内存安全测试</a></h2>
-<blockquote>
-<p>📖 <strong>本节内容来源</strong>：整合自 Pedro Park 的 Zig Book</p>
-</blockquote>
-<h1 id="为什么需要内存安全测试"><a class="header" href="#为什么需要内存安全测试">为什么需要内存安全测试？</a></h1>
-<p>Zig 没有垃圾回收器，需要手动管理内存。内存安全测试可以检测：</p>
-<ol>
-<li><strong>内存泄漏</strong>：分配但未释放的内存</li>
-<li><strong>双重释放</strong>：同一内存被释放多次</li>
-<li><strong>使用后释放</strong>：释放后继续使用内存</li>
-<li><strong>缓冲区溢出</strong>：访问超出分配范围的内存</li>
-</ol>
-<h1 id="使用-stdtestingallocator"><a class="header" href="#使用-stdtestingallocator">使用 std.testing.allocator</a></h1>
-<p><code>std.testing.allocator</code> 是一个特殊的分配器，会在测试结束时自动检测内存问题：</p>
-<pre><code class="language-zig">// ❌ 错误示例
-const std = @import("std");
-
-test "memory leak detection" {
-    const allocator = std.testing.allocator;
-    
-    // 正确的内存管理
-    const slice = try allocator.alloc(u8, 100);
-    defer allocator.free(slice); // 必须释放
-    
-    // 使用内存
-    @memset(slice, 0xAA);
-}
-
-test "detect memory leak" {
-    const allocator = std.testing.allocator;
-    
-    // ❌ 错误示例：忘记释放内存
-    const slice = try allocator.alloc(u8, 100);
-    // 没有 defer allocator.free(slice);
-    
-    // 测试结束时，testing.allocator 会检测到内存泄漏并报告错误
-    // Error: memory leak detected
-}
-</code></pre>
-<p><strong>测试输出示例</strong>：</p>
-<pre><code>Test [1/2] test "memory leak detection"... OK
-Test [2/2] test "detect memory leak"... FAIL (MemoryLeakDetected)
-error: memory leak detected
-</code></pre>
-<h1 id="测试内存分配函数"><a class="header" href="#测试内存分配函数">测试内存分配函数</a></h1>
-<p>当测试需要分配内存的函数时，使用 <code>std.testing.allocator</code>：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-fn createString(allocator: std.mem.Allocator, content: []const u8) ![]u8 {
-    const buffer = try allocator.alloc(u8, content.len);
-    @memcpy(buffer, content);
-    return buffer;
-}
-
-test "createString" {
-    const allocator = std.testing.allocator;
-    
-    const str = try createString(allocator, "hello");
-    defer allocator.free(str); // 必须释放
-    
-    try std.testing.expectEqualSlices(u8, "hello", str);
-}
-</code></pre>
-<h1 id="测试需要分配器的结构体"><a class="header" href="#测试需要分配器的结构体">测试需要分配器的结构体</a></h1>
-<p>对于需要分配器的结构体，测试时传入 <code>std.testing.allocator</code>：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-const ArrayList = struct {
-    items: []i32,
-    allocator: std.mem.Allocator,
-    
-    fn init(allocator: std.mem.Allocator) ArrayList {
-        return .{
-            .items = &amp;[_]i32{},
-            .allocator = allocator,
-        };
-    }
-    
-    fn deinit(self: *ArrayList) void {
-        if (self.items.len &gt; 0) {
-            self.allocator.free(self.items);
-        }
-    }
-    
-    fn append(self: *ArrayList, item: i32) !void {
-        const new_items = try self.allocator.alloc(i32, self.items.len + 1);
-        @memcpy(new_items[0..self.items.len], self.items);
-        new_items[self.items.len] = item;
-        if (self.items.len &gt; 0) {
-            self.allocator.free(self.items);
-        }
-        self.items = new_items;
-    }
-};
-
-test "ArrayList" {
-    const allocator = std.testing.allocator;
-    var list = ArrayList.init(allocator);
-    defer list.deinit(); // 必须调用 deinit
-    
-    try list.append(1);
-    try list.append(2);
-    try list.append(3);
-    
-    try std.testing.expectEqual(@as(usize, 3), list.items.len);
-    try std.testing.expectEqual(@as(i32, 1), list.items[0]);
-}
-</code></pre>
-<h1 id="模拟分配失败"><a class="header" href="#模拟分配失败">模拟分配失败</a></h1>
-<p>使用 <code>FailingAllocator</code> 测试内存不足的情况：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-test "allocation failure" {
-    // 创建一个会在第 N 次分配时失败的分配器
-    var failing = std.testing.FailingAllocator.init(
-        std.heap.page_allocator,
-        .{ .fail_index = 2 }, // 第 2 次分配时失败
-    );
-    const allocator = failing.allocator();
-    
-    // 第 1 次分配成功
-    const ptr1 = try allocator.alloc(u8, 10);
-    defer allocator.free(ptr1);
-    
-    // 第 2 次分配失败
-    const result = allocator.alloc(u8, 10);
-    try std.testing.expectError(error.OutOfMemory, result);
-}
-</code></pre>
-<p><strong>应用场景</strong>：</p>
-<ul>
-<li>测试错误处理路径</li>
-<li>验证资源清理逻辑</li>
-<li>确保程序在内存不足时优雅降级</li>
-</ul>
-<h1 id="检测未初始化内存"><a class="header" href="#检测未初始化内存">检测未初始化内存</a></h1>
-<p>使用 <code>undefined</code> 标记未初始化变量，配合安全检查：</p>
-<pre><code class="language-zig">// 💡 最佳实践
-const std = @import("std");
-
-test "undefined detection" {
-    // Debug 模式下，Zig 会用 0xAA 填充未初始化内存
-    var buffer: [10]u8 = undefined;
-    
-    // 在 Debug 模式下，读取未初始化的内存可能触发运行时错误
-    // 但在 Release 模式下，这是未定义行为
-    
-    // 正确做法：先初始化再使用
-    @memset(&amp;buffer, 0);
-    try std.testing.expectEqual(@as(u8, 0), buffer[0]);
-}
-</code></pre>
-<h1 id="内存安全测试最佳实践"><a class="header" href="#内存安全测试最佳实践">内存安全测试最佳实践</a></h1>
-<p><strong>1. 总是使用 std.testing.allocator</strong></p>
-<pre><code class="language-zig">// 🚫 已废弃：0.16.0，请使用 DebugAllocator
-test "correct pattern" {
-    const allocator = std.testing.allocator;
-    // 测试代码
-}
-
-// ❌ 错误示例
-test "incorrect pattern" {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
-    // 这样无法自动检测内存泄漏
-}
-</code></pre>
-<p><strong>2. 确保所有分配都有对应的释放</strong></p>
-<pre><code class="language-zig">test "proper cleanup" {
-    const allocator = std.testing.allocator;
-    
-    const ptr1 = try allocator.alloc(u8, 10);
-    defer allocator.free(ptr1); // 使用 defer 确保释放
-    
-    const ptr2 = try allocator.create(i32);
-    defer allocator.destroy(ptr2); // 使用 defer 确保释放
-    
-    // 即使测试失败，defer 也会执行
-}
-</code></pre>
-<p><strong>3. 测试错误路径的内存清理</strong></p>
-<pre><code class="language-zig">// ❌ 错误示例
-const std = @import("std");
-
-fn complexOperation(allocator: std.mem.Allocator) !void {
-    const ptr1 = try allocator.alloc(u8, 100);
-    errdefer allocator.free(ptr1); // 错误时释放
-    
-    const ptr2 = try allocator.alloc(u8, 200);
-    errdefer allocator.free(ptr2); // 错误时释放
-    
-    // 如果这里失败，ptr1 和 ptr2 都会被正确释放
-    return error.SomeError;
-}
-
-test "error path cleanup" {
-    const allocator = std.testing.allocator;
-    
-    try std.testing.expectError(error.SomeError, complexOperation(allocator));
-    // testing.allocator 会验证所有内存都已释放
-}
-</code></pre>
-<p><strong>4. 测试边界条件</strong></p>
-<pre><code class="language-zig">test "boundary conditions" {
-    const allocator = std.testing.allocator;
-    
-    // 测试零长度分配
-    const empty = try allocator.alloc(u8, 0);
-    defer allocator.free(empty);
-    
-    // 测试大块分配
-    const large = try allocator.alloc(u8, 1024 * 1024);
-    defer allocator.free(large);
-}
-</code></pre>
-<h1 id="内存安全检测工具"><a class="header" href="#内存安全检测工具">内存安全检测工具</a></h1>
-<p><strong>GeneralPurposeAllocator 的泄漏检测</strong></p>
-<p>在非测试代码中，使用 <code>GeneralPurposeAllocator</code> 检测内存泄漏：</p>
-<pre><code class="language-zig">// 🚫 已废弃：0.16.0，请使用 DebugAllocator
-const std = @import("std");
-
-pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer {
-        const leaked = gpa.deinit();
-        if (leaked == .leak) {
-            std.debug.print("Memory leak detected!\n", .{});
-        }
-    }
-    const allocator = gpa.allocator();
-    
-    // 程序代码
-}
-</code></pre>
-<p><strong>安全检查编译选项</strong></p>
-<pre><code class="language-bash"># Debug 模式：启用所有安全检查
-zig build -Doptimize=Debug
-
-# ReleaseSafe 模式：优化但保留安全检查
-zig build -Doptimize=ReleaseSafe
-
-# ReleaseFast 模式：完全优化，禁用安全检查
-zig build -Doptimize=ReleaseFast
-</code></pre>
-<h2 id="基准测试"><a class="header" href="#基准测试">基准测试</a></h2>
-<pre><code class="language-zig">const std = @import("std");
-
-fn fibonacci(n: usize) usize {
-    if (n &lt;= 1) return n;
-    return fibonacci(n - 1) + fibonacci(n - 2);
-}
-
-pub fn main(_: std.process.Init.Minimal) !void {
-    const iterations = 10_000;
-    
-    // 计时开始
-    const start = std.time.nanoTimestamp();
-    
-    // 运行基准测试
-    var i: usize = 0;
-    while (i &lt; iterations) : (i += 1) {
-        const result = fibonacci(20);
-        std.mem.doNotOptimizeAway(result);
-    }
-    
-    // 计时结束
-    const end = std.time.nanoTimestamp();
-    
-    // 计算耗时
-    const elapsed_ns = end - start;
-    const elapsed_ms = @as(f64, @floatFromInt(elapsed_ns)) / std.time.ns_per_ms;
-    const avg_ns = @as(f64, @floatFromInt(elapsed_ns)) / @as(f64, @floatFromInt(iterations));
-    
-    std.debug.print("总耗时：{d:.2} ms\n", .{elapsed_ms});
-    std.debug.print("平均耗时：{d:.2} ns/次\n", .{avg_ns});
-    std.debug.print("吞吐量：{d:.0} 次/秒\n", .{1_000_000_000.0 / avg_ns});
-}
-</code></pre>
-<h2 id="测试运行与构建集成"><a class="header" href="#测试运行与构建集成">测试运行与构建集成</a></h2>
-<blockquote>
-<p>📖 <strong>本节内容来源</strong>：整合自 Pedro Park 的 Zig Book 和 Zig Language Bible</p>
-</blockquote>
-<h1 id="基本测试命令"><a class="header" href="#基本测试命令">基本测试命令</a></h1>
-<pre><code class="language-bash"># 运行所有测试
-zig test src/main.zig
-
-# 运行特定测试
-zig test src/main.zig --test-filter "add function"
-
-# 运行测试并显示详细输出
-zig test src/main.zig --verbose
-
-# 在构建系统中运行测试
-zig build test
-</code></pre>
-<h1 id="测试命令选项详解"><a class="header" href="#测试命令选项详解">测试命令选项详解</a></h1>
-<p><strong>1. –test-filter：过滤测试</strong></p>
-<pre><code class="language-bash"># 只运行名称包含 "add" 的测试
-zig test src/main.zig --test-filter "add"
-
-# 支持部分匹配
-zig test src/main.zig --test-filter "Math"
-</code></pre>
-<p><strong>注意事项</strong>：</p>
-<ul>
-<li>未命名的测试块（<code>test { }</code>）始终会运行</li>
-<li>过滤器区分大小写</li>
-<li>支持正则表达式模式</li>
-</ul>
-<p><strong>2. –test-cmd：自定义测试运行器</strong></p>
-<pre><code class="language-bash"># 使用自定义测试运行器
-zig test src/main.zig --test-cmd "path/to/test_runner"
-
-# 在特定环境下运行测试
-zig test src/main.zig --test-cmd "wine" --test-cmd-bin
-</code></pre>
-<p><strong>3. –test-name-prefix：测试名称前缀</strong></p>
-<pre><code class="language-bash"># 为测试名称添加前缀（用于区分不同模块）
-zig test src/main.zig --test-name-prefix "module1."
-</code></pre>
-<h1 id="构建系统集成"><a class="header" href="#构建系统集成">构建系统集成</a></h1>
-<p><strong>基本 build.zig 测试配置：</strong></p>
-<pre><code class="language-zig">// 🚫 已废弃：0.15.x 已移除
-const std = @import("std");
-
-pub fn build(b: *std.Build) void {
-    const target = b.standardTargetOptions(.{});
-    const optimize = b.standardOptimizeOption(.{});
-    
-    // 主程序
-    const exe = b.addExecutable(.{
-        .name = "myapp",
-        .root_module = b.createModule(.{
-            .root_source_file = b.path("src/main.zig"),
-            .target = target,
-            .optimize = optimize,
-        }),
-    });
-    b.installArtifact(exe);
-    
-    // 单元测试
-    const unit_tests = b.addTest(.{
-        .root_module = b.createModule(.{
-            .root_source_file = b.path("src/main.zig"),
-            .target = target,
-            .optimize = optimize,
-        }),
-    });
-    
-    const run_unit_tests = b.addRunArtifact(unit_tests);
-    
-    const test_step = b.step("test", "Run unit tests");
-    test_step.dependOn(&amp;run_unit_tests.step);
-}
-</code></pre>
-<p><strong>高级测试配置：</strong></p>
-<pre><code class="language-zig">// 🚫 已废弃：0.15.x 已移除
-const std = @import("std");
-
-pub fn build(b: *std.Build) void {
-    const target = b.standardTargetOptions(.{});
-    const optimize = b.standardOptimizeOption(.{});
-    
-    // 1. 单元测试
-    const unit_tests = b.addTest(.{
-        .root_module = b.createModule(.{
-            .root_source_file = b.path("src/main.zig"),
-            .target = target,
-            .optimize = optimize,
-        }),
-        .filters = &amp;[_][]const u8{}, // 可选：测试过滤器
-    });
-    
-    // 2. 集成测试
-    const integration_tests = b.addTest(.{
-        .root_module = b.createModule(.{
-            .root_source_file = b.path("test/integration.zig"),
-            .target = target,
-            .optimize = optimize,
-        }),
-    });
-    
-    // 添加依赖
-    const my_module = b.createModule(.{
-        .root_source_file = b.path("src/lib.zig"),
-        .target = target,
-        .optimize = optimize,
-    });
-    integration_tests.root_module.addImport("mylib", my_module);
-    
-    // 3. 测试步骤
-    const unit_test_step = b.step("test-unit", "Run unit tests");
-    unit_test_step.dependOn(&amp;b.addRunArtifact(unit_tests).step);
-    
-    const integration_test_step = b.step("test-integration", "Run integration tests");
-    integration_test_step.dependOn(&amp;b.addRunArtifact(integration_tests).step);
-    
-    // 4. 运行所有测试
-    const all_tests_step = b.step("test-all", "Run all tests");
-    all_tests_step.dependOn(unit_test_step);
-    all_tests_step.dependOn(integration_test_step);
-    
-    // 默认测试步骤
-    const test_step = b.step("test", "Run tests");
-    test_step.dependOn(unit_test_step);
-}
-</code></pre>
-<p><strong>运行构建系统的测试：</strong></p>
-<pre><code class="language-bash"># 运行默认测试
-zig build test
-
-# 运行单元测试
-zig build test-unit
-
-# 运行集成测试
-zig build test-integration
-
-# 运行所有测试
-zig build test-all
-
-# 指定优化级别
-zig build test -Doptimize=ReleaseSafe
-
-# 指定目标平台
-zig build test -Dtarget=x86_64-linux
-</code></pre>
-<h1 id="测试输出格式"><a class="header" href="#测试输出格式">测试输出格式</a></h1>
-<p><strong>默认输出：</strong></p>
-<pre><code>Test [1/3] test "add function"... OK
-Test [2/3] test "divide function"... OK
-Test [3/3] test "expect equal"... OK
-All 3 tests passed.
-</code></pre>
-<p><strong>详细输出（–verbose）：</strong></p>
-<pre><code>Test [1/3] test "add function"... OK
-  try std.testing.expect(add(2, 3) == 5);
-  try std.testing.expect(add(-1, 1) == 0);
-  try std.testing.expect(add(0, 0) == 0);
-Test [2/3] test "divide function"... OK
-  const result = try divide(10, 2);
-  try std.testing.expect(result == 5);
-  const err = divide(10, 0);
-  try std.testing.expectError(error.DivisionByZero, err);
-...
-</code></pre>
-<p><strong>失败输出：</strong></p>
-<pre><code>Test [1/2] test "add function"... OK
-Test [2/2] test "divide function"... FAIL (DivisionByZero)
-/home/user/src/main.zig:10:5: error: DivisionByZero
-    return error.DivisionByZero;
-    ^~~~~~~~~~~~~~~~~~~~~~~~~~
-</code></pre>
-<h1 id="测试最佳实践"><a class="header" href="#测试最佳实践">测试最佳实践</a></h1>
-<p><strong>1. 测试命名规范</strong></p>
-<pre><code class="language-zig">// ✅ 好的命名：描述性强
-// ❌ 错误示例
-test "StringUtils.isEmpty returns true for empty string" { }
-test "MathUtils.add handles negative numbers" { }
-test "ArrayList.append increases length" { }
-
-// ❌ 不好的命名：模糊
-test "test1" { }
-test "my test" { }
-</code></pre>
-<p><strong>2. 测试组织结构</strong></p>
-<pre><code>src/
-├── main.zig
-├── utils.zig
-└── math.zig
-
-test/
-├── integration.zig    # 集成测试
-└── benchmark.zig      # 性能测试
-</code></pre>
-<p><strong>3. 测试覆盖率</strong></p>
-<pre><code class="language-bash"># 使用 Debug 模式确保所有安全检查启用
-zig test src/main.zig -Doptimize=Debug
-
-# 使用 ReleaseSafe 模式测试优化后的行为
-zig test src/main.zig -Doptimize=ReleaseSafe
-</code></pre>
-<p><strong>4. 持续集成配置</strong></p>
-<p><strong>GitHub Actions 示例：</strong></p>
-<pre><code class="language-yaml">name: Tests
-
-on: [push, pull_request]
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Install Zig
-        uses: goto-bus-stop/setup-zig@v2
-        with:
-          version: master
-      
-      - name: Run tests
-        run: zig build test
-      
-      - name: Run all tests
-        run: zig build test-all
-</code></pre>
-<h1 id="测试调试技巧"><a class="header" href="#测试调试技巧">测试调试技巧</a></h1>
-<p><strong>1. 使用 std.debug.print 调试</strong></p>
-<pre><code class="language-zig">test "debug example" {
-    const value = calculateSomething();
-    std.debug.print("Debug: value = {}\n", .{value});
-    try std.testing.expect(value &gt; 0);
-}
-</code></pre>
-<p><strong>2. 使用断点调试</strong></p>
-<pre><code class="language-zig">test "breakpoint example" {
-    const value = calculateSomething();
-    
-    // 在这里设置断点
-    std.debug.breakpoint();
-    
-    try std.testing.expect(value &gt; 0);
-}
-</code></pre>
-<p><strong>3. 测试隔离</strong></p>
-<pre><code class="language-zig">// 每个测试应该独立，不依赖其他测试的状态
-test "independent test 1" {
-    // 独立的测试环境
-    const allocator = std.testing.allocator;
-    // ...
-}
-
-test "independent test 2" {
-    // 另一个独立的测试环境
-    const allocator = std.testing.allocator;
-    // ...
-}
-</code></pre>
-<h1 id="测试性能优化"><a class="header" href="#测试性能优化">测试性能优化</a></h1>
-<p><strong>1. 并行测试</strong></p>
-<p>Zig 默认并行运行测试，可以通过环境变量控制：</p>
-<pre><code class="language-bash"># 设置并行线程数
-ZIG_TEST_THREADS=4 zig test src/main.zig
-
-# 串行运行测试
-ZIG_TEST_THREADS=1 zig test src/main.zig
-</code></pre>
-<p><strong>2. 测试过滤加速</strong></p>
-<pre><code class="language-bash"># 只运行修改相关的测试
-zig test src/main.zig --test-filter "modified_module"
-</code></pre>
-<p><strong>3. 增量测试</strong></p>
-<pre><code class="language-bash"># 使用构建系统的增量编译
-zig build test
-</code></pre>
-<h1 id="测试命令速查表"><a class="header" href="#测试命令速查表">测试命令速查表</a></h1>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>命令</th><th>说明</th></tr>
-</thead>
-<tbody>
-<tr><td><code>zig test file.zig</code></td><td>运行单个文件的测试</td></tr>
-<tr><td><code>zig test file.zig --test-filter "name"</code></td><td>运行匹配的测试</td></tr>
-<tr><td><code>zig test file.zig --verbose</code></td><td>显示详细输出</td></tr>
-<tr><td><code>zig build test</code></td><td>运行构建系统的测试</td></tr>
-<tr><td><code>zig build test-all</code></td><td>运行所有测试</td></tr>
-<tr><td><code>zig build test -Doptimize=Debug</code></td><td>Debug 模式测试</td></tr>
-<tr><td><code>zig build test -Doptimize=ReleaseSafe</code></td><td>ReleaseSafe 模式测试</td></tr>
-</tbody>
-</table>
-</div>
 <hr>
-<h1 id="章节练习题"><a class="header" href="#章节练习题">章节练习题</a></h1>
-<h1 id="基础题"><a class="header" href="#基础题">基础题</a></h1>
-<p><strong>题目1</strong>：编写一个函数，使用指针交换两个变量的值。</p>
-<p><strong>要求</strong>：</p>
+<h2 id="先测什么优先级应该怎么排"><a class="header" href="#先测什么优先级应该怎么排">先测什么？优先级应该怎么排？</a></h2>
+<p>刚开始写测试时，最容易犯的错误是：</p>
 <ul>
-<li>函数签名为 <code>fn swap(a: *i32, b: *i32) void</code></li>
-<li>使用指针参数</li>
-<li>交换两个变量的值</li>
+<li>只测最顺利的“快乐路径”</li>
+<li>试图一下子把所有细节都覆盖</li>
+<li>写了很多测试，但没有抓住真正容易出错的点</li>
 </ul>
-<p><strong>参考答案</strong>：</p>
+<p>更实用的顺序通常是：</p>
+<h3 id="1-先测核心行为"><a class="header" href="#1-先测核心行为">1. 先测核心行为</a></h3>
+<p>也就是这个函数最主要的承诺是什么。</p>
+<p>例如 <code>divide(a, b)</code>：</p>
+<ul>
+<li>正常除法能否返回结果</li>
+<li>除数为零时是否返回预期错误</li>
+</ul>
+<h3 id="2-再测边界条件"><a class="header" href="#2-再测边界条件">2. 再测边界条件</a></h3>
+<p>例如：</p>
+<ul>
+<li>空输入</li>
+<li>最小值/最大值</li>
+<li>长度为 0 或 1 的切片</li>
+<li>极小/极大容量</li>
+<li>容器空/满状态</li>
+</ul>
+<h3 id="3-再测失败路径"><a class="header" href="#3-再测失败路径">3. 再测失败路径</a></h3>
+<p>尤其是涉及：</p>
+<ul>
+<li>分配失败</li>
+<li>输入无效</li>
+<li>文件不存在</li>
+<li>解析失败</li>
+<li>资源初始化中途失败</li>
+</ul>
+<h3 id="4-最后再补回归测试"><a class="header" href="#4-最后再补回归测试">4. 最后再补回归测试</a></h3>
+<p>如果你修过一个 bug，就应该尽量为那个 bug 增加一个测试，让它以后不会悄悄回来。</p>
+<hr>
+<h2 id="一个更完整的测试示例"><a class="header" href="#一个更完整的测试示例">一个更完整的测试示例</a></h2>
+<p>下面这个例子展示了正常路径、边界条件和错误路径如何组合：</p>
 <pre><code class="language-zig">const std = @import("std");
 
-fn swap(a: *i32, b: *i32) void {
-    const temp = a.*;
-    a.* = b.*;
-    b.* = temp;
+fn firstOrError(items: []const i32) !i32 {
+    if (items.len == 0) return error.EmptyInput;
+    return items[0];
 }
 
-pub fn main(_: std.process.Init.Minimal) void {
-    var x: i32 = 10;
-    var y: i32 = 20;
-    
-    std.debug.print("交换前：x={}, y={}\n", .{ x, y });
-    swap(&amp;x, &amp;y);
-    std.debug.print("交换后：x={}, y={}\n", .{ x, y });
+test "firstOrError returns the first item for non-empty slices" {
+    const items = [_]i32{ 10, 20, 30 };
+    try std.testing.expectEqual(@as(i32, 10), try firstOrError(&amp;items));
+}
+
+test "firstOrError returns error.EmptyInput for empty slices" {
+    const items = [_]i32{};
+    try std.testing.expectError(error.EmptyInput, firstOrError(&amp;items));
 }
 </code></pre>
-<p><strong>题目2</strong>：编写一个函数，使用指针修改数组元素。</p>
-<p><strong>要求</strong>：</p>
+<p>这种结构很适合教程中的大多数模块：</p>
 <ul>
-<li>函数签名为 <code>fn doubleAll(arr: []i32) void</code></li>
-<li>将数组中所有元素乘以 2</li>
-<li>使用指针访问元素</li>
+<li>一个小函数</li>
+<li>两到三个行为测试</li>
+<li>明确区分正常路径和失败路径</li>
 </ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">fn doubleAll(arr: []i32) void {
-    for (arr) |*item| {
-        item.* *= 2;
+<hr>
+<h2 id="测试错误处理与失败路径"><a class="header" href="#测试错误处理与失败路径">测试错误处理与失败路径</a></h2>
+<p>Zig 的很多函数都会返回错误联合类型，例如 <code>!T</code>。<br>因此，测试时不能只验证“成功时结果对不对”，还要验证：</p>
+<ul>
+<li>什么时候会失败</li>
+<li>失败时返回的是哪个错误</li>
+<li>失败后资源是否仍然被正确清理</li>
+</ul>
+<h3 id="测试错误值"><a class="header" href="#测试错误值">测试错误值</a></h3>
+<pre><code class="language-zig">const std = @import("std");
+
+fn parsePort(text: []const u8) !u16 {
+    const port = std.fmt.parseInt(u16, text, 10) catch {
+        return error.InvalidPort;
+    };
+
+    if (port == 0) return error.InvalidPort;
+    return port;
+}
+
+test "parsePort accepts a valid port number" {
+    try std.testing.expectEqual(@as(u16, 8080), try parsePort("8080"));
+}
+
+test "parsePort rejects non-numeric input" {
+    try std.testing.expectError(error.InvalidPort, parsePort("abc"));
+}
+
+test "parsePort rejects zero" {
+    try std.testing.expectError(error.InvalidPort, parsePort("0"));
+}
+</code></pre>
+<h3 id="测试失败路径的价值"><a class="header" href="#测试失败路径的价值">测试失败路径的价值</a></h3>
+<p>这一类测试很重要，因为很多 bug 恰恰不是“正常情况写错了”，而是：</p>
+<ul>
+<li>出错时忘记返回正确错误</li>
+<li>对无效输入处理不完整</li>
+<li>中途失败后状态被破坏</li>
+<li>调用者无法据此做正确恢复</li>
+</ul>
+<hr>
+<h2 id="用测试验证资源释放责任"><a class="header" href="#用测试验证资源释放责任">用测试验证资源释放责任</a></h2>
+<p>在 Zig 中，资源释放责任需要说清楚。<br>测试也应该帮助你验证这件事。</p>
+<p>最常见的方式之一，是在测试中使用 <code>std.testing.allocator</code>。</p>
+<h3 id="stdtestingallocator-的作用"><a class="header" href="#stdtestingallocator-的作用"><code>std.testing.allocator</code> 的作用</a></h3>
+<p>它是测试环境中的专用分配器，适合用来帮助发现：</p>
+<ul>
+<li>内存泄漏</li>
+<li>重复释放</li>
+<li>一些资源使用不当的问题</li>
+</ul>
+<p>示例：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+fn duplicate(allocator: std.mem.Allocator, input: []const u8) ![]u8 {
+    const copy = try allocator.alloc(u8, input.len);
+    @memcpy(copy, input);
+    return copy;
+}
+
+test "duplicate allocates and returns a copy" {
+    const allocator = std.testing.allocator;
+
+    const result = try duplicate(allocator, "zig");
+    defer allocator.free(result);
+
+    try std.testing.expectEqualStrings("zig", result);
+}
+</code></pre>
+<p>这个测试除了检查功能，还隐含验证了一个重要契约：</p>
+<ul>
+<li><code>duplicate</code> 返回一段新分配的内存</li>
+<li>调用者拿到所有权</li>
+<li>因此调用者必须负责 <code>free</code></li>
+</ul>
+<h3 id="为什么这类测试很有价值"><a class="header" href="#为什么这类测试很有价值">为什么这类测试很有价值？</a></h3>
+<p>因为它迫使你把接口说清楚：</p>
+<ul>
+<li>是借用现有切片，还是返回新分配结果？</li>
+<li>谁负责释放？</li>
+<li>分配失败时会发生什么？</li>
+</ul>
+<p>如果这些问题在测试里说不清楚，通常说明接口本身也还不够清楚。</p>
+<hr>
+<h2 id="使用-defer-和-errdefer-设计可测试代码"><a class="header" href="#使用-defer-和-errdefer-设计可测试代码">使用 <code>defer</code> 和 <code>errdefer</code> 设计可测试代码</a></h2>
+<p>可测试的资源管理代码，往往也更容易写对。</p>
+<p>例如：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+fn buildMessage(allocator: std.mem.Allocator, name: []const u8) ![]u8 {
+    var list = std.ArrayList(u8).empty;
+    defer list.deinit(allocator);
+
+    try list.appendSlice(allocator, "hello, ");
+    try list.appendSlice(allocator, name);
+
+    return try allocator.dupe(u8, list.items);
+}
+
+test "buildMessage returns allocated greeting text" {
+    const allocator = std.testing.allocator;
+
+    const msg = try buildMessage(allocator, "zig");
+    defer allocator.free(msg);
+
+    try std.testing.expectEqualStrings("hello, zig", msg);
+}
+</code></pre>
+<p>这里你可以看到：</p>
+<ul>
+<li>临时容器 <code>list</code> 自己负责内部释放</li>
+<li>返回值 <code>msg</code> 的所有权转移给调用者</li>
+<li>测试里也因此必须显式 <code>free</code></li>
+</ul>
+<p>这类结构很符合 Zig 的风格：<br><strong>资源边界清楚，因此也更容易测试。</strong></p>
+<hr>
+<h2 id="嵌套测试它是什么什么时候关心"><a class="header" href="#嵌套测试它是什么什么时候关心">嵌套测试：它是什么，什么时候关心？</a></h2>
+<p>Zig 支持把 <code>test</code> 写在结构体等声明内部。<br>这通常被称为“嵌套测试”：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+const Counter = struct {
+    value: i32,
+
+    fn inc(self: *Counter) void {
+        self.value += 1;
     }
+
+    test "Counter.inc increases value by one" {
+        var c = Counter{ .value = 0 };
+        c.inc();
+        try std.testing.expectEqual(@as(i32, 1), c.value);
+    }
+};
+</code></pre>
+<h3 id="你第一次学习时要记住什么"><a class="header" href="#你第一次学习时要记住什么">你第一次学习时要记住什么？</a></h3>
+<p>最重要的是：</p>
+<ul>
+<li>这是 Zig 支持的一种测试组织方式</li>
+<li>它适合把小范围行为测试放在声明附近</li>
+<li>但它不是你一开始必须依赖的主线能力</li>
+</ul>
+<p>很多时候，<strong>顶层测试块已经足够</strong>。</p>
+<h3 id="关于-refalldecls"><a class="header" href="#关于-refalldecls">关于 <code>refAllDecls</code></a></h3>
+<p>你在一些资料中可能会看到 <code>std.testing.refAllDecls(...)</code>。<br>它的作用通常是帮助引用声明，从而让某些嵌套测试也被纳入测试流程。</p>
+<p>但对本教程阶段来说，更值得记住的是这条原则：</p>
+<blockquote>
+<p><strong>先把顶层测试写清楚，再把嵌套测试当作组织手段，而不是核心能力。</strong></p>
+</blockquote>
+<p>也就是说，<code>refAllDecls</code> 是“知道它存在即可”的高级补充，第一次阅读不必深究其内部机制。</p>
+<hr>
+<h2 id="测试过滤与选择性运行"><a class="header" href="#测试过滤与选择性运行">测试过滤与选择性运行</a></h2>
+<p>当测试数量变多时，你通常不会每次都想跑全部测试。<br>这时可以使用测试过滤。</p>
+<p>例如：</p>
+<pre><code class="language-bash">zig test src/math.zig --test-filter "divide"
+</code></pre>
+<p>这个命令的意义是：</p>
+<ul>
+<li>运行测试文件</li>
+<li>只执行名称匹配 <code>"divide"</code> 的测试块</li>
+</ul>
+<p>所以，测试名称写得清楚就会很有帮助。<br>例如：</p>
+<ul>
+<li><code>divide returns DivisionByZero when divisor is zero</code></li>
+<li><code>divide truncates integer division toward zero</code></li>
+</ul>
+<p>都比简单写成 <code>test1</code>、<code>divide test</code> 更好。</p>
+<hr>
+<h2 id="怎样给测试命名更清楚"><a class="header" href="#怎样给测试命名更清楚">怎样给测试命名更清楚？</a></h2>
+<p>推荐的命名风格是：</p>
+<ul>
+<li>描述<strong>对象</strong></li>
+<li>描述<strong>条件</strong></li>
+<li>描述<strong>预期行为</strong></li>
+</ul>
+<p>例如：</p>
+<ul>
+<li><code>parsePort rejects zero</code></li>
+<li><code>Stack.pop returns null when the stack is empty</code></li>
+<li><code>Config.get returns default value when field is unset</code></li>
+</ul>
+<p>这种风格有两个好处：</p>
+<ol>
+<li>读测试列表时就能大致知道覆盖了什么</li>
+<li>测试失败时，日志本身就像一句行为说明</li>
+</ol>
+<hr>
+<h2 id="什么是好测试"><a class="header" href="#什么是好测试">什么是“好测试”？</a></h2>
+<p>好测试通常有这些特征：</p>
+<h3 id="1-关注一个明确行为"><a class="header" href="#1-关注一个明确行为">1. 关注一个明确行为</a></h3>
+<p>不要在一个测试里同时验证十件事。<br>否则一旦失败，很难快速定位原因。</p>
+<h3 id="2-输入和预期都清楚"><a class="header" href="#2-输入和预期都清楚">2. 输入和预期都清楚</a></h3>
+<p>不要让读者猜这个测试到底在验证什么。</p>
+<h3 id="3-命名像一句行为描述"><a class="header" href="#3-命名像一句行为描述">3. 命名像一句行为描述</a></h3>
+<p>测试名本身应该能帮助理解代码。</p>
+<h3 id="4-对失败路径同样重视"><a class="header" href="#4-对失败路径同样重视">4. 对失败路径同样重视</a></h3>
+<p>尤其是在 Zig 中，这一点非常关键。</p>
+<h3 id="5-不依赖隐式全局状态"><a class="header" href="#5-不依赖隐式全局状态">5. 不依赖隐式全局状态</a></h3>
+<p>如果测试必须依赖复杂外部状态，通常说明设计可以继续改进。</p>
+<hr>
+<h2 id="一个简单容器测试示例"><a class="header" href="#一个简单容器测试示例">一个简单容器测试示例</a></h2>
+<p>下面是一个更贴近第二部分后续章节的例子：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+const Stack = struct {
+    items: [4]i32 = undefined,
+    len: usize = 0,
+
+    fn push(self: *Stack, value: i32) !void {
+        if (self.len &gt;= self.items.len) return error.Full;
+        self.items[self.len] = value;
+        self.len += 1;
+    }
+
+    fn pop(self: *Stack) ?i32 {
+        if (self.len == 0) return null;
+        self.len -= 1;
+        return self.items[self.len];
+    }
+};
+
+test "Stack.pop returns null when empty" {
+    var stack = Stack{};
+    try std.testing.expectEqual(@as(?i32, null), stack.pop());
 }
 
-pub fn main(_: std.process.Init.Minimal) void {
-    var arr = [_]i32{ 1, 2, 3, 4, 5 };
-    doubleAll(&amp;arr);
-    std.debug.print("结果：{any}\n", .{arr});
+test "Stack.push and Stack.pop follow LIFO order" {
+    var stack = Stack{};
+
+    try stack.push(10);
+    try stack.push(20);
+
+    try std.testing.expectEqual(@as(?i32, 20), stack.pop());
+    try std.testing.expectEqual(@as(?i32, 10), stack.pop());
+    try std.testing.expectEqual(@as(?i32, null), stack.pop());
+}
+
+test "Stack.push returns error.Full when capacity is exceeded" {
+    var stack = Stack{};
+
+    try stack.push(1);
+    try stack.push(2);
+    try stack.push(3);
+    try stack.push(4);
+
+    try std.testing.expectError(error.Full, stack.push(5));
 }
 </code></pre>
-<p><strong>题目3</strong>：编写一个函数，使用 const 指针读取数据。</p>
-<p><strong>要求</strong>：</p>
+<p>这个例子很适合观察几个测试设计要点：</p>
 <ul>
-<li>函数签名为 <code>fn sum(arr: *const [5]i32) i32</code></li>
-<li>使用 const 指针参数</li>
-<li>计算数组元素之和</li>
+<li>空容器行为单独测</li>
+<li>正常顺序行为单独测</li>
+<li>容量溢出错误单独测</li>
 </ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">fn sum(arr: *const [5]i32) i32 {
-    var total: i32 = 0;
-    for (arr.*) |item| {
+<p>而不是把这三件事塞进一个超长测试里。</p>
+<hr>
+<h2 id="基准测试先把定位说清楚"><a class="header" href="#基准测试先把定位说清楚">基准测试：先把定位说清楚</a></h2>
+<p>很多人第一次接触“基准测试”时，会下意识把它理解成：</p>
+<ul>
+<li>复杂性能平台</li>
+<li>非常精密的测量框架</li>
+<li>一套必须标准化的流程</li>
+</ul>
+<p>但在教程阶段，更重要的是先建立正确认识：</p>
+<blockquote>
+<p><strong>基准测试的目标，不是“看起来很专业地测一个数字”，而是帮助你比较实现差异，并验证优化是否真的有效。</strong></p>
+</blockquote>
+<h3 id="先记住三条原则"><a class="header" href="#先记住三条原则">先记住三条原则</a></h3>
+<ol>
+<li><strong>先保证正确，再谈快</strong></li>
+<li><strong>先测量，再优化</strong></li>
+<li><strong>对结果保持怀疑，避免过度解读一次测量</strong></li>
+</ol>
+<hr>
+<h2 id="用-stdtimetimer-做简单测量"><a class="header" href="#用-stdtimetimer-做简单测量">用 <code>std.time.Timer</code> 做简单测量</a></h2>
+<p>在本教程里，我们先用最轻量的方式理解基准测量：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+fn sum(items: []const u64) u64 {
+    var total: u64 = 0;
+    for (items) |item| {
         total += item;
     }
     return total;
 }
 
-pub fn main(_: std.process.Init.Minimal) void {
-    const arr = [_]i32{ 1, 2, 3, 4, 5 };
-    const result = sum(&amp;arr);
-    std.debug.print("总和：{}\n", .{result});
+test "simple timing example" {
+    var data: [1000]u64 = undefined;
+    for (&amp;data, 0..) |*item, i| {
+        item.* = i;
+    }
+
+    var timer = try std.time.Timer.start();
+    const result = sum(&amp;data);
+    const elapsed_ns = timer.read();
+
+    try std.testing.expect(result &gt; 0);
+
+    std.debug.print("sum elapsed: {} ns\n", .{elapsed_ns});
 }
 </code></pre>
-<h1 id="进阶题"><a class="header" href="#进阶题">进阶题</a></h1>
-<p><strong>题目1</strong>：实现一个简单的链表节点结构，使用指针链接。</p>
-<p><strong>要求</strong>：</p>
+<h3 id="这类测量要怎么理解"><a class="header" href="#这类测量要怎么理解">这类测量要怎么理解？</a></h3>
+<p>它适合：</p>
 <ul>
-<li>定义链表节点结构</li>
-<li>实现插入和遍历功能</li>
-<li>使用指针管理节点</li>
+<li>粗略观察某段逻辑耗时</li>
+<li>对比两个实现的大致差异</li>
+<li>作为“是否值得继续分析”的第一步</li>
 </ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-const Node = struct {
-    value: i32,
-    next: ?*Node,
-    
-    fn init(value: i32) Node {
-        return Node{
-            .value = value,
-            .next = null,
-        };
-    }
-};
-
-pub fn main(_: std.process.Init.Minimal) void {
-    var node1 = Node.init(1);
-    var node2 = Node.init(2);
-    var node3 = Node.init(3);
-    
-    node1.next = &amp;node2;
-    node2.next = &amp;node3;
-    
-    var current: ?*Node = &amp;node1;
-    while (current) |node| {
-        std.debug.print("{} -&gt; ", .{node.value});
-        current = node.next;
-    }
-    std.debug.print("null\n", .{});
-}
-</code></pre>
-<p><strong>题目2</strong>：使用多级指针实现二维数组的动态分配。</p>
-<p><strong>要求</strong>：</p>
+<p>它不适合：</p>
 <ul>
-<li>使用二级指针</li>
-<li>分配 3x3 的二维数组</li>
-<li>初始化并输出数组</li>
+<li>得出非常精确、可移植、可复现的性能结论</li>
+<li>忽略环境因素后直接宣布“实现 A 一定比实现 B 快”</li>
+<li>代替更严谨的性能分析工具</li>
 </ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn main(_: std.process.Init.Minimal) !void {
-    var gpa: std.heap.DebugAllocator(.{}) = .init;
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
-    
-    const rows: usize = 3;
-    const cols: usize = 3;
-    
-    var matrix = try allocator.alloc([]i32, rows);
-    defer allocator.free(matrix);
-    
-    for (0..rows) |i| {
-        matrix[i] = try allocator.alloc(i32, cols);
-        for (0..cols) |j| {
-            matrix[i][j] = @intCast(i * cols + j);
-        }
-    }
-    
-    defer {
-        for (matrix) |row| {
-            allocator.free(row);
-        }
-    }
-    
-    for (matrix, 0..) |row, i| {
-        std.debug.print("行 {}: {any}\n", .{ i, row });
-    }
-}
-</code></pre>
-<h1 id="挑战题"><a class="header" href="#挑战题">挑战题</a></h1>
-<p><strong>题目</strong>：实现一个简单的二叉树结构，使用指针管理节点。</p>
-<p><strong>要求</strong>：</p>
-<ul>
-<li>定义二叉树节点结构</li>
-<li>实现插入和遍历功能</li>
-<li>使用递归遍历</li>
-</ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-const TreeNode = struct {
-    value: i32,
-    left: ?*TreeNode,
-    right: ?*TreeNode,
-    
-    fn init(value: i32) TreeNode {
-        return TreeNode{
-            .value = value,
-            .left = null,
-            .right = null,
-        };
-    }
-    
-    fn insert(node: *TreeNode, value: i32) void {
-        if (value &lt; node.value) {
-            if (node.left) |left| {
-                left.insert(value);
-            } else {
-                // 需要分配器来创建新节点
-                // 这里简化处理
-            }
-        } else {
-            if (node.right) |right| {
-                right.insert(value);
-            } else {
-                // 需要分配器来创建新节点
-                // 这里简化处理
-            }
-        }
-    }
-    
-    fn inorder(node: *const TreeNode) void {
-        if (node.left) |left| {
-            left.inorder();
-        }
-        std.debug.print("{} ", .{node.value});
-        if (node.right) |right| {
-            right.inorder();
-        }
-    }
-};
-
-pub fn main(_: std.process.Init.Minimal) void {
-    var root = TreeNode.init(5);
-    var left = TreeNode.init(3);
-    var right = TreeNode.init(7);
-    
-    root.left = &amp;left;
-    root.right = &amp;right;
-    
-    std.debug.print("中序遍历：", .{});
-    root.inorder();
-    std.debug.print("\n", .{});
-}
-</code></pre>
 <hr>
-<h1 id="章节练习题-1"><a class="header" href="#章节练习题-1">章节练习题</a></h1>
-<h1 id="基础题-1"><a class="header" href="#基础题-1">基础题</a></h1>
-<p><strong>题目1</strong>：编写一个简单的单元测试，验证加法函数。</p>
-<p><strong>要求</strong>：</p>
+<h2 id="为什么基准测试容易误导"><a class="header" href="#为什么基准测试容易误导">为什么基准测试容易误导？</a></h2>
+<p>因为性能受很多因素影响：</p>
 <ul>
-<li>创建一个 <code>add</code> 函数</li>
-<li>使用 <code>test</code> 块编写测试</li>
-<li>使用 <code>std.testing.expect</code> 断言</li>
+<li>编译优化级别</li>
+<li>输入规模</li>
+<li>数据分布</li>
+<li>缓存状态</li>
+<li>机器负载</li>
+<li>操作系统调度</li>
+<li>是否包含 I/O</li>
+<li>是否包含内存分配</li>
 </ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-fn add(a: i32, b: i32) i32 {
-    return a + b;
-}
-
-test "add function" {
-    try std.testing.expect(add(2, 3) == 5);
-    try std.testing.expect(add(-1, 1) == 0);
-    try std.testing.expect(add(0, 0) == 0);
-}
-</code></pre>
-<p><strong>运行测试</strong>：</p>
-<pre><code class="language-bash">zig test main.zig
-</code></pre>
-<p><strong>题目2</strong>：编写测试验证错误处理函数。</p>
-<p><strong>要求</strong>：</p>
+<p>所以，看到一次测量结果后，更成熟的做法是问：</p>
 <ul>
-<li>创建一个可能失败的函数</li>
-<li>测试成功和失败情况</li>
-<li>使用 <code>std.testing.expectError</code></li>
+<li>这个输入是否具有代表性？</li>
+<li>测到的是目标逻辑，还是别的开销？</li>
+<li>是否需要多次重复？</li>
+<li>是否需要换一个更贴近实际的数据集？</li>
 </ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-const MathError = error{
-    DivisionByZero,
-};
-
-fn divide(a: i32, b: i32) MathError!i32 {
-    if (b == 0) return error.DivisionByZero;
-    return @divTrunc(a, b);
-}
-
-test "divide success" {
-    const result = try divide(10, 2);
-    try std.testing.expect(result == 5);
-}
-
-test "divide by zero" {
-    try std.testing.expectError(error.DivisionByZero, divide(10, 0));
-}
-</code></pre>
-<p><strong>题目3</strong>：编写表格驱动测试。</p>
-<p><strong>要求</strong>：</p>
+<hr>
+<h2 id="测试与基准测试不要混在一起理解"><a class="header" href="#测试与基准测试不要混在一起理解">测试与基准测试不要混在一起理解</a></h2>
+<p>虽然测试和基准都用于“验证”，但它们关注的问题不同。</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>类型</th><th>主要问题</th><th>典型输出</th></tr>
+</thead>
+<tbody>
+<tr><td>测试</td><td>对不对</td><td>通过 / 失败</td></tr>
+<tr><td>基准</td><td>快不快</td><td>时间、吞吐、分配次数等</td></tr>
+</tbody>
+</table>
+</div>
+<p>所以更合理的顺序是：</p>
+<ol>
+<li>先确认逻辑正确</li>
+<li>再确认错误路径可靠</li>
+<li>最后才讨论性能表现</li>
+</ol>
+<hr>
+<h2 id="版本敏感说明哪些内容值得小心"><a class="header" href="#版本敏感说明哪些内容值得小心">版本敏感说明：哪些内容值得小心？</a></h2>
+<p>这一章里，真正稳定、应优先掌握的主线是：</p>
 <ul>
-<li>使用结构体数组定义测试用例</li>
-<li>遍历测试用例进行验证</li>
-<li>输出失败的测试用例</li>
+<li><code>test</code> 块</li>
+<li><code>std.testing.expect*</code></li>
+<li><code>expectError</code></li>
+<li><code>std.testing.allocator</code></li>
+<li>测试过滤</li>
+<li>用小而清楚的案例验证行为</li>
 </ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-fn isEven(n: i32) bool {
-    return n % 2 == 0;
-}
-
-test "isEven table driven" {
-    const cases = [_]struct {
-        input: i32,
-        expected: bool,
-    }{
-        .{ .input = 2, .expected = true },
-        .{ .input = 3, .expected = false },
-        .{ .input = 0, .expected = true },
-        .{ .input = -4, .expected = true },
-        .{ .input = -5, .expected = false },
-    };
-
-    for (cases) |c| {
-        try std.testing.expectEqual(c.expected, isEven(c.input));
-    }
-}
-</code></pre>
-<h1 id="进阶题-1"><a class="header" href="#进阶题-1">进阶题</a></h1>
-<p><strong>题目1</strong>：编写基准测试，比较不同算法的性能。</p>
-<p><strong>要求</strong>：</p>
+<p>而下面这些内容，相对更容易受到版本、构建方式或工程结构影响：</p>
 <ul>
-<li>实现两个不同的排序算法</li>
-<li>使用 <code>std.time</code> 测量执行时间</li>
-<li>输出性能对比结果</li>
+<li>更复杂的构建系统集成方式</li>
+<li>CI 配置细节</li>
+<li>某些基准脚手架或命令行习惯</li>
+<li>标准库内部辅助工具的具体接口形式</li>
 </ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">// ✨ 新特性：DebugAllocator
-const std = @import("std");
-
-fn bubbleSort(arr: []i32) void {
-    var swapped = true;
-    while (swapped) {
-        swapped = false;
-        for (arr[0 .. arr.len - 1], 0..) |*item, i| {
-            if (item.* &gt; arr[i + 1]) {
-                const temp = item.*;
-                item.* = arr[i + 1];
-                arr[i + 1] = temp;
-                swapped = true;
-            }
-        }
-    }
-}
-
-fn quickSort(arr: []i32, low: usize, high: usize) void {
-    if (low &lt; high) {
-        const pivot = arr[high];
-        var i = low;
-        for (low..high) |j| {
-            if (arr[j] &lt; pivot) {
-                const temp = arr[i];
-                arr[i] = arr[j];
-                arr[j] = temp;
-                i += 1;
-            }
-        }
-        const temp = arr[i];
-        arr[i] = arr[high];
-        arr[high] = temp;
-
-        quickSort(arr, low, i - 1);
-        quickSort(arr, i + 1, high);
-    }
-}
-
-test "sort performance comparison" {
-    var gpa: std.heap.DebugAllocator(.{}) = .init;
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
-
-    const size: usize = 1000;
-    var arr1 = try allocator.alloc(i32, size);
-    defer allocator.free(arr1);
-    var arr2 = try allocator.alloc(i32, size);
-    defer allocator.free(arr2);
-
-    // 初始化数组
-    for (0..size) |i| {
-        arr1[i] = @intCast(size - i);
-        arr2[i] = @intCast(size - i);
-    }
-
-    // 测量冒泡排序
-    const start1 = std.time.nanoTimestamp();
-    bubbleSort(arr1);
-    const end1 = std.time.nanoTimestamp();
-
-    // 测量快速排序
-    const start2 = std.time.nanoTimestamp();
-    quickSort(arr2, 0, arr2.len - 1);
-    const end2 = std.time.nanoTimestamp();
-
-    std.debug.print("冒泡排序：{} ns\n", .{end1 - start1});
-    std.debug.print("快速排序：{} ns\n", .{end2 - start2});
-}
-</code></pre>
-<p><strong>题目2</strong>：编写测试辅助函数，简化测试代码。</p>
-<p><strong>要求</strong>：</p>
+<p>因此，本章刻意不把重点放在“记很多构建细节”上。<br>你更应该先掌握的是：</p>
+<blockquote>
+<p><strong>如何把一个 Zig 接口拆成可验证的行为，并为这些行为写出清楚的小测试。</strong></p>
+</blockquote>
+<p>至于更复杂的构建集成，可以结合后续构建系统章节再看。</p>
+<hr>
+<h2 id="常见误区"><a class="header" href="#常见误区">常见误区</a></h2>
+<h3 id="1-只测快乐路径"><a class="header" href="#1-只测快乐路径">1. 只测快乐路径</a></h3>
+<p>这是最常见的问题。<br>尤其在 Zig 中，失败路径常常更值得测。</p>
+<h3 id="2-一个测试塞太多断言"><a class="header" href="#2-一个测试塞太多断言">2. 一个测试塞太多断言</a></h3>
+<p>这样失败时难以定位问题。</p>
+<h3 id="3-不清楚谁负责释放资源"><a class="header" href="#3-不清楚谁负责释放资源">3. 不清楚谁负责释放资源</a></h3>
+<p>如果测试里说不清楚所有权，接口设计往往也还不够清楚。</p>
+<h3 id="4-测试名太模糊"><a class="header" href="#4-测试名太模糊">4. 测试名太模糊</a></h3>
+<p>模糊的测试名会让失败日志失去价值。</p>
+<h3 id="5-把一次简单计时当成最终性能结论"><a class="header" href="#5-把一次简单计时当成最终性能结论">5. 把一次简单计时当成最终性能结论</a></h3>
+<p>基准测量应该帮助你提出更好的问题，而不是让你过早下结论。</p>
+<hr>
+<h2 id="推荐的写测试顺序"><a class="header" href="#推荐的写测试顺序">推荐的写测试顺序</a></h2>
+<p>当你写一个新模块时，可以参考下面这个顺序：</p>
+<ol>
+<li>先写一个最小成功案例</li>
+<li>再写一个最小失败案例</li>
+<li>再补边界输入</li>
+<li>如果涉及分配，加入资源释放检查</li>
+<li>如果未来可能优化，再补简单计时比较</li>
+</ol>
+<p>这套顺序很适合 Zig，因为它天然贴合：</p>
 <ul>
-<li>创建自定义断言函数</li>
-<li>提供更详细的错误信息</li>
-<li>支持多种数据类型</li>
+<li>显式错误处理</li>
+<li>显式资源管理</li>
+<li>小步验证</li>
+<li>先正确再优化</li>
 </ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-fn assertEqual(comptime T: type, expected: T, actual: T, message: []const u8) !void {
-    if (expected != actual) {
-        std.debug.print("断言失败：{s}\n", .{message});
-        std.debug.print("  期望：{}\n", .{expected});
-        std.debug.print("  实际：{}\n", .{actual});
-        return error.TestFailed;
-    }
-}
-
-fn assertSliceEqual(comptime T: type, expected: []const T, actual: []const T) !void {
-    if (expected.len != actual.len) {
-        std.debug.print("切片长度不匹配：{} != {}\n", .{ expected.len, actual.len });
-        return error.TestFailed;
-    }
-
-    for (expected, actual, 0..) |e, a, i| {
-        if (e != a) {
-            std.debug.print("切片元素不匹配，索引 {}：{} != {}\n", .{ i, e, a });
-            return error.TestFailed;
-        }
-    }
-}
-
-test "custom assertions" {
-    try assertEqual(i32, 42, 42, "数值应该相等");
-    try assertSliceEqual(u8, "hello", "hello");
-}
-</code></pre>
-<h1 id="挑战题-1"><a class="header" href="#挑战题-1">挑战题</a></h1>
-<p><strong>题目</strong>：实现一个完整的测试框架，支持测试套件和测试报告。</p>
-<p><strong>要求</strong>：</p>
+<hr>
+<h2 id="小结"><a class="header" href="#小结">小结</a></h2>
+<p>这一章最重要的，不是记住一长串测试 API，而是建立下面这些习惯：</p>
 <ul>
-<li>支持测试套件组织</li>
-<li>提供测试报告生成</li>
-<li>支持测试过滤</li>
+<li>把测试当成接口设计的一部分</li>
+<li>优先验证行为、边界和错误路径</li>
+<li>用 <code>std.testing</code> 写小而清楚的断言</li>
+<li>用 <code>std.testing.allocator</code> 帮助检查资源释放责任</li>
+<li>把基准测试当成“测量与比较工具”，而不是装饰性的性能数字</li>
 </ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-const TestResult = struct {
-    name: []const u8,
-    passed: bool,
-    duration_ns: i64,
-    error_msg: ?[]const u8,
-};
-
-const TestSuite = struct {
-    name: []const u8,
-    tests: std.ArrayList(TestResult),
-    
-    fn init(allocator: std.mem.Allocator, name: []const u8) TestSuite {
-        return .{
-            .name = name,
-            .tests = std.ArrayList(TestResult).init(allocator),
-        };
-    }
-    
-    fn deinit(self: *TestSuite) void {
-        self.tests.deinit();
-    }
-    
-    fn addTest(self: *TestSuite, name: []const u8, test_fn: fn () anyerror!void) void {
-        const start = std.time.nanoTimestamp();
-        var result = TestResult{
-            .name = name,
-            .passed = false,
-            .duration_ns = 0,
-            .error_msg = null,
-        };
-        
-        test_fn() catch |err| {
-            result.error_msg = @errorName(err);
-        };
-        
-        const end = std.time.nanoTimestamp();
-        result.duration_ns = end - start;
-        result.passed = result.error_msg == null;
-        
-        self.tests.append(result) catch {};
-    }
-    
-    fn printReport(self: *TestSuite) void {
-        std.debug.print("\n=== 测试报告：{s} ===\n\n", .{self.name});
-        
-        var passed: usize = 0;
-        var failed: usize = 0;
-        
-        for (self.tests.items) |test_result| {
-            if (test_result.passed) {
-                passed += 1;
-                std.debug.print("✓ {s} ({} ns)\n", .{ test_result.name, test_result.duration_ns });
-            } else {
-                failed += 1;
-                std.debug.print("✗ {s} - {s}\n", .{ test_result.name, test_result.error_msg.? });
-            }
-        }
-        
-        std.debug.print("\n总计：{} 通过，{} 失败\n", .{ passed, failed });
-    }
-};
-
-test "test framework" {
-    var gpa: std.heap.DebugAllocator(.{}) = .init;
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
-    
-    var suite = TestSuite.init(allocator, "数学函数测试");
-    defer suite.deinit();
-    
-    suite.addTest("加法测试", struct {
-        fn test() anyerror!void {
-            try std.testing.expect(2 + 2 == 4);
-        }
-    }.test);
-    
-    suite.addTest("减法测试", struct {
-        fn test() anyerror!void {
-            try std.testing.expect(5 - 3 == 2);
-        }
-    }.test);
-    
-    suite.printReport();
-}
-
----
-
-## 第三部分：实战案例
-
-&gt; 💡 **章节过渡**：从测试到实战案例
-&gt; 
-&gt; 在[实战案例1 - CLI工具开发](../part3-practice/chapter-cli-tool.md)中，我们学习了测试与基准测试，掌握了如何验证代码的正确性和性能。
-&gt; 现在，我们将通过实战案例巩固所学知识，从 CLI 工具开发开始。
-&gt; 
-&gt; **为什么测试是实战开发的基础？**
-&gt; 
-&gt; 1. **质量保证**：测试驱动开发（TDD）确保代码质量
-&gt; 2. **重构信心**：有测试覆盖的代码更容易重构
-&gt; 3. **文档作用**：测试用例本身就是最好的文档
-&gt; 
-&gt; **学习建议**：
-&gt; - 在开发实战案例时，养成编写测试的习惯
-&gt; - 使用基准测试验证性能优化效果
-&gt; - 将测试作为开发流程的一部分
-</code></pre>
+<p>如果你在读完本章后，已经能自然地问自己：</p>
+<ul>
+<li>这个函数最重要的行为是什么？</li>
+<li>它失败时应该怎么表现？</li>
+<li>谁拥有返回的资源？</li>
+<li>我能不能用一个小测试把这些契约说清楚？</li>
+</ul>
+<p>那么这一章就达到目的了。</p>
+<hr>
+<blockquote>
+<p>💡 <strong>下一章预告</strong></p>
+<p>下一章我们将进入 <a href="chapter-package-management.html">构建系统与包管理</a>，继续把“代码能写对”推进到“项目能组织、能构建、能复用”。</p>
+</blockquote>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../part2-advanced/chapter-package-management.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../part2-advanced/chapter-concurrency.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../part3-practice/chapter-cli-tool.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../part2-advanced/chapter-package-management.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -1686,11 +865,11 @@ test "test framework" {
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../part2-advanced/chapter-package-management.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../part2-advanced/chapter-concurrency.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../part3-practice/chapter-cli-tool.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../part2-advanced/chapter-package-management.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>

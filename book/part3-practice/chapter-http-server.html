@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>【draft】实战案例 - HTTP服务器开发 - Zig 编程语言入门教程</title>
+        <title>实战案例 - HTTP 服务器设计与最小实现 - Zig 编程语言入门教程</title>
 
 
         <!-- Custom HTML head -->
@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-a9ca16c2.js";
+            window.path_to_searchindex_js = "../searchindex-35211ac1.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-2fc75e4c.js"></script>
+        <script src="../toc-6dcbe846.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -181,288 +181,209 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="draft实战案例---http服务器开发"><a class="header" href="#draft实战案例---http服务器开发">【draft】实战案例 - HTTP服务器开发</a></h1>
+                        <h1 id="实战案例---http-服务器设计与最小实现"><a class="header" href="#实战案例---http-服务器设计与最小实现">实战案例 - HTTP 服务器设计与最小实现</a></h1>
+<p>这一章的目标，不是带你做一个“可直接上线的完整 Web 服务器”，而是帮助你建立一个更重要的判断：</p>
 <blockquote>
-<p>⚠️ <strong>网络 API 稳定性警告</strong>：本章使用的网络 API 正在快速演变。</p>
-<ul>
-<li><strong>模块迁移</strong>：<code>std.net</code> → <code>std.Io.net</code> 迁移仍在进行中</li>
-<li><strong>API 变化</strong>：网络相关函数签名可能继续调整</li>
-<li><strong>兼容性</strong>：示例代码基于 0.16.0-dev，可能需要适配</li>
-<li><strong>建议</strong>：关注官方 issue #25770 和社区讨论获取最新信息</li>
-</ul>
+<p><strong>一个最小 HTTP 服务器，真正需要解决哪些问题？</strong></p>
 </blockquote>
-<h1 id="2001-http协议基础"><a class="header" href="#2001-http协议基础">20.0.1 HTTP协议基础</a></h1>
-<h1 id="什么是http服务器"><a class="header" href="#什么是http服务器">什么是HTTP服务器？</a></h1>
-<p>HTTP服务器本质上是一个持续运行的程序，等待客户端连接并交换HTTP消息。可以将HTTP服务器想象成酒店的接待员：</p>
-<p><strong>酒店接待员比喻</strong>：</p>
+<p>如果你第一次接触 Zig 中的网络编程，很容易把注意力全部放在某个具体 API 上：怎么监听端口、怎么 accept、怎么 read、怎么 write。<br>但对教程读者来说，更重要的其实是先看清下面这些设计约束：</p>
 <ul>
-<li>接待员在酒店前台等待客人到达</li>
-<li>当客人到达时，接待员开始对话，询问住宿需求</li>
-<li>接待员查找可用房间，处理入住手续，交付钥匙</li>
-<li>完成后，接待员回到等待状态，等待下一位客人</li>
+<li>服务器要维护什么最小状态？</li>
+<li>一次连接的生命周期如何组织？</li>
+<li>请求读取和请求解析分别是什么问题？</li>
+<li>响应生成应该放在哪一层？</li>
+<li>哪些地方是“教学简化”，哪些地方在真实工程里必须继续补上？</li>
 </ul>
-<p>HTTP服务器的工作流程与此类似：</p>
+<blockquote>
+<p>⚠️ <strong>阅读提醒</strong></p>
+<p>本章涉及的网络与 I/O 接口属于 <strong>Zig 0.16.0-dev 语境下较容易变化的区域</strong>。<br>因此，本章更适合被理解为：</p>
+<ul>
+<li><strong>设计导向的最小服务器原型</strong></li>
+<li><strong>版本敏感 API 背景下的结构化阅读示例</strong></li>
+<li><strong>帮助你建立“连接 → 请求 → 响应 → 关闭”主流程直觉的教学案例</strong></li>
+</ul>
+<p>请不要把文中的每个接口签名都当成长期稳定不变的规范。<br>真正落地时，应结合你本地 Zig 版本和标准库源码核对细节。</p>
+</blockquote>
+<h2 id="先明确这一章不试图解决什么"><a class="header" href="#先明确这一章不试图解决什么">先明确：这一章不试图解决什么？</a></h2>
+<p>为了让案例保持清晰，本章故意<strong>不</strong>解决下面这些问题：</p>
+<ul>
+<li>完整 HTTP 协议实现</li>
+<li>持久连接（keep-alive）</li>
+<li>大请求体处理</li>
+<li>分块传输编码</li>
+<li>路由参数与中间件系统</li>
+<li>并发连接处理</li>
+<li>TLS / HTTPS</li>
+<li>超时、限流、防攻击、防慢连接等生产级防护</li>
+<li>高性能缓冲策略与零拷贝优化</li>
+</ul>
+<p>换句话说，这一章的重点不是“把服务器做全”，而是：</p>
+<blockquote>
+<p><strong>先做一个足够小、足够清楚、足够诚实的最小模型。</strong></p>
+</blockquote>
+<p>如果你先把这个最小模型理解透了，之后无论你是继续读标准库源码，还是迁移到第三方网络库，都会更容易判断“哪些复杂度是真需要的”。</p>
+<h2 id="一个最小-http-服务器到底在做什么"><a class="header" href="#一个最小-http-服务器到底在做什么">一个最小 HTTP 服务器到底在做什么？</a></h2>
+<p>从结构上看，一个最小 HTTP 服务器通常只需要完成 5 件事：</p>
 <ol>
-<li><strong>等待连接</strong>：服务器在指定端口监听，等待客户端连接</li>
-<li><strong>接受连接</strong>：客户端发起连接，服务器接受</li>
-<li><strong>处理请求</strong>：服务器读取并解析HTTP请求</li>
-<li><strong>发送响应</strong>：服务器执行请求操作，返回HTTP响应</li>
-<li><strong>关闭连接</strong>：完成通信后关闭连接</li>
+<li><strong>监听端口</strong></li>
+<li><strong>接受连接</strong></li>
+<li><strong>读取请求的起始数据</strong></li>
+<li><strong>根据请求路径生成响应</strong></li>
+<li><strong>写回响应并关闭连接</strong></li>
 </ol>
-<h1 id="http请求格式"><a class="header" href="#http请求格式">HTTP请求格式</a></h1>
-<p>HTTP请求由三部分组成：</p>
-<pre><code>请求行
-请求头
-请求体（可选）
-</code></pre>
-<p><strong>示例</strong>：</p>
-<pre><code class="language-http">GET /index.html HTTP/1.1
-Host: www.example.com
-User-Agent: Mozilla/5.0
-Accept: text/html
-
-</code></pre>
-<p><strong>请求行解析</strong>：</p>
+<p>这个流程已经能把服务器端最核心的资源边界暴露出来：</p>
 <ul>
-<li><code>GET</code>：请求方法（GET、POST、PUT、DELETE等）</li>
-<li><code>/index.html</code>：请求路径</li>
-<li><code>HTTP/1.1</code>：HTTP协议版本</li>
+<li>监听套接字何时创建、何时释放</li>
+<li>每个连接何时接受、何时关闭</li>
+<li>请求缓冲区由谁持有</li>
+<li>响应字符串由谁分配、由谁释放</li>
+<li>错误出现时，哪些资源必须仍然被清理</li>
 </ul>
-<h1 id="http响应格式"><a class="header" href="#http响应格式">HTTP响应格式</a></h1>
-<p>HTTP响应也由三部分组成：</p>
-<pre><code>状态行
-响应头
-响应体
-</code></pre>
-<p><strong>示例</strong>：</p>
-<pre><code class="language-http">HTTP/1.1 200 OK
-Content-Type: text/html
-Content-Length: 1234
-
-&lt;html&gt;
-  &lt;body&gt;
-    &lt;h1&gt;Hello, World!&lt;/h1&gt;
-  &lt;/body&gt;
-&lt;/html&gt;
-</code></pre>
-<p><strong>状态行解析</strong>：</p>
+<h2 id="这一章的实现约束"><a class="header" href="#这一章的实现约束">这一章的实现约束</a></h2>
+<p>为了保持案例的教学价值，我们先明确采用以下约束。</p>
+<h3 id="1-同步处理模型"><a class="header" href="#1-同步处理模型">1. 同步处理模型</a></h3>
+<p>一次只处理一个连接，不引入线程池或事件循环。</p>
+<p>这样做的目的不是说“同步模型最好”，而是为了先把连接生命周期讲清楚。</p>
+<h3 id="2-只做最小请求解析"><a class="header" href="#2-只做最小请求解析">2. 只做最小请求解析</a></h3>
+<p>我们只关心请求行里的：</p>
 <ul>
-<li><code>HTTP/1.1</code>：HTTP协议版本</li>
-<li><code>200</code>：状态码</li>
-<li><code>OK</code>：状态描述</li>
+<li>方法</li>
+<li>路径</li>
 </ul>
-<h1 id="常见状态码"><a class="header" href="#常见状态码">常见状态码</a></h1>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>状态码</th><th>含义</th><th>说明</th></tr>
-</thead>
-<tbody>
-<tr><td>200</td><td>OK</td><td>请求成功</td></tr>
-<tr><td>404</td><td>Not Found</td><td>请求的资源不存在</td></tr>
-<tr><td>500</td><td>Internal Server Error</td><td>服务器内部错误</td></tr>
-<tr><td>400</td><td>Bad Request</td><td>请求格式错误</td></tr>
-<tr><td>403</td><td>Forbidden</td><td>禁止访问</td></tr>
-</tbody>
-</table>
-</div>
-<h1 id="2002-socket编程基础"><a class="header" href="#2002-socket编程基础">20.0.2 Socket编程基础</a></h1>
-<h1 id="什么是socket"><a class="header" href="#什么是socket">什么是Socket？</a></h1>
-<p>Socket是网络通信的端点，可以理解为网络上的“插座“。就像电器通过插座连接电源一样，网络程序通过Socket连接网络。</p>
-<p><strong>Socket的工作流程</strong>：</p>
-<pre><code>服务器端：
-1. 创建Socket → socket()
-2. 绑定地址 → bind()
-3. 开始监听 → listen()
-4. 接受连接 → accept()
-5. 读写数据 → read()/write()
-6. 关闭连接 → close()
-
-客户端：
-1. 创建Socket → socket()
-2. 连接服务器 → connect()
-3. 读写数据 → read()/write()
-4. 关闭连接 → close()
-</code></pre>
-<h1 id="zig中的socket-api"><a class="header" href="#zig中的socket-api">Zig中的Socket API</a></h1>
-<p>在Zig 0.16.0-dev中，Socket相关的API位于<code>std.Io.net</code>模块：</p>
-<p><strong>关键类型</strong>：</p>
+<p>这意味着我们不会实现：</p>
 <ul>
-<li><code>std.Io.net.Ip4Address</code>：IPv4地址</li>
-<li><code>std.Io.net.Ip6Address</code>：IPv6地址</li>
-<li><code>std.Io.net.IpAddress</code>：IP地址联合类型</li>
-<li><code>std.Io.net.Server</code>：TCP服务器</li>
-<li><code>std.Io.net.Stream</code>：网络流</li>
+<li>完整请求头解析</li>
+<li>请求体读取</li>
+<li>chunked 编码</li>
+<li>完整 HTTP 语法校验</li>
 </ul>
-<p><strong>关键函数</strong>：</p>
+<h3 id="3-响应内容保持最简单"><a class="header" href="#3-响应内容保持最简单">3. 响应内容保持最简单</a></h3>
+<p>只返回几个固定文本：</p>
 <ul>
-<li><code>address.listen()</code>：开始监听</li>
-<li><code>server.accept()</code>：接受连接</li>
-<li><code>stream.read()</code>：读取数据</li>
-<li><code>stream.write()</code>：写入数据</li>
+<li><code>/</code> 返回欢迎页</li>
+<li><code>/api</code> 返回简单 JSON 文本</li>
+<li>其他路径返回 404</li>
 </ul>
-<p><strong>注意</strong>：在0.16.0-dev版本中，所有I/O操作需要传递<code>io</code>参数。</p>
-<h2 id="项目需求分析与设计思路"><a class="header" href="#项目需求分析与设计思路">项目需求分析与设计思路</a></h2>
-<h1 id="项目目标"><a class="header" href="#项目目标">项目目标</a></h1>
-<p>构建一个简单的HTTP服务器，能够：</p>
+<h3 id="4-把网络-api-当背景不当主角"><a class="header" href="#4-把网络-api-当背景不当主角">4. 把网络 API 当背景，不当主角</a></h3>
+<p>本章的主角是<strong>服务器的结构和资源模型</strong>，不是某个开发版接口名。</p>
+<h2 id="为什么要先从同步模型开始"><a class="header" href="#为什么要先从同步模型开始">为什么要先从同步模型开始？</a></h2>
+<p>很多读者一看到“服务器”，就会自然联想到：</p>
+<ul>
+<li>多线程</li>
+<li>高并发</li>
+<li>异步 I/O</li>
+<li>事件循环</li>
+<li>reactor / proactor</li>
+</ul>
+<p>这些主题当然重要，但如果你一开始就把它们全部叠上来，往往反而会看不清基础问题。</p>
+<p>先从同步模型开始，有几个好处：</p>
 <ol>
-<li>监听指定端口，接受客户端连接</li>
-<li>解析HTTP请求（方法和路径）</li>
-<li>根据路径返回不同的响应</li>
-<li>支持HTML和JSON两种响应格式</li>
+<li><strong>更容易理解连接生命周期</strong></li>
+<li><strong>更容易看清请求读取和响应写回的位置</strong></li>
+<li><strong>更容易识别资源释放责任</strong></li>
+<li><strong>更容易区分“网络编程问题”和“并发编程问题”</strong></li>
 </ol>
-<h1 id="技术选型"><a class="header" href="#技术选型">技术选型</a></h1>
-<p>本项目使用Zig标准库的网络模块：</p>
-<ul>
-<li><code>std.Io.net.Ip4Address</code>: IPv4网络地址处理（0.16.0-dev新API）</li>
-<li><code>std.Io.net.IpAddress</code>: IP地址联合类型（支持IPv4和IPv6）</li>
-<li><code>std.Io.net.listen</code>: TCP服务器监听函数</li>
-<li><code>std.mem</code>: 字符串处理</li>
-<li><code>std.fmt</code>: 格式化输出</li>
-</ul>
-<p><strong>注意</strong>: 在0.16.0-dev版本中，网络模块已从 <code>std.net</code> 迁移到 <code>std.Io.net</code>，且所有I/O操作需要通过 <code>init.io</code> 进行。</p>
-<h1 id="设计思路"><a class="header" href="#设计思路">设计思路</a></h1>
-<p><strong>架构设计</strong>：</p>
-<pre><code>Server (结构体)
-├── init() - 初始化服务器
-├── start() - 启动监听循环
-├── handleConnection() - 处理单个连接
-└── generateResponse() - 生成HTTP响应
+<p>这正是为什么本章不直接追求“高性能服务器”，而是先追求“结构清楚”。</p>
+<h2 id="设计草图先看结构再看代码"><a class="header" href="#设计草图先看结构再看代码">设计草图：先看结构，再看代码</a></h2>
+<p>下面是本章希望你建立的最小结构图：</p>
+<pre><code class="language-text">Server
+├── init()                初始化监听地址与上下文
+├── start()               启动监听循环
+├── handleConnection()    处理单个连接
+└── generateResponse()    根据路径生成响应文本
 </code></pre>
-<p><strong>关键设计决策</strong>：</p>
-<ol>
-<li><strong>使用结构体封装</strong>: 将服务器状态和行为封装在一起</li>
-<li><strong>显式分配器传递</strong>: 内存分配由调用者控制</li>
-<li><strong>简单的请求解析</strong>: 仅解析方法和路径，不处理请求体</li>
-<li><strong>同步处理模型</strong>: 一次处理一个连接（生产环境应使用异步）</li>
-</ol>
-<h1 id="实现步骤"><a class="header" href="#实现步骤">实现步骤</a></h1>
-<ol>
-<li><strong>定义Server结构体</strong>: 包含地址和分配器</li>
-<li><strong>实现init方法</strong>: 创建监听地址</li>
-<li><strong>实现start方法</strong>: 接受连接循环</li>
-<li><strong>实现handleConnection</strong>: 读取请求，发送响应</li>
-<li><strong>实现generateResponse</strong>: 根据路径生成响应</li>
-</ol>
-<h1 id="预期效果"><a class="header" href="#预期效果">预期效果</a></h1>
-<p>运行服务器后：</p>
+<p>这个结构有几个教学上的好处：</p>
 <ul>
-<li>访问 <code>http://localhost:8080/</code> 返回欢迎页面</li>
-<li>访问 <code>http://localhost:8080/api</code> 返回JSON数据</li>
-<li>其他路径返回404错误</li>
+<li><code>init()</code> 负责“启动前准备”</li>
+<li><code>start()</code> 负责“整体循环”</li>
+<li><code>handleConnection()</code> 负责“一次请求-响应交互”</li>
+<li><code>generateResponse()</code> 负责“业务逻辑最小分发”</li>
 </ul>
-<h1 id="扩展方向"><a class="header" href="#扩展方向">扩展方向</a></h1>
-<p>完成基础版本后，可以考虑：</p>
-<ol>
-<li><strong>多线程处理</strong>: 使用线程池处理并发连接</li>
-<li><strong>异步I/O</strong>: 使用Zig的异步特性</li>
-<li><strong>路由系统</strong>: 实现更灵活的路由匹配</li>
-<li><strong>中间件</strong>: 添加日志、认证等中间件</li>
-<li><strong>静态文件服务</strong>: 支持文件系统访问</li>
-</ol>
-<h2 id="完整实现0160-dev-版本"><a class="header" href="#完整实现0160-dev-版本">完整实现（0.16.0-dev 版本）</a></h2>
-<p>让我们综合运用所学知识，构建一个简单的 HTTP 服务器。注意使用新的 <code>std.Io</code> API：</p>
-<pre><code class="language-zig">// ✨ 新特性：std.Io 统一接口
-const std = @import("std");
+<p>这样做的核心价值不是“面向对象”，而是：</p>
+<blockquote>
+<p><strong>把不同层次的问题拆开。</strong></p>
+</blockquote>
+<p>否则你很容易把监听、读取、解析、拼响应、写回、清理全部塞进一个函数，最后既不利于理解，也不利于扩展。</p>
+<h2 id="概念性最小原型"><a class="header" href="#概念性最小原型">概念性最小原型</a></h2>
+<p>下面这段代码更适合作为<strong>结构示意</strong>来阅读。<br>请重点关注：</p>
+<ul>
+<li>主循环在哪里</li>
+<li>连接关闭发生在哪里</li>
+<li>请求是如何被最小解析的</li>
+<li>响应是如何集中生成的</li>
+</ul>
+<p>而不要把它理解成“已经覆盖完整 HTTP 细节的实现”。</p>
+<pre><code class="language-zig">const std = @import("std");
 
 const Server = struct {
-    address: std.Io.net.Ip4Address,  // 服务器监听地址
-    allocator: std.mem.Allocator,     // 内存分配器（显式传递）
-    io: std.Io,                       // I/O接口（0.16.0新增）
+    address: std.Io.net.Ip4Address,
+    allocator: std.mem.Allocator,
+    io: std.Io,
 
     const Self = @This();
 
-    // 初始化服务器
-    // 参数：
-    //   - allocator: 内存分配器
-    //   - io: I/O接口（用于所有I/O操作）
-    //   - port: 监听端口号
-    // 返回：初始化后的Server实例
-    fn init(allocator: std.mem.Allocator, io: std.Io, port: u16) !Self {
-        // 创建IPv4地址（0.0.0.0表示监听所有网络接口）
-        const address = std.Io.net.Ip4Address{
-            .bytes = [4]u8{ 0, 0, 0, 0 },
-            .port = port,
-        };
+    fn init(allocator: std.mem.Allocator, io: std.Io, port: u16) Self {
         return .{
-            .address = address,
+            .address = .{
+                .bytes = .{ 0, 0, 0, 0 },
+                .port = port,
+            },
             .allocator = allocator,
             .io = io,
         };
     }
 
-    // 启动服务器主循环
     fn start(self: *Self) !void {
-        // 开始监听，启用端口重用
-        var server = try self.address.listen(.{
+        var listener = try self.address.listen(.{
             .reuse_port = true,
         });
-        defer server.deinit();
+        defer listener.deinit();
 
-        std.debug.print("服务器启动在端口 {}\n", .{self.address.getPort()});
+        std.debug.print("server listening on port {}\n", .{self.address.getPort()});
 
-        // 无限循环，持续接受连接
         while (true) {
-            // 阻塞等待客户端连接
-            const connection = try server.accept();
-            // 处理连接（同步模式，一次处理一个连接）
+            const connection = try listener.accept();
             try self.handleConnection(connection);
         }
     }
 
-    // 处理单个客户端连接
     fn handleConnection(self: *Self, connection: std.Io.net.Server.Connection) !void {
-        // 确保连接在函数退出时关闭
         defer connection.stream.close();
 
-        // 读取客户端请求
         var buffer: [4096]u8 = undefined;
         const bytes_read = try connection.stream.read(self.io, &amp;buffer);
-
-        // 如果没有数据，直接返回
         if (bytes_read == 0) return;
 
         const request = buffer[0..bytes_read];
+        const path = parsePath(request) orelse return;
 
-        // 解析HTTP请求行
-        // 格式：METHOD PATH HTTP/1.1
-        const method_end = std.mem.indexOf(u8, request, " ") orelse return;
-        const method = request[0..method_end];
-
-        const path_start = method_end + 1;
-        const path_end = std.mem.indexOf(u8, request[path_start..], " ") orelse return;
-        const path = request[path_start .. path_start + path_end];
-
-        // 生成HTTP响应
         const response = try self.generateResponse(path);
         defer self.allocator.free(response);
 
-        // 发送响应给客户端
         _ = try connection.stream.write(self.io, response);
     }
 
-    // 根据路径生成HTTP响应
     fn generateResponse(self: *Self, path: []const u8) ![]u8 {
-        // 根据路径确定响应内容和状态码
-        const content = if (std.mem.eql(u8, path, "/"))
-            "&lt;h1&gt;Welcome to Zig HTTP Server!&lt;/h1&gt;"
-        else if (std.mem.eql(u8, path, "/api"))
-            "{\"message\": \"Hello from Zig API\"}"
-        else
-            "&lt;h1&gt;404 Not Found&lt;/h1&gt;";
+        const body =
+            if (std.mem.eql(u8, path, "/"))
+                "&lt;h1&gt;Hello from Zig&lt;/h1&gt;"
+            else if (std.mem.eql(u8, path, "/api"))
+                "{\"message\":\"ok\"}"
+            else
+                "&lt;h1&gt;404 Not Found&lt;/h1&gt;";
 
-        const status = if (std.mem.eql(u8, path, "/") or std.mem.eql(u8, path, "/api"))
-            "200 OK"
-        else
-            "404 Not Found";
+        const status =
+            if (std.mem.eql(u8, path, "/") or std.mem.eql(u8, path, "/api"))
+                "200 OK"
+            else
+                "404 Not Found";
 
-        const content_type = if (std.mem.eql(u8, path, "/api"))
-            "application/json"
-        else
-            "text/html";
+        const content_type =
+            if (std.mem.eql(u8, path, "/api"))
+                "application/json"
+            else
+                "text/html; charset=utf-8";
 
-        // 构建完整的HTTP响应
-        // 格式：HTTP/1.1 STATUS\r\nHeaders\r\n\r\nBody
         return std.fmt.allocPrint(
             self.allocator,
             "HTTP/1.1 {s}\r\n" ++
@@ -471,187 +392,237 @@ const Server = struct {
                 "Connection: close\r\n" ++
                 "\r\n" ++
                 "{s}",
-            .{ status, content_type, content.len, content },
+            .{ status, content_type, body.len, body },
         );
     }
 };
 
+fn parsePath(request: []const u8) ?[]const u8 {
+    const line_end = std.mem.indexOf(u8, request, "\r\n") orelse return null;
+    const request_line = request[0..line_end];
+
+    const first_space = std.mem.indexOfScalar(u8, request_line, ' ') orelse return null;
+    const rest = request_line[first_space + 1 ..];
+    const second_space = std.mem.indexOfScalar(u8, rest, ' ') orelse return null;
+
+    return rest[0..second_space];
+}
+
 pub fn main(init: std.process.Init) !void {
     var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
 
-    var server = try Server.init(allocator, init.io, 8080);
+    var server = Server.init(gpa.allocator(), init.io, 8080);
     try server.start();
 }
 </code></pre>
-<h1 id="运行和测试"><a class="header" href="#运行和测试">运行和测试</a></h1>
-<p><strong>启动服务器</strong>：</p>
-<pre><code class="language-bash"># 方式1：直接运行
-zig run src/main.zig
-
-# 方式2：构建后运行
-zig build run
-</code></pre>
-<p><strong>测试服务器</strong>：</p>
-<pre><code class="language-bash"># 使用curl测试
-curl http://localhost:8080/
-curl http://localhost:8080/api
-curl http://localhost:8080/notfound
-
-# 使用浏览器测试
-# 在浏览器中打开 http://localhost:8080/
-</code></pre>
-<p><strong>预期输出</strong>：</p>
-<pre><code>服务器启动在端口 8080
-</code></pre>
-<p><strong>测试结果</strong>：</p>
-<pre><code># 访问 http://localhost:8080/
-&lt;h1&gt;Welcome to Zig HTTP Server!&lt;/h1&gt;
-
-# 访问 http://localhost:8080/api
-{"message": "Hello from Zig API"}
-
-# 访问 http://localhost:8080/notfound
-&lt;h1&gt;404 Not Found&lt;/h1&gt;
-</code></pre>
-<h1 id="关键变更说明"><a class="header" href="#关键变更说明">关键变更说明</a></h1>
+<h2 id="这段原型真正应该怎么看"><a class="header" href="#这段原型真正应该怎么看">这段原型真正应该怎么看？</a></h2>
+<p>如果你直接把上面的代码当成“HTTP 教程答案”，那它会显得过于简化。<br>但如果你把它当成“最小服务器结构图对应的代码”，它就很有价值。</p>
+<h3 id="1-init"><a class="header" href="#1-init">1. <code>init()</code></a></h3>
+<p>这里负责把：</p>
+<ul>
+<li>监听地址</li>
+<li>分配器</li>
+<li>I/O 上下文</li>
+</ul>
+<p>集中放进 <code>Server</code> 结构体。</p>
+<p>这一步的重点不是“封装好看”，而是明确：</p>
+<ul>
+<li>这些资源属于服务器整体生命周期</li>
+<li>后面的逻辑都依赖它们</li>
+</ul>
+<h3 id="2-start"><a class="header" href="#2-start">2. <code>start()</code></a></h3>
+<p>这里体现了服务器最核心的主循环：</p>
+<ul>
+<li>先 listen</li>
+<li>再 accept</li>
+<li>对每个连接调用 <code>handleConnection()</code></li>
+</ul>
+<p>这也是你之后扩展并发时最容易改动的位置。<br>例如未来如果你引入线程池，那么变化通常就发生在“接受连接之后，谁去处理它”这一层。</p>
+<h3 id="3-handleconnection"><a class="header" href="#3-handleconnection">3. <code>handleConnection()</code></a></h3>
+<p>这部分是本章最值得仔细看的函数。</p>
+<p>它做了四件事：</p>
 <ol>
-<li><strong>主函数签名</strong>: 从 <code>pub fn main() !void</code> 变更为 <code>pub fn main(init: std.process.Init) !void</code></li>
-<li><strong>网络模块</strong>: <code>std.net</code> → <code>std.Io.net</code></li>
-<li><strong>I/O 传递</strong>: 所有I/O操作需要通过 <code>init.io</code> 传递</li>
-<li><strong>Server 结构体</strong>: 新增 <code>io</code> 字段存储 I/O 接口</li>
+<li>确保连接最终会被关闭</li>
+<li>从流中读取一段请求数据</li>
+<li>解析最小路径信息</li>
+<li>生成并写回响应</li>
 </ol>
-<h1 id="旧版本兼容代码015x"><a class="header" href="#旧版本兼容代码015x">旧版本兼容代码（0.15.x）</a></h1>
-<pre><code class="language-zig">// 🚫 已废弃：0.16.0，请使用 std.Io.net
-const std = @import("std");
-
-const Server = struct {
-    address: std.net.Address,  // 旧版本使用 std.net
-    allocator: std.mem.Allocator,
-
-    fn init(allocator: std.mem.Allocator, port: u16) !Self {
-        const address = try std.net.Address.initIp4([4]u8{ 0, 0, 0, 0 }, port);
-        // ...
-    }
-
-    fn handleConnection(self: *Self, connection: std.net.Server.Connection) !void {
-        // 旧版本不需要 io 参数
-        const bytes_read = try connection.stream.read(&amp;buffer);
-        _ = try connection.stream.write(response);
-    }
-};
-
-pub fn main(_: std.process.Init.Minimal) !void {  // 旧版本主函数签名
-    // ...
-}
-</code></pre>
-<h2 id="实践指导与调试技巧"><a class="header" href="#实践指导与调试技巧">实践指导与调试技巧</a></h2>
-<h1 id="常见问题排查"><a class="header" href="#常见问题排查">常见问题排查</a></h1>
-<p><strong>问题1：端口被占用</strong></p>
-<pre><code>error: Address already in use
-</code></pre>
-<p><strong>解决方案</strong>：</p>
+<p>你可以把它理解成：</p>
+<blockquote>
+<p><strong>一次最小请求-响应事务的完整闭环。</strong></p>
+</blockquote>
+<h3 id="4-generateresponse"><a class="header" href="#4-generateresponse">4. <code>generateResponse()</code></a></h3>
+<p>把响应生成单独放出来，有两个好处：</p>
 <ul>
-<li>检查端口是否被其他程序占用：<code>lsof -i :8080</code></li>
-<li>更换端口号</li>
-<li>使用 <code>reuse_port = true</code> 选项</li>
+<li>避免业务分支和网络读写混在一起</li>
+<li>以后更容易替换为真正的路由或模板系统</li>
 </ul>
-<p><strong>问题2：连接超时</strong></p>
-<pre><code>error: Connection timed out
-</code></pre>
-<p><strong>解决方案</strong>：</p>
+<p>即使这里只是三种简单路径，它也已经体现出“分层”的价值。</p>
+<h2 id="这段实现有哪些刻意简化"><a class="header" href="#这段实现有哪些刻意简化">这段实现有哪些刻意简化？</a></h2>
+<p>这是本章最重要的部分之一。<br>请务必清楚地知道：这段代码<strong>没有</strong>覆盖下面这些真实问题。</p>
+<h3 id="1-一次-read-不等于完整-http-请求"><a class="header" href="#1-一次-read-不等于完整-http-请求">1. 一次 <code>read()</code> 不等于“完整 HTTP 请求”</a></h3>
+<p>这是最常见的误解之一。</p>
+<p>真实世界里：</p>
 <ul>
-<li>检查防火墙设置</li>
-<li>确认服务器正在运行</li>
-<li>验证IP地址和端口是否正确</li>
+<li>请求可能被拆成多个 TCP 包</li>
+<li>一次读取可能只拿到半行</li>
+<li>也可能一次读取拿到多个请求的内容</li>
+<li>大请求头或请求体可能远超当前缓冲区</li>
 </ul>
-<p><strong>问题3：请求解析错误</strong></p>
-<pre><code>error: Invalid request format
-</code></pre>
-<p><strong>解决方案</strong>：</p>
+<p>所以这里的做法只是：</p>
+<blockquote>
+<p><strong>为了教学，假定最小请求可以在一次读取中拿到足够的起始部分。</strong></p>
+</blockquote>
+<h3 id="2-我们没有真正验证完整-http-语法"><a class="header" href="#2-我们没有真正验证完整-http-语法">2. 我们没有真正验证完整 HTTP 语法</a></h3>
+<p>这里的 <code>parsePath()</code> 只是在请求行里找两个空格，取中间那段作为路径。<br>这足够帮助你理解“最小解析流程”，但远远不等于完整解析器。</p>
+<h3 id="3-我们默认使用-connection-close"><a class="header" href="#3-我们默认使用-connection-close">3. 我们默认使用 <code>Connection: close</code></a></h3>
+<p>这是一个非常有意的简化。</p>
+<p>如果你支持 keep-alive，那么就必须继续处理：</p>
 <ul>
-<li>打印原始请求数据进行调试</li>
-<li>检查HTTP请求格式是否正确</li>
-<li>使用Wireshark抓包分析</li>
+<li>同一连接上的多个请求</li>
+<li>请求边界判断</li>
+<li>超时</li>
+<li>状态机</li>
+<li>连接重用策略</li>
 </ul>
-<h1 id="性能优化建议"><a class="header" href="#性能优化建议">性能优化建议</a></h1>
+<p>这些都不是本章想先解决的问题。</p>
+<h3 id="4-错误处理仍然是最小教学版"><a class="header" href="#4-错误处理仍然是最小教学版">4. 错误处理仍然是“最小教学版”</a></h3>
+<p>例如：</p>
+<ul>
+<li>请求格式错误时如何返回 400</li>
+<li>写回失败时如何记录日志</li>
+<li>某类网络错误是否应继续服务循环</li>
+<li>是否要区分客户端断开和服务端故障</li>
+</ul>
+<p>这些在真正的服务器里都需要更仔细设计。</p>
+<h2 id="这个案例最值得学的不是-api而是边界"><a class="header" href="#这个案例最值得学的不是-api而是边界">这个案例最值得学的不是 API，而是边界</a></h2>
+<p>如果你只盯着函数名看，这一章会很容易过时。<br>但如果你重点学习下面这些边界，它就会更稳定：</p>
+<h3 id="1-资源边界"><a class="header" href="#1-资源边界">1. 资源边界</a></h3>
+<ul>
+<li>监听器何时创建和销毁</li>
+<li>连接何时关闭</li>
+<li>响应字符串何时分配和释放</li>
+</ul>
+<h3 id="2-职责边界"><a class="header" href="#2-职责边界">2. 职责边界</a></h3>
+<ul>
+<li>网络读写放在哪</li>
+<li>请求解析放在哪</li>
+<li>响应生成放在哪</li>
+</ul>
+<h3 id="3-教学边界"><a class="header" href="#3-教学边界">3. 教学边界</a></h3>
+<ul>
+<li>什么是最小可理解模型</li>
+<li>什么是被故意省略的真实复杂度</li>
+</ul>
+<p>这三种边界意识，比记住某个 dev 版接口更重要。</p>
+<h2 id="如果你要继续扩展这一章的下一步是什么"><a class="header" href="#如果你要继续扩展这一章的下一步是什么">如果你要继续扩展，这一章的下一步是什么？</a></h2>
+<p>如果你已经理解了这个最小模型，后续可以按下面顺序继续扩展，而不要一开始全部堆上去。</p>
+<h3 id="第一步补上更诚实的错误响应"><a class="header" href="#第一步补上更诚实的错误响应">第一步：补上更诚实的错误响应</a></h3>
+<p>例如：</p>
+<ul>
+<li>请求行无效时返回 <code>400 Bad Request</code></li>
+<li>路径不存在时继续返回 <code>404 Not Found</code></li>
+</ul>
+<p>这样可以让服务器从“只会输出固定文本”进步到“对错误输入有基本反馈”。</p>
+<h3 id="第二步把路由逻辑独立出来"><a class="header" href="#第二步把路由逻辑独立出来">第二步：把路由逻辑独立出来</a></h3>
+<p>当前的 <code>if / else if / else</code> 适合教学，但真实项目里通常会很快变得臃肿。</p>
+<p>你可以把它扩展成：</p>
+<ul>
+<li>一个更清楚的 <code>route()</code> 函数</li>
+<li>一个最小路由表</li>
+<li>按方法 + 路径分发</li>
+</ul>
+<h3 id="第三步支持静态文件或简单请求体"><a class="header" href="#第三步支持静态文件或简单请求体">第三步：支持静态文件或简单请求体</a></h3>
+<p>这会迫使你思考：</p>
+<ul>
+<li>文件读取</li>
+<li>Content-Type</li>
+<li>更长的响应</li>
+<li>请求体边界</li>
+</ul>
+<h3 id="第四步再考虑并发"><a class="header" href="#第四步再考虑并发">第四步：再考虑并发</a></h3>
+<p>只有当你已经看清楚单连接模型之后，再引入：</p>
+<ul>
+<li>每连接一线程</li>
+<li>线程池</li>
+<li>更成熟的异步 I/O 方案</li>
+</ul>
+<p>才更容易知道“并发到底在解决哪一层问题”。</p>
+<h2 id="什么时候不该自己从零写-http-服务器"><a class="header" href="#什么时候不该自己从零写-http-服务器">什么时候不该自己从零写 HTTP 服务器？</a></h2>
+<p>这是一个很现实的问题。</p>
+<p>如果你的目标是：</p>
+<ul>
+<li>快速上线项目</li>
+<li>构建更完整的 Web 服务</li>
+<li>处理复杂 HTTP 行为</li>
+<li>降低版本敏感 API 带来的维护成本</li>
+</ul>
+<p>那么你通常不应该长期停留在“从零写最小服务器”的阶段。<br>这一章的价值在于<strong>帮助你理解模型</strong>，而不是鼓励你永远重复造轮子。</p>
+<p>更实际的学习路径往往是：</p>
 <ol>
-<li><strong>使用线程池处理并发连接</strong>：</li>
+<li>先理解本章的最小模型</li>
+<li>再阅读标准库或第三方库示例</li>
+<li>最后决定自己要保留哪一层控制权</li>
 </ol>
-<pre><code class="language-zig">// 创建线程池
-const num_threads = 4;
-var threads: [num_threads]std.Thread = undefined;
-
-// 每个线程处理一个连接
-for (0..num_threads) |i| {
-    threads[i] = try std.Thread.spawn(.{}, handleConnection, .{connection});
-}
-</code></pre>
-<ol start="2">
-<li><strong>使用Arena Allocator减少内存碎片</strong>：</li>
-</ol>
-<pre><code class="language-zig">var arena = std.heap.ArenaAllocator.init(allocator);
-defer arena.deinit();
-const arena_allocator = arena.allocator();
-</code></pre>
-<ol start="3">
-<li><strong>添加请求日志</strong>：</li>
-</ol>
-<pre><code class="language-zig">std.debug.print("[{s}] {s} {s}\n", .{ 
-    @tagName(method), 
-    path, 
-    status 
-});
-</code></pre>
-<h1 id="扩展练习"><a class="header" href="#扩展练习">扩展练习</a></h1>
+<h2 id="调试这类最小服务器时优先看什么"><a class="header" href="#调试这类最小服务器时优先看什么">调试这类最小服务器时，优先看什么？</a></h2>
+<p>如果你把这段原型落到本地版本里，调试时可以优先关注：</p>
 <ol>
 <li>
-<p><strong>练习1：添加POST请求支持</strong></p>
+<p><strong>监听是否成功</strong></p>
 <ul>
-<li>解析请求体</li>
-<li>实现表单数据处理</li>
+<li>端口是否被占用</li>
+<li>地址是否绑定成功</li>
 </ul>
 </li>
 <li>
-<p><strong>练习2：实现静态文件服务</strong></p>
+<p><strong>连接是否真的被接受</strong></p>
 <ul>
-<li>读取文件系统</li>
-<li>根据文件扩展名设置Content-Type</li>
+<li>是否卡在 accept</li>
+<li>是否有客户端实际连上来</li>
 </ul>
 </li>
 <li>
-<p><strong>练习3：添加并发处理</strong></p>
+<p><strong>读取是否拿到预期数据</strong></p>
 <ul>
-<li>使用线程池</li>
-<li>实现连接队列</li>
+<li>是不是只读到了部分请求</li>
+<li>缓冲区里到底有什么</li>
 </ul>
 </li>
 <li>
-<p><strong>练习4：实现路由系统</strong></p>
+<p><strong>路径解析是否成功</strong></p>
 <ul>
-<li>支持路径参数</li>
-<li>支持中间件</li>
+<li>请求行格式是不是与你的解析逻辑匹配</li>
+<li>是否正确处理了 <code>\r\n</code></li>
+</ul>
+</li>
+<li>
+<p><strong>响应是否被完整写回</strong></p>
+<ul>
+<li>状态行和头是否完整</li>
+<li><code>Content-Length</code> 是否匹配正文长度</li>
 </ul>
 </li>
 </ol>
+<p>这类排查顺序很重要，因为很多“服务器没工作”的问题，其实并不是业务逻辑错了，而是更早的网络边界就已经没对上。</p>
+<h2 id="小结"><a class="header" href="#小结">小结</a></h2>
+<p>这一章最重要的目标，不是教你做一个生产级 HTTP 服务器，而是帮助你建立这样一个最小而清楚的模型：</p>
+<blockquote>
+<p><strong>监听 → 接受连接 → 读取请求起始数据 → 解析最小路径 → 生成响应 → 写回并关闭连接</strong></p>
+</blockquote>
+<p>如果你已经看清下面这些点，这一章就达成目标了：</p>
+<ul>
+<li>一个最小服务器的职责分层应该怎么拆</li>
+<li>为什么要先从同步模型开始</li>
+<li>为什么网络与 I/O API 应被视为版本敏感背景</li>
+<li>为什么“一次 read + 简单 parse”只是教学简化，而不是完整 HTTP 处理</li>
+<li>未来扩展时，应该先补哪一层，而不是一开始就把所有复杂度堆上来</li>
+</ul>
+<p>把这一章读成“设计与约束练习”，会比把它读成“HTTP API 速查表”更有价值。</p>
 <hr>
 <blockquote>
-<p>💡 <strong>章节过渡</strong>：从 HTTP 服务器到内存池实现</p>
-<p>在<a href="chapter-memory-pool.html">实战案例3 - 内存池实现</a>中，我们学习了 HTTP 服务器开发，了解了网络编程的基本概念。
-现在，我们将实现一个内存池，深入理解内存管理和泛型编程。</p>
-<p><strong>为什么 HTTP 服务器需要内存池？</strong></p>
-<ol>
-<li><strong>性能优化</strong>：减少频繁的内存分配和释放</li>
-<li><strong>内存碎片</strong>：内存池可以减少内存碎片</li>
-<li><strong>并发安全</strong>：内存池可以实现线程安全的内存管理</li>
-</ol>
-<p><strong>学习建议</strong>：</p>
-<ul>
-<li>回顾<a href="../part2-advanced/chapter-memory-management.html">内存管理模型</a>的内存管理知识</li>
-<li>理解<a href="../part2-advanced/chapter-generics.html">泛型编程</a>的泛型编程概念</li>
-<li>准备实现高性能的内存管理组件</li>
-</ul>
+<p>💡 <strong>下一章预告</strong></p>
+<p>下一章我们将学习 <a href="chapter-memory-pool.html">实战案例 - 内存池实现</a>，从网络 I/O 话题切换到另一个非常典型的系统编程主题：如何围绕固定大小对象建立清晰而高效的资源复用模型。</p>
 </blockquote>
 
                     </main>

@@ -1,6 +1,16 @@
-# 复合类型
+# 复合类型：数组、切片与数据建模
 
-本章介绍 Zig 的复合类型，包括数组、切片、枚举、联合、结构体和元组。复合类型将基本类型组合成更复杂的数据结构，是构建程序的基础。
+本章介绍 Zig 中最常见的复合类型，包括数组、切片、枚举、联合、结构体和元组。它们用于把基础类型组织成更有结构的数据，是后续学习控制流、错误处理、内存管理和工程实践的基础。
+
+> 💡 **阅读建议**
+>
+> 这一章的内容从“最常用的数据表示方式”逐步过渡到“更灵活的数据建模方式”。
+> 如果你是第一次接触 Zig，建议优先掌握下面几部分：
+> - 数组与切片
+> - 结构体
+> - 枚举
+>
+> 联合、非穷尽枚举以及部分与布局相关的内容，第一次阅读时可以先理解核心概念，不必急着记住所有细节。
 
 ## 数组
 
@@ -11,7 +21,7 @@
 ```zig
 const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const array: [5]i32 = [_]i32{ 1, 2, 3, 4, 5 };
 
     const len = array.len;
@@ -64,7 +74,7 @@ matrix[2][2] = 9
 - **内存连续**：元素在内存中连续存储，访问高效
 - **边界检查**：数组长度是编译期常量，编译器可以在索引已知时提前发现越界；索引为运行时变量时仍进行运行时边界检查
 
-> 📖 **相关章节**：数组遍历使用的 `for` 循环将在[控制流与资源管理](chapter-control-flow.md)中详细讲解。
+> **相关章节**：数组遍历使用的 `for` 循环将在[控制流与资源管理](chapter-control-flow.md)中详细讲解。
 
 ### 数组操作
 
@@ -77,7 +87,7 @@ matrix[2][2] = 9
 ```zig
 const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const part1 = [_]u8{ 1, 2, 3 };
     const part2 = [_]u8{ 4, 5 };
 
@@ -106,7 +116,7 @@ pub fn main(_: std.process.Init.Minimal) void {
 ```zig
 const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     var array = [_]i32{ 1, 2, 3, 4, 5 };
 
     const slice: []i32 = array[1..4];
@@ -133,7 +143,7 @@ subslice length: 2
 - **引用语义**：切片是对底层内存的引用，不拥有数据；修改切片会影响原数据
 - **边界检查**：切片长度是运行时值，只能在运行时检查边界
 
-> 📖 **深入学习**：胖指针是 Zig 指针系统的重要组成部分，[指针与引用类型](../part2-advanced/chapter-pointers.md)将详细讲解各种指针类型及其应用场景。
+> **深入学习**：胖指针是 Zig 指针系统的重要组成部分，[指针、切片与对齐](../part2-advanced/chapter-pointers.md)将详细讲解各种指针类型及其应用场景。
 
 ### 切片创建方式
 
@@ -147,7 +157,7 @@ subslice length: 2
 ```zig
 const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     var array = [_]i32{ 1, 2, 3, 4, 5 };
 
     const full: []i32 = array[:];
@@ -213,17 +223,17 @@ graph TB
 
 ## 哨兵终止数组
 
-哨兵终止数组在数组末尾添加一个"哨兵值"来标记结束，主要用于 C 语言兼容性。
+哨兵终止数组在数组末尾添加一个“哨兵值”来标记结束，主要用于 C 语言兼容性，以及需要明确终止标记的数据表示。
 
 **语法**：
-- `[N:T]`：长度为 N，哨兵值为 T 的数组
-- `[:T]`：未知长度，哨兵值为 T 的切片
-- 最常见的：`[:0]const u8` — C 风格字符串
+- `[N:S]T`：长度为 `N`、哨兵值为 `S`、元素类型为 `T` 的数组
+- `[:S]T`：带哨兵值 `S` 的切片
+- 最常见的：`[:0]const u8` —— 以 `0` 结尾的字节切片，常用于 C 风格字符串
 
 ```zig
 const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const message: [5:0]u8 = "hello".*;
 
     std.debug.print("消息：{s}\n", .{&message});
@@ -264,7 +274,7 @@ pub fn callCFunction() void {
 ```zig
 const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const names: [3][:0]const u8 = .{ "Alice", "Bob", "Charlie" };
     for (names, 0..) |name, i| {
         std.debug.print("名字 {}：{s}\n", .{ i, name });
@@ -272,7 +282,7 @@ pub fn main(_: std.process.Init.Minimal) void {
 }
 ```
 
-> 📖 **相关章节**：哨兵终止数组主要用于 C 互操作，详细内容请参考 [C 互操作](../part2-advanced/chapter-c-interop.md)。
+> **相关章节**：哨兵终止数组主要用于 C 互操作，详细内容请参考 [C 互操作](../part2-advanced/chapter-c-interop.md)。
 
 ## 枚举
 
@@ -295,7 +305,7 @@ const Color = enum {
     blue,
 };
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const color: Color = .red;
 
     const color_name = switch (color) {
@@ -319,7 +329,7 @@ pub fn main(_: std.process.Init.Minimal) void {
 从整数创建：.green
 ```
 
-> 📖 **相关章节**：枚举与 `switch` 语句配合使用时，编译器会强制穷尽性检查，详见[控制流与资源管理](chapter-control-flow.md)。
+> **相关章节**：枚举与 `switch` 语句配合使用时，编译器会强制穷尽性检查，详见[控制流与资源管理](chapter-control-flow.md)。
 
 ### 带整数类型的枚举
 
@@ -335,7 +345,7 @@ const Priority = enum(u8) {
     critical = 20,
 };
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const p: Priority = .high;
     std.debug.print("优先级：{s}，值：{}\n", .{ @tagName(p), @intFromEnum(p) });
 }
@@ -380,7 +390,7 @@ const Direction = enum(u4) {
     }
 };
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const dir: Direction = .north;
     std.debug.print("方向：{s}\n", .{dir.toString()});
     std.debug.print("相反方向：{s}\n", .{dir.opposite().toString()});
@@ -411,7 +421,7 @@ const TcpState = enum(u8) {
     _, // 非穷尽：允许其他 u8 值
 };
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const known: TcpState = .established;
     std.debug.print("已知状态：{s}\n", .{@tagName(known)});
 
@@ -434,7 +444,7 @@ pub fn main(_: std.process.Init.Minimal) void {
 其他状态
 ```
 
-非穷尽枚举的 switch 必须使用 `_` 分支处理未命名的值。`@tagName` 对未命名的值返回 `null`。
+非穷尽枚举的 `switch` 必须使用 `_` 分支处理未命名的值。对非穷尽枚举而言，运行时才出现的未命名值不能按普通命名枚举值处理；在需要展示名称时，应该优先依赖显式分支或整数值，而不要假定所有值都一定有可用的标签名。
 
 ## 联合
 
@@ -466,7 +476,7 @@ const Shape = union(enum) {
     }
 };
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const shapes: [3]Shape = .{
         Shape{ .circle = .{ .radius = 1.0 } },
         Shape{ .rectangle = .{ .width = 3.0, .height = 5.0 } },
@@ -530,7 +540,7 @@ const Value = union(enum) {
     }
 };
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const values: [4]Value = .{
         Value{ .integer = 42 },
         Value{ .float = 3.14 },
@@ -558,7 +568,7 @@ pub fn main(_: std.process.Init.Minimal) void {
 字符串 = hello
 ```
 
-> 📖 **相关章节**：带标签联合与 `switch` 语句配合使用时，编译器会自动推断活动变体，详见[控制流与资源管理](chapter-control-flow.md)。
+> **相关章节**：带标签联合与 `switch` 语句配合使用时，编译器会自动推断活动变体，详见[控制流与资源管理](chapter-control-flow.md)。
 
 ### 无标签联合
 
@@ -581,7 +591,7 @@ const Data = union {
     as_bytes: [4]u8,
 };
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     var data: Data = .{ .as_i32 = 42 };
     std.debug.print("as_i32: {}\n", .{data.as_i32});
 
@@ -614,7 +624,7 @@ const Data = extern union {
     as_bytes: [4]u8,
 };
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const data: Data = .{ .as_i32 = 0x41424344 };
 
     std.debug.print("as_i32: {}\n", .{data.as_i32});
@@ -647,7 +657,7 @@ const Data = packed union {
     as_f32: f32,
 };
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const data: Data = .{ .as_u32 = 0x40490FDB };
     std.debug.print("as_u32: 0x{X}\n", .{data.as_u32});
     std.debug.print("as_f32: {}\n", .{data.as_f32});
@@ -683,7 +693,7 @@ const MyUnion = union {
     string: []const u8,
 };
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const u1 = MyUnion{ .int = 42 };
     const u2 = @unionInit(MyUnion, "float", 3.14);
     const u3 = @unionInit(MyUnion, "string", "hello");
@@ -702,7 +712,7 @@ fn initUnion(comptime field: []const u8, value: anytype) MyUnion {
 }
 ```
 
-> 📖 **相关章节**：更多编译期技巧请参考[编译期计算与元编程](../part2-advanced/chapter-comptime.md)和[泛型编程](../part2-advanced/chapter-generics.md)。
+> **相关章节**：更多编译期技巧请参考[编译期计算与元编程](../part2-advanced/chapter-comptime.md)和[泛型编程](../part2-advanced/chapter-generics.md)。
 
 **`@tagName`**：获取带标签联合当前变体的名称字符串，常用于日志和调试：
 
@@ -714,7 +724,7 @@ const Result = union(enum) {
     failure: []const u8,
 };
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const r1 = Result{ .success = 100 };
     const r2 = Result{ .failure = "连接失败" };
 
@@ -765,7 +775,7 @@ const Rectangle = struct {
     }
 };
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     var rect = Rectangle{
         .width = 10.0,
         .height = 5.0,
@@ -833,7 +843,7 @@ const ExternStruct = extern struct {
     c: u16,
 };
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     std.debug.print("AutoLayout 大小: {} 字节\n", .{@sizeOf(AutoLayout)});
     std.debug.print("PackedStruct 大小: {} 字节\n", .{@sizeOf(PackedStruct)});
     std.debug.print("ExternStruct 大小: {} 字节\n", .{@sizeOf(ExternStruct)});
@@ -868,7 +878,7 @@ const Flags = packed struct {
     }
 };
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const flags = Flags{ .enable = true, .mode = 0b101, .priority = 0b11, .reserved = 0 };
     std.debug.print("bitSizeOf: {}, sizeOf: {}\n", .{ @bitSizeOf(Flags), @sizeOf(Flags) });
     std.debug.print("as byte: 0x{X}\n", .{flags.asByte()});
@@ -897,7 +907,7 @@ fn printPoint(p: Point) void {
     std.debug.print("Point({}, {})\n", .{ p.x, p.y });
 }
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const p: Point = .{ .x = 1.0, .y = 2.0 };
     printPoint(p);
 
@@ -935,7 +945,7 @@ const Threshold = struct {
     };
 };
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const cfg = Config{ .host = "example.com" };
     std.debug.print("配置: {s}:{}\n", .{ cfg.host, cfg.port });
 
@@ -977,7 +987,7 @@ fn Vector(comptime T: type) type {
     };
 }
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const Vec3f = Vector(f32);
     const v1 = Vec3f{ .x = 1.0, .y = 2.0, .z = 3.0 };
     const v2 = Vec3f{ .x = 4.0, .y = 5.0, .z = 6.0 };
@@ -994,7 +1004,7 @@ v1 + v2 = (5.0, 7.0, 9.0)
 
 `@This()` 获取当前正在定义的类型，常用于泛型结构体中引用自身类型。
 
-> 📖 **深入学习**：泛型结构体的完整实现和高级用法请参考[泛型编程](../part2-advanced/chapter-generics.md)章节。
+> **深入学习**：泛型结构体的完整实现和高级用法请参考[泛型编程](../part2-advanced/chapter-generics.md)章节。
 
 ## 元组
 
@@ -1005,7 +1015,7 @@ v1 + v2 = (5.0, 7.0, 9.0)
 ```zig
 const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const tuple = .{ 1, "hello", 3.14, true };
 
     std.debug.print("第一个元素: {}\n", .{tuple[0]});
@@ -1040,7 +1050,7 @@ tuple[3] = true
 ```zig
 const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const t1 = .{ 1, 2 };
     const t2 = .{ "a", "b" };
     const combined = t1 ++ t2;

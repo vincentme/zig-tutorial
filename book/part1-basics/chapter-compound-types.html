@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>复合类型 - Zig 编程语言入门教程</title>
+        <title>复合类型：数组、切片与数据建模 - Zig 编程语言入门教程</title>
 
 
         <!-- Custom HTML head -->
@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-a9ca16c2.js";
+            window.path_to_searchindex_js = "../searchindex-35211ac1.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-2fc75e4c.js"></script>
+        <script src="../toc-6dcbe846.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -181,14 +181,25 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="复合类型"><a class="header" href="#复合类型">复合类型</a></h1>
-<p>本章介绍 Zig 的复合类型，包括数组、切片、枚举、联合、结构体和元组。复合类型将基本类型组合成更复杂的数据结构，是构建程序的基础。</p>
+                        <h1 id="复合类型数组切片与数据建模"><a class="header" href="#复合类型数组切片与数据建模">复合类型：数组、切片与数据建模</a></h1>
+<p>本章介绍 Zig 中最常见的复合类型，包括数组、切片、枚举、联合、结构体和元组。它们用于把基础类型组织成更有结构的数据，是后续学习控制流、错误处理、内存管理和工程实践的基础。</p>
+<blockquote>
+<p>💡 <strong>阅读建议</strong></p>
+<p>这一章的内容从“最常用的数据表示方式”逐步过渡到“更灵活的数据建模方式”。
+如果你是第一次接触 Zig，建议优先掌握下面几部分：</p>
+<ul>
+<li>数组与切片</li>
+<li>结构体</li>
+<li>枚举</li>
+</ul>
+<p>联合、非穷尽枚举以及部分与布局相关的内容，第一次阅读时可以先理解核心概念，不必急着记住所有细节。</p>
+</blockquote>
 <h2 id="数组"><a class="header" href="#数组">数组</a></h2>
 <p>数组是固定大小的连续内存序列，其长度是编译期常量，也是类型的一部分。</p>
 <h3 id="基本用法"><a class="header" href="#基本用法">基本用法</a></h3>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const array: [5]i32 = [_]i32{ 1, 2, 3, 4, 5 };
 
     const len = array.len;
@@ -239,7 +250,7 @@ matrix[2][2] = 9
 <li><strong>边界检查</strong>：数组长度是编译期常量，编译器可以在索引已知时提前发现越界；索引为运行时变量时仍进行运行时边界检查</li>
 </ul>
 <blockquote>
-<p>📖 <strong>相关章节</strong>：数组遍历使用的 <code>for</code> 循环将在<a href="chapter-control-flow.html">控制流与资源管理</a>中详细讲解。</p>
+<p><strong>相关章节</strong>：数组遍历使用的 <code>for</code> 循环将在<a href="chapter-control-flow.html">控制流与资源管理</a>中详细讲解。</p>
 </blockquote>
 <h3 id="数组操作"><a class="header" href="#数组操作">数组操作</a></h3>
 <p><strong>初始化语法</strong>：<code>[_]T{...}</code> 中的 <code>_</code> 表示让编译器从元素数量推断数组长度。</p>
@@ -247,7 +258,7 @@ matrix[2][2] = 9
 <p><strong>重复（<code>**</code>）</strong>：将数组重复指定次数，生成新数组。</p>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const part1 = [_]u8{ 1, 2, 3 };
     const part2 = [_]u8{ 4, 5 };
 
@@ -268,7 +279,7 @@ pub fn main(_: std.process.Init.Minimal) void {
 <h3 id="基本用法-1"><a class="header" href="#基本用法-1">基本用法</a></h3>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     var array = [_]i32{ 1, 2, 3, 4, 5 };
 
     const slice: []i32 = array[1..4];
@@ -293,7 +304,7 @@ subslice length: 2
 <li><strong>边界检查</strong>：切片长度是运行时值，只能在运行时检查边界</li>
 </ul>
 <blockquote>
-<p>📖 <strong>深入学习</strong>：胖指针是 Zig 指针系统的重要组成部分，<a href="../part2-advanced/chapter-pointers.html">指针与引用类型</a>将详细讲解各种指针类型及其应用场景。</p>
+<p><strong>深入学习</strong>：胖指针是 Zig 指针系统的重要组成部分，<a href="../part2-advanced/chapter-pointers.html">指针、切片与对齐</a>将详细讲解各种指针类型及其应用场景。</p>
 </blockquote>
 <h3 id="切片创建方式"><a class="header" href="#切片创建方式">切片创建方式</a></h3>
 <div class="table-wrapper">
@@ -311,7 +322,7 @@ subslice length: 2
 </div>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     var array = [_]i32{ 1, 2, 3, 4, 5 };
 
     const full: []i32 = array[:];
@@ -382,16 +393,16 @@ pub fn main(_: std.process.Init.Minimal) void {
 </table>
 </div>
 <h2 id="哨兵终止数组"><a class="header" href="#哨兵终止数组">哨兵终止数组</a></h2>
-<p>哨兵终止数组在数组末尾添加一个“哨兵值“来标记结束，主要用于 C 语言兼容性。</p>
+<p>哨兵终止数组在数组末尾添加一个“哨兵值”来标记结束，主要用于 C 语言兼容性，以及需要明确终止标记的数据表示。</p>
 <p><strong>语法</strong>：</p>
 <ul>
-<li><code>[N:T]</code>：长度为 N，哨兵值为 T 的数组</li>
-<li><code>[:T]</code>：未知长度，哨兵值为 T 的切片</li>
-<li>最常见的：<code>[:0]const u8</code> — C 风格字符串</li>
+<li><code>[N:S]T</code>：长度为 <code>N</code>、哨兵值为 <code>S</code>、元素类型为 <code>T</code> 的数组</li>
+<li><code>[:S]T</code>：带哨兵值 <code>S</code> 的切片</li>
+<li>最常见的：<code>[:0]const u8</code> —— 以 <code>0</code> 结尾的字节切片，常用于 C 风格字符串</li>
 </ul>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const message: [5:0]u8 = "hello".*;
 
     std.debug.print("消息：{s}\n", .{&amp;message});
@@ -434,7 +445,7 @@ pub fn callCFunction() void {
 </code></pre>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const names: [3][:0]const u8 = .{ "Alice", "Bob", "Charlie" };
     for (names, 0..) |name, i| {
         std.debug.print("名字 {}：{s}\n", .{ i, name });
@@ -442,7 +453,7 @@ pub fn main(_: std.process.Init.Minimal) void {
 }
 </code></pre>
 <blockquote>
-<p>📖 <strong>相关章节</strong>：哨兵终止数组主要用于 C 互操作，详细内容请参考 <a href="../part2-advanced/chapter-c-interop.html">C 互操作</a>。</p>
+<p><strong>相关章节</strong>：哨兵终止数组主要用于 C 互操作，详细内容请参考 <a href="../part2-advanced/chapter-c-interop.html">C 互操作</a>。</p>
 </blockquote>
 <h2 id="枚举"><a class="header" href="#枚举">枚举</a></h2>
 <p>枚举用于定义一组命名的整数值，提供类型安全和代码可读性。</p>
@@ -462,7 +473,7 @@ const Color = enum {
     blue,
 };
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const color: Color = .red;
 
     const color_name = switch (color) {
@@ -484,7 +495,7 @@ pub fn main(_: std.process.Init.Minimal) void {
 从整数创建：.green
 </code></pre>
 <blockquote>
-<p>📖 <strong>相关章节</strong>：枚举与 <code>switch</code> 语句配合使用时，编译器会强制穷尽性检查，详见<a href="chapter-control-flow.html">控制流与资源管理</a>。</p>
+<p><strong>相关章节</strong>：枚举与 <code>switch</code> 语句配合使用时，编译器会强制穷尽性检查，详见<a href="chapter-control-flow.html">控制流与资源管理</a>。</p>
 </blockquote>
 <h3 id="带整数类型的枚举"><a class="header" href="#带整数类型的枚举">带整数类型的枚举</a></h3>
 <p>指定底层整数类型，用于 C 互操作、内存优化或协议兼容：</p>
@@ -497,7 +508,7 @@ const Priority = enum(u8) {
     critical = 20,
 };
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const p: Priority = .high;
     std.debug.print("优先级：{s}，值：{}\n", .{ @tagName(p), @intFromEnum(p) });
 }
@@ -537,7 +548,7 @@ const Direction = enum(u4) {
     }
 };
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const dir: Direction = .north;
     std.debug.print("方向：{s}\n", .{dir.toString()});
     std.debug.print("相反方向：{s}\n", .{dir.opposite().toString()});
@@ -562,7 +573,7 @@ const TcpState = enum(u8) {
     _, // 非穷尽：允许其他 u8 值
 };
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const known: TcpState = .established;
     std.debug.print("已知状态：{s}\n", .{@tagName(known)});
 
@@ -582,7 +593,7 @@ pub fn main(_: std.process.Init.Minimal) void {
 未知状态值：99
 其他状态
 </code></pre>
-<p>非穷尽枚举的 switch 必须使用 <code>_</code> 分支处理未命名的值。<code>@tagName</code> 对未命名的值返回 <code>null</code>。</p>
+<p>非穷尽枚举的 <code>switch</code> 必须使用 <code>_</code> 分支处理未命名的值。对非穷尽枚举而言，运行时才出现的未命名值不能按普通命名枚举值处理；在需要展示名称时，应该优先依赖显式分支或整数值，而不要假定所有值都一定有可用的标签名。</p>
 <h2 id="联合"><a class="header" href="#联合">联合</a></h2>
 <p>联合允许在同一内存位置存储不同类型的数据。Zig 将联合分为两大类：</p>
 <ul>
@@ -608,7 +619,7 @@ const Shape = union(enum) {
     }
 };
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const shapes: [3]Shape = .{
         Shape{ .circle = .{ .radius = 1.0 } },
         Shape{ .rectangle = .{ .width = 3.0, .height = 5.0 } },
@@ -662,7 +673,7 @@ const Value = union(enum) {
     }
 };
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const values: [4]Value = .{
         Value{ .integer = 42 },
         Value{ .float = 3.14 },
@@ -688,7 +699,7 @@ pub fn main(_: std.process.Init.Minimal) void {
 字符串 = hello
 </code></pre>
 <blockquote>
-<p>📖 <strong>相关章节</strong>：带标签联合与 <code>switch</code> 语句配合使用时，编译器会自动推断活动变体，详见<a href="chapter-control-flow.html">控制流与资源管理</a>。</p>
+<p><strong>相关章节</strong>：带标签联合与 <code>switch</code> 语句配合使用时，编译器会自动推断活动变体，详见<a href="chapter-control-flow.html">控制流与资源管理</a>。</p>
 </blockquote>
 <h3 id="无标签联合"><a class="header" href="#无标签联合">无标签联合</a></h3>
 <p>无标签联合没有类型标签，程序员需要自己跟踪当前活动的成员。根据内存布局的不同，分为三种：</p>
@@ -713,7 +724,7 @@ const Data = union {
     as_bytes: [4]u8,
 };
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     var data: Data = .{ .as_i32 = 42 };
     std.debug.print("as_i32: {}\n", .{data.as_i32});
 
@@ -739,7 +750,7 @@ const Data = extern union {
     as_bytes: [4]u8,
 };
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const data: Data = .{ .as_i32 = 0x41424344 };
 
     std.debug.print("as_i32: {}\n", .{data.as_i32});
@@ -765,7 +776,7 @@ const Data = packed union {
     as_f32: f32,
 };
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const data: Data = .{ .as_u32 = 0x40490FDB };
     std.debug.print("as_u32: 0x{X}\n", .{data.as_u32});
     std.debug.print("as_f32: {}\n", .{data.as_f32});
@@ -794,7 +805,7 @@ const MyUnion = union {
     string: []const u8,
 };
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const u1 = MyUnion{ .int = 42 };
     const u2 = @unionInit(MyUnion, "float", 3.14);
     const u3 = @unionInit(MyUnion, "string", "hello");
@@ -810,7 +821,7 @@ pub fn main(_: std.process.Init.Minimal) void {
 }
 </code></pre>
 <blockquote>
-<p>📖 <strong>相关章节</strong>：更多编译期技巧请参考<a href="../part2-advanced/chapter-comptime.html">编译期计算与元编程</a>和<a href="../part2-advanced/chapter-generics.html">泛型编程</a>。</p>
+<p><strong>相关章节</strong>：更多编译期技巧请参考<a href="../part2-advanced/chapter-comptime.html">编译期计算与元编程</a>和<a href="../part2-advanced/chapter-generics.html">泛型编程</a>。</p>
 </blockquote>
 <p><strong><code>@tagName</code></strong>：获取带标签联合当前变体的名称字符串，常用于日志和调试：</p>
 <pre><code class="language-zig">const std = @import("std");
@@ -820,7 +831,7 @@ const Result = union(enum) {
     failure: []const u8,
 };
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const r1 = Result{ .success = 100 };
     const r2 = Result{ .failure = "连接失败" };
 
@@ -864,7 +875,7 @@ const Rectangle = struct {
     }
 };
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     var rect = Rectangle{
         .width = 10.0,
         .height = 5.0,
@@ -930,7 +941,7 @@ const ExternStruct = extern struct {
     c: u16,
 };
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     std.debug.print("AutoLayout 大小: {} 字节\n", .{@sizeOf(AutoLayout)});
     std.debug.print("PackedStruct 大小: {} 字节\n", .{@sizeOf(PackedStruct)});
     std.debug.print("ExternStruct 大小: {} 字节\n", .{@sizeOf(ExternStruct)});
@@ -961,7 +972,7 @@ const Flags = packed struct {
     }
 };
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const flags = Flags{ .enable = true, .mode = 0b101, .priority = 0b11, .reserved = 0 };
     std.debug.print("bitSizeOf: {}, sizeOf: {}\n", .{ @bitSizeOf(Flags), @sizeOf(Flags) });
     std.debug.print("as byte: 0x{X}\n", .{flags.asByte()});
@@ -984,7 +995,7 @@ fn printPoint(p: Point) void {
     std.debug.print("Point({}, {})\n", .{ p.x, p.y });
 }
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const p: Point = .{ .x = 1.0, .y = 2.0 };
     printPoint(p);
 
@@ -1016,7 +1027,7 @@ const Threshold = struct {
     };
 };
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const cfg = Config{ .host = "example.com" };
     std.debug.print("配置: {s}:{}\n", .{ cfg.host, cfg.port });
 
@@ -1051,7 +1062,7 @@ fn Vector(comptime T: type) type {
     };
 }
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const Vec3f = Vector(f32);
     const v1 = Vec3f{ .x = 1.0, .y = 2.0, .z = 3.0 };
     const v2 = Vec3f{ .x = 4.0, .y = 5.0, .z = 6.0 };
@@ -1065,14 +1076,14 @@ pub fn main(_: std.process.Init.Minimal) void {
 </code></pre>
 <p><code>@This()</code> 获取当前正在定义的类型，常用于泛型结构体中引用自身类型。</p>
 <blockquote>
-<p>📖 <strong>深入学习</strong>：泛型结构体的完整实现和高级用法请参考<a href="../part2-advanced/chapter-generics.html">泛型编程</a>章节。</p>
+<p><strong>深入学习</strong>：泛型结构体的完整实现和高级用法请参考<a href="../part2-advanced/chapter-generics.html">泛型编程</a>章节。</p>
 </blockquote>
 <h2 id="元组"><a class="header" href="#元组">元组</a></h2>
 <p>元组是一种特殊的匿名结构体，字段没有名称，使用数字索引访问。元组可以包含不同类型的元素。</p>
 <h3 id="基本用法-3"><a class="header" href="#基本用法-3">基本用法</a></h3>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const tuple = .{ 1, "hello", 3.14, true };
 
     std.debug.print("第一个元素: {}\n", .{tuple[0]});
@@ -1099,7 +1110,7 @@ tuple[3] = true
 <p><strong>元组与结构体的关系</strong>：元组本质上是无字段名的匿名结构体，字段名为数字索引（0, 1, 2…）。</p>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main(_: std.process.Init.Minimal) void {
+pub fn main(_: std.process.Init) void {
     const t1 = .{ 1, 2 };
     const t2 = .{ "a", "b" };
     const combined = t1 ++ t2;
@@ -1133,7 +1144,7 @@ combined[2]: a
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../part1-basics/chapter-basic-types.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../part1-basics/chapter-functions.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
@@ -1147,7 +1158,7 @@ combined[2]: a
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../part1-basics/chapter-basic-types.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../part1-basics/chapter-functions.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
