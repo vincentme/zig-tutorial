@@ -1,0 +1,574 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>第三部分导读 - Zig 编程语言入门教程</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-2459343d.css">
+        <link rel="stylesheet" href="../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../theme/css/auto-numbering-66d94143.css">
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-35211ac1.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-6dcbe846.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Zig 编程语言入门教程</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/vincentme/zig-tutorial" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/vincentme/zig-tutorial/edit/main/src/part3-practice/part-overview.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="第三部分导读把语言知识转成可落地的项目能力"><a class="header" href="#第三部分导读把语言知识转成可落地的项目能力">第三部分导读：把语言知识转成可落地的项目能力</a></h1>
+<p>前两部分解决的是“理解 Zig 的语法、模型与常见工程能力”；第三部分开始解决另一个问题：</p>
+<blockquote>
+<p><strong>当你真的要做点东西时，应该如何把这些知识组合起来？</strong></p>
+</blockquote>
+<p>这一部分不再以“单个语言特性”为中心，而是以<strong>案例、设计约束、实现思路和工程权衡</strong>为中心。<br>你会看到：</p>
+<ul>
+<li>一个小项目为什么要这样拆分模块</li>
+<li>一个 API 为什么要这样设计</li>
+<li>一段代码为什么选择简单可靠，而不是“看起来更高级”</li>
+<li>哪些主题适合做完整案例，哪些更适合当作专题深入</li>
+</ul>
+<hr>
+<h2 id="这一部分的阅读目标"><a class="header" href="#这一部分的阅读目标">这一部分的阅读目标</a></h2>
+<p>读完第三部分后，你应该逐步具备这些能力：</p>
+<ul>
+<li>能把 Zig 基础语法组织成一个完整的小项目</li>
+<li>能围绕“场景与约束”来设计实现，而不是只会拼语法</li>
+<li>能初步判断：
+<ul>
+<li>什么时候该用简单方案</li>
+<li>什么时候该进一步做抽象</li>
+<li>什么时候该考虑性能、内存、并发或底层优化</li>
+</ul>
+</li>
+<li>能分辨“完整案例”和“专题技巧”之间的学习方式差异</li>
+</ul>
+<hr>
+<h2 id="这一部分怎么读最合适"><a class="header" href="#这一部分怎么读最合适">这一部分怎么读最合适？</a></h2>
+<p>建议你把第三部分分成两类内容来读：</p>
+<h3 id="第一类完整案例"><a class="header" href="#第一类完整案例">第一类：完整案例</a></h3>
+<p>这类章节更强调“从需求到实现”的完整闭环，适合顺读。</p>
+<h3 id="第二类专题章节"><a class="header" href="#第二类专题章节">第二类：专题章节</a></h3>
+<p>这类章节更强调某个方向的关键技巧、约束或优化思路，适合在完成基础案例后按需阅读。</p>
+<p>如果你是第一次进入第三部分，推荐阅读顺序是：</p>
+<ol>
+<li><a href="chapter-cli-tool.html">实战案例 - CLI 工具开发</a></li>
+<li><a href="chapter-http-server.html">实战案例 - HTTP 服务器设计与最小实现</a></li>
+<li><a href="chapter-memory-pool.html">实战案例 - 内存池实现</a></li>
+<li><a href="chapter-config-system.html">实战案例 - 配置系统原型</a></li>
+<li><a href="chapter-simd.html">SIMD 向量编程（专题）</a></li>
+<li><a href="chapter-async.html">异步 I/O：现状与未来方向</a></li>
+<li><a href="chapter-advanced-memory.html">高级内存管理技巧（专题）</a></li>
+<li><a href="chapter-optimization.html">性能优化与调试（专题）</a></li>
+</ol>
+<hr>
+<h2 id="先说清楚第三部分并不都是同一种案例"><a class="header" href="#先说清楚第三部分并不都是同一种案例">先说清楚：第三部分并不都是“同一种案例”</a></h2>
+<p>为了避免阅读预期错位，这里先明确区分一下。</p>
+<h2 id="一完整案例从问题到实现的闭环"><a class="header" href="#一完整案例从问题到实现的闭环">一、完整案例：从问题到实现的闭环</a></h2>
+<p>这类内容更像真正的项目练习，应该重点关注：</p>
+<ul>
+<li>解决什么问题</li>
+<li>有哪些设计约束</li>
+<li>模块如何划分</li>
+<li>实现路径如何逐步展开</li>
+<li>结果如何验证</li>
+<li>还存在哪些局限</li>
+</ul>
+<h3 id="1-cli-工具开发"><a class="header" href="#1-cli-工具开发">1. CLI 工具开发</a></h3>
+<p>这是第三部分里最适合作为起点的一章。</p>
+<p>你会练到：</p>
+<ul>
+<li>项目结构组织</li>
+<li>参数解析</li>
+<li>文件系统遍历</li>
+<li>错误处理</li>
+<li>输出格式设计</li>
+<li>测试与构建流程</li>
+</ul>
+<p>这一章最接近“一个完整但不复杂的小项目”，非常适合先建立信心。</p>
+<h3 id="2-http-服务器设计与最小实现"><a class="header" href="#2-http-服务器设计与最小实现">2. HTTP 服务器设计与最小实现</a></h3>
+<p>这一章会把你从本地文件和命令行场景，带到网络编程场景。</p>
+<p>你会接触：</p>
+<ul>
+<li>监听、接受连接、读取请求、写回响应</li>
+<li>HTTP 请求/响应的最小模型</li>
+<li>服务端程序的循环结构</li>
+<li>网络 API 与版本演进带来的现实约束</li>
+</ul>
+<p>不过要特别注意：</p>
+<blockquote>
+<p>本章更适合把重点放在<strong>设计思路与最小服务模型</strong>上，而不是死记某个开发版快照下的具体 API 签名。</p>
+</blockquote>
+<h3 id="3-内存池实现"><a class="header" href="#3-内存池实现">3. 内存池实现</a></h3>
+<p>这一章已经开始进入“带明确性能目标的数据结构/资源管理案例”。</p>
+<p>你会看到：</p>
+<ul>
+<li>预分配思路</li>
+<li>获取/释放语义</li>
+<li>空间换时间的典型策略</li>
+<li>为什么某些场景下对象池比通用分配更合适</li>
+</ul>
+<p>它仍然是案例，但已经开始带有明显的“实现策略专题”味道。</p>
+<h3 id="4-配置系统原型"><a class="header" href="#4-配置系统原型">4. 配置系统原型</a></h3>
+<p>这一章的价值，在于练习“如何把配置、类型、默认值、校验逻辑组织起来”。</p>
+<p>这类题目很有代表性，因为它常常介于：</p>
+<ul>
+<li>工程中的真实需求</li>
+<li>编译期能力的应用</li>
+<li>API 设计取舍</li>
+</ul>
+<p>阅读时要注意区分：</p>
+<ul>
+<li>哪些部分是“可直接借鉴的结构设计”</li>
+<li>哪些部分只是“为了展示技巧而做的简化实现”</li>
+</ul>
+<hr>
+<h2 id="二专题章节围绕某个方向深入而不是完整项目闭环"><a class="header" href="#二专题章节围绕某个方向深入而不是完整项目闭环">二、专题章节：围绕某个方向深入，而不是完整项目闭环</a></h2>
+<p>这类内容不一定是“从零到一做一个完整程序”，而更像是：</p>
+<ul>
+<li>某个能力方向的专题说明</li>
+<li>某类优化手段的入门窗口</li>
+<li>进一步深入工程实践前的准备材料</li>
+</ul>
+<h3 id="1-simd-向量编程"><a class="header" href="#1-simd-向量编程">1. SIMD 向量编程</a></h3>
+<p>这是一个典型的“按需深入”主题。</p>
+<p>它适合你在下面这些情况下阅读：</p>
+<ul>
+<li>你对数值计算、图像处理、信号处理等方向有兴趣</li>
+<li>你已经有明确的热点代码</li>
+<li>你知道自己为什么要关心数据并行</li>
+</ul>
+<p>如果只是一般应用开发，这一章不必急着读。<br>更合适的阅读姿势是：<strong>先把它当成性能相关专题中的一个分支，而不是第三部分的主线案例。</strong></p>
+<h3 id="2-异步-io现状与未来方向"><a class="header" href="#2-异步-io现状与未来方向">2. 异步 I/O：现状与未来方向</a></h3>
+<p>这一章更适合当作“现状说明与方向性阅读”。</p>
+<p>它的意义主要在于帮助你理解：</p>
+<ul>
+<li>Zig 当前异步能力的现状</li>
+<li>旧语言级 <code>async/await</code> 的历史变化</li>
+<li><code>std.Io</code> 相关方向为什么值得关注</li>
+<li>为什么这里目前更适合讲“路线与模型”，而不是讲一个稳定实战模板</li>
+</ul>
+<p>因此，这一章更适合放在专题段落的前半部分来读：<br>先把 Zig 当前并发 / I/O 方向的现实状态搞清楚，再继续进入更偏资源控制和性能验证的话题。</p>
+<h3 id="3-高级内存管理技巧"><a class="header" href="#3-高级内存管理技巧">3. 高级内存管理技巧</a></h3>
+<p>这一章更偏“专题能力扩展”。</p>
+<p>适合在你已经理解：</p>
+<ul>
+<li>基本分配器模型</li>
+<li>所有权边界</li>
+<li>内存池思路</li>
+</ul>
+<p>之后再继续读。<br>它的重点不是“记更多 API”，而是学习：</p>
+<ul>
+<li>什么时候真的需要自己做更多内存控制</li>
+<li>这些技巧带来的收益和代价分别是什么</li>
+</ul>
+<p>它也很适合作为<a href="chapter-memory-pool.html">内存池实现</a>之后的延伸阅读，帮助你从“做一个案例”过渡到“比较多种资源控制策略”。</p>
+<h3 id="4-性能优化与调试"><a class="header" href="#4-性能优化与调试">4. 性能优化与调试</a></h3>
+<p>这是一个非常适合放在专题收尾位置的章节。</p>
+<p>因为当你已经看过 SIMD、异步方向和高级内存技巧这些专题之后，你会更容易真正理解：</p>
+<ul>
+<li>为什么要测量，而不是凭感觉优化</li>
+<li>不同优化级别意味着什么</li>
+<li>调试、断言、简单基准测试如何帮助你定位问题</li>
+<li>性能问题和正确性问题常常是纠缠在一起的</li>
+</ul>
+<p>把它放在专题段落的最后，也更符合一种成熟的工程顺序：</p>
+<blockquote>
+<p><strong>先理解手段，再回到“如何验证这些手段到底值不值得”。</strong></p>
+</blockquote>
+<hr>
+<h2 id="推荐的学习分组"><a class="header" href="#推荐的学习分组">推荐的学习分组</a></h2>
+<p>如果你希望更有节奏地学习，可以按下面三组来读。</p>
+<h2 id="第一组先完成两个完整项目"><a class="header" href="#第一组先完成两个完整项目">第一组：先完成两个完整项目</a></h2>
+<p>建议先读：</p>
+<ol>
+<li><a href="chapter-cli-tool.html">实战案例 - CLI 工具开发</a></li>
+<li><a href="chapter-http-server.html">实战案例 - HTTP 服务器设计与最小实现</a></li>
+</ol>
+<p>这一组的目标是建立：</p>
+<ul>
+<li>从需求到模块划分的意识</li>
+<li>从输入到输出的完整实现路径</li>
+<li>对“真正写一个程序”这件事的整体感觉</li>
+</ul>
+<h2 id="第二组再做两个实现型案例"><a class="header" href="#第二组再做两个实现型案例">第二组：再做两个实现型案例</a></h2>
+<p>建议再读：</p>
+<ol start="3">
+<li><a href="chapter-memory-pool.html">实战案例 - 内存池实现</a></li>
+<li><a href="chapter-config-system.html">实战案例 - 配置系统原型</a></li>
+</ol>
+<p>这一组的目标是建立：</p>
+<ul>
+<li>面向约束做设计的能力</li>
+<li>更主动地考虑数据结构、资源管理和抽象边界</li>
+<li>对“一个实现为什么长这样”的解释能力</li>
+</ul>
+<h2 id="第三组最后按需进入专题"><a class="header" href="#第三组最后按需进入专题">第三组：最后按需进入专题</a></h2>
+<p>最后再读：</p>
+<ol start="5">
+<li><a href="chapter-simd.html">SIMD 向量编程（专题）</a></li>
+<li><a href="chapter-async.html">异步 I/O：现状与未来方向</a></li>
+<li><a href="chapter-advanced-memory.html">高级内存管理技巧（专题）</a></li>
+<li><a href="chapter-optimization.html">性能优化与调试（专题）</a></li>
+</ol>
+<p>这一组更像“工具箱扩展”和“方向探索”。<br>如果你只打算挑读其中两章，比较推荐优先读：</p>
+<ul>
+<li><a href="chapter-async.html">异步 I/O：现状与未来方向</a>：帮助你校正对 Zig 当前并发 / I/O 现状的预期</li>
+<li><a href="chapter-optimization.html">性能优化与调试（专题）</a>：帮助你把前面学到的技巧重新落回“如何验证”这个工程问题上</li>
+</ul>
+<hr>
+<h2 id="阅读第三部分时最重要的不是抄代码而是问这几个问题"><a class="header" href="#阅读第三部分时最重要的不是抄代码而是问这几个问题">阅读第三部分时，最重要的不是抄代码，而是问这几个问题</a></h2>
+<h3 id="1-这个案例真正要解决的问题是什么"><a class="header" href="#1-这个案例真正要解决的问题是什么">1. 这个案例真正要解决的问题是什么？</a></h3>
+<p>不要只看“实现了什么”，更要看“为什么要实现它”。</p>
+<p>例如：</p>
+<ul>
+<li>为什么这里做 CLI，而不是 GUI？</li>
+<li>为什么这里自己实现内存池，而不是直接用通用分配器？</li>
+<li>为什么这里只做最小 HTTP 处理，而不是完整协议栈？</li>
+</ul>
+<h3 id="2-这个实现的边界条件是什么"><a class="header" href="#2-这个实现的边界条件是什么">2. 这个实现的边界条件是什么？</a></h3>
+<p>好的案例不会假装“万能”。</p>
+<p>你在阅读时要主动问：</p>
+<ul>
+<li>这个实现支持哪些输入？</li>
+<li>不支持哪些输入？</li>
+<li>是否是单线程？</li>
+<li>是否假定某些资源总是可用？</li>
+<li>是教学用最小实现，还是可直接扩展到生产环境的骨架？</li>
+</ul>
+<h3 id="3-哪些部分是稳定基础哪些部分是版本敏感区域"><a class="header" href="#3-哪些部分是稳定基础哪些部分是版本敏感区域">3. 哪些部分是稳定基础，哪些部分是版本敏感区域？</a></h3>
+<p>第三部分比前面更容易接触到开发版变动较快的领域，例如：</p>
+<ul>
+<li><code>std.Io</code> 相关接口</li>
+<li>网络 API</li>
+<li>某些构建与标准库细节</li>
+</ul>
+<p>阅读时请把重点放在：</p>
+<ul>
+<li>架构思路</li>
+<li>资源模型</li>
+<li>错误处理路径</li>
+<li>模块组织方式</li>
+</ul>
+<p>而不要把每个开发版 API 名字当作永久不变的知识点。</p>
+<h3 id="4-这个案例还有哪些下一步"><a class="header" href="#4-这个案例还有哪些下一步">4. 这个案例还有哪些“下一步”？</a></h3>
+<p>真正的实战能力，不是把教程里的版本写完，而是知道它接下来会往哪里演化。</p>
+<p>例如：</p>
+<ul>
+<li>CLI 工具下一步可以支持更复杂过滤条件</li>
+<li>HTTP 服务器下一步可以补路由、中间件、并发模型</li>
+<li>内存池下一步可以考虑空闲链表、线程安全、对象重置</li>
+<li>配置系统下一步可以考虑文件格式、环境变量、校验与错误恢复</li>
+</ul>
+<hr>
+<h2 id="第三部分的学习重点和前两部分不一样"><a class="header" href="#第三部分的学习重点和前两部分不一样">第三部分的学习重点，和前两部分不一样</a></h2>
+<p>前两部分更像是在建立这些能力：</p>
+<ul>
+<li>理解 Zig 怎么表达</li>
+<li>理解错误与资源如何管理</li>
+<li>理解类型、函数、控制流、构建系统</li>
+</ul>
+<p>而第三部分开始更强调这些能力：</p>
+<ul>
+<li><strong>场景建模能力</strong>：先定义问题，再写代码</li>
+<li><strong>约束意识</strong>：明确什么能做、什么暂时不做</li>
+<li><strong>模块划分能力</strong>：把复杂逻辑拆成合理的部分</li>
+<li><strong>权衡意识</strong>：性能、可读性、复杂度之间如何取舍</li>
+<li><strong>收束能力</strong>：写完之后知道这个实现的边界在哪里</li>
+</ul>
+<hr>
+<h2 id="一个推荐的实战练习方法"><a class="header" href="#一个推荐的实战练习方法">一个推荐的实战练习方法</a></h2>
+<p>每读完一个案例或专题，建议你做一次“小幅改造”练习，而不是重写一遍原文。</p>
+<p>例如：</p>
+<h3 id="读完-cli-工具后"><a class="header" href="#读完-cli-工具后">读完 CLI 工具后</a></h3>
+<p>你可以尝试：</p>
+<ul>
+<li>增加一个新过滤条件</li>
+<li>增加彩色输出</li>
+<li>为 JSON 输出补上更多字段</li>
+<li>改善帮助信息和错误提示</li>
+</ul>
+<h3 id="读完-http-服务器后"><a class="header" href="#读完-http-服务器后">读完 HTTP 服务器后</a></h3>
+<p>你可以尝试：</p>
+<ul>
+<li>增加一个新路由</li>
+<li>返回不同的状态码</li>
+<li>添加简单日志</li>
+<li>只支持最小 GET 请求，但把边界写清楚</li>
+</ul>
+<h3 id="读完内存池后"><a class="header" href="#读完内存池后">读完内存池后</a></h3>
+<p>你可以尝试：</p>
+<ul>
+<li>给释放操作增加合法性检查</li>
+<li>增加“重置对象”的逻辑</li>
+<li>记录命中率或使用统计</li>
+<li>思考如何从线性查找优化为更稳定的空闲管理</li>
+</ul>
+<h3 id="读完配置系统后"><a class="header" href="#读完配置系统后">读完配置系统后</a></h3>
+<p>你可以尝试：</p>
+<ul>
+<li>增加默认值支持</li>
+<li>增加字段校验</li>
+<li>增加从文本输入解析</li>
+<li>把“简化演示”推进成更接近实际工程的版本</li>
+</ul>
+<h3 id="读完性能与调试专题后"><a class="header" href="#读完性能与调试专题后">读完性能与调试专题后</a></h3>
+<p>你可以尝试：</p>
+<ul>
+<li>给前面的 CLI 或内存池代码加简单计时</li>
+<li>比较不同优化级别的差异</li>
+<li>加入断言和调试输出</li>
+<li>记录你真正优化前后的变化，而不是只看“理论上应该更快”</li>
+</ul>
+<hr>
+<h2 id="第三部分结束后你应该收获什么"><a class="header" href="#第三部分结束后你应该收获什么">第三部分结束后，你应该收获什么？</a></h2>
+<p>理想情况下，完成这一部分后，你不只是“又看了几章 Zig 示例”，而是应该开始具备下面这些感觉：</p>
+<ul>
+<li>我可以把一个小需求拆成几个合理模块</li>
+<li>我知道如何围绕约束写实现，而不是盲目追求“大而全”</li>
+<li>我知道哪些代码是教学骨架，哪些地方需要我自己补强</li>
+<li>我开始能判断一个 Zig 实现是“清楚可靠”，还是“过早复杂化”</li>
+<li>我可以继续进入自己的小项目，而不是只停留在教程练习里</li>
+</ul>
+<hr>
+<h2 id="最后的阅读建议"><a class="header" href="#最后的阅读建议">最后的阅读建议</a></h2>
+<p>请把第三部分当成“从会写 Zig，到开始会做东西”的过渡阶段。</p>
+<p>这一部分最重要的不是：</p>
+<ul>
+<li>记住所有 API 名字</li>
+<li>复制每一行代码</li>
+<li>一次做成“生产级项目”</li>
+</ul>
+<p>而是：</p>
+<ul>
+<li>学会围绕问题组织代码</li>
+<li>学会说明设计约束</li>
+<li>学会在版本变化中抓住稳定的核心思路</li>
+<li>学会在工程实践里继续迭代自己的实现</li>
+</ul>
+<p>接下来，建议先从 <a href="chapter-cli-tool.html">实战案例 - CLI 工具开发</a> 开始。<br>它会是你进入第三部分最平稳、也最有成就感的起点。</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../part2-advanced/chapter-package-management.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../part3-practice/chapter-cli-tool.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../part2-advanced/chapter-package-management.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../part3-practice/chapter-cli-tool.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-c2a407aa.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-362d1e8a.js"></script>
+        <script src="../book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../mermaid-eefea253.min.js"></script>
+        <script src="../mermaid-init-ccf746f1.js"></script>
+
+
+
+    </div>
+    </body>
+</html>
