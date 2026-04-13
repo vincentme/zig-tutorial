@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-35211ac1.js";
+            window.path_to_searchindex_js = "../searchindex-a9c16af4.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-6dcbe846.js"></script>
+        <script src="../toc-fc612514.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -249,36 +249,16 @@ zig fmt --help
 </code></pre>
 <p>这里不需要现在就理解所有输出内容，只要知道 Zig 工具链已经正常工作即可。</p>
 <hr>
-<h2 id="编辑器配置"><a class="header" href="#编辑器配置">编辑器配置</a></h2>
-<p>你完全可以先用任意文本编辑器开始写 Zig。<br>但如果想获得补全、跳转、错误提示等体验，建议配置语言服务器。</p>
-<h2 id="vs-code-配置示例"><a class="header" href="#vs-code-配置示例">VS Code 配置示例</a></h2>
-<p>安装 Zig 扩展：</p>
-<pre><code class="language-bash"># 安装 Zig 扩展
-code --install-extension ziglang.vscode-zig
-</code></pre>
-<p>一个简单的 <code>settings.json</code> 示例：</p>
-<pre><code class="language-json">{
-  "zig.zls.path": "zls",
-  "zig.formatting.provider": "zig",
-  "zig.checkForUpdate": false
-}
-</code></pre>
-<h2 id="安装-zls"><a class="header" href="#安装-zls">安装 ZLS</a></h2>
-<p>ZLS 是 Zig Language Server，用于提供编辑器智能提示。</p>
-<p>推荐安装方式：</p>
+<h2 id="编辑器支持"><a class="header" href="#编辑器支持">编辑器支持</a></h2>
+<p>你可以先用任意文本编辑器开始写 Zig。</p>
+<p>如果想获得补全、跳转、错误提示、格式化等体验，可以在常见编辑器中安装 Zig 相关扩展，并启用语言服务器支持。<br>例如 <code>VS Code</code>、<code>Zed</code>、<code>Neovim</code> 等编辑器通常都有对应的 Zig 开发插件或集成方案。</p>
+<p>很多编辑器会自动提示安装或配置 <code>ZLS</code>（Zig Language Server）。<br>如果需要手动安装、更新或排查问题，建议参考 ZLS 官方安装说明：</p>
 <ul>
-<li>访问 <a href="https://zigtools.org/zls/install/">https://zigtools.org/zls/install/</a></li>
-<li>下载与你的 Zig 版本相匹配的 ZLS</li>
-<li>将其加入 <code>PATH</code></li>
+<li><a href="https://zigtools.org/zls/install/">https://zigtools.org/zls/install/</a></li>
 </ul>
 <blockquote>
-<p>⚠️ <strong>版本兼容很重要</strong><br>ZLS 和 Zig 版本不匹配时，常见现象是补全异常、诊断错误或编辑器提示不准确。<br>如果你使用的是开发版 Zig，也应尽量使用对应版本的 ZLS。</p>
+<p>⚠️ 版本兼容很重要<br><code>ZLS</code> 应尽量与所使用的 Zig 版本匹配。<br>如果你使用的是开发版 Zig，也应尽量使用对应版本的 <code>ZLS</code>，否则可能出现补全异常、诊断不准确等问题。</p>
 </blockquote>
-<p>如果你确实需要从源码构建：</p>
-<pre><code class="language-bash">git clone https://github.com/zigtools/zls
-cd zls
-zig build -Doptimize=ReleaseFast
-</code></pre>
 <hr>
 <h2 id="第一个-zig-程序"><a class="header" href="#第一个-zig-程序">第一个 Zig 程序</a></h2>
 <p>先不要急着讨论构建系统、包管理或复杂项目结构。<br>这一节的重点只有一件事：<strong>把一个最小程序跑起来</strong>。</p>
@@ -320,7 +300,7 @@ pub fn main() void {
 <hr>
 <h2 id="zig-016-中常见的-main-写法"><a class="header" href="#zig-016-中常见的-main-写法">Zig 0.16 中常见的 <code>main</code> 写法</a></h2>
 <p>在 Zig 0.16 中，你会看到不止一种 <code>main</code> 写法。<br>本教程后续示例会根据需要使用不同形式，但你现在只需要先认识它们。</p>
-<h3 id="1-最小写法"><a class="header" href="#1-最小写法">1. 最小写法</a></h3>
+<h3 id="最小写法"><a class="header" href="#最小写法">最小写法</a></h3>
 <pre><code class="language-zig">const std = @import("std");
 
 pub fn main() void {
@@ -333,7 +313,7 @@ pub fn main() void {
 <li>不需要向上传播错误</li>
 <li>只做少量调试输出</li>
 </ul>
-<h3 id="2-需要错误传播时"><a class="header" href="#2-需要错误传播时">2. 需要错误传播时</a></h3>
+<h3 id="需要错误传播时"><a class="header" href="#需要错误传播时">需要错误传播时</a></h3>
 <pre><code class="language-zig">const std = @import("std");
 
 pub fn main() !void {
@@ -346,25 +326,38 @@ pub fn main() !void {
 <li>你希望把错误直接向外返回</li>
 <li>示例中已经开始接触显式错误处理</li>
 </ul>
-<h3 id="3-使用-stdprocessinit-的-016-风格写法"><a class="header" href="#3-使用-stdprocessinit-的-016-风格写法">3. 使用 <code>std.process.Init</code> 的 0.16 风格写法</a></h3>
+<h3 id="使用-stdprocessinit--stdprocessinitminimal-的-016-风格写法"><a class="header" href="#使用-stdprocessinit--stdprocessinitminimal-的-016-风格写法">使用 <code>std.process.Init</code> / <code>std.process.Init.Minimal</code> 的 0.16 风格写法</a></h3>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(_: std.process.Init.Minimal) void {
+    std.debug.print("Hello from Zig 0.16!\n", .{});
+}
+</code></pre>
+<p>你也可能看到更完整的形式：</p>
 <pre><code class="language-zig">const std = @import("std");
 
 pub fn main(_: std.process.Init) void {
     std.debug.print("Hello from Zig 0.16!\n", .{});
 }
 </code></pre>
+<p>可以先简单理解为：</p>
+<ul>
+<li><code>std.process.Init.Minimal</code>：只接收最基本的初始化上下文</li>
+<li><code>std.process.Init</code>：接收更完整的初始化上下文</li>
+</ul>
 <p>适合：</p>
 <ul>
-<li>你想和 0.16 的新式入口风格保持一致</li>
-<li>后续需要访问初始化上下文中的字段</li>
-<li>教程统一采用这一风格来减少版本混淆</li>
+<li>你想和 Zig 0.16 的新式入口风格保持一致</li>
+<li>你在示例或标准库代码里看到了这种写法</li>
+<li>后续可能需要访问入口初始化信息</li>
 </ul>
+<p>对于入门阶段，你不必先深究二者内部区别。并且如果当前示例并不需要使用这些上下文，完全可以先把参数写成 <code>_</code>，表示“先接收但不使用”以避免编译错误。</p>
 <h3 id="应该怎么选"><a class="header" href="#应该怎么选">应该怎么选？</a></h3>
 <p>对于本章和你自己的第一个程序：</p>
 <ul>
 <li><strong>想最快跑起来</strong>：用 <code>pub fn main() void</code></li>
 <li><strong>马上要用 <code>try</code></strong>：用 <code>pub fn main() !void</code></li>
-<li><strong>想和本教程后续多数 0.16 示例保持一致</strong>：用 <code>pub fn main(_: std.process.Init) void</code> 或 <code>pub fn main(init: std.process.Init) !void</code></li>
+<li><strong>想和本教程后续多数 0.16 示例保持一致</strong>：用 <code>pub fn main(_: std.process.Init.Minimal) void</code>、<code>pub fn main(_: std.process.Init) void</code>，或它们对应的 <code>!void</code> 版本</li>
 </ul>
 <blockquote>
 <p>💡 一个重要原则<br><code>main</code> 是否接收 <code>std.process.Init</code>，和是否返回 <code>!void</code>，是两个不同维度的问题：</p>
@@ -454,7 +447,7 @@ zig init
 <li><code>build.zig</code> 是构建脚本</li>
 <li><code>build.zig.zon</code> 是项目清单文件</li>
 </ul>
-<p>这些内容会在<a href="chapter-build-system.html">构建系统入门</a>里专门讲。<br>本章不展开，是为了避免你在还没熟悉语言基础之前就被工程化细节打断。</p>
+<p>这些内容会在<a href="chapter-build-system.html">构建系统入门</a>里专门讲。本章不展开讲解，是为了避免你在还没熟悉语言基础之前就被工程化细节打断。</p>
 <hr>
 <h2 id="常见问题"><a class="header" href="#常见问题">常见问题</a></h2>
 <h3 id="为什么我复制示例后编不过"><a class="header" href="#为什么我复制示例后编不过">为什么我复制示例后编不过？</a></h3>

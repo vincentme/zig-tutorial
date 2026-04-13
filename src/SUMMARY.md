@@ -9,7 +9,7 @@
 - [开发环境与第一个程序](part1-basics/chapter-setup.md)
 - [变量、常量与基础类型](part1-basics/chapter-basic-types.md)
 - [函数定义与调用](part1-basics/chapter-functions.md)
-- [复合类型：数组、切片与数据建模](part1-basics/chapter-compound-types.md)
+- [复合类型](part1-basics/chapter-compound-types.md)
 - [控制流、可选类型与资源管理](part1-basics/chapter-control-flow.md)
 - [错误处理：!T、try 与 errdefer](part1-basics/chapter-error-handling.md)
 - [构建系统入门](part1-basics/chapter-build-system.md)
@@ -17,7 +17,8 @@
 # 第二部分：高级特性
 
 - [第二部分导读](part2-advanced/part-overview.md)
-- [标准库导读：常用模块与阅读方法](part2-advanced/chapter-standard-library.md)
+- [标准库导航与阅读指南](part2-advanced/chapter-standard-library-guide.md)
+- [常用标准库模块详解](part2-advanced/chapter-standard-library-detail.md)
 - [编译期计算与元编程](part2-advanced/chapter-comptime.md)
 - [泛型编程](part2-advanced/chapter-generics.md)
 - [指针、切片与对齐](part2-advanced/chapter-pointers.md)

@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-35211ac1.js";
+            window.path_to_searchindex_js = "../searchindex-a9c16af4.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-6dcbe846.js"></script>
+        <script src="../toc-fc612514.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -234,7 +234,7 @@ pub fn main(_: std.process.Init) void {
 }
 </code></pre>
 <h3 id="命名风格建议"><a class="header" href="#命名风格建议">命名风格建议</a></h3>
-<p>这一节更适合作为<strong>本教程的代码风格约定</strong>来理解，而不是把它看成 Zig 语言层面的硬性规则。<br>实际项目中，不同团队和代码库可能会有不同风格；阅读 Zig 标准库时，你也会看到与某些语言不同的命名习惯。</p>
+<p>这一节更适合作为<strong>本教程的代码风格约定</strong>来理解，而不是把它看成 Zig 语言层面的硬性规则。实际项目中，不同团队和代码库可能会有不同风格。</p>
 <p>本教程后续示例主要采用下面这套较容易阅读的风格：</p>
 <div class="table-wrapper">
 <table>
@@ -263,9 +263,9 @@ pub fn main(_: std.process.Init) void {
 <tr><th>注释类型</th><th>语法</th><th>用途</th></tr>
 </thead>
 <tbody>
-<tr><td>普通注释</td><td><code>//</code></td><td>代码说明</td></tr>
-<tr><td>文档注释</td><td><code>///</code></td><td>为声明添加文档，被 <code>zig doc</code> 提取</td></tr>
-<tr><td>顶层文档注释</td><td><code>//!</code></td><td>为文件或模块添加文档</td></tr>
+<tr><td>普通注释</td><td><code>//</code></td><td>代码说明，不参与文档生成</td></tr>
+<tr><td>文档注释</td><td><code>///</code></td><td>写在声明前，为后面的声明添加文档，可被 <code>zig doc</code> 提取</td></tr>
+<tr><td>顶层文档注释</td><td><code>//!</code></td><td>为当前文件对应的模块添加文档，通常写在文件开头</td></tr>
 </tbody>
 </table>
 </div>
@@ -273,7 +273,7 @@ pub fn main(_: std.process.Init) void {
 
 /// 计算两个整数的和
 fn add(a: i32, b: i32) i32 {
-    return a + b;  // 普通注释
+    return a + b; // 普通注释
 }
 </code></pre>
 <h3 id="变量遮蔽规则"><a class="header" href="#变量遮蔽规则">变量遮蔽规则</a></h3>
@@ -369,19 +369,16 @@ pub fn main(_: std.process.Init) void {
 <tr><th>类型分类</th><th>类型</th><th>说明</th></tr>
 </thead>
 <tbody>
-<tr><td>整数</td><td><code>i8</code><del><code>i128</code>, <code>u8</code></del><code>u128</code>, <code>isize</code>, <code>usize</code></td><td>有符号/无符号整数</td></tr>
+<tr><td>整数</td><td><code>i8</code> 到 <code>i128</code>，<code>u8</code> 到 <code>u128</code>，<code>isize</code>，<code>usize</code></td><td>有符号/无符号整数</td></tr>
 <tr><td>浮点</td><td><code>f16</code>, <code>f32</code>, <code>f64</code>, <code>f80</code>, <code>f128</code></td><td>IEEE 浮点数</td></tr>
 <tr><td>布尔</td><td><code>bool</code></td><td><code>true</code> 或 <code>false</code></td></tr>
 <tr><td>空</td><td><code>void</code></td><td>空类型，大小为 0 字节</td></tr>
 <tr><td>不可达</td><td><code>noreturn</code></td><td>永不返回的类型</td></tr>
 <tr><td>编译期</td><td><code>comptime_int</code>, <code>comptime_float</code></td><td>编译期确定的数值类型</td></tr>
-<tr><td>可选</td><td><code>?T</code></td><td>可能为 <code>null</code> 的类型</td></tr>
+<tr><td>可选</td><td><code>?T</code></td><td>可能为 <code>null</code> 的类型，后续章节展开</td></tr>
 </tbody>
 </table>
 </div>
-<blockquote>
-<p><strong>深入学习</strong>：可选类型 <code>?T</code> 的详细用法请参考<a href="chapter-control-flow.html">控制流与资源管理</a>。</p>
-</blockquote>
 <h3 id="整数类型"><a class="header" href="#整数类型">整数类型</a></h3>
 <p>Zig 提供了从 8 位到 128 位的整数类型，以及平台相关的 <code>isize</code>/<code>usize</code>：</p>
 <div class="table-wrapper">
@@ -416,14 +413,43 @@ pub fn main(_: std.process.Init) void {
     std.debug.print("i32: {}, u32: {}, usize: {}\n", .{ a, b, size });
 }
 </code></pre>
-<h4 id="数字字面量"><a class="header" href="#数字字面量">数字字面量</a></h4>
-<p>整数字面量默认类型为 <code>comptime_int</code>，浮点字面量默认类型为 <code>comptime_float</code>：</p>
-<pre><code class="language-zig">const decimal = 42;          // comptime_int
-const hex = 0xFF;            // 十六进制
-const octal = 0o755;         // 八进制
-const binary = 0b1010;       // 二进制
-const float_val = 3.14;      // comptime_float
-const readable = 1_000_000;  // 下划线分隔
+<h3 id="浮点类型"><a class="header" href="#浮点类型">浮点类型</a></h3>
+<p>Zig 提供了多种浮点类型：<code>f16</code>、<code>f32</code>、<code>f64</code>、<code>f80</code> 和 <code>f128</code>。它们的主要区别在于可表示的精度和范围；位数越高，通常能表示更多有效数字，但相应地也会占用更多空间。</p>
+<p>对初学者来说，可以先建立下面这些直觉：</p>
+<ul>
+<li><code>f32</code> 和 <code>f64</code> 最常见</li>
+<li><code>f64</code> 比 <code>f32</code> 精度更高</li>
+<li><code>f16</code> 精度较低，常见于特定场景</li>
+<li><code>f80</code>、<code>f128</code> 提供更高精度，但并不是所有场景都需要</li>
+</ul>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(_: std.process.Init) void {
+    const float_16: f16 = 3.14;
+    const float_32: f32 = 3.14159;
+    const float_64: f64 = 3.141592653589793;
+    const float_80: f80 = 3.141592653589793238;
+    const float_128: f128 = 3.14159265358979323846264338327950288;
+
+    std.debug.print("f16: {}, f32: {}, f64: {}\n", .{ float_16, float_32, float_64 });
+    std.debug.print("f80: {}, f128: {}\n", .{ float_80, float_128 });
+}
+</code></pre>
+<p><strong>预期输出：</strong></p>
+<pre><code>f16: 3.140625, f32: 3.14159, f64: 3.141592653589793
+f80: 3.141592653589793238, f128: 3.14159265358979323846264338327950288
+</code></pre>
+<p>需要注意的是，十进制浮点字面量在赋给二进制浮点类型时，往往不能被“完全精确”地表示，因此实际打印结果可能与书写时的十进制形式略有差异。这也是为什么不同精度的浮点类型，输出结果会有所不同。</p>
+<h3 id="数字字面量与编译期数值类型"><a class="header" href="#数字字面量与编译期数值类型">数字字面量与编译期数值类型</a></h3>
+<p>Zig 的数字字面量支持多种写法：</p>
+<pre><code class="language-zig">const decimal = 42;           // 十进制整数字面量
+const hex = 0xFF;             // 十六进制
+const octal = 0o755;          // 八进制
+const binary = 0b1010;        // 二进制
+const float_val = 3.14;       // 浮点字面量
+const readable = 1_000_000;   // 使用下划线提高可读性
+const readable_hex = 0xFFFF_FFFF;
+const readable_float = 1_000.0_001;
 </code></pre>
 <p><strong>进制前缀</strong>：</p>
 <ul>
@@ -432,44 +458,31 @@ const readable = 1_000_000;  // 下划线分隔
 <li>八进制：<code>0o</code>（如 <code>0o755</code>）</li>
 <li>二进制：<code>0b</code>（如 <code>0b1010</code>）</li>
 </ul>
-<p><strong>下划线分隔符</strong>：数字中可插入 <code>_</code> 提高可读性（如 <code>1_000_000</code>、<code>0xFFFF_FFFF</code>、<code>1_000.0_001</code>）。</p>
-<h3 id="浮点类型"><a class="header" href="#浮点类型">浮点类型</a></h3>
+<p><strong>下划线分隔符</strong>：数字中可插入 <code>_</code> 提高可读性，例如 <code>1_000_000</code>、<code>0xFFFF_FFFF</code>、<code>1_000.0_001</code>。</p>
+<p>在没有被具体上下文约束时：</p>
+<ul>
+<li>整数字面量的类型语义是 <code>comptime_int</code></li>
+<li>浮点字面量的类型语义是 <code>comptime_float</code></li>
+</ul>
+<p>这并不表示它们一开始就被自动推断成某个固定宽度的整数或浮点类型。更准确地说，在赋给具体类型变量、参与需要确定类型的表达式，或作为函数参数使用之前，它们仍然保持编译期数值语义；当上下文需要具体类型时，编译器才会将其落实为相应的整数或浮点类型，并检查该值是否能被目标类型表示。</p>
 <pre><code class="language-zig">const std = @import("std");
 
 pub fn main(_: std.process.Init) void {
-    const float_16: f16 = 3.14;      // 16位半精度
-    const float_32: f32 = 3.14159;   // 32位单精度
-    const float_64: f64 = 3.141592653589793; // 64位双精度
-    const float_80: f80 = 3.141592653589793238; // 80位扩展精度
-    const float_128: f128 = 3.14159265358979323846264338327950288; // 128位四精度
+    const a = 42;   // comptime_int
+    const b = 3.14; // comptime_float
 
-    std.debug.print("f16: {}, f32: {}, f64: {}, f80: {}, f128: {}\n", .{ float_16, float_32, float_64, float_80, float_128 });
+    const i: i32 = 42;
+    const f: f64 = 3.14;
+
+    std.debug.print("a: {}, b: {}, i: {}, f: {}\n", .{ a, b, i, f });
 }
 </code></pre>
 <p><strong>预期输出：</strong></p>
-<pre><code>f16: 3.140625, f32: 3.14159, f64: 3.141592653589793, f80: 3.141592653589793238, f128: 3.14159265358979323846264338327950288
+<pre><code>a: 42, b: 3.14, i: 42, f: 3.14
 </code></pre>
-<h3 id="编译期类型"><a class="header" href="#编译期类型">编译期类型</a></h3>
-<p>Zig 提供了编译期数值类型，用于表示“在编译阶段仍保持精确语义”的数值：</p>
-<ul>
-<li><code>comptime_int</code>：编译期整数类型</li>
-<li><code>comptime_float</code>：编译期浮点类型</li>
-</ul>
-<p>它们不应简单理解为“先自动推断成某个固定宽度的整数或浮点类型”，而更适合理解为：</p>
-<ul>
-<li>在被具体上下文约束之前，它们仍然保留编译期数值语义</li>
-<li>当你把它们赋给某个具体类型变量，或参与需要确定类型的表达式时，编译器才会将其落实到具体类型上</li>
-</ul>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn main(_: std.process.Init) void {
-    const int_val: comptime_int = 42;
-    const float_val: comptime_float = 3.14;
-    std.debug.print("comptime_int: {}, comptime_float: {}\n", .{ int_val, float_val });
-}
-</code></pre>
-<p><strong>预期输出：</strong></p>
-<pre><code>comptime_int: 42, comptime_float: 3.14
+<p>如果需要，也可以显式写出编译期数值类型：</p>
+<pre><code class="language-zig">const int_val: comptime_int = 42;
+const float_val: comptime_float = 3.14;
 </code></pre>
 <h3 id="布尔类型"><a class="header" href="#布尔类型">布尔类型</a></h3>
 <p>布尔类型表示逻辑值，只有 <code>true</code> 和 <code>false</code> 两个取值：</p>
@@ -500,7 +513,9 @@ pub fn main(_: std.process.Init) void {
 </blockquote>
 <h3 id="void-和-noreturn"><a class="header" href="#void-和-noreturn">void 和 noreturn</a></h3>
 <p><strong><code>void</code></strong> 是空类型，大小为 0 字节，用于不返回有用值的函数：</p>
-<pre><code class="language-zig">fn logMessage(msg: []const u8) void {
+<pre><code class="language-zig">const std = @import("std");
+
+fn logMessage(msg: []const u8) void {
     std.debug.print("{s}\n", .{msg});
 }
 </code></pre>
@@ -509,7 +524,10 @@ pub fn main(_: std.process.Init) void {
     while (true) {}
 }
 </code></pre>
-<p><code>noreturn</code> 类型的表达式包括：<code>return</code>、<code>while (true) {}</code>、<code>unreachable</code>、<code>std.process.exit()</code> 等。</p>
+<p><code>noreturn</code> 表示控制流不会继续返回到当前位置。</p>
+<ul>
+<li>典型例子包括：<code>while (true) {}</code>、<code>unreachable</code>、<code>std.process.exit()</code>；会直接结束当前控制流的表达式（如 <code>return</code>）的类型也为 <code>noreturn</code>。</li>
+</ul>
 <h2 id="类型转换"><a class="header" href="#类型转换">类型转换</a></h2>
 <h3 id="为什么需要显式类型转换"><a class="header" href="#为什么需要显式类型转换">为什么需要显式类型转换？</a></h3>
 <p>Zig 的设计哲学是“显式优于隐式“，不进行隐式类型转换。以下代码展示了隐式转换可能带来的问题：</p>
@@ -564,9 +582,9 @@ pub fn main(_: std.process.Init) void {
 </ul>
 <h3 id="最佳实践"><a class="header" href="#最佳实践">最佳实践</a></h3>
 <ol>
-<li><strong>优先使用安全转换</strong>：<code>@intCast</code>、<code>@floatFromInt</code> 等有运行时检查的转换</li>
-<li><strong>明确不安全操作</strong>：使用 <code>@truncate</code>、<code>@bitCast</code> 时添加注释说明意图</li>
-<li><strong>处理可能的错误</strong>：对于可能失败的转换，先检查范围再使用 <code>@intCast</code>，或使用 <code>std.math.cast</code></li>
+<li><strong>优先使用语义明确的转换方式</strong>：例如整数缩窄时优先考虑 <code>@intCast</code>，避免直接使用 <code>@truncate</code></li>
+<li><strong>区分“范围检查”和“精度丢失”</strong>：<code>@intCast</code>、<code>@intFromFloat</code> 主要关注值是否可表示；<code>@floatFromInt</code> 虽不会 panic，但大整数可能丢失精度</li>
+<li><strong>明确不安全操作</strong>：使用 <code>@truncate</code>、<code>@bitCast</code> 时添加注释说明意图；对于可能失败的整数转换，可先检查范围再使用 <code>@intCast</code>，或使用 <code>std.math.cast</code></li>
 </ol>
 <blockquote>
 <p><strong>相关章节</strong>：类型转换失败时的错误处理机制将在<a href="chapter-error-handling.html">错误处理基础</a>中详细讲解。</p>
@@ -624,9 +642,10 @@ comptime_int 值: 90
 <li>字符字面量用单引号 <code>'A'</code>，类型是 <code>comptime_int</code></li>
 <li>支持完整的 Unicode 字符集</li>
 <li>可以直接打印码位，或使用 <code>{c}</code> 格式化为 ASCII 字符、<code>{u}</code> 格式化为 Unicode 字符</li>
+<li>在 <code>{0u}</code>、<code>{0x}</code> 这类写法中，前面的 <code>0</code> 表示重复使用第 0 个参数；其中 <code>{u}</code> 按 Unicode 字符输出，<code>{x}</code> 按十六进制输出</li>
 </ul>
 <blockquote>
-<p><strong>深入学习</strong>：字符串格式化（如 <code>{s}</code>, <code>{c}</code>, <code>{u}</code> 等格式说明符）的详细用法请参考<a href="../part2-advanced/chapter-standard-library.html#字符串格式化">标准库常用模块</a>中的格式化输出部分。</p>
+<p><strong>深入学习</strong>：字符串格式化（如 <code>{s}</code>, <code>{c}</code>, <code>{u}</code> 等格式说明符）的详细用法请参考<a href="../part2-advanced/chapter-standard-library-detail.html#stdfmt">常用标准库模块详解</a>中的相关内容。</p>
 </blockquote>
 <h3 id="字符串字面量"><a class="header" href="#字符串字面量">字符串字面量</a></h3>
 <p>双引号用于字符串字面量，存储为 UTF-8 编码的字节序列：</p>
@@ -724,7 +743,7 @@ fn main() void {
 <hr>
 <ol class="footnote-definition">
 <li id="footnote-1">
-<p>Unicode 码位的实际范围是 0x0000 到 0x10FFFF（21 位），通常用 32 位类型存储以方便处理。 <a href="#fr-1-1">↩</a></p>
+<p>当前 Unicode 码位的取值范围是 <code>0x0000</code> 到 <code>0x10FFFF</code>，因此最多需要 21 个二进制位来表示；不过在实际编程中，通常会使用 32 位整数类型来存储它们。 <a href="#fr-1-1">↩</a></p>
 </li>
 </ol>
 

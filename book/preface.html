@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-35211ac1.js";
+            window.path_to_searchindex_js = "searchindex-a9c16af4.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-6dcbe846.js"></script>
+        <script src="toc-fc612514.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -252,23 +252,23 @@
 <hr>
 <h2 id="阅读这本书时建议特别关注什么"><a class="header" href="#阅读这本书时建议特别关注什么">阅读这本书时，建议特别关注什么？</a></h2>
 <p>学习 Zig 时，建议你始终带着下面几个问题阅读：</p>
-<h3 id="1-这段代码的意图是否足够明确"><a class="header" href="#1-这段代码的意图是否足够明确">1. 这段代码的意图是否足够明确？</a></h3>
+<h3 id="这段代码的意图是否足够明确"><a class="header" href="#这段代码的意图是否足够明确">这段代码的意图是否足够明确？</a></h3>
 <p>Zig 非常强调显式表达。<br>很多在其他语言里可以“默认推断”或“习惯省略”的地方，在 Zig 中更鼓励你写清楚。</p>
-<h3 id="2-失败路径在哪里"><a class="header" href="#2-失败路径在哪里">2. 失败路径在哪里？</a></h3>
+<h3 id="失败路径在哪里"><a class="header" href="#失败路径在哪里">失败路径在哪里？</a></h3>
 <p>在 Zig 里，错误处理不是附属品，而是主流程设计的一部分。<br>你需要习惯思考：</p>
 <ul>
 <li>这一步会失败吗？</li>
 <li>失败时由谁处理？</li>
 <li>失败后资源是否能正确清理？</li>
 </ul>
-<h3 id="3-资源的生命周期是否清楚"><a class="header" href="#3-资源的生命周期是否清楚">3. 资源的生命周期是否清楚？</a></h3>
+<h3 id="资源的生命周期是否清楚"><a class="header" href="#资源的生命周期是否清楚">资源的生命周期是否清楚？</a></h3>
 <p>内存、文件句柄、网络连接、锁等都属于资源。<br>Zig 希望你明确知道：</p>
 <ul>
 <li>资源在哪里获取</li>
 <li>资源由谁持有</li>
 <li>资源在什么时候释放</li>
 </ul>
-<h3 id="4-这段代码是否容易读懂"><a class="header" href="#4-这段代码是否容易读懂">4. 这段代码是否容易读懂？</a></h3>
+<h3 id="这段代码是否容易读懂"><a class="header" href="#这段代码是否容易读懂">这段代码是否容易读懂？</a></h3>
 <p>Zig 的很多设计都偏向“让代码更容易被读懂、被验证、被维护”。<br>所以在学习过程中，不要只追求“能写出来”，也要注意“是否表达清楚”。</p>
 <hr>
 <h2 id="版本说明"><a class="header" href="#版本说明">版本说明</a></h2>
@@ -282,19 +282,19 @@
 <li>如果你本地使用的是其他版本，示例代码可能需要做少量调整</li>
 </ul>
 <h3 id="本书中最值得留意的版本差异"><a class="header" href="#本书中最值得留意的版本差异">本书中最值得留意的版本差异</a></h3>
-<h4 id="1-stdio-与-stdio"><a class="header" href="#1-stdio-与-stdio">1. <code>std.io</code> 与 <code>std.Io</code></a></h4>
+<h4 id="stdio-与-stdio"><a class="header" href="#stdio-与-stdio"><code>std.io</code> 与 <code>std.Io</code></a></h4>
 <p>在较新的 0.16 开发版语境中，I/O 相关 API 已明显向 <code>std.Io</code> 这一套接口演进。<br>如果你查阅的是旧资料，常常会看到 <code>std.io</code> 风格的写法。</p>
-<h4 id="2-main-函数写法更灵活不只有一种签名"><a class="header" href="#2-main-函数写法更灵活不只有一种签名">2. <code>main</code> 函数写法更灵活，不只有一种签名</a></h4>
+<h4 id="main-函数写法更灵活不只有一种签名"><a class="header" href="#main-函数写法更灵活不只有一种签名"><code>main</code> 函数写法更灵活，不只有一种签名</a></h4>
 <p>在 0.16 语境下，<code>std.process.Init</code> 相关写法是很常见的新风格之一，但它<strong>不是唯一合法写法</strong>。<br>例如，无参数的 <code>main</code> 依然可能是完全合理的选择。</p>
 <p>本书会根据示例目的，选用最容易解释的写法；在需要和 0.16 新接口配合时，也会使用带 <code>std.process.Init</code> 的形式。</p>
-<h4 id="3-分配器相关-api-在持续演进"><a class="header" href="#3-分配器相关-api-在持续演进">3. 分配器相关 API 在持续演进</a></h4>
+<h4 id="分配器相关-api-在持续演进"><a class="header" href="#分配器相关-api-在持续演进">分配器相关 API 在持续演进</a></h4>
 <p>如果你查阅旧资料，可能会看到一些与当前版本不完全一致的分配器名称或用法。<br>本书会尽量使用当前教程上下文中一致、便于理解的方式介绍，但你在对照外部资料时，要有“版本差异可能存在”的心理预期。</p>
-<h4 id="4-异步能力的现状需要区别看待"><a class="header" href="#4-异步能力的现状需要区别看待">4. 异步能力的现状需要区别看待</a></h4>
-<p><code>async</code> / <code>await</code> 这类语言级能力在 Zig 的演进过程中发生过变化。<br>因此，本书不会把“语言级 async/await”作为当前基础主线内容来讲，而会把重点放在更稳定、对入门更关键的语言基础与工程能力上。</p>
+<h4 id="异步能力的现状需要区别看待"><a class="header" href="#异步能力的现状需要区别看待">异步能力的现状需要区别看待</a></h4>
+<p>Zig 早期曾提供语言内置的 <code>async</code> / <code>await</code> 机制，但这套方案后来已被移除。当前与异步相关的能力与实践路径仍在调整之中，整体方向也更偏向库层而非把它作为当前入门阶段的核心语言主线。<br>因此，本书不会把“语言级 async/await”作为当前基础主线内容来讲，而会把重点放在更稳定、对入门更关键的语言基础与工程能力上。</p>
 <hr>
 <h2 id="关于代码示例"><a class="header" href="#关于代码示例">关于代码示例</a></h2>
 <p>本书中的代码示例遵循几个原则：</p>
-<h3 id="1-优先讲清楚再追求写法炫技"><a class="header" href="#1-优先讲清楚再追求写法炫技">1. 优先讲清楚，再追求写法炫技</a></h3>
+<h3 id="优先讲清楚再追求写法炫技"><a class="header" href="#优先讲清楚再追求写法炫技">优先讲清楚，再追求写法炫技</a></h3>
 <p>示例会优先选择：</p>
 <ul>
 <li>容易读懂</li>
@@ -302,14 +302,14 @@
 <li>能体现语言设计意图</li>
 </ul>
 <p>而不是一开始就展示最复杂、最“高级”的写法。</p>
-<h3 id="2-尽量使用当前版本语境下可理解的写法"><a class="header" href="#2-尽量使用当前版本语境下可理解的写法">2. 尽量使用当前版本语境下可理解的写法</a></h3>
+<h3 id="尽量使用当前版本语境下可理解的写法"><a class="header" href="#尽量使用当前版本语境下可理解的写法">尽量使用当前版本语境下可理解的写法</a></h3>
 <p>对于版本敏感的标准库 API，本书会尽量：</p>
 <ul>
 <li>直接给出当前语境下的推荐写法</li>
 <li>在必要时提醒你这属于版本易变区域</li>
 <li>避免把旧版和新版写法混在一起造成困扰</li>
 </ul>
-<h3 id="3-错误示例只用于教学对比"><a class="header" href="#3-错误示例只用于教学对比">3. 错误示例只用于教学对比</a></h3>
+<h3 id="错误示例只用于教学对比"><a class="header" href="#错误示例只用于教学对比">错误示例只用于教学对比</a></h3>
 <p>当你看到“错误示例”时，它的目的通常是：</p>
 <ul>
 <li>帮你理解为什么某种写法不推荐</li>

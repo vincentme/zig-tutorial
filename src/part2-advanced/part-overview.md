@@ -57,29 +57,30 @@
 
 ### 第一层：建立高级主题的导航能力
 1. [第二部分导读](part-overview.md)
-2. [标准库导读：常用模块与阅读方法](chapter-standard-library.md)
+2. [标准库导航与阅读指南](chapter-standard-library-guide.md)
+3. [常用标准库模块详解](chapter-standard-library-detail.md)
 
-这一层的重点不是记住所有 API，而是先建立“查阅地图”：
+这一层的重点不是记住所有 API，而是先建立“查阅地图”和“高频模块入口”：
 
 - 哪些模块最常用
 - 哪些内容版本变动更频繁
 - 哪些章节更适合当工具箱，而不是逐字背诵
 
 ### 第二层：语言机制与抽象能力
-3. [编译期计算与元编程](chapter-comptime.md)
-4. [泛型编程](chapter-generics.md)
-5. [指针、切片与对齐](chapter-pointers.md)
-6. [内存管理模型](chapter-memory-management.md)
+4. [编译期计算与元编程](chapter-comptime.md)
+5. [泛型编程](chapter-generics.md)
+6. [指针、切片与对齐](chapter-pointers.md)
+7. [内存管理模型](chapter-memory-management.md)
 
 这一层是第二部分的核心主线。  
 建议你重点投入，因为后面的接口设计、C 互操作、并发与实战案例，几乎都会反复依赖这里的概念。
 
 ### 第三层：工程设计与系统边界
-7. [接口、组合与设计模式](chapter-interfaces.md)
-8. [与 C 语言的互操作性](chapter-c-interop.md)
-9. [并发编程概述](chapter-concurrency.md)
-10. [测试与验证：从单元测试到基准测量](chapter-testing.md)
-11. [构建系统与包管理](chapter-package-management.md)
+8. [接口、组合与设计模式](chapter-interfaces.md)
+9. [与 C 语言的互操作性](chapter-c-interop.md)
+10. [并发编程概述](chapter-concurrency.md)
+11. [测试与验证：从单元测试到基准测量](chapter-testing.md)
+12. [构建系统与包管理](chapter-package-management.md)
 
 这一层更偏工程实践。  
 如果你已经准备进入第三部分，这几章会非常有帮助，尤其是：
@@ -279,22 +280,25 @@ Zig 仍然强调：**先写清楚，再上复杂抽象。**
 
 如果你暂时不打算深入所有高级主题，可以用下面这条“压缩阅读路径”：
 
-1. [标准库导读：常用模块与阅读方法](chapter-standard-library.md)  
-   先建立标准库导航感，知道哪些内容值得优先关注。
+1. [标准库导航与阅读指南](chapter-standard-library-guide.md)  
+   先建立标准库地图与查阅方法，知道哪些内容值得优先关注。
 
-2. [编译期计算与元编程](chapter-comptime.md)  
+2. [常用标准库模块详解](chapter-standard-library-detail.md)  
+   再建立 `std.mem`、`std.fmt`、`std.fs` 等高频模块的第一轮实用直觉。
+
+3. [编译期计算与元编程](chapter-comptime.md)  
    理解 Zig 高级能力的核心起点。
 
-3. [泛型编程](chapter-generics.md)  
+4. [泛型编程](chapter-generics.md)  
    理解如何写零成本抽象。
 
-4. [指针、切片与对齐](chapter-pointers.md)  
+5. [指针、切片与对齐](chapter-pointers.md)  
    这是很多高级主题真正的地基。
 
-5. [内存管理模型](chapter-memory-management.md)  
+6. [内存管理模型](chapter-memory-management.md)  
    把资源、分配器和所有权关系真正连起来。
 
-6. [测试与验证：从单元测试到基准测量](chapter-testing.md)  
+7. [测试与验证：从单元测试到基准测量](chapter-testing.md)  
    为进入实战打基础。
 
 这条路径完成后，再按需要回看接口、C 互操作、并发和构建章节，会轻松很多。
@@ -330,4 +334,4 @@ Zig 仍然强调：**先写清楚，再上复杂抽象。**
 - 更像 Zig 的写法，通常不是最花哨的写法
 - 真正有价值的高级抽象，应该让代码**更清楚、更稳定、更容易验证**
 
-接下来，建议先从 [标准库导读：常用模块与阅读方法](chapter-standard-library.md) 开始，建立第二部分的整体导航感。
+接下来，建议先从 [标准库导航与阅读指南](chapter-standard-library-guide.md) 开始，建立第二部分的整体导航感；然后继续阅读 [常用标准库模块详解](chapter-standard-library-detail.md)，建立高频标准库模块的第一轮实用直觉。

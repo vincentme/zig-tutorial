@@ -1,203 +1,454 @@
-<!DOCTYPE HTML>
+<!DOCTYPE html>
 <html lang="zh-CN" class="light sidebar-visible" dir="ltr">
     <head>
         <!-- Book generated using mdBook -->
-        <meta charset="UTF-8">
-        <title>复合类型：数组、切片与数据建模 - Zig 编程语言入门教程</title>
-
+        <meta charset="UTF-8" />
+        <title>复合类型 - Zig 编程语言入门教程</title>
 
         <!-- Custom HTML head -->
 
-        <meta name="description" content="">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="theme-color" content="#ffffff">
+        <meta name="description" content="" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="theme-color" content="#ffffff" />
 
-        <link rel="icon" href="../favicon-de23e50b.svg">
-        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
-        <link rel="stylesheet" href="../css/variables-8adf115d.css">
-        <link rel="stylesheet" href="../css/general-2459343d.css">
-        <link rel="stylesheet" href="../css/chrome-ae938929.css">
-        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+        <link rel="icon" href="../favicon-de23e50b.svg" />
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png" />
+        <link rel="stylesheet" href="../css/variables-8adf115d.css" />
+        <link rel="stylesheet" href="../css/general-2459343d.css" />
+        <link rel="stylesheet" href="../css/chrome-ae938929.css" />
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print" />
 
         <!-- Fonts -->
-        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css" />
 
         <!-- Highlight.js Stylesheets -->
-        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
-        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
-        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+        <link
+            rel="stylesheet"
+            id="mdbook-highlight-css"
+            href="../highlight-493f70e1.css"
+        />
+        <link
+            rel="stylesheet"
+            id="mdbook-tomorrow-night-css"
+            href="../tomorrow-night-4c0ae647.css"
+        />
+        <link
+            rel="stylesheet"
+            id="mdbook-ayu-highlight-css"
+            href="../ayu-highlight-3fdfc3ac.css"
+        />
 
         <!-- Custom theme stylesheets -->
-        <link rel="stylesheet" href="../theme/css/auto-numbering-66d94143.css">
-
+        <link
+            rel="stylesheet"
+            href="../theme/css/auto-numbering-66d94143.css"
+        />
 
         <!-- Provide site root and default themes to javascript -->
         <script>
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-35211ac1.js";
+            window.path_to_searchindex_js = "../searchindex-a9c16af4.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-6dcbe846.js"></script>
+        <script src="../toc-fc612514.js"></script>
     </head>
     <body>
-    <div id="mdbook-help-container">
-        <div id="mdbook-help-popup">
-            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
-            <div>
-                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
-                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
-                <p>Press <kbd>?</kbd> to show this help</p>
-                <p>Press <kbd>Esc</kbd> to hide this help</p>
+        <div id="mdbook-help-container">
+            <div id="mdbook-help-popup">
+                <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+                <div>
+                    <p>
+                        Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between
+                        chapters
+                    </p>
+                    <p>
+                        Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book
+                    </p>
+                    <p>Press <kbd>?</kbd> to show this help</p>
+                    <p>Press <kbd>Esc</kbd> to hide this help</p>
+                </div>
             </div>
         </div>
-    </div>
-    <div id="mdbook-body-container">
-        <!-- Work around some values being stored in localStorage wrapped in quotes -->
-        <script>
-            try {
-                let theme = localStorage.getItem('mdbook-theme');
-                let sidebar = localStorage.getItem('mdbook-sidebar');
+        <div id="mdbook-body-container">
+            <!-- Work around some values being stored in localStorage wrapped in quotes -->
+            <script>
+                try {
+                    let theme = localStorage.getItem("mdbook-theme");
+                    let sidebar = localStorage.getItem("mdbook-sidebar");
 
-                if (theme.startsWith('"') && theme.endsWith('"')) {
-                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                    if (theme.startsWith('"') && theme.endsWith('"')) {
+                        localStorage.setItem(
+                            "mdbook-theme",
+                            theme.slice(1, theme.length - 1),
+                        );
+                    }
+
+                    if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                        localStorage.setItem(
+                            "mdbook-sidebar",
+                            sidebar.slice(1, sidebar.length - 1),
+                        );
+                    }
+                } catch (e) {}
+            </script>
+
+            <!-- Set the theme before any content is loaded, prevents flash -->
+            <script>
+                const default_theme = window.matchMedia(
+                    "(prefers-color-scheme: dark)",
+                ).matches
+                    ? default_dark_theme
+                    : default_light_theme;
+                let theme;
+                try {
+                    theme = localStorage.getItem("mdbook-theme");
+                } catch (e) {}
+                if (theme === null || theme === undefined) {
+                    theme = default_theme;
                 }
+                const html = document.documentElement;
+                html.classList.remove("light");
+                html.classList.add(theme);
+                html.classList.add("js");
+            </script>
 
-                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
-                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+            <input
+                type="checkbox"
+                id="mdbook-sidebar-toggle-anchor"
+                class="hidden"
+            />
+
+            <!-- Hide / unhide sidebar before it is displayed -->
+            <script>
+                let sidebar = null;
+                const sidebar_toggle = document.getElementById(
+                    "mdbook-sidebar-toggle-anchor",
+                );
+                if (document.body.clientWidth >= 1080) {
+                    try {
+                        sidebar = localStorage.getItem("mdbook-sidebar");
+                    } catch (e) {}
+                    sidebar = sidebar || "visible";
+                } else {
+                    sidebar = "hidden";
+                    sidebar_toggle.checked = false;
                 }
-            } catch (e) { }
-        </script>
+                if (sidebar === "visible") {
+                    sidebar_toggle.checked = true;
+                } else {
+                    html.classList.remove("sidebar-visible");
+                }
+            </script>
 
-        <!-- Set the theme before any content is loaded, prevents flash -->
-        <script>
-            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
-            let theme;
-            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
-            if (theme === null || theme === undefined) { theme = default_theme; }
-            const html = document.documentElement;
-            html.classList.remove('light')
-            html.classList.add(theme);
-            html.classList.add("js");
-        </script>
-
-        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
-
-        <!-- Hide / unhide sidebar before it is displayed -->
-        <script>
-            let sidebar = null;
-            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
-            if (document.body.clientWidth >= 1080) {
-                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
-                sidebar = sidebar || 'visible';
-            } else {
-                sidebar = 'hidden';
-                sidebar_toggle.checked = false;
-            }
-            if (sidebar === 'visible') {
-                sidebar_toggle.checked = true;
-            } else {
-                html.classList.remove('sidebar-visible');
-            }
-        </script>
-
-        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
-            <!-- populated by js -->
-            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
-            <noscript>
-                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
-            </noscript>
-            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
-                <div class="sidebar-resize-indicator"></div>
-            </div>
-        </nav>
-
-        <div id="mdbook-page-wrapper" class="page-wrapper">
-
-            <div class="page">
-                <div id="mdbook-menu-bar-hover-placeholder"></div>
-                <div id="mdbook-menu-bar" class="menu-bar sticky">
-                    <div class="left-buttons">
-                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
-                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
-                        </label>
-                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
-                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
-                        </button>
-                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
-                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
-                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
-                        </ul>
-                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
-                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
-                        </button>
-                    </div>
-
-                    <h1 class="menu-title">Zig 编程语言入门教程</h1>
-
-                    <div class="right-buttons">
-                        <a href="../print.html" title="Print this book" aria-label="Print this book">
-                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
-                        </a>
-                        <a href="https://github.com/vincentme/zig-tutorial" title="Git repository" aria-label="Git repository">
-                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
-                        </a>
-                        <a href="https://github.com/vincentme/zig-tutorial/edit/main/src/part1-basics/chapter-compound-types.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
-                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
-                        </a>
-
-                    </div>
+            <nav
+                id="mdbook-sidebar"
+                class="sidebar"
+                aria-label="Table of contents"
+            >
+                <!-- populated by js -->
+                <mdbook-sidebar-scrollbox
+                    class="sidebar-scrollbox"
+                ></mdbook-sidebar-scrollbox>
+                <noscript>
+                    <iframe
+                        class="sidebar-iframe-outer"
+                        src="../toc.html"
+                    ></iframe>
+                </noscript>
+                <div
+                    id="mdbook-sidebar-resize-handle"
+                    class="sidebar-resize-handle"
+                >
+                    <div class="sidebar-resize-indicator"></div>
                 </div>
+            </nav>
 
-                <div id="mdbook-search-wrapper" class="hidden">
-                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
-                        <div class="search-wrapper">
-                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
-                            <div class="spinner-wrapper">
-                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
-                            </div>
+            <div id="mdbook-page-wrapper" class="page-wrapper">
+                <div class="page">
+                    <div id="mdbook-menu-bar-hover-placeholder"></div>
+                    <div id="mdbook-menu-bar" class="menu-bar sticky">
+                        <div class="left-buttons">
+                            <label
+                                id="mdbook-sidebar-toggle"
+                                class="icon-button"
+                                for="mdbook-sidebar-toggle-anchor"
+                                title="Toggle Table of Contents"
+                                aria-label="Toggle Table of Contents"
+                                aria-controls="mdbook-sidebar"
+                            >
+                                <span class="fa-svg"
+                                    ><svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 448 512"
+                                    >
+                                        <!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. -->
+                                        <path
+                                            d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"
+                                        /></svg
+                                ></span>
+                            </label>
+                            <button
+                                id="mdbook-theme-toggle"
+                                class="icon-button"
+                                type="button"
+                                title="Change theme"
+                                aria-label="Change theme"
+                                aria-haspopup="true"
+                                aria-expanded="false"
+                                aria-controls="mdbook-theme-list"
+                            >
+                                <span class="fa-svg"
+                                    ><svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 576 512"
+                                    >
+                                        <!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. -->
+                                        <path
+                                            d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"
+                                        /></svg
+                                ></span>
+                            </button>
+                            <ul
+                                id="mdbook-theme-list"
+                                class="theme-popup"
+                                aria-label="Themes"
+                                role="menu"
+                            >
+                                <li role="none">
+                                    <button
+                                        role="menuitem"
+                                        class="theme"
+                                        id="mdbook-theme-default_theme"
+                                    >
+                                        Auto
+                                    </button>
+                                </li>
+                                <li role="none">
+                                    <button
+                                        role="menuitem"
+                                        class="theme"
+                                        id="mdbook-theme-light"
+                                    >
+                                        Light
+                                    </button>
+                                </li>
+                                <li role="none">
+                                    <button
+                                        role="menuitem"
+                                        class="theme"
+                                        id="mdbook-theme-rust"
+                                    >
+                                        Rust
+                                    </button>
+                                </li>
+                                <li role="none">
+                                    <button
+                                        role="menuitem"
+                                        class="theme"
+                                        id="mdbook-theme-coal"
+                                    >
+                                        Coal
+                                    </button>
+                                </li>
+                                <li role="none">
+                                    <button
+                                        role="menuitem"
+                                        class="theme"
+                                        id="mdbook-theme-navy"
+                                    >
+                                        Navy
+                                    </button>
+                                </li>
+                                <li role="none">
+                                    <button
+                                        role="menuitem"
+                                        class="theme"
+                                        id="mdbook-theme-ayu"
+                                    >
+                                        Ayu
+                                    </button>
+                                </li>
+                            </ul>
+                            <button
+                                id="mdbook-search-toggle"
+                                class="icon-button"
+                                type="button"
+                                title="Search (`/`)"
+                                aria-label="Toggle Searchbar"
+                                aria-expanded="false"
+                                aria-keyshortcuts="/ s"
+                                aria-controls="mdbook-searchbar"
+                            >
+                                <span class="fa-svg"
+                                    ><svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 512 512"
+                                    >
+                                        <!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. -->
+                                        <path
+                                            d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"
+                                        /></svg
+                                ></span>
+                            </button>
                         </div>
-                    </form>
-                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
-                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
-                        <ul id="mdbook-searchresults">
-                        </ul>
+
+                        <h1 class="menu-title">Zig 编程语言入门教程</h1>
+
+                        <div class="right-buttons">
+                            <a
+                                href="../print.html"
+                                title="Print this book"
+                                aria-label="Print this book"
+                            >
+                                <span class="fa-svg" id="print-button"
+                                    ><svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 512 512"
+                                    >
+                                        <!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. -->
+                                        <path
+                                            d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"
+                                        /></svg
+                                ></span>
+                            </a>
+                            <a
+                                href="https://github.com/vincentme/zig-tutorial"
+                                title="Git repository"
+                                aria-label="Git repository"
+                            >
+                                <span class="fa-svg"
+                                    ><svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 496 512"
+                                    >
+                                        <!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. -->
+                                        <path
+                                            d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"
+                                        /></svg
+                                ></span>
+                            </a>
+                            <a
+                                href="https://github.com/vincentme/zig-tutorial/edit/main/src/part1-basics/chapter-compound-types.md"
+                                title="Suggest an edit"
+                                aria-label="Suggest an edit"
+                                rel="edit"
+                            >
+                                <span class="fa-svg" id="git-edit-button"
+                                    ><svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 512 512"
+                                    >
+                                        <!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. -->
+                                        <path
+                                            d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"
+                                        /></svg
+                                ></span>
+                            </a>
+                        </div>
                     </div>
-                </div>
 
-                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
-                <script>
-                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
-                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
-                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
-                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
-                    });
-                </script>
+                    <div id="mdbook-search-wrapper" class="hidden">
+                        <form
+                            id="mdbook-searchbar-outer"
+                            class="searchbar-outer"
+                        >
+                            <div class="search-wrapper">
+                                <input
+                                    type="search"
+                                    id="mdbook-searchbar"
+                                    name="searchbar"
+                                    placeholder="Search this book ..."
+                                    aria-controls="mdbook-searchresults-outer"
+                                    aria-describedby="searchresults-header"
+                                />
+                                <div class="spinner-wrapper">
+                                    <span class="fa-svg" id="fa-spin"
+                                        ><svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            viewBox="0 0 512 512"
+                                        >
+                                            <!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. -->
+                                            <path
+                                                d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"
+                                            /></svg
+                                    ></span>
+                                </div>
+                            </div>
+                        </form>
+                        <div
+                            id="mdbook-searchresults-outer"
+                            class="searchresults-outer hidden"
+                        >
+                            <div
+                                id="mdbook-searchresults-header"
+                                class="searchresults-header"
+                            ></div>
+                            <ul id="mdbook-searchresults"></ul>
+                        </div>
+                    </div>
 
-                <div id="mdbook-content" class="content">
-                    <main>
-                        <h1 id="复合类型数组切片与数据建模"><a class="header" href="#复合类型数组切片与数据建模">复合类型：数组、切片与数据建模</a></h1>
-<p>本章介绍 Zig 中最常见的复合类型，包括数组、切片、枚举、联合、结构体和元组。它们用于把基础类型组织成更有结构的数据，是后续学习控制流、错误处理、内存管理和工程实践的基础。</p>
-<blockquote>
-<p>💡 <strong>阅读建议</strong></p>
-<p>这一章的内容从“最常用的数据表示方式”逐步过渡到“更灵活的数据建模方式”。
-如果你是第一次接触 Zig，建议优先掌握下面几部分：</p>
-<ul>
-<li>数组与切片</li>
-<li>结构体</li>
-<li>枚举</li>
-</ul>
-<p>联合、非穷尽枚举以及部分与布局相关的内容，第一次阅读时可以先理解核心概念，不必急着记住所有细节。</p>
-</blockquote>
-<h2 id="数组"><a class="header" href="#数组">数组</a></h2>
-<p>数组是固定大小的连续内存序列，其长度是编译期常量，也是类型的一部分。</p>
-<h3 id="基本用法"><a class="header" href="#基本用法">基本用法</a></h3>
-<pre><code class="language-zig">const std = @import("std");
+                    <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                    <script>
+                        document
+                            .getElementById("mdbook-sidebar-toggle")
+                            .setAttribute(
+                                "aria-expanded",
+                                sidebar === "visible",
+                            );
+                        document
+                            .getElementById("mdbook-sidebar")
+                            .setAttribute("aria-hidden", sidebar !== "visible");
+                        Array.from(
+                            document.querySelectorAll("#mdbook-sidebar a"),
+                        ).forEach(function (link) {
+                            link.setAttribute(
+                                "tabIndex",
+                                sidebar === "visible" ? 0 : -1,
+                            );
+                        });
+                    </script>
+
+                    <div id="mdbook-content" class="content">
+                        <main>
+                            <h1 id="复合类型数组切片与数据建模">
+                                <a
+                                    class="header"
+                                    href="#复合类型数组切片与数据建模"
+                                    >复合类型</a
+                                >
+                            </h1>
+                            <p>
+                                本章介绍 Zig
+                                中最常见的复合类型，包括数组、切片、枚举、联合、结构体和元组。它们用于把基础类型组织成更有结构的数据，是后续学习控制流、错误处理、内存管理和工程实践的基础。
+                            </p>
+                            <blockquote>
+                                <p>💡 <strong>阅读建议</strong></p>
+                                <p>
+                                    这一章的内容从“最常用的数据表示方式”逐步过渡到“更灵活的数据建模方式”。
+                                    如果你是第一次接触
+                                    Zig，建议优先掌握下面几部分：
+                                </p>
+                                <ul>
+                                    <li>数组与切片</li>
+                                    <li>结构体</li>
+                                    <li>枚举</li>
+                                </ul>
+                                <p>
+                                    联合、非穷尽枚举以及部分与布局相关的内容，第一次阅读时可以先理解核心概念，不必急着记住所有细节。
+                                </p>
+                            </blockquote>
+                            <h2 id="数组">
+                                <a class="header" href="#数组">数组</a>
+                            </h2>
+                            <p>
+                                数组是固定大小的连续内存序列，其长度是编译期常量，也是类型的一部分。
+                            </p>
+                            <h3 id="基本用法">
+                                <a class="header" href="#基本用法">基本用法</a>
+                            </h3>
+                            <pre><code class="language-zig">const std = @import("std");
 
 pub fn main(_: std.process.Init) void {
     const array: [5]i32 = [_]i32{ 1, 2, 3, 4, 5 };
@@ -224,8 +475,8 @@ pub fn main(_: std.process.Init) void {
     }
 }
 </code></pre>
-<p><strong>预期输出：</strong></p>
-<pre><code>array[0] = 1
+                            <p><strong>预期输出：</strong></p>
+                            <pre><code>array[0] = 1
 array[1] = 2
 array[2] = 3
 array[3] = 4
@@ -241,22 +492,60 @@ matrix[2][0] = 7
 matrix[2][1] = 8
 matrix[2][2] = 9
 </code></pre>
-<p><strong>核心特性</strong>：</p>
-<ul>
-<li><strong>大小固定</strong>：数组大小在编译期确定，不可改变</li>
-<li><strong>类型包含大小</strong>：<code>[5]i32</code> 和 <code>[10]i32</code> 是不同的类型</li>
-<li><strong>值语义</strong>：数组赋值会复制所有元素</li>
-<li><strong>内存连续</strong>：元素在内存中连续存储，访问高效</li>
-<li><strong>边界检查</strong>：数组长度是编译期常量，编译器可以在索引已知时提前发现越界；索引为运行时变量时仍进行运行时边界检查</li>
-</ul>
-<blockquote>
-<p><strong>相关章节</strong>：数组遍历使用的 <code>for</code> 循环将在<a href="chapter-control-flow.html">控制流与资源管理</a>中详细讲解。</p>
-</blockquote>
-<h3 id="数组操作"><a class="header" href="#数组操作">数组操作</a></h3>
-<p><strong>初始化语法</strong>：<code>[_]T{...}</code> 中的 <code>_</code> 表示让编译器从元素数量推断数组长度。</p>
-<p><strong>连接（<code>++</code>）</strong>：将两个编译期已知的数组连接为新数组。</p>
-<p><strong>重复（<code>**</code>）</strong>：将数组重复指定次数，生成新数组。</p>
-<pre><code class="language-zig">const std = @import("std");
+                            <p><strong>核心特性</strong>：</p>
+                            <ul>
+                                <li>
+                                    <strong>大小固定</strong
+                                    >：数组大小在编译期确定，不可改变
+                                </li>
+                                <li>
+                                    <strong>类型包含大小</strong>：<code
+                                        >[5]i32</code
+                                    >
+                                    和 <code>[10]i32</code> 是不同的类型
+                                </li>
+                                <li>
+                                    <strong>值语义</strong
+                                    >：数组赋值会复制所有元素
+                                </li>
+                                <li>
+                                    <strong>内存连续</strong
+                                    >：元素在内存中连续存储，访问高效
+                                </li>
+                                <li>
+                                    <strong>边界检查</strong
+                                    >：数组长度是编译期常量，编译器可以在索引已知时提前发现越界；索引为运行时变量时仍进行运行时边界检查
+                                </li>
+                            </ul>
+                            <blockquote>
+                                <p>
+                                    <strong>相关章节</strong>：数组遍历使用的
+                                    <code>for</code> 循环将在<a
+                                        href="chapter-control-flow.html"
+                                        >控制流与资源管理</a
+                                    >中详细讲解。
+                                </p>
+                            </blockquote>
+                            <h3 id="数组操作">
+                                <a class="header" href="#数组操作">数组操作</a>
+                            </h3>
+                            <p>
+                                <strong>初始化语法</strong>：<code
+                                    >[_]T{...}</code
+                                >
+                                中的
+                                <code>_</code>
+                                表示让编译器从元素数量推断数组长度。
+                            </p>
+                            <p>
+                                <strong>连接（<code>++</code>）</strong
+                                >：将两个编译期已知的数组连接为新数组。
+                            </p>
+                            <p>
+                                <strong>重复（<code>**</code>）</strong
+                                >：将数组重复指定次数，生成新数组。
+                            </p>
+                            <pre><code class="language-zig">const std = @import("std");
 
 pub fn main(_: std.process.Init) void {
     const part1 = [_]u8{ 1, 2, 3 };
@@ -269,15 +558,29 @@ pub fn main(_: std.process.Init) void {
     std.debug.print("重复: {any}\n", .{repeated});
 }
 </code></pre>
-<p><strong>预期输出：</strong></p>
-<pre><code>连接: { 1, 2, 3, 4, 5 }
+                            <p><strong>预期输出：</strong></p>
+                            <pre><code>连接: { 1, 2, 3, 4, 5 }
 重复: { 1, 2, 3, 1, 2, 3, 1, 2, 3 }
 </code></pre>
-<p><code>++</code> 和 <code>**</code> 都是编译期操作，操作数必须是编译期已知的值。</p>
-<h2 id="切片"><a class="header" href="#切片">切片</a></h2>
-<p>切片是对连续内存区域的“视图“，包含指针和长度两个字段（胖指针）。切片本身大小固定（64 位系统上 16 字节），但可以在运行时引用不同长度的数据。</p>
-<h3 id="基本用法-1"><a class="header" href="#基本用法-1">基本用法</a></h3>
-<pre><code class="language-zig">const std = @import("std");
+                            <p>
+                                <code>++</code> 和
+                                <code>**</code>
+                                都是编译期操作，操作数必须是编译期已知的值。
+                            </p>
+                            <h2 id="切片">
+                                <a class="header" href="#切片">切片</a>
+                            </h2>
+                            <p>
+                                切片是对连续内存区域的“视图“，包含指针和长度两个字段（胖指针）。切片本身大小固定（64
+                                位系统上 16
+                                字节），但可以在运行时引用不同长度的数据。
+                            </p>
+                            <h3 id="基本用法-1">
+                                <a class="header" href="#基本用法-1"
+                                    >基本用法</a
+                                >
+                            </h3>
+                            <pre><code class="language-zig">const std = @import("std");
 
 pub fn main(_: std.process.Init) void {
     var array = [_]i32{ 1, 2, 3, 4, 5 };
@@ -292,35 +595,85 @@ pub fn main(_: std.process.Init) void {
     std.debug.print("subslice length: {}\n", .{subslice.len});
 }
 </code></pre>
-<p><strong>预期输出：</strong></p>
-<pre><code>slice length: 3, first: 2
+                            <p><strong>预期输出：</strong></p>
+                            <pre><code>slice length: 3, first: 2
 array[1] after modification: 99
 subslice length: 2
 </code></pre>
-<p><strong>核心特性</strong>：</p>
-<ul>
-<li><strong>胖指针</strong>：包含指针和长度两个字段（64 位系统上共 16 字节）</li>
-<li><strong>引用语义</strong>：切片是对底层内存的引用，不拥有数据；修改切片会影响原数据</li>
-<li><strong>边界检查</strong>：切片长度是运行时值，只能在运行时检查边界</li>
-</ul>
-<blockquote>
-<p><strong>深入学习</strong>：胖指针是 Zig 指针系统的重要组成部分，<a href="../part2-advanced/chapter-pointers.html">指针、切片与对齐</a>将详细讲解各种指针类型及其应用场景。</p>
-</blockquote>
-<h3 id="切片创建方式"><a class="header" href="#切片创建方式">切片创建方式</a></h3>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>方式</th><th>语法</th><th>说明</th></tr>
-</thead>
-<tbody>
-<tr><td>从数组切片</td><td><code>array[start..end]</code></td><td>包含 <code>start</code>，不包含 <code>end</code></td></tr>
-<tr><td>全切片</td><td><code>array[:]</code></td><td>等价于 <code>array[0..array.len]</code></td></tr>
-<tr><td>从指针切片</td><td><code>ptr[0..len]</code></td><td>从指针创建指定长度的切片</td></tr>
-<tr><td>重新切片</td><td><code>slice[start..end]</code></td><td>从已有切片创建子切片</td></tr>
-</tbody>
-</table>
-</div>
-<pre><code class="language-zig">const std = @import("std");
+                            <p><strong>核心特性</strong>：</p>
+                            <ul>
+                                <li>
+                                    <strong>胖指针</strong
+                                    >：包含指针和长度两个字段（64 位系统上共 16
+                                    字节）
+                                </li>
+                                <li>
+                                    <strong>引用语义</strong
+                                    >：切片是对底层内存的引用，不拥有数据；修改切片会影响原数据
+                                </li>
+                                <li>
+                                    <strong>边界检查</strong
+                                    >：切片长度是运行时值，只能在运行时检查边界
+                                </li>
+                            </ul>
+                            <blockquote>
+                                <p>
+                                    <strong>深入学习</strong>：胖指针是 Zig
+                                    指针系统的重要组成部分，<a
+                                        href="../part2-advanced/chapter-pointers.html"
+                                        >指针、切片与对齐</a
+                                    >将详细讲解各种指针类型及其应用场景。
+                                </p>
+                            </blockquote>
+                            <h3 id="切片创建方式">
+                                <a class="header" href="#切片创建方式"
+                                    >切片创建方式</a
+                                >
+                            </h3>
+                            <div class="table-wrapper">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>方式</th>
+                                            <th>语法</th>
+                                            <th>说明</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>从数组切片</td>
+                                            <td>
+                                                <code>array[start..end]</code>
+                                            </td>
+                                            <td>
+                                                包含 <code>start</code>，不包含
+                                                <code>end</code>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>全切片</td>
+                                            <td><code>array[:]</code></td>
+                                            <td>
+                                                等价于
+                                                <code>array[0..array.len]</code>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>从指针切片</td>
+                                            <td><code>ptr[0..len]</code></td>
+                                            <td>从指针创建指定长度的切片</td>
+                                        </tr>
+                                        <tr>
+                                            <td>重新切片</td>
+                                            <td>
+                                                <code>slice[start..end]</code>
+                                            </td>
+                                            <td>从已有切片创建子切片</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <pre><code class="language-zig">const std = @import("std");
 
 pub fn main(_: std.process.Init) void {
     var array = [_]i32{ 1, 2, 3, 4, 5 };
@@ -332,24 +685,58 @@ pub fn main(_: std.process.Init) void {
     std.debug.print("full len: {}, sub len: {}, reslice len: {}\n", .{ full.len, sub.len, reslice.len });
 }
 </code></pre>
-<p><strong>预期输出：</strong></p>
-<pre><code>full len: 5, sub len: 3, reslice len: 2
+                            <p><strong>预期输出：</strong></p>
+                            <pre><code>full len: 5, sub len: 3, reslice len: 2
 </code></pre>
-<h3 id="数组-vs-切片"><a class="header" href="#数组-vs-切片">数组 vs 切片</a></h3>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>特性</th><th>数组</th><th>切片</th></tr>
-</thead>
-<tbody>
-<tr><td><strong>大小</strong></td><td>编译期常量，类型的一部分</td><td>运行时值，存储在 <code>len</code> 字段中</td></tr>
-<tr><td><strong>内存</strong></td><td>直接存储数据</td><td>胖指针（ptr + len，共 16 字节）</td></tr>
-<tr><td><strong>语义</strong></td><td>值语义（赋值复制）</td><td>引用语义（赋值共享底层数据）</td></tr>
-<tr><td><strong>边界检查</strong></td><td>索引已知时编译期检查，否则运行时检查</td><td>运行时检查</td></tr>
-</tbody>
-</table>
-</div>
-<pre class="mermaid">graph TB
+                            <h3 id="数组-vs-切片">
+                                <a class="header" href="#数组-vs-切片"
+                                    >数组 vs 切片</a
+                                >
+                            </h3>
+                            <div class="table-wrapper">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>特性</th>
+                                            <th>数组</th>
+                                            <th>切片</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>大小</strong></td>
+                                            <td>编译期常量，类型的一部分</td>
+                                            <td>
+                                                运行时值，存储在
+                                                <code>len</code> 字段中
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>内存</strong></td>
+                                            <td>直接存储数据</td>
+                                            <td>
+                                                胖指针（ptr + len，共 16 字节）
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>语义</strong></td>
+                                            <td>值语义（赋值复制）</td>
+                                            <td>
+                                                引用语义（赋值共享底层数据）
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>边界检查</strong></td>
+                                            <td>
+                                                索引已知时编译期检查，否则运行时检查
+                                            </td>
+                                            <td>运行时检查</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <pre class="mermaid">
+graph TB
     classDef ptrStyle fill:#fff9c4,stroke:#f57f17,stroke-width:2px
     classDef lenStyle fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px
     classDef arrayElement fill:#e1f5ff,stroke:#01579b,stroke-width:3px
@@ -375,32 +762,76 @@ pub fn main(_: std.process.Init) void {
 
     class SliceVar container
     class Array container
-</pre>
+</pre
+                            >
 
-<p><strong>选择指南</strong>：</p>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>场景</th><th>推荐使用</th><th>原因</th></tr>
-</thead>
-<tbody>
-<tr><td>编译期已知大小</td><td>数组</td><td>性能更好，编译期检查</td></tr>
-<tr><td>函数参数</td><td>切片</td><td>灵活，避免复制</td></tr>
-<tr><td>返回值</td><td>切片</td><td>可以返回部分数据</td></tr>
-<tr><td>全局常量</td><td>数组</td><td>存储在静态内存</td></tr>
-<tr><td>动态大小</td><td>切片</td><td>唯一选择</td></tr>
-</tbody>
-</table>
-</div>
-<h2 id="哨兵终止数组"><a class="header" href="#哨兵终止数组">哨兵终止数组</a></h2>
-<p>哨兵终止数组在数组末尾添加一个“哨兵值”来标记结束，主要用于 C 语言兼容性，以及需要明确终止标记的数据表示。</p>
-<p><strong>语法</strong>：</p>
-<ul>
-<li><code>[N:S]T</code>：长度为 <code>N</code>、哨兵值为 <code>S</code>、元素类型为 <code>T</code> 的数组</li>
-<li><code>[:S]T</code>：带哨兵值 <code>S</code> 的切片</li>
-<li>最常见的：<code>[:0]const u8</code> —— 以 <code>0</code> 结尾的字节切片，常用于 C 风格字符串</li>
-</ul>
-<pre><code class="language-zig">const std = @import("std");
+                            <p><strong>选择指南</strong>：</p>
+                            <div class="table-wrapper">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>场景</th>
+                                            <th>推荐使用</th>
+                                            <th>原因</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>编译期已知大小</td>
+                                            <td>数组</td>
+                                            <td>性能更好，编译期检查</td>
+                                        </tr>
+                                        <tr>
+                                            <td>函数参数</td>
+                                            <td>切片</td>
+                                            <td>灵活，避免复制</td>
+                                        </tr>
+                                        <tr>
+                                            <td>返回值</td>
+                                            <td>切片</td>
+                                            <td>可以返回部分数据</td>
+                                        </tr>
+                                        <tr>
+                                            <td>全局常量</td>
+                                            <td>数组</td>
+                                            <td>存储在静态内存</td>
+                                        </tr>
+                                        <tr>
+                                            <td>动态大小</td>
+                                            <td>切片</td>
+                                            <td>唯一选择</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <h2 id="哨兵终止数组">
+                                <a class="header" href="#哨兵终止数组"
+                                    >哨兵终止数组</a
+                                >
+                            </h2>
+                            <p>
+                                哨兵终止数组在数组末尾添加一个“哨兵值”来标记结束，主要用于
+                                C 语言兼容性，以及需要明确终止标记的数据表示。
+                            </p>
+                            <p><strong>语法</strong>：</p>
+                            <ul>
+                                <li>
+                                    <code>[N:S]T</code>：长度为
+                                    <code>N</code>、哨兵值为
+                                    <code>S</code>、元素类型为
+                                    <code>T</code> 的数组
+                                </li>
+                                <li>
+                                    <code>[:S]T</code>：带哨兵值
+                                    <code>S</code> 的切片
+                                </li>
+                                <li>
+                                    最常见的：<code>[:0]const u8</code> —— 以
+                                    <code>0</code> 结尾的字节切片，常用于 C
+                                    风格字符串
+                                </li>
+                            </ul>
+                            <pre><code class="language-zig">const std = @import("std");
 
 pub fn main(_: std.process.Init) void {
     const message: [5:0]u8 = "hello".*;
@@ -417,33 +848,64 @@ pub fn main(_: std.process.Init) void {
     std.debug.print("哨兵终止切片长度：{}\n", .{str.len});
 }
 </code></pre>
-<p><strong>注意事项</strong>：</p>
-<ol>
-<li><strong>哨兵值不在 <code>len</code> 中</strong>：<code>message.len</code> 返回 5，但实际占用 6 字节</li>
-<li><strong>访问哨兵</strong>：<code>arr[arr.len]</code> 返回哨兵值</li>
-<li><strong>编译期检查</strong>：Zig 会确保哨兵值正确设置</li>
-</ol>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>特性</th><th>普通数组 <code>[N]T</code></th><th>哨兵数组 <code>[N:S]T</code></th></tr>
-</thead>
-<tbody>
-<tr><td>长度信息</td><td>编译期已知</td><td>编译期已知</td></tr>
-<tr><td>内存布局</td><td>N 个元素</td><td>N+1 个元素（含哨兵）</td></tr>
-<tr><td>C 兼容性</td><td>需要转换</td><td>直接兼容</td></tr>
-</tbody>
-</table>
-</div>
-<p><strong>实际应用场景</strong>：</p>
-<pre><code class="language-zig">extern "c" fn puts(s: [*:0]const u8) c_int;
+                            <p><strong>注意事项</strong>：</p>
+                            <ol>
+                                <li>
+                                    <strong
+                                        >哨兵值不在 <code>len</code> 中</strong
+                                    >：<code>message.len</code> 返回
+                                    5，但实际占用 6 字节
+                                </li>
+                                <li>
+                                    <strong>访问哨兵</strong>：<code
+                                        >arr[arr.len]</code
+                                    >
+                                    返回哨兵值
+                                </li>
+                                <li>
+                                    <strong>编译期检查</strong>：Zig
+                                    会确保哨兵值正确设置
+                                </li>
+                            </ol>
+                            <div class="table-wrapper">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>特性</th>
+                                            <th>普通数组 <code>[N]T</code></th>
+                                            <th>
+                                                哨兵数组 <code>[N:S]T</code>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>长度信息</td>
+                                            <td>编译期已知</td>
+                                            <td>编译期已知</td>
+                                        </tr>
+                                        <tr>
+                                            <td>内存布局</td>
+                                            <td>N 个元素</td>
+                                            <td>N+1 个元素（含哨兵）</td>
+                                        </tr>
+                                        <tr>
+                                            <td>C 兼容性</td>
+                                            <td>需要转换</td>
+                                            <td>直接兼容</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <p><strong>实际应用场景</strong>：</p>
+                            <pre><code class="language-zig">extern "c" fn puts(s: [*:0]const u8) c_int;
 
 pub fn callCFunction() void {
     const message = "Hello from Zig";
     _ = puts(message.ptr);
 }
 </code></pre>
-<pre><code class="language-zig">const std = @import("std");
+                            <pre><code class="language-zig">const std = @import("std");
 
 pub fn main(_: std.process.Init) void {
     const names: [3][:0]const u8 = .{ "Alice", "Bob", "Charlie" };
@@ -452,20 +914,34 @@ pub fn main(_: std.process.Init) void {
     }
 }
 </code></pre>
-<blockquote>
-<p><strong>相关章节</strong>：哨兵终止数组主要用于 C 互操作，详细内容请参考 <a href="../part2-advanced/chapter-c-interop.html">C 互操作</a>。</p>
-</blockquote>
-<h2 id="枚举"><a class="header" href="#枚举">枚举</a></h2>
-<p>枚举用于定义一组命名的整数值，提供类型安全和代码可读性。</p>
-<p><strong>Zig 枚举的特点</strong>：</p>
-<ul>
-<li>可以指定底层整数类型</li>
-<li>可以包含方法</li>
-<li>与 C 枚举完全兼容</li>
-<li>switch 语句必须穷尽所有枚举值</li>
-</ul>
-<h3 id="基本枚举"><a class="header" href="#基本枚举">基本枚举</a></h3>
-<pre><code class="language-zig">const std = @import("std");
+                            <blockquote>
+                                <p>
+                                    <strong>相关章节</strong
+                                    >：哨兵终止数组主要用于 C
+                                    互操作，详细内容请参考
+                                    <a
+                                        href="../part2-advanced/chapter-c-interop.html"
+                                        >C 互操作</a
+                                    >。
+                                </p>
+                            </blockquote>
+                            <h2 id="枚举">
+                                <a class="header" href="#枚举">枚举</a>
+                            </h2>
+                            <p>
+                                枚举用于定义一组命名的整数值，提供类型安全和代码可读性。
+                            </p>
+                            <p><strong>Zig 枚举的特点</strong>：</p>
+                            <ul>
+                                <li>可以指定底层整数类型</li>
+                                <li>可以包含方法</li>
+                                <li>与 C 枚举完全兼容</li>
+                                <li>switch 语句必须穷尽所有枚举值</li>
+                            </ul>
+                            <h3 id="基本枚举">
+                                <a class="header" href="#基本枚举">基本枚举</a>
+                            </h3>
+                            <pre><code class="language-zig">const std = @import("std");
 
 const Color = enum {
     red,
@@ -489,17 +965,31 @@ pub fn main(_: std.process.Init) void {
     std.debug.print("从整数创建：{}\n", .{green_value});
 }
 </code></pre>
-<p><strong>预期输出：</strong></p>
-<pre><code>颜色：红色
+                            <p><strong>预期输出：</strong></p>
+                            <pre><code>颜色：红色
 序值：0
 从整数创建：.green
 </code></pre>
-<blockquote>
-<p><strong>相关章节</strong>：枚举与 <code>switch</code> 语句配合使用时，编译器会强制穷尽性检查，详见<a href="chapter-control-flow.html">控制流与资源管理</a>。</p>
-</blockquote>
-<h3 id="带整数类型的枚举"><a class="header" href="#带整数类型的枚举">带整数类型的枚举</a></h3>
-<p>指定底层整数类型，用于 C 互操作、内存优化或协议兼容：</p>
-<pre><code class="language-zig">const std = @import("std");
+                            <blockquote>
+                                <p>
+                                    <strong>相关章节</strong>：枚举与
+                                    <code>switch</code>
+                                    语句配合使用时，编译器会强制穷尽性检查，详见<a
+                                        href="chapter-control-flow.html"
+                                        >控制流与资源管理</a
+                                    >。
+                                </p>
+                            </blockquote>
+                            <h3 id="带整数类型的枚举">
+                                <a class="header" href="#带整数类型的枚举"
+                                    >带整数类型的枚举</a
+                                >
+                            </h3>
+                            <p>
+                                指定底层整数类型，用于 C
+                                互操作、内存优化或协议兼容：
+                            </p>
+                            <pre><code class="language-zig">const std = @import("std");
 
 const Priority = enum(u8) {
     low = 1,
@@ -513,11 +1003,13 @@ pub fn main(_: std.process.Init) void {
     std.debug.print("优先级：{s}，值：{}\n", .{ @tagName(p), @intFromEnum(p) });
 }
 </code></pre>
-<p><strong>预期输出：</strong></p>
-<pre><code>优先级：high，值：10
+                            <p><strong>预期输出：</strong></p>
+                            <pre><code>优先级：high，值：10
 </code></pre>
-<h3 id="枚举方法"><a class="header" href="#枚举方法">枚举方法</a></h3>
-<pre><code class="language-zig">const std = @import("std");
+                            <h3 id="枚举方法">
+                                <a class="header" href="#枚举方法">枚举方法</a>
+                            </h3>
+                            <pre><code class="language-zig">const std = @import("std");
 
 const Direction = enum(u4) {
     north = 0,
@@ -557,14 +1049,23 @@ pub fn main(_: std.process.Init) void {
     std.debug.print("所有方向数量：{}\n", .{all.len});
 }
 </code></pre>
-<p><strong>预期输出：</strong></p>
-<pre><code>方向：北
+                            <p><strong>预期输出：</strong></p>
+                            <pre><code>方向：北
 相反方向：南
 所有方向数量：4
 </code></pre>
-<h3 id="非穷尽枚举"><a class="header" href="#非穷尽枚举">非穷尽枚举</a></h3>
-<p>非穷尽枚举使用 <code>_</code> 占位符表示未列出的值，适用于处理外部协议和 C 互操作时无法穷举所有可能值的场景：</p>
-<pre><code class="language-zig">const std = @import("std");
+                            <h3 id="非穷尽枚举">
+                                <a class="header" href="#非穷尽枚举"
+                                    >非穷尽枚举</a
+                                >
+                            </h3>
+                            <p>
+                                非穷尽枚举使用
+                                <code>_</code>
+                                占位符表示未列出的值，适用于处理外部协议和 C
+                                互操作时无法穷举所有可能值的场景：
+                            </p>
+                            <pre><code class="language-zig">const std = @import("std");
 
 const TcpState = enum(u8) {
     closed = 0,
@@ -588,22 +1089,44 @@ pub fn main(_: std.process.Init) void {
     }
 }
 </code></pre>
-<p><strong>预期输出：</strong></p>
-<pre><code>已知状态：established
+                            <p><strong>预期输出：</strong></p>
+                            <pre><code>已知状态：established
 未知状态值：99
 其他状态
 </code></pre>
-<p>非穷尽枚举的 <code>switch</code> 必须使用 <code>_</code> 分支处理未命名的值。对非穷尽枚举而言，运行时才出现的未命名值不能按普通命名枚举值处理；在需要展示名称时，应该优先依赖显式分支或整数值，而不要假定所有值都一定有可用的标签名。</p>
-<h2 id="联合"><a class="header" href="#联合">联合</a></h2>
-<p>联合允许在同一内存位置存储不同类型的数据。Zig 将联合分为两大类：</p>
-<ul>
-<li><strong>带标签联合</strong>：有类型标签，自动跟踪活动成员，类型安全（推荐）</li>
-<li><strong>无标签联合</strong>：无类型标签，需手动跟踪活动成员</li>
-</ul>
-<h3 id="带标签联合"><a class="header" href="#带标签联合">带标签联合</a></h3>
-<p>带标签联合是联合和枚举的结合体，通过标签自动跟踪当前存储的值类型。这是 Zig 中实现安全多态的核心机制。</p>
-<p><strong>基本用法</strong>：</p>
-<pre><code class="language-zig">const std = @import("std");
+                            <p>
+                                非穷尽枚举的 <code>switch</code> 必须使用
+                                <code>_</code>
+                                分支处理未命名的值。对非穷尽枚举而言，运行时才出现的未命名值不能按普通命名枚举值处理；在需要展示名称时，应该优先依赖显式分支或整数值，而不要假定所有值都一定有可用的标签名。
+                            </p>
+                            <h2 id="联合">
+                                <a class="header" href="#联合">联合</a>
+                            </h2>
+                            <p>
+                                联合允许在同一内存位置存储不同类型的数据。Zig
+                                将联合分为两大类：
+                            </p>
+                            <ul>
+                                <li>
+                                    <strong>带标签联合</strong
+                                    >：有类型标签，自动跟踪活动成员，类型安全（推荐）
+                                </li>
+                                <li>
+                                    <strong>无标签联合</strong
+                                    >：无类型标签，需手动跟踪活动成员
+                                </li>
+                            </ul>
+                            <h3 id="带标签联合">
+                                <a class="header" href="#带标签联合"
+                                    >带标签联合</a
+                                >
+                            </h3>
+                            <p>
+                                带标签联合是联合和枚举的结合体，通过标签自动跟踪当前存储的值类型。这是
+                                Zig 中实现安全多态的核心机制。
+                            </p>
+                            <p><strong>基本用法</strong>：</p>
+                            <pre><code class="language-zig">const std = @import("std");
 
 const Shape = union(enum) {
     circle: struct { radius: f32 },
@@ -631,22 +1154,28 @@ pub fn main(_: std.process.Init) void {
     }
 }
 </code></pre>
-<p><strong>预期输出：</strong></p>
-<pre><code>形状 0 面积：3.14
+                            <p><strong>预期输出：</strong></p>
+                            <pre><code>形状 0 面积：3.14
 形状 1 面积：15.00
 形状 2 面积：12.00
 </code></pre>
-<p><strong>两种定义方式</strong>：</p>
-<p>方式一（匿名标记，推荐）：使用 <code>union(enum)</code>，编译器自动生成枚举标签。</p>
-<p>方式二（显式标签）：先定义枚举类型，再定义联合引用它：</p>
-<pre><code class="language-zig">const ShapeTag = enum { circle, rectangle };
+                            <p><strong>两种定义方式</strong>：</p>
+                            <p>
+                                方式一（匿名标记，推荐）：使用
+                                <code>union(enum)</code
+                                >，编译器自动生成枚举标签。
+                            </p>
+                            <p>
+                                方式二（显式标签）：先定义枚举类型，再定义联合引用它：
+                            </p>
+                            <pre><code class="language-zig">const ShapeTag = enum { circle, rectangle };
 const Shape = union(ShapeTag) {
     circle: struct { radius: f32 },
     rectangle: struct { width: f32, height: f32 },
 };
 </code></pre>
-<p><strong>带标签联合的方法</strong>：</p>
-<pre><code class="language-zig">const std = @import("std");
+                            <p><strong>带标签联合的方法</strong>：</p>
+                            <pre><code class="language-zig">const std = @import("std");
 
 const Value = union(enum) {
     integer: i64,
@@ -692,31 +1221,68 @@ pub fn main(_: std.process.Init) void {
     }
 }
 </code></pre>
-<p><strong>预期输出：</strong></p>
-<pre><code>整数 = 42
+                            <p><strong>预期输出：</strong></p>
+                            <pre><code>整数 = 42
 浮点数 = 3.14
 布尔值 = true
 字符串 = hello
 </code></pre>
-<blockquote>
-<p><strong>相关章节</strong>：带标签联合与 <code>switch</code> 语句配合使用时，编译器会自动推断活动变体，详见<a href="chapter-control-flow.html">控制流与资源管理</a>。</p>
-</blockquote>
-<h3 id="无标签联合"><a class="header" href="#无标签联合">无标签联合</a></h3>
-<p>无标签联合没有类型标签，程序员需要自己跟踪当前活动的成员。根据内存布局的不同，分为三种：</p>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>类型</th><th>内存布局</th><th>访问非活动成员</th><th>主要用途</th></tr>
-</thead>
-<tbody>
-<tr><td><strong>普通 union</strong></td><td>由编译器决定</td><td>安全模式下触发运行时错误</td><td>通用场景</td></tr>
-<tr><td><strong>extern union</strong></td><td>C ABI</td><td>允许</td><td>C 互操作、类型转换</td></tr>
-<tr><td><strong>packed union</strong></td><td>位级精确</td><td>允许</td><td>硬件编程、位操作</td></tr>
-</tbody>
-</table>
-</div>
-<p><strong>普通 union</strong>：</p>
-<pre><code class="language-zig">const std = @import("std");
+                            <blockquote>
+                                <p>
+                                    <strong>相关章节</strong>：带标签联合与
+                                    <code>switch</code>
+                                    语句配合使用时，编译器会自动推断活动变体，详见<a
+                                        href="chapter-control-flow.html"
+                                        >控制流与资源管理</a
+                                    >。
+                                </p>
+                            </blockquote>
+                            <h3 id="无标签联合">
+                                <a class="header" href="#无标签联合"
+                                    >无标签联合</a
+                                >
+                            </h3>
+                            <p>
+                                无标签联合没有类型标签，程序员需要自己跟踪当前活动的成员。根据内存布局的不同，分为三种：
+                            </p>
+                            <div class="table-wrapper">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>类型</th>
+                                            <th>内存布局</th>
+                                            <th>访问非活动成员</th>
+                                            <th>主要用途</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>普通 union</strong></td>
+                                            <td>由编译器决定</td>
+                                            <td>安全模式下触发运行时错误</td>
+                                            <td>通用场景</td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <strong>extern union</strong>
+                                            </td>
+                                            <td>C ABI</td>
+                                            <td>允许</td>
+                                            <td>C 互操作、类型转换</td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <strong>packed union</strong>
+                                            </td>
+                                            <td>位级精确</td>
+                                            <td>允许</td>
+                                            <td>硬件编程、位操作</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <p><strong>普通 union</strong>：</p>
+                            <pre><code class="language-zig">const std = @import("std");
 
 const Data = union {
     as_i32: i32,
@@ -734,15 +1300,23 @@ pub fn main(_: std.process.Init) void {
     std.debug.print("联合大小: {} 字节\n", .{@sizeOf(Data)});
 }
 </code></pre>
-<p><strong>预期输出：</strong></p>
-<pre><code>as_i32: 42
+                            <p><strong>预期输出：</strong></p>
+                            <pre><code>as_i32: 42
 as_f32: 3.14
 联合大小: 8 字节
 </code></pre>
-<p>注意：虽然所有成员都是 4 字节，但普通 union 的大小不一定等于最大成员的大小。普通 union 的内存布局由编译器决定，实际大小取决于编译器实现。访问非活动成员在安全构建模式下会触发运行时错误，在 ReleaseFast/ReleaseSmall 模式下是未定义行为。</p>
-<p><strong>extern union</strong>：</p>
-<p><code>extern union</code> 遵循 C ABI，允许访问非活动成员（类型重解释）：</p>
-<pre><code class="language-zig">const std = @import("std");
+                            <p>
+                                注意：虽然所有成员都是 4 字节，但普通 union
+                                的大小不一定等于最大成员的大小。普通 union
+                                的内存布局由编译器决定，实际大小取决于编译器实现。访问非活动成员在安全构建模式下会触发运行时错误，在
+                                ReleaseFast/ReleaseSmall 模式下是未定义行为。
+                            </p>
+                            <p><strong>extern union</strong>：</p>
+                            <p>
+                                <code>extern union</code> 遵循 C
+                                ABI，允许访问非活动成员（类型重解释）：
+                            </p>
+                            <pre><code class="language-zig">const std = @import("std");
 
 const Data = extern union {
     as_i32: i32,
@@ -759,16 +1333,29 @@ pub fn main(_: std.process.Init) void {
     std.debug.print("联合大小: {} 字节\n", .{@sizeOf(Data)});
 }
 </code></pre>
-<p><strong>预期输出（小端序平台，如 x86/ARM）：</strong></p>
-<pre><code>as_i32: 1094861636
+                            <p>
+                                <strong
+                                    >预期输出（小端序平台，如
+                                    x86/ARM）：</strong
+                                >
+                            </p>
+                            <pre><code>as_i32: 1094861636
 as_f32: 12.141422
 as_bytes: DCBA
 联合大小: 4 字节
 </code></pre>
-<p>注意：<code>as_bytes</code> 的输出取决于 CPU 字节序。上例为小端序结果，大端序平台上输出不同。</p>
-<p><strong>packed union</strong>：</p>
-<p><code>packed union</code> 有位级精确的内存布局，所有成员必须有相同的 <code>@bitSizeOf</code>，可以嵌入 <code>packed struct</code> 中：</p>
-<pre><code class="language-zig">const std = @import("std");
+                            <p>
+                                注意：<code>as_bytes</code> 的输出取决于 CPU
+                                字节序。上例为小端序结果，大端序平台上输出不同。
+                            </p>
+                            <p><strong>packed union</strong>：</p>
+                            <p>
+                                <code>packed union</code>
+                                有位级精确的内存布局，所有成员必须有相同的
+                                <code>@bitSizeOf</code>，可以嵌入
+                                <code>packed struct</code> 中：
+                            </p>
+                            <pre><code class="language-zig">const std = @import("std");
 
 const Data = packed union {
     as_u32: u32,
@@ -782,8 +1369,11 @@ pub fn main(_: std.process.Init) void {
     std.debug.print("as_f32: {}\n", .{data.as_f32});
 }
 </code></pre>
-<p><code>packed union</code> 支持指定 backing integer type：</p>
-<pre><code class="language-zig">const Register = packed struct {
+                            <p>
+                                <code>packed union</code> 支持指定 backing
+                                integer type：
+                            </p>
+                            <pre><code class="language-zig">const Register = packed struct {
     control: packed union(u32) {
         as_u32: u32,
         bits: packed struct {
@@ -795,9 +1385,14 @@ pub fn main(_: std.process.Init) void {
     status: u32,
 };
 </code></pre>
-<h3 id="高级特性"><a class="header" href="#高级特性">高级特性</a></h3>
-<p><strong><code>@unionInit</code></strong>：内建函数，用于在字段名为编译期参数时初始化联合。其字段名参数必须是编译期常量，但函数本身可以在运行时使用。</p>
-<pre><code class="language-zig">const std = @import("std");
+                            <h3 id="高级特性">
+                                <a class="header" href="#高级特性">高级特性</a>
+                            </h3>
+                            <p>
+                                <strong><code>@unionInit</code></strong
+                                >：内建函数，用于在字段名为编译期参数时初始化联合。其字段名参数必须是编译期常量，但函数本身可以在运行时使用。
+                            </p>
+                            <pre><code class="language-zig">const std = @import("std");
 
 const MyUnion = union {
     int: i32,
@@ -815,16 +1410,33 @@ pub fn main(_: std.process.Init) void {
     std.debug.print("u3: {s}\n", .{u3.string});
 }
 </code></pre>
-<p><code>@unionInit</code> 的主要用途是在泛型代码中，当字段名是 <code>comptime</code> 参数时无法使用普通初始化语法：</p>
-<pre><code class="language-zig">fn initUnion(comptime field: []const u8, value: anytype) MyUnion {
+                            <p>
+                                <code>@unionInit</code>
+                                的主要用途是在泛型代码中，当字段名是
+                                <code>comptime</code>
+                                参数时无法使用普通初始化语法：
+                            </p>
+                            <pre><code class="language-zig">fn initUnion(comptime field: []const u8, value: anytype) MyUnion {
     return @unionInit(MyUnion, field, value);
 }
 </code></pre>
-<blockquote>
-<p><strong>相关章节</strong>：更多编译期技巧请参考<a href="../part2-advanced/chapter-comptime.html">编译期计算与元编程</a>和<a href="../part2-advanced/chapter-generics.html">泛型编程</a>。</p>
-</blockquote>
-<p><strong><code>@tagName</code></strong>：获取带标签联合当前变体的名称字符串，常用于日志和调试：</p>
-<pre><code class="language-zig">const std = @import("std");
+                            <blockquote>
+                                <p>
+                                    <strong>相关章节</strong
+                                    >：更多编译期技巧请参考<a
+                                        href="../part2-advanced/chapter-comptime.html"
+                                        >编译期计算与元编程</a
+                                    >和<a
+                                        href="../part2-advanced/chapter-generics.html"
+                                        >泛型编程</a
+                                    >。
+                                </p>
+                            </blockquote>
+                            <p>
+                                <strong><code>@tagName</code></strong
+                                >：获取带标签联合当前变体的名称字符串，常用于日志和调试：
+                            </p>
+                            <pre><code class="language-zig">const std = @import("std");
 
 const Result = union(enum) {
     success: i32,
@@ -844,15 +1456,24 @@ pub fn main(_: std.process.Init) void {
     }
 }
 </code></pre>
-<p><strong>预期输出：</strong></p>
-<pre><code>r1 标签: success
+                            <p><strong>预期输出：</strong></p>
+                            <pre><code>r1 标签: success
 r2 标签: failure
 成功: 100
 </code></pre>
-<h2 id="结构体"><a class="header" href="#结构体">结构体</a></h2>
-<p>结构体是 Zig 中定义复合类型的主要方式，将多个相关的数据字段组合成一个逻辑单元。</p>
-<h3 id="基本用法-2"><a class="header" href="#基本用法-2">基本用法</a></h3>
-<pre><code class="language-zig">const std = @import("std");
+                            <h2 id="结构体">
+                                <a class="header" href="#结构体">结构体</a>
+                            </h2>
+                            <p>
+                                结构体是 Zig
+                                中定义复合类型的主要方式，将多个相关的数据字段组合成一个逻辑单元。
+                            </p>
+                            <h3 id="基本用法-2">
+                                <a class="header" href="#基本用法-2"
+                                    >基本用法</a
+                                >
+                            </h3>
+                            <pre><code class="language-zig">const std = @import("std");
 
 const Rectangle = struct {
     width: f32,
@@ -890,38 +1511,73 @@ pub fn main(_: std.process.Init) void {
     std.debug.print("正方形面积: {d:.2}\n", .{sq.area()});
 }
 </code></pre>
-<p><strong>预期输出：</strong></p>
-<pre><code>面积: 50.00
+                            <p><strong>预期输出：</strong></p>
+                            <pre><code>面积: 50.00
 放大后面积: 200.00
 正方形面积: 16.00
 </code></pre>
-<p><strong>核心概念</strong>：</p>
-<ul>
-<li><strong>字段</strong>：存储数据的变量，可以有默认值。字段的可变性取决于结构体实例是否为 <code>var</code>：<code>var</code> 实例的字段可修改，<code>const</code> 实例的字段不可修改</li>
-<li><strong>方法</strong>：带有 <code>self</code> 参数的函数（值类型 <code>self</code> 不能修改字段，指针类型 <code>*Self</code> 可以修改）</li>
-<li><strong>关联函数</strong>：不带 <code>self</code> 参数的函数（类似静态方法/构造函数）</li>
-</ul>
-<pre><code class="language-zig">var p = Point{ .x = 1.0, .y = 2.0 };
+                            <p><strong>核心概念</strong>：</p>
+                            <ul>
+                                <li>
+                                    <strong>字段</strong
+                                    >：存储数据的变量，可以有默认值。字段的可变性取决于结构体实例是否为
+                                    <code>var</code>：<code>var</code>
+                                    实例的字段可修改，<code>const</code>
+                                    实例的字段不可修改
+                                </li>
+                                <li>
+                                    <strong>方法</strong>：带有
+                                    <code>self</code> 参数的函数（值类型
+                                    <code>self</code> 不能修改字段，指针类型
+                                    <code>*Self</code> 可以修改）
+                                </li>
+                                <li>
+                                    <strong>关联函数</strong>：不带
+                                    <code>self</code>
+                                    参数的函数（类似静态方法/构造函数）
+                                </li>
+                            </ul>
+                            <pre><code class="language-zig">var p = Point{ .x = 1.0, .y = 2.0 };
 p.x = 3.0;  // 合法：p 是 var
 
 const q = Point{ .x = 1.0, .y = 2.0 };
 // q.x = 3.0;  // 编译错误：q 是 const
 </code></pre>
-<h3 id="结构体布局"><a class="header" href="#结构体布局">结构体布局</a></h3>
-<p>Zig 提供三种布局方式：</p>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>布局方式</th><th>使用场景</th><th>特点</th></tr>
-</thead>
-<tbody>
-<tr><td>默认</td><td>大多数情况</td><td>编译器可重排字段优化布局</td></tr>
-<tr><td>packed</td><td>位操作、协议解析</td><td>紧凑存储，无填充，位级精确</td></tr>
-<tr><td>extern</td><td>与 C 互操作</td><td>遵循 C ABI，按声明顺序排列</td></tr>
-</tbody>
-</table>
-</div>
-<pre><code class="language-zig">const std = @import("std");
+                            <h3 id="结构体布局">
+                                <a class="header" href="#结构体布局"
+                                    >结构体布局</a
+                                >
+                            </h3>
+                            <p>Zig 提供三种布局方式：</p>
+                            <div class="table-wrapper">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>布局方式</th>
+                                            <th>使用场景</th>
+                                            <th>特点</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>默认</td>
+                                            <td>大多数情况</td>
+                                            <td>编译器可重排字段优化布局</td>
+                                        </tr>
+                                        <tr>
+                                            <td>packed</td>
+                                            <td>位操作、协议解析</td>
+                                            <td>紧凑存储，无填充，位级精确</td>
+                                        </tr>
+                                        <tr>
+                                            <td>extern</td>
+                                            <td>与 C 互操作</td>
+                                            <td>遵循 C ABI，按声明顺序排列</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <pre><code class="language-zig">const std = @import("std");
 
 const AutoLayout = struct {
     a: u8,
@@ -947,19 +1603,35 @@ pub fn main(_: std.process.Init) void {
     std.debug.print("ExternStruct 大小: {} 字节\n", .{@sizeOf(ExternStruct)});
 }
 </code></pre>
-<p><strong>预期输出：</strong></p>
-<pre><code>AutoLayout 大小: 8 字节
+                            <p><strong>预期输出：</strong></p>
+                            <pre><code>AutoLayout 大小: 8 字节
 PackedStruct 大小: 8 字节
 ExternStruct 大小: 12 字节
 </code></pre>
-<p><strong><code>packed struct</code> 详解</strong>：</p>
-<ul>
-<li>字段按声明顺序紧密排列，无 padding</li>
-<li>不允许自定义字段对齐（<code>align</code> 修饰符无效）</li>
-<li><code>@bitSizeOf(T)</code> 返回所有字段位宽之和，<code>@sizeOf(T)</code> 返回实际占用字节数（需满足整体对齐要求）</li>
-<li>可以嵌入 <code>packed union</code>，但不能嵌入 <code>extern union</code></li>
-</ul>
-<pre><code class="language-zig">const std = @import("std");
+                            <p>
+                                <strong><code>packed struct</code> 详解</strong
+                                >：
+                            </p>
+                            <ul>
+                                <li>字段按声明顺序紧密排列，无 padding</li>
+                                <li>
+                                    不允许自定义字段对齐（<code>align</code>
+                                    修饰符无效）
+                                </li>
+                                <li>
+                                    <code>@bitSizeOf(T)</code>
+                                    返回所有字段位宽之和，<code
+                                        >@sizeOf(T)</code
+                                    >
+                                    返回实际占用字节数（需满足整体对齐要求）
+                                </li>
+                                <li>
+                                    可以嵌入
+                                    <code>packed union</code>，但不能嵌入
+                                    <code>extern union</code>
+                                </li>
+                            </ul>
+                            <pre><code class="language-zig">const std = @import("std");
 
 const Flags = packed struct {
     enable: bool,
@@ -978,13 +1650,19 @@ pub fn main(_: std.process.Init) void {
     std.debug.print("as byte: 0x{X}\n", .{flags.asByte()});
 }
 </code></pre>
-<p><strong>预期输出：</strong></p>
-<pre><code>bitSizeOf: 8, sizeOf: 1
+                            <p><strong>预期输出：</strong></p>
+                            <pre><code>bitSizeOf: 8, sizeOf: 1
 as byte: 0xED
 </code></pre>
-<h3 id="结果位置语义"><a class="header" href="#结果位置语义">结果位置语义</a></h3>
-<p>当目标类型已知时，可以省略匿名结构体的类型名：</p>
-<pre><code class="language-zig">const std = @import("std");
+                            <h3 id="结果位置语义">
+                                <a class="header" href="#结果位置语义"
+                                    >结果位置语义</a
+                                >
+                            </h3>
+                            <p>
+                                当目标类型已知时，可以省略匿名结构体的类型名：
+                            </p>
+                            <pre><code class="language-zig">const std = @import("std");
 
 const Point = struct {
     x: f32,
@@ -1002,13 +1680,19 @@ pub fn main(_: std.process.Init) void {
     printPoint(.{ .x = 3.0, .y = 4.0 });
 }
 </code></pre>
-<p><strong>预期输出：</strong></p>
-<pre><code>Point(1, 2)
+                            <p><strong>预期输出：</strong></p>
+                            <pre><code>Point(1, 2)
 Point(3, 4)
 </code></pre>
-<p>适用场景：变量声明（类型注解提供结果位置）、函数参数（函数签名提供结果位置）、返回值（返回类型提供结果位置）。类型必须明确，否则编译错误。</p>
-<h3 id="字段默认值"><a class="header" href="#字段默认值">字段默认值</a></h3>
-<pre><code class="language-zig">const std = @import("std");
+                            <p>
+                                适用场景：变量声明（类型注解提供结果位置）、函数参数（函数签名提供结果位置）、返回值（返回类型提供结果位置）。类型必须明确，否则编译错误。
+                            </p>
+                            <h3 id="字段默认值">
+                                <a class="header" href="#字段默认值"
+                                    >字段默认值</a
+                                >
+                            </h3>
+                            <pre><code class="language-zig">const std = @import("std");
 
 const Config = struct {
     host: []const u8 = "localhost",
@@ -1035,14 +1719,28 @@ pub fn main(_: std.process.Init) void {
     std.debug.print("阈值范围: {} - {}\n", .{ threshold.minimum, threshold.maximum });
 }
 </code></pre>
-<p><strong>预期输出：</strong></p>
-<pre><code>配置: example.com:8080
+                            <p><strong>预期输出：</strong></p>
+                            <pre><code>配置: example.com:8080
 阈值范围: 0.25 - 0.75
 </code></pre>
-<p>默认值必须是编译期常量。没有默认值的字段必须显式提供。<code>Threshold.default</code> 使用了 decl literal 语法（<code>.default</code>），编译器根据结果位置类型自动解析为 <code>Threshold.default</code>。</p>
-<h3 id="泛型结构体"><a class="header" href="#泛型结构体">泛型结构体</a></h3>
-<p>Zig 通过 <code>comptime</code> 参数实现泛型结构体：</p>
-<pre><code class="language-zig">const std = @import("std");
+                            <p>
+                                默认值必须是编译期常量。没有默认值的字段必须显式提供。<code
+                                    >Threshold.default</code
+                                >
+                                使用了 decl literal
+                                语法（<code>.default</code>），编译器根据结果位置类型自动解析为
+                                <code>Threshold.default</code>。
+                            </p>
+                            <h3 id="泛型结构体">
+                                <a class="header" href="#泛型结构体"
+                                    >泛型结构体</a
+                                >
+                            </h3>
+                            <p>
+                                Zig 通过
+                                <code>comptime</code> 参数实现泛型结构体：
+                            </p>
+                            <pre><code class="language-zig">const std = @import("std");
 
 fn Vector(comptime T: type) type {
     return struct {
@@ -1071,17 +1769,34 @@ pub fn main(_: std.process.Init) void {
     std.debug.print("v1 + v2 = ({d:.1}, {d:.1}, {d:.1})\n", .{ v3.x, v3.y, v3.z });
 }
 </code></pre>
-<p><strong>预期输出：</strong></p>
-<pre><code>v1 + v2 = (5.0, 7.0, 9.0)
+                            <p><strong>预期输出：</strong></p>
+                            <pre><code>v1 + v2 = (5.0, 7.0, 9.0)
 </code></pre>
-<p><code>@This()</code> 获取当前正在定义的类型，常用于泛型结构体中引用自身类型。</p>
-<blockquote>
-<p><strong>深入学习</strong>：泛型结构体的完整实现和高级用法请参考<a href="../part2-advanced/chapter-generics.html">泛型编程</a>章节。</p>
-</blockquote>
-<h2 id="元组"><a class="header" href="#元组">元组</a></h2>
-<p>元组是一种特殊的匿名结构体，字段没有名称，使用数字索引访问。元组可以包含不同类型的元素。</p>
-<h3 id="基本用法-3"><a class="header" href="#基本用法-3">基本用法</a></h3>
-<pre><code class="language-zig">const std = @import("std");
+                            <p>
+                                <code>@This()</code>
+                                获取当前正在定义的类型，常用于泛型结构体中引用自身类型。
+                            </p>
+                            <blockquote>
+                                <p>
+                                    <strong>深入学习</strong
+                                    >：泛型结构体的完整实现和高级用法请参考<a
+                                        href="../part2-advanced/chapter-generics.html"
+                                        >泛型编程</a
+                                    >章节。
+                                </p>
+                            </blockquote>
+                            <h2 id="元组">
+                                <a class="header" href="#元组">元组</a>
+                            </h2>
+                            <p>
+                                元组是一种特殊的匿名结构体，字段没有名称，使用数字索引访问。元组可以包含不同类型的元素。
+                            </p>
+                            <h3 id="基本用法-3">
+                                <a class="header" href="#基本用法-3"
+                                    >基本用法</a
+                                >
+                            </h3>
+                            <pre><code class="language-zig">const std = @import("std");
 
 pub fn main(_: std.process.Init) void {
     const tuple = .{ 1, "hello", 3.14, true };
@@ -1095,8 +1810,8 @@ pub fn main(_: std.process.Init) void {
     }
 }
 </code></pre>
-<p><strong>预期输出：</strong></p>
-<pre><code>第一个元素: 1
+                            <p><strong>预期输出：</strong></p>
+                            <pre><code>第一个元素: 1
 第二个元素: hello
 元组长度: 4
 tuple[0] = 1
@@ -1104,11 +1819,24 @@ tuple[1] = { 104, 101, 108, 108, 111 }
 tuple[2] = 3.14
 tuple[3] = true
 </code></pre>
-<p>遍历元组必须使用 <code>inline for</code>，因为每个元素的类型可能不同，编译器需要在编译期为每个元素生成对应的代码。</p>
-<h3 id="元组操作"><a class="header" href="#元组操作">元组操作</a></h3>
-<p><strong>元组连接</strong>：使用 <code>++</code> 连接两个元组。</p>
-<p><strong>元组与结构体的关系</strong>：元组本质上是无字段名的匿名结构体，字段名为数字索引（0, 1, 2…）。</p>
-<pre><code class="language-zig">const std = @import("std");
+                            <p>
+                                遍历元组必须使用
+                                <code>inline for</code
+                                >，因为每个元素的类型可能不同，编译器需要在编译期为每个元素生成对应的代码。
+                            </p>
+                            <h3 id="元组操作">
+                                <a class="header" href="#元组操作">元组操作</a>
+                            </h3>
+                            <p>
+                                <strong>元组连接</strong>：使用
+                                <code>++</code> 连接两个元组。
+                            </p>
+                            <p>
+                                <strong>元组与结构体的关系</strong
+                                >：元组本质上是无字段名的匿名结构体，字段名为数字索引（0,
+                                1, 2…）。
+                            </p>
+                            <pre><code class="language-zig">const std = @import("std");
 
 pub fn main(_: std.process.Init) void {
     const t1 = .{ 1, 2 };
@@ -1121,81 +1849,212 @@ pub fn main(_: std.process.Init) void {
     std.debug.print("类型: {}\n", .{TupleType});
 }
 </code></pre>
-<p><strong>预期输出：</strong></p>
-<pre><code>连接后长度: 4
+                            <p><strong>预期输出：</strong></p>
+                            <pre><code>连接后长度: 4
 combined[2]: a
 类型: struct { comptime comptime_int = 1, comptime comptime_int = 2, comptime *const [2:0]u8 = "a", comptime *const [2:0]u8 = "b" }
 </code></pre>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>特性</th><th>元组</th><th>结构体</th><th>数组</th></tr>
-</thead>
-<tbody>
-<tr><td>字段访问</td><td>索引（0, 1, 2…）</td><td>名称</td><td>索引</td></tr>
-<tr><td>元素类型</td><td>可以不同</td><td>可以不同</td><td>必须相同</td></tr>
-<tr><td>定义方式</td><td>匿名</td><td>命名类型</td><td>命名类型</td></tr>
-<tr><td>适用场景</td><td>临时数据、多返回值</td><td>长期存储、复用</td><td>同类数据集合</td></tr>
-</tbody>
-</table>
-</div>
+                            <div class="table-wrapper">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>特性</th>
+                                            <th>元组</th>
+                                            <th>结构体</th>
+                                            <th>数组</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>字段访问</td>
+                                            <td>索引（0, 1, 2…）</td>
+                                            <td>名称</td>
+                                            <td>索引</td>
+                                        </tr>
+                                        <tr>
+                                            <td>元素类型</td>
+                                            <td>可以不同</td>
+                                            <td>可以不同</td>
+                                            <td>必须相同</td>
+                                        </tr>
+                                        <tr>
+                                            <td>定义方式</td>
+                                            <td>匿名</td>
+                                            <td>命名类型</td>
+                                            <td>命名类型</td>
+                                        </tr>
+                                        <tr>
+                                            <td>适用场景</td>
+                                            <td>临时数据、多返回值</td>
+                                            <td>长期存储、复用</td>
+                                            <td>同类数据集合</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </main>
 
-                    </main>
-
-                    <nav class="nav-wrapper" aria-label="Page navigation">
-                        <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../part1-basics/chapter-functions.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
-                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                        <nav class="nav-wrapper" aria-label="Page navigation">
+                            <!-- Mobile navigation buttons -->
+                            <a
+                                rel="prev"
+                                href="../part1-basics/chapter-functions.html"
+                                class="mobile-nav-chapters previous"
+                                title="Previous chapter"
+                                aria-label="Previous chapter"
+                                aria-keyshortcuts="Left"
+                            >
+                                <span class="fa-svg"
+                                    ><svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 320 512"
+                                    >
+                                        <!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. -->
+                                        <path
+                                            d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"
+                                        /></svg
+                                ></span>
                             </a>
 
-                            <a rel="next prefetch" href="../part1-basics/chapter-control-flow.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            <a
+                                rel="next prefetch"
+                                href="../part1-basics/chapter-control-flow.html"
+                                class="mobile-nav-chapters next"
+                                title="Next chapter"
+                                aria-label="Next chapter"
+                                aria-keyshortcuts="Right"
+                            >
+                                <span class="fa-svg"
+                                    ><svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 320 512"
+                                    >
+                                        <!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. -->
+                                        <path
+                                            d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"
+                                        /></svg
+                                ></span>
                             </a>
 
-                        <div style="clear: both"></div>
-                    </nav>
+                            <div style="clear: both"></div>
+                        </nav>
+                    </div>
                 </div>
+
+                <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a
+                        rel="prev"
+                        href="../part1-basics/chapter-functions.html"
+                        class="nav-chapters previous"
+                        title="Previous chapter"
+                        aria-label="Previous chapter"
+                        aria-keyshortcuts="Left"
+                    >
+                        <span class="fa-svg"
+                            ><svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 320 512"
+                            >
+                                <!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. -->
+                                <path
+                                    d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"
+                                /></svg
+                        ></span>
+                    </a>
+
+                    <a
+                        rel="next prefetch"
+                        href="../part1-basics/chapter-control-flow.html"
+                        class="nav-chapters next"
+                        title="Next chapter"
+                        aria-label="Next chapter"
+                        aria-keyshortcuts="Right"
+                    >
+                        <span class="fa-svg"
+                            ><svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 320 512"
+                            >
+                                <!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. -->
+                                <path
+                                    d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"
+                                /></svg
+                        ></span>
+                    </a>
+                </nav>
             </div>
 
-            <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../part1-basics/chapter-functions.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
-                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
-                    </a>
+            <template id="fa-eye"
+                ><span class="fa-svg"
+                    ><svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 576 512"
+                    >
+                        <!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. -->
+                        <path
+                            d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"
+                        /></svg></span
+            ></template>
+            <template id="fa-eye-slash"
+                ><span class="fa-svg"
+                    ><svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 640 512"
+                    >
+                        <!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. -->
+                        <path
+                            d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"
+                        /></svg></span
+            ></template>
+            <template id="fa-copy"
+                ><span class="fa-svg"
+                    ><svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 512 512"
+                    >
+                        <!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. -->
+                        <path
+                            d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"
+                        /></svg></span
+            ></template>
+            <template id="fa-play"
+                ><span class="fa-svg"
+                    ><svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 384 512"
+                    >
+                        <!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. -->
+                        <path
+                            d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"
+                        /></svg></span
+            ></template>
+            <template id="fa-clock-rotate-left"
+                ><span class="fa-svg"
+                    ><svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 512 512"
+                    >
+                        <!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. -->
+                        <path
+                            d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"
+                        /></svg></span
+            ></template>
 
-                    <a rel="next prefetch" href="../part1-basics/chapter-control-flow.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
-                    </a>
-            </nav>
+            <script>
+                window.playground_copyable = true;
+            </script>
 
+            <script src="../elasticlunr-ef4e11c1.min.js"></script>
+            <script src="../mark-09e88c2c.min.js"></script>
+            <script src="../searcher-c2a407aa.js"></script>
+
+            <script src="../clipboard-1626706a.min.js"></script>
+            <script src="../highlight-362d1e8a.js"></script>
+            <script src="../book-a0b12cfe.js"></script>
+
+            <!-- Custom JS scripts -->
+            <script src="../mermaid-eefea253.min.js"></script>
+            <script src="../mermaid-init-ccf746f1.js"></script>
         </div>
-
-        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
-        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
-        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
-        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
-        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
-
-
-
-        <script>
-            window.playground_copyable = true;
-        </script>
-
-
-        <script src="../elasticlunr-ef4e11c1.min.js"></script>
-        <script src="../mark-09e88c2c.min.js"></script>
-        <script src="../searcher-c2a407aa.js"></script>
-
-        <script src="../clipboard-1626706a.min.js"></script>
-        <script src="../highlight-362d1e8a.js"></script>
-        <script src="../book-a0b12cfe.js"></script>
-
-        <!-- Custom JS scripts -->
-        <script src="../mermaid-eefea253.min.js"></script>
-        <script src="../mermaid-init-ccf746f1.js"></script>
-
-
-
-    </div>
     </body>
 </html>

@@ -97,51 +97,21 @@ zig fmt --help
 
 ---
 
-## 编辑器配置
+## 编辑器支持
 
-你完全可以先用任意文本编辑器开始写 Zig。  
-但如果想获得补全、跳转、错误提示等体验，建议配置语言服务器。
+你可以先用任意文本编辑器开始写 Zig。
 
-## VS Code 配置示例
+如果想获得补全、跳转、错误提示、格式化等体验，可以在常见编辑器中安装 Zig 相关扩展，并启用语言服务器支持。  
+例如 `VS Code`、`Zed`、`Neovim` 等编辑器通常都有对应的 Zig 开发插件或集成方案。
 
-安装 Zig 扩展：
+很多编辑器会自动提示安装或配置 `ZLS`（Zig Language Server）。  
+如果需要手动安装、更新或排查问题，建议参考 ZLS 官方安装说明：
 
-```bash
-# 安装 Zig 扩展
-code --install-extension ziglang.vscode-zig
-```
+- <https://zigtools.org/zls/install/>
 
-一个简单的 `settings.json` 示例：
-
-```json
-{
-  "zig.zls.path": "zls",
-  "zig.formatting.provider": "zig",
-  "zig.checkForUpdate": false
-}
-```
-
-## 安装 ZLS
-
-ZLS 是 Zig Language Server，用于提供编辑器智能提示。
-
-推荐安装方式：
-
-- 访问 <https://zigtools.org/zls/install/>
-- 下载与你的 Zig 版本相匹配的 ZLS
-- 将其加入 `PATH`
-
-> ⚠️ **版本兼容很重要**  
-> ZLS 和 Zig 版本不匹配时，常见现象是补全异常、诊断错误或编辑器提示不准确。  
-> 如果你使用的是开发版 Zig，也应尽量使用对应版本的 ZLS。
-
-如果你确实需要从源码构建：
-
-```bash
-git clone https://github.com/zigtools/zls
-cd zls
-zig build -Doptimize=ReleaseFast
-```
+> ⚠️ 版本兼容很重要  
+> `ZLS` 应尽量与所使用的 Zig 版本匹配。  
+> 如果你使用的是开发版 Zig，也应尽量使用对应版本的 `ZLS`，否则可能出现补全异常、诊断不准确等问题。
 
 ---
 
@@ -206,7 +176,7 @@ Hello, World!
 在 Zig 0.16 中，你会看到不止一种 `main` 写法。  
 本教程后续示例会根据需要使用不同形式，但你现在只需要先认识它们。
 
-### 1. 最小写法
+### 最小写法
 
 ```zig
 const std = @import("std");
@@ -222,7 +192,7 @@ pub fn main() void {
 - 不需要向上传播错误
 - 只做少量调试输出
 
-### 2. 需要错误传播时
+### 需要错误传播时
 
 ```zig
 const std = @import("std");
@@ -238,7 +208,17 @@ pub fn main() !void {
 - 你希望把错误直接向外返回
 - 示例中已经开始接触显式错误处理
 
-### 3. 使用 `std.process.Init` 的 0.16 风格写法
+### 使用 `std.process.Init` / `std.process.Init.Minimal` 的 0.16 风格写法
+
+```zig
+const std = @import("std");
+
+pub fn main(_: std.process.Init.Minimal) void {
+    std.debug.print("Hello from Zig 0.16!\n", .{});
+}
+```
+
+你也可能看到更完整的形式：
 
 ```zig
 const std = @import("std");
@@ -248,11 +228,18 @@ pub fn main(_: std.process.Init) void {
 }
 ```
 
+可以先简单理解为：
+
+- `std.process.Init.Minimal`：只接收最基本的初始化上下文
+- `std.process.Init`：接收更完整的初始化上下文
+
 适合：
 
-- 你想和 0.16 的新式入口风格保持一致
-- 后续需要访问初始化上下文中的字段
-- 教程统一采用这一风格来减少版本混淆
+- 你想和 Zig 0.16 的新式入口风格保持一致
+- 你在示例或标准库代码里看到了这种写法
+- 后续可能需要访问入口初始化信息
+
+对于入门阶段，你不必先深究二者内部区别。并且如果当前示例并不需要使用这些上下文，完全可以先把参数写成 `_`，表示“先接收但不使用”以避免编译错误。
 
 ### 应该怎么选？
 
@@ -260,7 +247,7 @@ pub fn main(_: std.process.Init) void {
 
 - **想最快跑起来**：用 `pub fn main() void`
 - **马上要用 `try`**：用 `pub fn main() !void`
-- **想和本教程后续多数 0.16 示例保持一致**：用 `pub fn main(_: std.process.Init) void` 或 `pub fn main(init: std.process.Init) !void`
+- **想和本教程后续多数 0.16 示例保持一致**：用 `pub fn main(_: std.process.Init.Minimal) void`、`pub fn main(_: std.process.Init) void`，或它们对应的 `!void` 版本
 
 > 💡 一个重要原则  
 > `main` 是否接收 `std.process.Init`，和是否返回 `!void`，是两个不同维度的问题：  
@@ -383,8 +370,7 @@ hello-zig/
 - `build.zig` 是构建脚本
 - `build.zig.zon` 是项目清单文件
 
-这些内容会在[构建系统入门](chapter-build-system.md)里专门讲。  
-本章不展开，是为了避免你在还没熟悉语言基础之前就被工程化细节打断。
+这些内容会在[构建系统入门](chapter-build-system.md)里专门讲。本章不展开讲解，是为了避免你在还没熟悉语言基础之前就被工程化细节打断。
 
 ---
 
