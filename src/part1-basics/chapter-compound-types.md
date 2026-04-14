@@ -151,7 +151,7 @@ subslice length: 2
 |------|------|------|
 | 从数组切片 | `array[start..end]` | 包含 `start`，不包含 `end` |
 | 全切片 | `array[:]` | 等价于 `array[0..array.len]` |
-| 从指针切片 | `ptr[0..len]` | 从指针创建指定长度的切片 |
+|从 many-item pointer 构造切片 | `ptr[0..len]` | 需要已知起始位置和长度|
 | 重新切片 | `slice[start..end]` | 从已有切片创建子切片 |
 
 ```zig
@@ -444,7 +444,7 @@ pub fn main(_: std.process.Init) void {
 其他状态
 ```
 
-非穷尽枚举的 `switch` 必须使用 `_` 分支处理未命名的值。对非穷尽枚举而言，运行时才出现的未命名值不能按普通命名枚举值处理；在需要展示名称时，应该优先依赖显式分支或整数值，而不要假定所有值都一定有可用的标签名。
+对非穷尽枚举进行 `switch` 时，需要使用 `_` 或 `else` 处理未显式匹配到的值。两者的区别是：`_` 更适合兜底未命名的底层 tag 值，并让编译器继续检查所有已知命名值是否已被显式处理；`else` 则会兜底所有未列出的情况，包括未列出的命名值和未命名值。
 
 ## 联合
 
@@ -509,66 +509,6 @@ const Shape = union(ShapeTag) {
     rectangle: struct { width: f32, height: f32 },
 };
 ```
-
-**带标签联合的方法**：
-
-```zig
-const std = @import("std");
-
-const Value = union(enum) {
-    integer: i64,
-    float: f64,
-    boolean: bool,
-    string: []const u8,
-
-    fn describe(self: Value) []const u8 {
-        return switch (self) {
-            .integer => "整数",
-            .float => "浮点数",
-            .boolean => "布尔值",
-            .string => "字符串",
-        };
-    }
-
-    fn toInt(self: Value) ?i64 {
-        return switch (self) {
-            .integer => |v| v,
-            .float => |v| @intFromFloat(v),
-            .boolean => |v| if (v) 1 else 0,
-            .string => null,
-        };
-    }
-};
-
-pub fn main(_: std.process.Init) void {
-    const values: [4]Value = .{
-        Value{ .integer = 42 },
-        Value{ .float = 3.14 },
-        Value{ .boolean = true },
-        Value{ .string = "hello" },
-    };
-
-    for (values) |val| {
-        std.debug.print("{s} = ", .{val.describe()});
-        switch (val) {
-            .integer => |v| std.debug.print("{}\n", .{v}),
-            .float => |v| std.debug.print("{}\n", .{v}),
-            .boolean => |v| std.debug.print("{}\n", .{v}),
-            .string => |v| std.debug.print("{s}\n", .{v}),
-        }
-    }
-}
-```
-
-**预期输出：**
-```
-整数 = 42
-浮点数 = 3.14
-布尔值 = true
-字符串 = hello
-```
-
-> **相关章节**：带标签联合与 `switch` 语句配合使用时，编译器会自动推断活动变体，详见[控制流与资源管理](chapter-control-flow.md)。
 
 ### 无标签联合
 
@@ -646,7 +586,7 @@ as_bytes: DCBA
 
 **packed union**：
 
-`packed union` 有位级精确的内存布局，所有成员必须有相同的 `@bitSizeOf`，可以嵌入 `packed struct` 中：
+`packed union` 有位级精确的内存布局，所有成员必须有相同的 `@bitSizeOf`。它可以作为 `packed struct` 的字段，用来表示同一段位数据的不同解释方式：
 
 ```zig
 const std = @import("std");
@@ -662,6 +602,12 @@ pub fn main(_: std.process.Init) void {
     std.debug.print("as_u32: 0x{X}\n", .{data.as_u32});
     std.debug.print("as_f32: {}\n", .{data.as_f32});
 }
+```
+
+**预期输出：**
+```
+as_u32: 0x40490FDB
+as_f32: 3.1415927
 ```
 
 `packed union` 支持指定 backing integer type：
@@ -682,7 +628,7 @@ const Register = packed struct {
 
 ### 高级特性
 
-**`@unionInit`**：内建函数，用于在字段名为编译期参数时初始化联合。其字段名参数必须是编译期常量，但函数本身可以在运行时使用。
+**`@unionInit`**：内建函数，用于在字段名为编译期参数时初始化联合。其中字段名必须在编译期确定，但被写入的值可以来自运行时，因此它也可以出现在普通运行时代码中。
 
 ```zig
 const std = @import("std");
@@ -862,7 +808,7 @@ ExternStruct 大小: 12 字节
 - 字段按声明顺序紧密排列，无 padding
 - 不允许自定义字段对齐（`align` 修饰符无效）
 - `@bitSizeOf(T)` 返回所有字段位宽之和，`@sizeOf(T)` 返回实际占用字节数（需满足整体对齐要求）
-- 可以嵌入 `packed union`，但不能嵌入 `extern union`
+- 可以将 `packed union` 作为字段放在 `packed struct` 中，但不能放入 `extern union`
 
 ```zig
 const std = @import("std");
@@ -925,6 +871,11 @@ Point(3, 4)
 
 ### 字段默认值
 
+在结构体中，常见的“默认值”有两种不同方式：
+
+1. **字段级默认值**：直接写在字段定义后面  
+2. **类型级默认实例**：在结构体内部定义一个命名常量，表示一组预设值
+
 ```zig
 const std = @import("std");
 
@@ -960,7 +911,62 @@ pub fn main(_: std.process.Init) void {
 阈值范围: 0.25 - 0.75
 ```
 
-默认值必须是编译期常量。没有默认值的字段必须显式提供。`Threshold.default` 使用了 decl literal 语法（`.default`），编译器根据结果位置类型自动解析为 `Threshold.default`。
+#### 方式一：字段级默认值
+
+在 `Config` 中，默认值直接写在字段定义上：
+
+- `host` 默认为 `"localhost"`
+- `port` 默认为 `8080`
+- `timeout` 默认为 `30`
+- `debug` 默认为 `false`
+
+因此创建结构体时，只需要提供想要覆盖的字段即可：
+
+```zig
+const cfg = Config{ .host = "example.com" };
+```
+
+这里没有显式写出的字段，会自动使用各自的默认值。  
+这种方式适合“多数情况下使用同一组默认配置，只偶尔覆盖少数字段”的场景。
+
+#### 方式二：类型级默认实例
+
+在 `Threshold` 中，`minimum` 和 `maximum` 本身**没有字段默认值**；真正的默认方案来自结构体内部定义的常量：
+
+```zig
+const default: Threshold = .{
+    .minimum = 0.25,
+    .maximum = 0.75,
+};
+```
+
+因此：
+
+```zig
+const threshold: Threshold = .default;
+```
+
+表示“使用 `Threshold.default` 这个预先定义好的完整实例”。
+
+这种方式不是让字段自动补默认值，而是为整个类型提供一个带名字的预设值。  
+它适合下面这类场景：
+
+- 需要提供一个完整的默认实例
+- 以后可能还会有多个命名预设，例如 `strict`、`relaxed`
+- 希望调用点明确表达“我在使用某个预定义方案”
+
+#### 两种方式的区别
+
+| 方式 | 写法位置 | 作用 | 初始化时是否可省略字段 |
+| ---- | -------- | ---- | ---------------------- |
+| 字段级默认值 | 字段定义后 | 给单个字段提供默认值 | 可以省略这些带默认值的字段 |
+| 类型级默认实例 | 结构体内部常量 | 给整个类型提供一个预设实例 | 不能因此自动省略字段，除非直接使用该实例 |
+
+#### 注意事项
+
+- 字段默认值和这类预设实例中的字面量值，都必须能在编译期确定
+- 没有字段默认值的字段，在普通结构体字面量初始化时必须显式提供
+- `.default` 使用的是 decl literal 语法，编译器会根据结果位置类型将其解析为 `Threshold.default`
 
 ### 泛型结构体
 
@@ -1045,6 +1051,23 @@ tuple[3] = true
 
 **元组连接**：使用 `++` 连接两个元组。
 
+```zig
+const std = @import("std");
+
+pub fn main(_: std.process.Init) void {
+    const a = .{ 1, 2 };
+    const b = .{ "zig", true };
+    const c = a ++ b;
+
+    std.debug.print("{} {} {s} {}\n", .{ c[0], c[1], c[2], c[3] });
+}
+```
+
+**预期输出：**
+```text
+1 2 zig true
+```
+
 **元组与结构体的关系**：元组本质上是无字段名的匿名结构体，字段名为数字索引（0, 1, 2...）。
 
 ```zig
@@ -1075,3 +1098,34 @@ combined[2]: a
 | 元素类型 | 可以不同 | 可以不同 | 必须相同 |
 | 定义方式 | 匿名 | 命名类型 | 命名类型 |
 | 适用场景 | 临时数据、多返回值 | 长期存储、复用 | 同类数据集合 |
+
+## 本章要点
+
+读完这一章后，建议你先抓住下面这些主线，而不必急着一次记住所有细节：
+
+- **数组** 是长度固定、类型统一的连续数据；长度是类型的一部分。
+- **切片** 是对连续数据的一段视图，运行时携带长度信息；它本身不拥有底层数据。
+- **哨兵终止数组** 适合表示以特定结束值结尾的数据，常见于与 C 风格字符串或底层接口交互的场景。
+- **枚举** 用于表示一组离散取值；带底层整数类型的枚举可以更明确地控制表示方式。
+- **非穷尽枚举** 不能假定所有运行时值都已被当前源码完整列出；使用 `switch` 时要为未显式匹配到的情况保留兜底处理。
+- **联合** 表示“一块存储在不同时间按不同类型解释”；如果需要让当前活跃字段始终可安全追踪，应优先考虑 **带标签联合**。
+- **带标签联合** 常用于表示“一个值在若干变体中取其一”的数据；读取时通常使用 `switch` 按标签分别处理。
+- **无标签联合** 更接近底层内存重解释；只有在你非常清楚当前活跃字段时才适合使用。
+- **结构体** 用于把多个相关字段组织成一个整体；可以同时拥有字段、方法、工厂函数和内部常量。
+- **结构体布局** 需要根据目标选择：
+  - 普通 `struct` 适合日常编程
+  - `packed struct` 适合位级精确布局
+  - `extern struct` 适合与 C ABI 或外部布局约定对齐
+- **字段默认值** 和 **类型级默认实例** 是两种不同机制：
+  - 字段默认值允许在初始化时省略该字段
+  - 类型级默认实例是为整个类型提供一个预设好的完整值
+- **泛型结构体** 本质上是“返回类型的函数”，用于在同一模式下生成不同具体类型。
+- **元组** 适合表示一组位置相关、通常较轻量的异构数据；它更强调“按位置访问”，而不是像结构体那样按字段名组织语义。
+
+如果你对本章内容还不够熟悉，建议优先回顾这些核心问题：
+
+1. 数组、切片、哨兵终止数组三者的区别是什么？
+2. 什么时候该用枚举，什么时候该用带标签联合？
+3. 普通 `struct`、`packed struct`、`extern struct` 的定位分别是什么？
+4. 字段默认值和类型级默认实例的区别是什么？
+5. 结构体与元组各自适合表达什么样的数据？

@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-a9c16af4.js";
+            window.path_to_searchindex_js = "../searchindex-8e831d08.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-fc612514.js"></script>
+        <script src="../toc-12114389.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -739,6 +739,25 @@ fn main() void {
 <li>不处理转义序列</li>
 <li>行与行之间自动插入换行符，最后一行末尾不包含换行符</li>
 <li>适合嵌入代码、JSON、XML 等文本</li>
+</ul>
+<h2 id="本章要点"><a class="header" href="#本章要点">本章要点</a></h2>
+<p>读完这一章后，建议你先牢牢记住下面这些主线，而不必急着把所有细节一次记完：</p>
+<ul>
+<li>使用 <code>const</code> 表示不可变绑定，使用 <code>var</code> 表示可变绑定</li>
+<li><code>undefined</code> 只适用于“先声明、后立即覆盖”的场景，读取 <code>undefined</code> 值属于非法行为</li>
+<li>Zig 鼓励显式、清晰的命名、注释和作用域管理；局部变量遮蔽规则也相对严格</li>
+<li>整数类型和浮点类型需要结合范围、精度和场景来选择</li>
+<li>数字字面量在未被上下文约束时，通常具有 <code>comptime_int</code> 或 <code>comptime_float</code> 的语义</li>
+<li><code>bool</code> 只有 <code>true</code> 和 <code>false</code> 两个取值，常用于条件判断和逻辑运算</li>
+<li><code>void</code> 表示“没有有用返回值”，<code>noreturn</code> 表示控制流不会回到当前位置</li>
+<li>Zig 不做隐式类型转换；数值转换应使用显式内建函数表达意图</li>
+<li>字符字面量和字符串字面量是两个不同概念：
+<ul>
+<li>字符表示单个 Unicode 码位</li>
+<li>字符串表示 UTF-8 编码的字节序列</li>
+</ul>
+</li>
+<li>多行字符串字面量适合嵌入原样文本，不执行转义</li>
 </ul>
 <hr>
 <ol class="footnote-definition">

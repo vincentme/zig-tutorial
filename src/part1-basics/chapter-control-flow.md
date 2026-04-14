@@ -24,11 +24,11 @@ Zig 的可选类型使用 `?T` 表示，用于表示值可能存在或不存在�
 
 ### 解包操作
 
-Zig 提供了三种解包可选类型的方式：`if` 模式匹配、`.?` 操作符和 `orelse` 表达式。
+Zig 提供了三种解包可选类型的方式：`if` 模式匹配、`.?` 操作符和 `orelse` 表达式。其中，`if` 解包会在后文介绍 `if` 语句时结合示例详细说明
 
 #### .? 操作符
 
-`.?` 操作符用于解包可选类型，如果值为 `null` 则触发 panic：
+`.?` 操作符用于解包可选类型；如果值为 `null`，在 `Debug` / `ReleaseSafe` 等开启运行时安全检查的模式下会触发 panic，在关闭安全检查的模式下则不能依赖这种错误被捕获。因此只应在你确信值不为 `null` 时使用。
 
 ```zig
 const std = @import("std");
@@ -211,17 +211,15 @@ pub fn main(_: std.process.Init) void {
 结果：5
 ```
 
-> **深入学习**：错误联合类型的完整用法请参考[错误处理基础](chapter-error-handling.md)。
-
 ## while 循环
 
 while 循环用于重复执行代码块，与 if 类似，while 也支持可选类型解包、错误联合类型解包和作为表达式使用。
 
 Zig 的 while 循环支持：
-- **continue 表达式**：每次迭代后执行的表达式，即使循环体中执行了 `continue` 也会执行——这是它与写在循环体末尾代码的关键区别
-- **可选类型解包**：while 可直接处理可选类型，自动解包并在值为 null 时退出
-- **错误联合类型解包**：while 可直接处理错误联合类型，成功时获取值，失败时退出
-- **标签**：支持带标签的 break/continue 控制嵌套循环
+- **continue 表达式**：写在 `while` 条件后的 `: (...)` 部分，每轮迭代结束后、下一轮条件判断前执行；即使循环体中提前执行了 `continue`，它也仍会执行
+- **可选类型解包**：while 可以直接处理可选类型，自动解包并在值为 null 时退出
+- **错误联合类型解包**：`while` 也可以直接处理错误联合类型；成功时自动解包值，遇到错误时停止继续解包，并将错误交给对应的 `else |err|` 分支处理
+- **标签**：支持带标签的 `break` / `continue` 控制嵌套循环；当循环或代码块作为表达式使用时，也可以通过 `break :label value` 返回值
 
 ### 基本用法
 
@@ -328,11 +326,9 @@ pub fn main(_: std.process.Init) void {
 读取到：A
 ```
 
-> **深入学习**：错误联合类型的详细用法请参考[错误处理基础](chapter-error-handling.md)。
-
 ### while 作为表达式
 
-while 循环支持 `else` 分支，在循环正常结束（没有 `break`）时执行：
+当 `while` 作为表达式使用时，`break value` 和 `else` 分别对应两种不同的取值路径：前者用于提前结束并返回值，后者用于循环正常结束时提供值。
 
 ```zig
 const std = @import("std");
@@ -369,14 +365,15 @@ pub fn main(_: std.process.Init) void {
 
 ## for 循环
 
-while 循环适合处理不确定次数的迭代，而 for 循环则更适合遍历已知长度的序列。
+`while` 更适合“是否继续循环取决于条件”的场景；`for` 更适合遍历数组、切片、范围等**已知序列**。
 
-Zig 的 for 循环支持：
-- **单元素遍历**：直接遍历数组、切片等序列的元素
-- **带索引遍历**：使用 `0..` 语法同时获取元素和索引
-- **多序列并行遍历**：同时遍历多个序列
-- **范围遍历**：使用 `start..end` 语法遍历数字范围
-- **指针捕获**：使用 `|*item|` 捕获指针，允许在循环中修改元素
+Zig 的 `for` 循环支持：
+
+- **单元素遍历**：直接遍历数组、切片等序列中的每个元素
+- **带索引遍历**：使用 `for (target, 0..) |item, index|` 同时获取元素和索引
+- **多序列并行遍历**：按位置同时遍历多个序列；实际使用时通常应保证长度一致
+- **范围遍历**：使用 `start..end` 遍历左闭右开的整数范围
+- **指针捕获**：使用 `|*item|` 捕获元素指针；若要原地修改数组元素，通常需要遍历 `&array`
 
 ```zig
 const std = @import("std");
@@ -384,38 +381,38 @@ const std = @import("std");
 pub fn main(_: std.process.Init) void {
     const array = [_]i32{ 1, 2, 3, 4, 5 };
 
-    // 遍历数组：只获取元素
+    // 遍历数组：只获取元素值
     for (array) |item| {
         std.debug.print("item = {}\n", .{item});
     }
 
-    // 带索引的遍历
+    // 带索引遍历：同时获取元素和索引
     for (array, 0..) |item, index| {
         std.debug.print("array[{}] = {}\n", .{ index, item });
     }
 
-    // 多数组并行遍历
+    // 多序列并行遍历：这里两个数组长度相同，因此可以按位置一一对应
     const array2 = [_]i32{ 10, 20, 30, 40, 50 };
     for (array, array2) |a, b| {
         std.debug.print("{} + {} = {}\n", .{ a, b, a + b });
     }
 
-    // 修改元素：使用指针捕获
+    // 原地修改元素：遍历 &array，并用 |*item| 捕获元素指针
     var mutable_array = [_]i32{ 1, 2, 3, 4, 5 };
     for (&mutable_array) |*item| {
-        item.* *= 2;
+        item.* *= 2; // 直接写回原数组
     }
 
     for (mutable_array) |item| {
         std.debug.print("double item = {}\n", .{item});
     }
 
-    // 范围遍历
+    // 范围遍历：0..5 表示 0 到 4，不包含 5
     for (0..5) |i| {
         std.debug.print("i = {}\n", .{i});
     }
 
-    // 标签和 break/continue
+    // 标签和 break/continue：带标签的 break 可以直接跳出外层循环
     outer: for (0..3) |i| {
         for (0..3) |j| {
             if (i == 1 and j == 1) break :outer;
@@ -460,26 +457,31 @@ i = 4
 
 ### for 作为表达式
 
-for 循环可以使用 `else` 分支处理循环正常结束的情况（与 while 的 `else` 语义一致）：
+和 `while` 一样，`for` 也可以作为表达式使用。当它被放在赋值、返回值等“需要结果”的位置时，所有可能的结束路径都必须产生一个值：
+
+- 如果在循环体中执行 `break value`，整个 `for` 表达式的值就是这个 `value`
+- 如果序列被遍历完、循环正常结束，则由 `else` 分支提供结果值
+
+这种写法很适合表达“查找成功则返回结果，否则返回默认值”的模式。
 
 ```zig
 const std = @import("std");
 
 pub fn main(_: std.process.Init) void {
     const items = [_]i32{ 1, 3, 5, 7, 9 };
-    
-    // for 循环直接作为表达式
+
+    // 找到第一个大于 6 的元素；若没找到则返回 -1
     const found = for (items) |item| {
         if (item > 6) break item;
     } else -1;
-    
+
     std.debug.print("找到的元素: {}\n", .{found});
-    
-    // 带标签的 for 循环作为表达式
+
+    // 返回满足条件元素的索引；若没找到则返回 null
     const index = search: for (items, 0..) |item, i| {
         if (item > 6) break :search i;
     } else null;
-    
+
     if (index) |i| {
         std.debug.print("找到索引: {}\n", .{i});
     }
@@ -487,33 +489,36 @@ pub fn main(_: std.process.Init) void {
 ```
 
 **预期输出：**
-```
+```text
 找到的元素: 7
 找到索引: 3
 ```
 
 **关键点**：
-- `break value` 可以提前退出并返回值
-- `else` 分支在循环正常结束（没有 `break`）时执行
-- 带标签的 for 循环可以更清晰地控制返回
+- `for` 作为表达式时，必须为所有结束路径提供结果
+- `break value` 用于提前结束循环，并把 `value` 作为整个 `for` 表达式的结果
+- `else` 分支在循环正常结束（没有执行 `break`）时提供结果
+- 第二个例子中，`break :search i` 产生 `usize`，`else null` 产生 `null`，因此整个表达式的类型是 `?usize`
 
 ## switch 语句
 
-if 语句适合处理简单的条件判断，而 switch 语句则更适合处理多分支选择。switch 提供了更强大的模式匹配能力，并且编译器会强制要求处理所有可能的情况。
+`if` 更适合处理少量、局部的条件判断；当分支较多，或者你希望把“一个值映射成另一个值”时，`switch` 通常更清晰。  
+在 Zig 中，`switch` 不仅可用于分支控制，也常直接作为表达式返回结果。
 
-Zig 的 switch 语句特性：
-- **穷尽性检查**：编译器强制要求处理所有可能的情况，避免遗漏分支
-- **模式匹配**：支持范围匹配（`1...10`）、多值匹配（`1, 2, 3`）、枚举匹配等
-- **表达式**：可以返回值，支持函数式编程风格
-- **无隐式 fallthrough**：每个 case 自动 break
+Zig 的 `switch` 具有这些特点：
+
+- **穷尽性检查**：必须覆盖所有可能情况；如果无法逐个列出，通常需要使用 `else` 兜底
+- **多种匹配方式**：支持按具体值、多个值、范围以及枚举成员分支
+- **可作为表达式**：每个分支都可以产生一个值，整个 `switch` 表达式再把该值返回给外层
+- **无隐式 fallthrough**：一个分支匹配后只执行该分支，不会自动继续进入下一个分支
 
 ```zig
 const std = @import("std");
 
 pub fn main(_: std.process.Init) void {
     const number: i32 = 2;
-    
-    // 基本 switch：必须穷尽所有情况，使用 else 处理其他
+
+    // 基本 switch：使用 else 处理未显式列出的情况
     const result = switch (number) {
         1 => "一",
         2 => "二",
@@ -521,8 +526,8 @@ pub fn main(_: std.process.Init) void {
         else => "其他",
     };
     std.debug.print("结果：{s}\n", .{result});
-    
-    // 范围匹配：使用 ... 操作符（闭区间，包含两端）
+
+    // 范围匹配：1...10 表示闭区间，包含两端
     const grade: u8 = 85;
     const level = switch (grade) {
         90...100 => "A",
@@ -532,8 +537,8 @@ pub fn main(_: std.process.Init) void {
         else => "F",
     };
     std.debug.print("等级：{s}\n", .{level});
-    
-    // 多值匹配：使用逗号分隔
+
+    // 多值匹配：多个候选值共用同一分支
     const char: u8 = 'a';
     const is_vowel = switch (char) {
         'a', 'e', 'i', 'o', 'u' => true,
@@ -545,7 +550,7 @@ pub fn main(_: std.process.Init) void {
 ```
 
 **预期输出：**
-```
+```text
 结果：二
 等级：B
 是元音：true
@@ -553,10 +558,16 @@ pub fn main(_: std.process.Init) void {
 
 ### switch 的高级用法
 
+除了基本的值匹配外，`switch` 的特性还包括：
+
+- **枚举匹配**：对枚举的所有成员分支，编译器会检查是否穷尽
+- **捕获匹配值**：在范围匹配等场景下，把当前匹配到的值绑定到局部变量
+- **配合指针修改数据**：在已经拿到指针的前提下，通过 `switch` 有条件地修改原值
+
 ```zig
 const std = @import("std");
 
-// 枚举匹配：编译器确保穷尽，不需要 else
+// 枚举匹配：已列出所有枚举成员，因此不需要 else
 const Color = enum { red, green, blue };
 
 fn colorToHex(color: Color) u32 {
@@ -567,7 +578,7 @@ fn colorToHex(color: Color) u32 {
     };
 }
 
-// 捕获匹配值
+// 捕获匹配值：1...10 分支中的 |val| 就是当前匹配到的具体值
 fn classifyNumber(n: i32) []const u8 {
     return switch (n) {
         0 => "零",
@@ -580,11 +591,11 @@ fn classifyNumber(n: i32) []const u8 {
     };
 }
 
-// 指针捕获：在 switch 中修改匹配的值
+// 配合指针修改原值：for 先拿到元素指针，再由 switch 决定是否修改
 fn doublePositive(numbers: []i32) void {
     for (numbers) |*n| {
         switch (n.*) {
-            1...100 => |*val| val.* *= 2,  // 通过指针捕获修改原值
+            1...100 => |*val| val.* *= 2,
             else => {},
         }
     }
@@ -593,7 +604,7 @@ fn doublePositive(numbers: []i32) void {
 pub fn main(_: std.process.Init) void {
     std.debug.print("红色：0x{X}\n", .{colorToHex(.red)});
     std.debug.print("分类：{s}\n", .{classifyNumber(5)});
-    
+
     var arr = [_]i32{ 3, 50, -1, 99 };
     doublePositive(&arr);
     std.debug.print("翻倍后：{any}\n", .{arr});
@@ -601,14 +612,19 @@ pub fn main(_: std.process.Init) void {
 ```
 
 **预期输出：**
-```
+```text
 红色：0xFF0000
 小数字：5
 分类：小
 翻倍后：{ 6, 100, -1, 198 }
 ```
 
-> **深入学习**：枚举与 switch 配合使用的更多示例请参考[复合类型](chapter-compound-types.md#枚举)。
+**关键点**：
+
+- 对穷尽枚举做 `switch` 时，如果已经覆盖所有枚举成员，就不需要 `else`
+- 在 `1...10 => |val| ...` 这种写法中，`val` 是当前匹配到的具体值
+- `blk: { ... break :blk value; }` 是一个带标签的块表达式，适合在“先做一点额外操作，再返回分支结果”时使用
+- `doublePositive` 中真正拿到原数组元素指针的是 `for (numbers) |*n|`；`switch` 则根据 `n.*` 的值决定是否修改它
 
 ## defer 语句
 
@@ -665,8 +681,6 @@ fn protectedOperation(mutex: *std.Thread.Mutex) void {
     // 临界区代码...
 }
 ```
-
-> **相关章节**：并发编程的详细讲解请参考[并发编程模型](../part2-advanced/chapter-concurrency.md)。
 
 ### LIFO（后进先出）原则
 

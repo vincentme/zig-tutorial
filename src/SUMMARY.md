@@ -11,7 +11,7 @@
 - [函数定义与调用](part1-basics/chapter-functions.md)
 - [复合类型](part1-basics/chapter-compound-types.md)
 - [控制流、可选类型与资源管理](part1-basics/chapter-control-flow.md)
-- [错误处理：!T、try 与 errdefer](part1-basics/chapter-error-handling.md)
+- [错误处理](part1-basics/chapter-error-handling.md)
 - [构建系统入门](part1-basics/chapter-build-system.md)
 
 # 第二部分：高级特性

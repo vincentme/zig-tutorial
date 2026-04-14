@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-a9c16af4.js";
+            window.path_to_searchindex_js = "../searchindex-8e831d08.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-fc612514.js"></script>
+        <script src="../toc-12114389.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -356,8 +356,7 @@ pub fn main(_: std.process.Init) void {
 <p><strong>注意事项</strong>：</p>
 <ul>
 <li>递归深度受栈大小限制</li>
-<li>Zig 目前不保证尾调用优化，深度递归应优先使用迭代</li>
-<li>对于深度递归，考虑使用迭代替代</li>
+<li>Zig 目前不保证尾调用优化，因此深度递归场景通常应优先考虑迭代实现</li>
 </ul>
 <h2 id="函数参数与调用方式"><a class="header" href="#函数参数与调用方式">函数参数与调用方式</a></h2>
 <h3 id="参数传递核心原则"><a class="header" href="#参数传递核心原则">参数传递核心原则</a></h3>
@@ -367,9 +366,6 @@ pub fn main(_: std.process.Init) void {
 <li><strong>优先按值语义理解代码</strong>：阅读代码时，先把参数看作“传入了一个值”</li>
 <li><strong>需要修改调用者数据时，要显式传递指针</strong>：修改行为必须清楚写出来</li>
 </ol>
-<blockquote>
-<p>对初学者来说，最重要的是先建立“什么时候传值、什么时候传指针”的直觉。至于底层 ABI 如何传参，那是实现细节，通常不需要在入门阶段纠结。</p>
-</blockquote>
 <pre><code class="language-zig">const std = @import("std");
 
 // 值传递（原始类型）：小类型通过值传递，复制成本很低
@@ -428,45 +424,35 @@ pub fn main(_: std.process.Init) void {
 <tr><th>数据类型</th><th>推荐传递方式</th><th>原因</th></tr>
 </thead>
 <tbody>
-<tr><td>原始类型（i32, f64等）</td><td>值传递</td><td>复制成本低</td></tr>
-<tr><td>小结构体（≤指针大小）</td><td>值传递</td><td>复制成本可接受</td></tr>
-<tr><td>大结构体</td><td><code>*const T</code></td><td>避免复制</td></tr>
-<tr><td>需要修改的数据</td><td><code>*T</code></td><td>显式表达意图</td></tr>
-<tr><td>可选数据</td><td><code>?T</code> 或 <code>*const ?T</code></td><td>根据大小选择</td></tr>
+<tr><td>原始类型（<code>i32</code>、<code>f64</code> 等）</td><td>值传递</td><td>复制成本低</td></tr>
+<tr><td>小结构体</td><td>值传递</td><td>语义直接，复制成本通常可接受</td></tr>
+<tr><td>大结构体</td><td><code>*const T</code></td><td>避免复制，并明确只读借用</td></tr>
+<tr><td>需要修改的数据</td><td><code>*T</code></td><td>显式表达可变借用</td></tr>
+<tr><td>允许缺失的小值</td><td><code>?T</code></td><td>直接表达“值可能不存在”</td></tr>
+<tr><td>允许缺失的大对象</td><td><code>?*const T</code> 或 <code>?*T</code></td><td>同时表达“可能不存在”和“避免复制”</td></tr>
 </tbody>
 </table>
 </div>
-<p><strong>常见应用</strong>：</p>
-<pre><code class="language-zig">// 大型结构体的高效传递
-const BigData = struct {
-    values: [1000]f32,
-    metadata: [100]u8,
-};
-
-fn processBigData(data: *const BigData) f32 {
-    var sum: f32 = 0;
-    for (data.values) |v| {
-        sum += v;
-    }
-    return sum;
-}
-
-// 修改调用者的数据（切片本身是胖指针，按值传递即可修改元素）
-fn fillArray(arr: []u8, value: u8) void {
+<p><strong>两种常见参数模式</strong></p>
+<ol>
+<li>切片参数：按值传递，但仍可修改底层元素</li>
+</ol>
+<pre><code class="language-zig">fn fillArray(arr: []u8, value: u8) void {
     for (arr) |*item| {
         item.* = value;
     }
 }
-
-// 输出参数模式
-fn divideWithRemainder(a: i32, b: i32, remainder: *i32) i32 {
+</code></pre>
+<p>这里的 <code>arr</code> 是切片，函数拿到的是切片这个值本身；但切片指向的底层数据仍然可以被修改。<br>如果你不希望函数修改元素，应使用 <code>[]const u8</code>。</p>
+<ol start="2">
+<li>输出参数模式：通过指针写回附加结果</li>
+</ol>
+<p>这种写法在 C 中很常见；在 Zig 中通常不是首选，但在与 C 交互、复用缓冲区或有明确性能需求时仍然有用。</p>
+<pre><code class="language-zig">fn divideWithRemainder(a: i32, b: i32, remainder: *i32) i32 {
     remainder.* = @mod(a, b);
     return @divTrunc(a, b);
 }
 </code></pre>
-<blockquote>
-<p><strong>深入学习</strong>：资源管理相关的 <code>defer</code> 和 <code>errdefer</code> 机制请参考<a href="chapter-control-flow.html#defer-语句">控制流与资源管理</a>。</p>
-</blockquote>
 <h2 id="内建函数入门了解即可"><a class="header" href="#内建函数入门了解即可">内建函数（入门了解即可）</a></h2>
 <h3 id="什么是内建函数"><a class="header" href="#什么是内建函数">什么是内建函数？</a></h3>
 <p>内建函数（Builtin Functions）是 Zig 提供的特殊函数，以 <code>@</code> 开头。它们：</p>
@@ -489,7 +475,7 @@ fn divideWithRemainder(a: i32, b: i32, remainder: *i32) i32 {
 <tr><td>内存操作</td><td><code>@bitCast</code>, <code>@ptrCast</code></td><td>内存重解释</td></tr>
 <tr><td>指针操作</td><td><code>@ptrFromInt</code>, <code>@intFromPtr</code></td><td>指针与整数转换</td></tr>
 <tr><td>编译期</td><td><code>@compileError</code>, <code>@compileLog</code></td><td>编译期诊断</td></tr>
-<tr><td>数学运算</td><td><code>@sqrt</code>, <code>@sin</code>, <code>@cos</code></td><td>数学函数</td></tr>
+<tr><td>数学函数</td><td><code>@sqrt</code>, <code>@sin</code>, <code>@cos</code></td><td>常见数学函数调用</td></tr>
 </tbody>
 </table>
 </div>

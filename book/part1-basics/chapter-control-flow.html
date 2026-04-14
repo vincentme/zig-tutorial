@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-a9c16af4.js";
+            window.path_to_searchindex_js = "../searchindex-8e831d08.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-fc612514.js"></script>
+        <script src="../toc-12114389.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -208,7 +208,7 @@
 <p><strong>深入学习</strong>：错误联合类型的详细用法将在<a href="chapter-error-handling.html">错误处理基础</a>中讲解。</p>
 </blockquote>
 <h3 id="解包操作"><a class="header" href="#解包操作">解包操作</a></h3>
-<p>Zig 提供了三种解包可选类型的方式：<code>if</code> 模式匹配、<code>.?</code> 操作符和 <code>orelse</code> 表达式。</p>
+<p>Zig 提供了三种解包可选类型的方式：<code>if</code> 模式匹配、<code>.?</code> 操作符和 <code>orelse</code> 表达式。其中，<code>if</code> 解包会在后文介绍 <code>if</code> 语句时结合示例详细说明</p>
 <h4 id="-操作符"><a class="header" href="#-操作符">.? 操作符</a></h4>
 <p><code>.?</code> 操作符用于解包可选类型，如果值为 <code>null</code> 则触发 panic：</p>
 <pre><code class="language-zig">const std = @import("std");
@@ -373,10 +373,10 @@ pub fn main(_: std.process.Init) void {
 <p>while 循环用于重复执行代码块，与 if 类似，while 也支持可选类型解包、错误联合类型解包和作为表达式使用。</p>
 <p>Zig 的 while 循环支持：</p>
 <ul>
-<li><strong>continue 表达式</strong>：每次迭代后执行的表达式，即使循环体中执行了 <code>continue</code> 也会执行——这是它与写在循环体末尾代码的关键区别</li>
+<li><strong>continue 表达式</strong>：写在 <code>while</code> 条件后的 <code>: (...)</code> 部分，每轮迭代结束后、下一轮条件判断前执行；即使循环体中提前执行了 <code>continue</code>，它也仍会执行</li>
 <li><strong>可选类型解包</strong>：while 可直接处理可选类型，自动解包并在值为 null 时退出</li>
-<li><strong>错误联合类型解包</strong>：while 可直接处理错误联合类型，成功时获取值，失败时退出</li>
-<li><strong>标签</strong>：支持带标签的 break/continue 控制嵌套循环</li>
+<li><strong>错误联合类型解包</strong>：<code>while</code> 可直接处理错误联合类型；成功时自动解包值，遇到错误时停止继续解包，并将错误交给对应的 <code>else |err|</code> 分支处理</li>
+<li><strong>标签</strong>：支持带标签的 <code>break</code> / <code>continue</code> 控制嵌套循环；当循环或代码块作为表达式使用时，也可以通过 <code>break :label value</code> 返回值</li>
 </ul>
 <h3 id="基本用法-1"><a class="header" href="#基本用法-1">基本用法</a></h3>
 <pre><code class="language-zig">const std = @import("std");
@@ -476,7 +476,7 @@ pub fn main(_: std.process.Init) void {
 <p><strong>深入学习</strong>：错误联合类型的详细用法请参考<a href="chapter-error-handling.html">错误处理基础</a>。</p>
 </blockquote>
 <h3 id="while-作为表达式"><a class="header" href="#while-作为表达式">while 作为表达式</a></h3>
-<p>while 循环支持 <code>else</code> 分支，在循环正常结束（没有 <code>break</code>）时执行：</p>
+<p>当 <code>while</code> 作为表达式使用时，<code>break value</code> 和 <code>else</code> 分别对应两种不同的取值路径：前者用于提前结束并返回值，后者用于循环正常结束时提供值。</p>
 <pre><code class="language-zig">const std = @import("std");
 
 pub fn main(_: std.process.Init) void {
