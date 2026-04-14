@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d0c1d12c.js";
+            window.path_to_searchindex_js = "../searchindex-2609b999.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-c7628560.js"></script>
@@ -232,7 +232,7 @@
 <h2 id="错误集合"><a class="header" href="#错误集合">错误集合</a></h2>
 <p>错误集合用于定义一组命名错误值。</p>
 <p>你可以把它理解为：函数可能失败，但失败不是随便返回一个字符串或整数，而是返回一个<strong>受类型系统约束的错误值</strong>。</p>
-<h2 id="为什么需要错误集合"><a class="header" href="#为什么需要错误集合">为什么需要错误集合？</a></h2>
+<h3 id="为什么需要错误集合"><a class="header" href="#为什么需要错误集合">为什么需要错误集合？</a></h3>
 <p>错误集合带来三件事：</p>
 <ul>
 <li><strong>类型安全</strong>：错误不是随意拼出来的文本</li>
@@ -240,8 +240,8 @@
 <li><strong>编译期约束</strong>：函数签名和调用点都能被检查</li>
 </ul>
 <p>例如，“文件不存在”和“权限不足”都叫失败，但它们不是同一类失败。把它们区分开，调用者才能做出不同处理。</p>
-<h2 id="定义错误集合"><a class="header" href="#定义错误集合">定义错误集合</a></h2>
-<pre><code class="language-/dev/null/chapter-error-handling.zig#L1-18">const std = @import("std");
+<h3 id="定义错误集合"><a class="header" href="#定义错误集合">定义错误集合</a></h3>
+<pre><code class="language-zig">const std = @import("std");
 
 const FileError = error{
     NotFound,
@@ -264,9 +264,9 @@ pub fn main(_: std.process.Init) void {
 <li>错误值可以比较</li>
 <li>写成 <code>error.NotFound</code> 通常比 <code>FileError.NotFound</code> 更常见</li>
 </ul>
-<h2 id="错误名的全局性"><a class="header" href="#错误名的全局性">错误名的全局性</a></h2>
-<p>Zig 的错误名是全局的。同名错误值在不同错误集合里表示同一个错误名。</p>
-<pre><code class="language-/dev/null/chapter-error-handling.zig#L20-27">const A = error{NotFound};
+<h3 id="错误名的全局性"><a class="header" href="#错误名的全局性">错误名的全局性</a></h3>
+<p>Zig 的错误名是<strong>全局共享</strong>的；错误集合的作用是约束“这里允许出现哪些错误名”，而不是为每个错误集合创建彼此独立的命名空间。</p>
+<pre><code class="language-zig">const A = error{NotFound};
 const B = error{NotFound};
 
 comptime {
@@ -275,50 +275,29 @@ comptime {
     _ = .{ a, b };
 }
 </code></pre>
-<p>这意味着：</p>
+<p>这个例子说明：</p>
 <ul>
-<li><code>A</code> 和 <code>B</code> 是不同的错误集合类型</li>
-<li>但 <code>A</code> 和 <code>B</code> 中的 <code>NotFound</code> 指向同一个错误名</li>
+<li><code>A</code> 和 <code>B</code> 是两个不同的错误集合类型</li>
+<li>但它们都包含同一个全局错误名 <code>NotFound</code></li>
+<li>因此这里赋值时统一写成 <code>error.NotFound</code>，而不是 <code>A.NotFound</code> 或 <code>B.NotFound</code></li>
 </ul>
-<p>初学时你只需要记住一句话：<strong>错误集合约束的是“允许哪些错误”，不是重新发明一套彼此隔离的错误值命名空间。</strong></p>
-<h2 id="一个更实际的例子"><a class="header" href="#一个更实际的例子">一个更实际的例子</a></h2>
-<pre><code class="language-/dev/null/chapter-error-handling.zig#L29-45">const ConfigError = error{
-    FileNotFound,
-    InvalidSyntax,
-    MissingRequiredField,
-    InvalidValue,
-};
-
-const Config = struct {
-    port: u16,
-    host: []const u8,
-};
-
-fn loadConfig(path: []const u8) ConfigError!Config {
-    if (path.len == 0) return error.FileNotFound;
-
-    return .{
-        .port = 8080,
-        .host = "localhost",
-    };
-}
-</code></pre>
-<p>这个签名 <code>ConfigError!Config</code> 的意思是：</p>
+<p>可以把错误集合理解为“允许的错误名单”：</p>
 <ul>
-<li>成功时返回 <code>Config</code></li>
-<li>失败时返回 <code>ConfigError</code> 中的某个错误</li>
+<li><code>error{NotFound}</code> 表示这里只允许 <code>NotFound</code></li>
+<li><code>error{NotFound, AccessDenied}</code> 表示这里允许 <code>NotFound</code> 和 <code>AccessDenied</code></li>
 </ul>
-<hr>
-<h2 id="错误联合类型t"><a class="header" href="#错误联合类型t">错误联合类型：<code>!T</code></a></h2>
-<p>错误集合只回答“可能有哪些错误”，但还没有回答“函数结果的整体形状是什么”。</p>
-<p>这就是错误联合类型的作用。</p>
+<p>它约束的是<strong>允许出现哪些错误</strong>，而不是重新定义一套新的错误值。</p>
+<p>初学时可以先记住一句话：<strong>错误集合限制的是可返回错误的范围；同名错误在不同错误集合里，仍然是同一个全局错误名。</strong></p>
+<h2 id="错误类型与错误值"><a class="header" href="#错误类型与错误值">错误类型与错误值</a></h2>
+<h3 id="错误联合类型t"><a class="header" href="#错误联合类型t">错误联合类型：<code>!T</code></a></h3>
+<p>错误集合只回答“可能有哪些错误”，但还没有回答“这个函数在成功时返回什么、失败时又可能出现哪些错误”。这就是错误联合类型的作用。</p>
 <p><code>ErrorSet!T</code> 表示：</p>
 <ul>
 <li>要么得到一个 <code>T</code></li>
-<li>要么得到一个错误</li>
+<li>要么得到一个属于<code>ErrorSet</code>的错误</li>
 </ul>
 <p>例如：</p>
-<pre><code class="language-/dev/null/chapter-error-handling.zig#L47-63">const ParseError = error{
+<pre><code class="language-zig">const ParseError = error{
     InvalidFormat,
     OutOfRange,
 };
@@ -340,7 +319,7 @@ fn parseNumber(str: []const u8) ParseError!u32 {
 <li>成功分支：<code>u32</code></li>
 <li>失败分支：<code>ParseError</code></li>
 </ul>
-<h2 id="t-的两种常见写法"><a class="header" href="#t-的两种常见写法"><code>!T</code> 的两种常见写法</a></h2>
+<h3 id="t-的两种常见写法"><a class="header" href="#t-的两种常见写法"><code>!T</code> 的两种常见写法</a></h3>
 <p>你会看到两种形式：</p>
 <ul>
 <li><code>SomeError!T</code></li>
@@ -367,7 +346,7 @@ fn inferred() !void {
 </ul>
 <p>这样做的原因很简单：公共接口更需要可读性和稳定性，内部实现更需要灵活性。</p>
 <hr>
-<h2 id="错误集推断"><a class="header" href="#错误集推断">错误集推断</a></h2>
+<h3 id="错误集推断"><a class="header" href="#错误集推断">错误集推断</a></h3>
 <p>当函数返回 <code>!T</code> 时，编译器会根据函数体中可能返回的错误自动推断错误集合。</p>
 <pre><code class="language-/dev/null/chapter-error-handling.zig#L78-89">fn divide(a: i32, b: i32) !i32 {
     if (b == 0) return error.DivisionByZero;
@@ -394,7 +373,7 @@ fn inferred() !void {
 <li>如果你在写库接口，过度依赖推断可能让接口边界不够清晰</li>
 </ul>
 <hr>
-<h2 id="错误集合并"><a class="header" href="#错误集合并">错误集合并</a></h2>
+<h3 id="错误集合并"><a class="header" href="#错误集合并">错误集合并</a></h3>
 <p>如果一个函数可能返回多个来源的错误，可以把错误集合合并。</p>
 <pre><code class="language-/dev/null/chapter-error-handling.zig#L91-103">const FileError = error{
     NotFound,
@@ -411,7 +390,7 @@ const CombinedError = FileError || NetworkError;
 <p><code>CombinedError</code> 包含这两个集合中的全部错误。</p>
 <p>这在“上层函数整合多个子系统错误”时很常见。</p>
 <hr>
-<h2 id="子集与超集"><a class="header" href="#子集与超集">子集与超集</a></h2>
+<h3 id="子集与超集"><a class="header" href="#子集与超集">子集与超集</a></h3>
 <p>错误集合之间存在子集关系。</p>
 <p>如果一个错误集合是另一个的子集，那么：</p>
 <ul>
@@ -437,13 +416,13 @@ fn example() void {
 <li>反过来不安全，因为超集里可能含有子集没有的错误</li>
 </ul>
 <hr>
-<h2 id="错误集转换"><a class="header" href="#错误集转换">错误集转换</a></h2>
+<h3 id="错误集转换"><a class="header" href="#错误集转换">错误集转换</a></h3>
 <p>当你确实需要把较大的错误集收窄到较小的错误集时，有两种思路：</p>
 <ol>
 <li><strong>显式映射</strong></li>
 <li><strong><code>@errorCast</code></strong></li>
 </ol>
-<h3 id="显式映射"><a class="header" href="#显式映射">显式映射</a></h3>
+<p>显式映射：</p>
 <p>这是最稳妥、也最推荐的方式。</p>
 <pre><code class="language-/dev/null/chapter-error-handling.zig#L119-136">const LowLevelError = error{
     DiskError,
@@ -463,7 +442,7 @@ fn mapError(err: LowLevelError) HighLevelError {
 }
 </code></pre>
 <p>这种写法的优点是语义明确：你不是“强行缩小”，而是在设计 API 边界。</p>
-<h3 id="errorcast"><a class="header" href="#errorcast"><code>@errorCast</code></a></h3>
+<p><code>@errorCast</code>：</p>
 <p><code>@errorCast</code> 用于把错误值收窄到目标错误集合。</p>
 <pre><code class="language-/dev/null/chapter-error-handling.zig#L138-149">const BroadError = error{ NotFound, PermissionDenied };
 const SpecificError = error{NotFound};
@@ -483,7 +462,7 @@ fn broad() BroadError!void {
 </ul>
 <p>所以它适合“你已经能证明这里只会出现某个子集错误”的场景，不适合拿来掩盖接口设计问题。</p>
 <hr>
-<h2 id="anyerror"><a class="header" href="#anyerror"><code>anyerror</code></a></h2>
+<h3 id="anyerror"><a class="header" href="#anyerror"><code>anyerror</code></a></h3>
 <p><code>anyerror</code> 是所有错误的超集。</p>
 <pre><code class="language-/dev/null/chapter-error-handling.zig#L151-154">fn flexibleFunction() anyerror!void {
     return error.SomethingWentWrong;
@@ -503,7 +482,7 @@ fn broad() BroadError!void {
 </ul>
 <p>一句话概括：<strong><code>anyerror</code> 是逃生门，不是默认选项。</strong></p>
 <hr>
-<h2 id="错误相关内建函数"><a class="header" href="#错误相关内建函数">错误相关内建函数</a></h2>
+<h3 id="错误相关内建函数"><a class="header" href="#错误相关内建函数">错误相关内建函数</a></h3>
 <p>Zig 提供了一些和错误相关的内建函数，最常见的是下面几个：</p>
 <div class="table-wrapper">
 <table>
@@ -536,7 +515,8 @@ pub fn main(_: std.process.Init) void {
 </ul>
 <p>对大多数应用代码来说，知道它们存在就够了。</p>
 <hr>
-<h2 id="try传播错误"><a class="header" href="#try传播错误"><code>try</code>：传播错误</a></h2>
+<h2 id="错误传播与处理"><a class="header" href="#错误传播与处理">错误传播与处理</a></h2>
+<h3 id="try传播错误"><a class="header" href="#try传播错误"><code>try</code>：传播错误</a></h3>
 <p><code>try</code> 的作用是：</p>
 <ul>
 <li>如果表达式成功，取出其中的值</li>
@@ -558,14 +538,14 @@ fn calculate() !i32 {
 <li>成功：把结果绑定给 <code>result</code></li>
 <li>失败：当前函数 <code>calculate</code> 直接返回那个错误</li>
 </ul>
-<h2 id="try-的等价理解"><a class="header" href="#try-的等价理解"><code>try</code> 的等价理解</a></h2>
+<h3 id="try-的等价理解"><a class="header" href="#try-的等价理解"><code>try</code> 的等价理解</a></h3>
 <p>你可以把它近似理解为下面这种写法：</p>
 <pre><code class="language-/dev/null/chapter-error-handling.zig#L178-182">const result = divide(10, 2) catch |err| {
     return err;
 };
 </code></pre>
 <p>这不是说 <code>try</code> 只是语法糖那么简单，而是帮助你理解它的控制流：<strong>失败就立刻返回，成功才继续往下执行。</strong></p>
-<h2 id="try-的使用限制"><a class="header" href="#try-的使用限制"><code>try</code> 的使用限制</a></h2>
+<h3 id="try-的使用限制"><a class="header" href="#try-的使用限制"><code>try</code> 的使用限制</a></h3>
 <p><code>try</code> 只能出现在当前函数本身也允许返回错误的地方。</p>
 <p>如果你想和本教程其余 Zig 0.16 示例保持一致，也可以让 <code>main</code> 接收 <code>std.process.Init</code>；这和是否返回 <code>!void</code> 是两个独立维度。</p>
 <pre><code class="language-/dev/null/chapter-error-handling.zig#L184-193">fn mightFail() !void {
@@ -587,9 +567,9 @@ pub fn goodMain(_: std.process.Init) !void {
 <p>你只有在“自己也能把错误继续往上交”的前提下，才能使用 <code>try</code>。</p>
 </blockquote>
 <hr>
-<h2 id="catch在当前层处理错误"><a class="header" href="#catch在当前层处理错误"><code>catch</code>：在当前层处理错误</a></h2>
+<h3 id="catch在当前层处理错误"><a class="header" href="#catch在当前层处理错误"><code>catch</code>：在当前层处理错误</a></h3>
 <p>如果你不想继续传播，而是想在当前层把错误处理掉，就用 <code>catch</code>。</p>
-<h2 id="提供默认值"><a class="header" href="#提供默认值">提供默认值</a></h2>
+<h3 id="提供默认值"><a class="header" href="#提供默认值">提供默认值</a></h3>
 <pre><code class="language-/dev/null/chapter-error-handling.zig#L195-201">fn divide(a: i32, b: i32) !i32 {
     if (b == 0) return error.DivisionByZero;
     return @divTrunc(a, b);
@@ -599,7 +579,7 @@ const result = divide(10, 0) catch 0;
 </code></pre>
 <p>这里的意思是：如果失败，就直接用 <code>0</code> 作为替代值。</p>
 <p>这适合“失败后有合理默认值”的场景。</p>
-<h2 id="捕获错误并执行逻辑"><a class="header" href="#捕获错误并执行逻辑">捕获错误并执行逻辑</a></h2>
+<h3 id="捕获错误并执行逻辑"><a class="header" href="#捕获错误并执行逻辑">捕获错误并执行逻辑</a></h3>
 <pre><code class="language-/dev/null/chapter-error-handling.zig#L203-214">const std = @import("std");
 
 fn example() void {
@@ -618,7 +598,7 @@ fn example() void {
 <li>返回默认值</li>
 <li>提前结束当前函数</li>
 </ul>
-<h2 id="catch-unreachable"><a class="header" href="#catch-unreachable"><code>catch unreachable</code></a></h2>
+<h3 id="catch-unreachable"><a class="header" href="#catch-unreachable"><code>catch unreachable</code></a></h3>
 <p>有时你在逻辑上可以证明某个操作不会失败，这时可以写：</p>
 <pre><code class="language-/dev/null/chapter-error-handling.zig#L216-217">const value = parseNumber("42") catch unreachable;
 </code></pre>
@@ -630,7 +610,7 @@ fn example() void {
 </ul>
 <p>因此它只适合“你真的能证明不可能失败”的场景，而不是“我懒得处理”。</p>
 <hr>
-<h2 id="匹配具体错误"><a class="header" href="#匹配具体错误">匹配具体错误</a></h2>
+<h3 id="匹配具体错误"><a class="header" href="#匹配具体错误">匹配具体错误</a></h3>
 <p>如果不同错误需要不同处理方式，可以在 <code>catch</code> 后面接 <code>switch</code>。</p>
 <pre><code class="language-/dev/null/chapter-error-handling.zig#L219-236">const std = @import("std");
 
@@ -660,7 +640,7 @@ fn handleFile() void {
 </ul>
 <p>如果你不想逐个列出，也可以使用 <code>else</code> 兜底，但前提是这确实符合你的接口设计。</p>
 <hr>
-<h2 id="用-if-同时处理成功和失败"><a class="header" href="#用-if-同时处理成功和失败">用 <code>if</code> 同时处理成功和失败</a></h2>
+<h3 id="用-if-同时处理成功和失败"><a class="header" href="#用-if-同时处理成功和失败">用 <code>if</code> 同时处理成功和失败</a></h3>
 <p>错误联合类型也可以用 <code>if</code> 解包：</p>
 <pre><code class="language-/dev/null/chapter-error-handling.zig#L238-251">const std = @import("std");
 
@@ -680,7 +660,7 @@ fn example() void {
 <li><strong><code>if (expr) |value| else |err|</code></strong>：成功和失败都要显式展开</li>
 </ul>
 <hr>
-<h2 id="t-和-t-的区别"><a class="header" href="#t-和-t-的区别"><code>!T</code> 和 <code>?T</code> 的区别</a></h2>
+<h3 id="t-和-t-的区别"><a class="header" href="#t-和-t-的区别"><code>!T</code> 和 <code>?T</code> 的区别</a></h3>
 <p>这是初学者最容易混淆的地方之一。</p>
 <ul>
 <li><code>!T</code>：表示<strong>操作失败</strong></li>
@@ -710,14 +690,15 @@ fn loadUserConfig(path: []const u8) ![]const u8 {
 </ul>
 <p>如果一个操作既可能失败，又可能成功但没有值，那么类型可能是 <code>!?T</code> 或 <code>? !T</code> 相关组合，但初学阶段先把 <code>?T</code> 和 <code>!T</code> 的职责分清最重要。</p>
 <hr>
-<h2 id="errdefer"><a class="header" href="#errdefer"><code>errdefer</code></a></h2>
+<h2 id="失败路径清理errdefer"><a class="header" href="#失败路径清理errdefer">失败路径清理：<code>errdefer</code></a></h2>
+<h3 id="errdefer"><a class="header" href="#errdefer"><code>errdefer</code></a></h3>
 <p><code>defer</code> 你已经见过：作用域结束时执行。</p>
 <p><code>errdefer</code> 则更专门：<strong>只有当前函数以错误返回时才执行。</strong></p>
 <p>这使它特别适合一种场景：</p>
 <blockquote>
 <p>成功时把资源交给调用者，失败时由当前函数负责回收。</p>
 </blockquote>
-<h2 id="defer-和-errdefer-的区别"><a class="header" href="#defer-和-errdefer-的区别"><code>defer</code> 和 <code>errdefer</code> 的区别</a></h2>
+<h3 id="defer-和-errdefer-的区别"><a class="header" href="#defer-和-errdefer-的区别"><code>defer</code> 和 <code>errdefer</code> 的区别</a></h3>
 <ul>
 <li><strong><code>defer</code></strong>：成功、失败都会执行</li>
 <li><strong><code>errdefer</code></strong>：只有失败时执行</li>
@@ -747,7 +728,7 @@ fn withErrdefer(allocator: std.mem.Allocator) ![]u8 {
 <li><strong>成功时资源所有权转移给调用者</strong> → 用 <code>errdefer</code></li>
 </ul>
 <hr>
-<h2 id="errdefer-的基本用法"><a class="header" href="#errdefer-的基本用法"><code>errdefer</code> 的基本用法</a></h2>
+<h3 id="errdefer-的基本用法"><a class="header" href="#errdefer-的基本用法"><code>errdefer</code> 的基本用法</a></h3>
 <pre><code class="language-/dev/null/chapter-error-handling.zig#L281-300">const std = @import("std");
 
 const User = struct {
@@ -778,7 +759,7 @@ fn createUser(allocator: std.mem.Allocator, id: usize, name: []const u8) !*User 
 </ul>
 <p>这正是 <code>errdefer</code> 最典型的用途。</p>
 <hr>
-<h2 id="多资源管理"><a class="header" href="#多资源管理">多资源管理</a></h2>
+<h3 id="多资源管理"><a class="header" href="#多资源管理">多资源管理</a></h3>
 <p>当一个函数分配多个资源时，<code>errdefer</code> 可以把“部分成功、后续失败”的清理逻辑写得非常自然。</p>
 <pre><code class="language-/dev/null/chapter-error-handling.zig#L302-326">const std = @import("std");
 
@@ -812,7 +793,7 @@ fn loadConfig(allocator: std.mem.Allocator, name: []const u8, count: usize) !*Co
 <p>这说明多个 <code>errdefer</code> 的执行顺序是 <strong>LIFO</strong>（后进先出），和 <code>defer</code> 一样。</p>
 <p>这很合理，因为资源通常也是按“先拿外层、再拿内层”的顺序获取的，清理时正好反过来。</p>
 <hr>
-<h2 id="errdefer-的执行顺序"><a class="header" href="#errdefer-的执行顺序"><code>errdefer</code> 的执行顺序</a></h2>
+<h3 id="errdefer-的执行顺序"><a class="header" href="#errdefer-的执行顺序"><code>errdefer</code> 的执行顺序</a></h3>
 <pre><code class="language-/dev/null/chapter-error-handling.zig#L328-339">fn example() !void {
     const resource1 = try acquire1();
     errdefer release1(resource1);
@@ -837,7 +818,7 @@ fn loadConfig(allocator: std.mem.Allocator, name: []const u8, count: usize) !*Co
 <p><code>errdefer</code> 和 <code>defer</code> 一样，都是倒序执行。</p>
 </blockquote>
 <hr>
-<h2 id="errdefer-err"><a class="header" href="#errdefer-err"><code>errdefer |err|</code></a></h2>
+<h3 id="errdefer-err"><a class="header" href="#errdefer-err"><code>errdefer |err|</code></a></h3>
 <p><code>errdefer</code> 还可以捕获当前返回的错误值：</p>
 <pre><code class="language-/dev/null/chapter-error-handling.zig#L341-356">const std = @import("std");
 
@@ -914,7 +895,7 @@ pub fn main(_: std.process.Init) !void {
 <p>这正是 Zig 错误处理最常见、也最推荐的组织方式。</p>
 <hr>
 <h2 id="最佳实践"><a class="header" href="#最佳实践">最佳实践</a></h2>
-<h2 id="1-把错误处理当成接口设计的一部分"><a class="header" href="#1-把错误处理当成接口设计的一部分">1. 把错误处理当成接口设计的一部分</a></h2>
+<h3 id="把错误处理当成接口设计的一部分"><a class="header" href="#把错误处理当成接口设计的一部分">把错误处理当成接口设计的一部分</a></h3>
 <p>不要把错误处理看成“最后补上的边角料”。</p>
 <p>更好的思路是：</p>
 <ul>
@@ -924,7 +905,7 @@ pub fn main(_: std.process.Init) !void {
 <li>成功和失败时资源分别由谁负责？</li>
 </ul>
 <p>这些问题越早想清楚，代码越整洁。</p>
-<h2 id="2-公共接口优先使用清晰的错误集"><a class="header" href="#2-公共接口优先使用清晰的错误集">2. 公共接口优先使用清晰的错误集</a></h2>
+<h3 id="公共接口优先使用清晰的错误集"><a class="header" href="#公共接口优先使用清晰的错误集">公共接口优先使用清晰的错误集</a></h3>
 <pre><code class="language-/dev/null/chapter-error-handling.zig#L397-408">const ConfigError = error{
     FileNotFound,
     InvalidFormat,
@@ -945,28 +926,29 @@ const BadError = error{
 <li>能帮助调用者决定处理策略</li>
 <li>尽量避免模糊词，如 <code>Failed</code>、<code>Bad</code>、<code>Error</code></li>
 </ul>
-<h2 id="3-能传播就先传播能处理再处理"><a class="header" href="#3-能传播就先传播能处理再处理">3. 能传播就先传播，能处理再处理</a></h2>
+<h3 id="能传播就先传播能处理再处理"><a class="header" href="#能传播就先传播能处理再处理">能传播就先传播，能处理再处理</a></h3>
 <p>一般原则是：</p>
 <ul>
 <li>当前层没有恢复策略 → <code>try</code></li>
 <li>当前层知道如何恢复或转换 → <code>catch</code></li>
 </ul>
 <p>不要为了“显得处理过了”而到处写无意义的 <code>catch</code>。</p>
-<h2 id="4-defer-管函数内生命周期errdefer-管失败回滚"><a class="header" href="#4-defer-管函数内生命周期errdefer-管失败回滚">4. <code>defer</code> 管函数内生命周期，<code>errdefer</code> 管失败回滚</a></h2>
+<h3 id="defer-管函数内生命周期errdefer-管失败回滚"><a class="header" href="#defer-管函数内生命周期errdefer-管失败回滚"><code>defer</code> 管函数内生命周期，<code>errdefer</code> 管失败回滚</a></h3>
 <p>这是最重要的实践规则之一：</p>
 <ul>
 <li><strong>函数内自己用完的资源</strong> → <code>defer</code></li>
 <li><strong>成功时交给调用者的资源</strong> → <code>errdefer</code></li>
 </ul>
 <p>如果这条规则混乱，资源管理通常也会跟着混乱。</p>
-<h2 id="5-谨慎使用-catch-unreachable"><a class="header" href="#5-谨慎使用-catch-unreachable">5. 谨慎使用 <code>catch unreachable</code></a></h2>
+<h3 id="谨慎使用-catch-unreachable"><a class="header" href="#谨慎使用-catch-unreachable">谨慎使用 <code>catch unreachable</code></a></h3>
 <p>只有在你能证明“不可能失败”时才使用。</p>
 <p>如果只是“我觉得应该不会出错”，那通常不够。</p>
-<h2 id="6-避免把-anyerror-当默认方案"><a class="header" href="#6-避免把-anyerror-当默认方案">6. 避免把 <code>anyerror</code> 当默认方案</a></h2>
+<h3 id="避免把-anyerror-当默认方案"><a class="header" href="#避免把-anyerror-当默认方案">避免把 <code>anyerror</code> 当默认方案</a></h3>
 <p><code>anyerror</code> 会让接口边界变模糊。除非你确实在做边界适配或原型验证，否则优先写具体错误集。</p>
 <hr>
-<h2 id="常见错误"><a class="header" href="#常见错误">常见错误</a></h2>
-<h2 id="错误-1在不能返回错误的函数里使用-try"><a class="header" href="#错误-1在不能返回错误的函数里使用-try">错误 1：在不能返回错误的函数里使用 <code>try</code></a></h2>
+<h2 id="常见问题与调试"><a class="header" href="#常见问题与调试">常见问题与调试</a></h2>
+<h3 id="常见错误"><a class="header" href="#常见错误">常见错误</a></h3>
+<p>错误 1：在不能返回错误的函数里使用 <code>try</code></p>
 <pre><code class="language-/dev/null/chapter-error-handling.zig#L410-421">fn mightFail() !void {
     return error.Failed;
 }
@@ -983,7 +965,7 @@ fn good() !void {
 </code></pre>
 <p>根本原因不是“语法不允许”，而是：<code>try</code> 需要一个地方把错误继续交出去。</p>
 <hr>
-<h2 id="错误-2错误集不兼容"><a class="header" href="#错误-2错误集不兼容">错误 2：错误集不兼容</a></h2>
+<p>错误 2：错误集不兼容</p>
 <pre><code class="language-/dev/null/chapter-error-handling.zig#L423-446">const SpecificError = error{NotFound};
 const BroadError = error{NotFound, PermissionDenied};
 
@@ -1014,7 +996,7 @@ fn narrowCast() SpecificError!void {
 <p>函数签名写了什么，你就只能返回那个集合允许的错误。</p>
 </blockquote>
 <hr>
-<h2 id="错误-3该用-defer-时误用了-errdefer"><a class="header" href="#错误-3该用-defer-时误用了-errdefer">错误 3：该用 <code>defer</code> 时误用了 <code>errdefer</code></a></h2>
+<p>错误 3：该用 <code>defer</code> 时误用了 <code>errdefer</code></p>
 <pre><code class="language-/dev/null/chapter-error-handling.zig#L448-474">fn allocateAndProcess(allocator: std.mem.Allocator) !void {
     const memory = try allocator.alloc(u8, 100);
     errdefer allocator.free(memory);
@@ -1042,7 +1024,7 @@ fn narrowCast() SpecificError!void {
 }
 </code></pre>
 <hr>
-<h2 id="错误-4把没有值误写成错误"><a class="header" href="#错误-4把没有值误写成错误">错误 4：把“没有值”误写成错误</a></h2>
+<p>错误 4：把“没有值”误写成错误</p>
 <p>如果“没找到”是正常业务结果，就不该强行设计成错误。</p>
 <pre><code class="language-/dev/null/chapter-error-handling.zig#L495-506">fn findUser(id: u32) ?[]const u8 {
     if (id == 1) return "alice";
@@ -1061,8 +1043,8 @@ fn openConfig(path: []const u8) ![]const u8 {
 </ul>
 <p>把这两者混在一起，会让接口语义变差。</p>
 <hr>
-<h2 id="调试建议"><a class="header" href="#调试建议">调试建议</a></h2>
-<h2 id="打印错误名"><a class="header" href="#打印错误名">打印错误名</a></h2>
+<h3 id="调试建议"><a class="header" href="#调试建议">调试建议</a></h3>
+<p><strong>打印错误名</strong></p>
 <p>最直接、最常用的方法是 <code>@errorName</code>：</p>
 <pre><code class="language-/dev/null/chapter-error-handling.zig#L508-519">const std = @import("std");
 
@@ -1078,7 +1060,7 @@ pub fn main(_: std.process.Init) void {
 }
 </code></pre>
 <p>这通常比直接打印错误值更适合教学和日志输出。</p>
-<h2 id="优先保留错误传播链"><a class="header" href="#优先保留错误传播链">优先保留错误传播链</a></h2>
+<p><strong>优先保留错误传播链</strong></p>
 <p>调试时，一个常见坏习惯是过早把错误吞掉，例如：</p>
 <ul>
 <li>直接 <code>catch 0</code></li>
@@ -1086,11 +1068,11 @@ pub fn main(_: std.process.Init) void {
 <li>直接 <code>catch unreachable</code></li>
 </ul>
 <p>如果你还没确定问题在哪，先让错误继续传播，通常更容易定位根因。</p>
-<h2 id="在安全检查模式下验证假设"><a class="header" href="#在安全检查模式下验证假设">在安全检查模式下验证假设</a></h2>
+<p><strong>在安全检查模式下验证假设</strong></p>
 <p>像 <code>@errorCast</code>、<code>catch unreachable</code> 这类写法都依赖你的逻辑判断。</p>
 <p>因此在开发阶段，应该优先在带安全检查的模式下运行和验证，尽早暴露错误假设。</p>
 <hr>
-<h2 id="本章小结"><a class="header" href="#本章小结">本章小结</a></h2>
+<h2 id="本章要点"><a class="header" href="#本章要点">本章要点</a></h2>
 <p>把整章压缩成几句话，就是：</p>
 <ol>
 <li><strong>错误集合</strong>定义“可能有哪些错误”</li>

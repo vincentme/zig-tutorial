@@ -49,7 +49,7 @@ Zig 选择显式错误处理，主要是为了让代码在三个方面更好：
 
 你可以把它理解为：函数可能失败，但失败不是随便返回一个字符串或整数，而是返回一个**受类型系统约束的错误值**。
 
-## 为什么需要错误集合？
+### 为什么需要错误集合？
 
 错误集合带来三件事：
 
@@ -59,9 +59,9 @@ Zig 选择显式错误处理，主要是为了让代码在三个方面更好：
 
 例如，“文件不存在”和“权限不足”都叫失败，但它们不是同一类失败。把它们区分开，调用者才能做出不同处理。
 
-## 定义错误集合
+### 定义错误集合
 
-```/dev/null/chapter-error-handling.zig#L1-18
+```zig
 const std = @import("std");
 
 const FileError = error{
@@ -86,11 +86,11 @@ pub fn main(_: std.process.Init) void {
 - 错误值可以比较
 - 写成 `error.NotFound` 通常比 `FileError.NotFound` 更常见
 
-## 错误名的全局性
+### 错误名的全局性
 
-Zig 的错误名是全局的。同名错误值在不同错误集合里表示同一个错误名。
+Zig 的错误名是**全局共享**的；错误集合的作用是约束“这里允许出现哪些错误名”，而不是为每个错误集合创建彼此独立的命名空间。
 
-```/dev/null/chapter-error-handling.zig#L20-27
+```zig
 const A = error{NotFound};
 const B = error{NotFound};
 
@@ -101,59 +101,35 @@ comptime {
 }
 ```
 
-这意味着：
+这个例子说明：
 
-- `A` 和 `B` 是不同的错误集合类型
-- 但 `A` 和 `B` 中的 `NotFound` 指向同一个错误名
+- `A` 和 `B` 是两个不同的错误集合类型
+- 但它们都包含同一个全局错误名 `NotFound`
+- 因此这里赋值时统一写成 `error.NotFound`，而不是 `A.NotFound` 或 `B.NotFound`
 
-初学时你只需要记住一句话：**错误集合约束的是“允许哪些错误”，不是重新发明一套彼此隔离的错误值命名空间。**
+可以把错误集合理解为“允许的错误名单”：
 
-## 一个更实际的例子
+- `error{NotFound}` 表示这里只允许 `NotFound`
+- `error{NotFound, AccessDenied}` 表示这里允许 `NotFound` 和 `AccessDenied`
 
-```/dev/null/chapter-error-handling.zig#L29-45
-const ConfigError = error{
-    FileNotFound,
-    InvalidSyntax,
-    MissingRequiredField,
-    InvalidValue,
-};
+它约束的是**允许出现哪些错误**，而不是重新定义一套新的错误值。
 
-const Config = struct {
-    port: u16,
-    host: []const u8,
-};
+初学时可以先记住一句话：**错误集合限制的是可返回错误的范围；同名错误在不同错误集合里，仍然是同一个全局错误名。**
 
-fn loadConfig(path: []const u8) ConfigError!Config {
-    if (path.len == 0) return error.FileNotFound;
+## 错误类型与错误值
 
-    return .{
-        .port = 8080,
-        .host = "localhost",
-    };
-}
-```
+### 错误联合类型：`!T`
 
-这个签名 `ConfigError!Config` 的意思是：
-
-- 成功时返回 `Config`
-- 失败时返回 `ConfigError` 中的某个错误
-
----
-
-## 错误联合类型：`!T`
-
-错误集合只回答“可能有哪些错误”，但还没有回答“函数结果的整体形状是什么”。
-
-这就是错误联合类型的作用。
+错误集合只回答“可能有哪些错误”，但还没有回答“这个函数在成功时返回什么、失败时又可能出现哪些错误”。这就是错误联合类型的作用。
 
 `ErrorSet!T` 表示：
 
 - 要么得到一个 `T`
-- 要么得到一个错误
+- 要么得到一个属于`ErrorSet`的错误
 
 例如：
 
-```/dev/null/chapter-error-handling.zig#L47-63
+```zig
 const ParseError = error{
     InvalidFormat,
     OutOfRange,
@@ -177,7 +153,7 @@ fn parseNumber(str: []const u8) ParseError!u32 {
 - 成功分支：`u32`
 - 失败分支：`ParseError`
 
-## `!T` 的两种常见写法
+### `!T` 的两种常见写法
 
 你会看到两种形式：
 
@@ -210,7 +186,7 @@ fn inferred() !void {
 
 ---
 
-## 错误集推断
+### 错误集推断
 
 当函数返回 `!T` 时，编译器会根据函数体中可能返回的错误自动推断错误集合。
 
@@ -242,7 +218,7 @@ fn divide(a: i32, b: i32) !i32 {
 
 ---
 
-## 错误集合并
+### 错误集合并
 
 如果一个函数可能返回多个来源的错误，可以把错误集合合并。
 
@@ -266,7 +242,7 @@ const CombinedError = FileError || NetworkError;
 
 ---
 
-## 子集与超集
+### 子集与超集
 
 错误集合之间存在子集关系。
 
@@ -297,14 +273,14 @@ fn example() void {
 
 ---
 
-## 错误集转换
+### 错误集转换
 
 当你确实需要把较大的错误集收窄到较小的错误集时，有两种思路：
 
 1. **显式映射**
 2. **`@errorCast`**
 
-### 显式映射
+显式映射：
 
 这是最稳妥、也最推荐的方式。
 
@@ -329,7 +305,7 @@ fn mapError(err: LowLevelError) HighLevelError {
 
 这种写法的优点是语义明确：你不是“强行缩小”，而是在设计 API 边界。
 
-### `@errorCast`
+`@errorCast`：
 
 `@errorCast` 用于把错误值收窄到目标错误集合。
 
@@ -355,7 +331,7 @@ fn broad() BroadError!void {
 
 ---
 
-## `anyerror`
+### `anyerror`
 
 `anyerror` 是所有错误的超集。
 
@@ -382,7 +358,7 @@ fn flexibleFunction() anyerror!void {
 
 ---
 
-## 错误相关内建函数
+### 错误相关内建函数
 
 Zig 提供了一些和错误相关的内建函数，最常见的是下面几个：
 
@@ -416,7 +392,9 @@ pub fn main(_: std.process.Init) void {
 
 ---
 
-## `try`：传播错误
+## 错误传播与处理
+
+### `try`：传播错误
 
 `try` 的作用是：
 
@@ -442,7 +420,7 @@ fn calculate() !i32 {
 - 成功：把结果绑定给 `result`
 - 失败：当前函数 `calculate` 直接返回那个错误
 
-## `try` 的等价理解
+### `try` 的等价理解
 
 你可以把它近似理解为下面这种写法：
 
@@ -454,7 +432,7 @@ const result = divide(10, 2) catch |err| {
 
 这不是说 `try` 只是语法糖那么简单，而是帮助你理解它的控制流：**失败就立刻返回，成功才继续往下执行。**
 
-## `try` 的使用限制
+### `try` 的使用限制
 
 `try` 只能出现在当前函数本身也允许返回错误的地方。
 
@@ -482,11 +460,11 @@ pub fn goodMain(_: std.process.Init) !void {
 
 ---
 
-## `catch`：在当前层处理错误
+### `catch`：在当前层处理错误
 
 如果你不想继续传播，而是想在当前层把错误处理掉，就用 `catch`。
 
-## 提供默认值
+### 提供默认值
 
 ```/dev/null/chapter-error-handling.zig#L195-201
 fn divide(a: i32, b: i32) !i32 {
@@ -501,7 +479,7 @@ const result = divide(10, 0) catch 0;
 
 这适合“失败后有合理默认值”的场景。
 
-## 捕获错误并执行逻辑
+### 捕获错误并执行逻辑
 
 ```/dev/null/chapter-error-handling.zig#L203-214
 const std = @import("std");
@@ -523,7 +501,7 @@ fn example() void {
 - 返回默认值
 - 提前结束当前函数
 
-## `catch unreachable`
+### `catch unreachable`
 
 有时你在逻辑上可以证明某个操作不会失败，这时可以写：
 
@@ -542,7 +520,7 @@ const value = parseNumber("42") catch unreachable;
 
 ---
 
-## 匹配具体错误
+### 匹配具体错误
 
 如果不同错误需要不同处理方式，可以在 `catch` 后面接 `switch`。
 
@@ -578,7 +556,7 @@ fn handleFile() void {
 
 ---
 
-## 用 `if` 同时处理成功和失败
+### 用 `if` 同时处理成功和失败
 
 错误联合类型也可以用 `if` 解包：
 
@@ -604,7 +582,7 @@ fn example() void {
 
 ---
 
-## `!T` 和 `?T` 的区别
+### `!T` 和 `?T` 的区别
 
 这是初学者最容易混淆的地方之一。
 
@@ -641,7 +619,9 @@ fn loadUserConfig(path: []const u8) ![]const u8 {
 
 ---
 
-## `errdefer`
+## 失败路径清理：`errdefer`
+
+### `errdefer`
 
 `defer` 你已经见过：作用域结束时执行。
 
@@ -651,7 +631,7 @@ fn loadUserConfig(path: []const u8) ![]const u8 {
 
 > 成功时把资源交给调用者，失败时由当前函数负责回收。
 
-## `defer` 和 `errdefer` 的区别
+### `defer` 和 `errdefer` 的区别
 
 - **`defer`**：成功、失败都会执行
 - **`errdefer`**：只有失败时执行
@@ -687,7 +667,7 @@ fn withErrdefer(allocator: std.mem.Allocator) ![]u8 {
 
 ---
 
-## `errdefer` 的基本用法
+### `errdefer` 的基本用法
 
 ```/dev/null/chapter-error-handling.zig#L281-300
 const std = @import("std");
@@ -723,7 +703,7 @@ fn createUser(allocator: std.mem.Allocator, id: usize, name: []const u8) !*User 
 
 ---
 
-## 多资源管理
+### 多资源管理
 
 当一个函数分配多个资源时，`errdefer` 可以把“部分成功、后续失败”的清理逻辑写得非常自然。
 
@@ -764,7 +744,7 @@ fn loadConfig(allocator: std.mem.Allocator, name: []const u8, count: usize) !*Co
 
 ---
 
-## `errdefer` 的执行顺序
+### `errdefer` 的执行顺序
 
 ```/dev/null/chapter-error-handling.zig#L328-339
 fn example() !void {
@@ -793,7 +773,7 @@ fn example() !void {
 
 ---
 
-## `errdefer |err|`
+### `errdefer |err|`
 
 `errdefer` 还可以捕获当前返回的错误值：
 
@@ -883,7 +863,7 @@ pub fn main(_: std.process.Init) !void {
 
 ## 最佳实践
 
-## 1. 把错误处理当成接口设计的一部分
+### 把错误处理当成接口设计的一部分
 
 不要把错误处理看成“最后补上的边角料”。
 
@@ -896,7 +876,7 @@ pub fn main(_: std.process.Init) !void {
 
 这些问题越早想清楚，代码越整洁。
 
-## 2. 公共接口优先使用清晰的错误集
+### 公共接口优先使用清晰的错误集
 
 ```/dev/null/chapter-error-handling.zig#L397-408
 const ConfigError = error{
@@ -920,7 +900,7 @@ const BadError = error{
 - 能帮助调用者决定处理策略
 - 尽量避免模糊词，如 `Failed`、`Bad`、`Error`
 
-## 3. 能传播就先传播，能处理再处理
+### 能传播就先传播，能处理再处理
 
 一般原则是：
 
@@ -929,7 +909,7 @@ const BadError = error{
 
 不要为了“显得处理过了”而到处写无意义的 `catch`。
 
-## 4. `defer` 管函数内生命周期，`errdefer` 管失败回滚
+### `defer` 管函数内生命周期，`errdefer` 管失败回滚
 
 这是最重要的实践规则之一：
 
@@ -938,21 +918,23 @@ const BadError = error{
 
 如果这条规则混乱，资源管理通常也会跟着混乱。
 
-## 5. 谨慎使用 `catch unreachable`
+### 谨慎使用 `catch unreachable`
 
 只有在你能证明“不可能失败”时才使用。
 
 如果只是“我觉得应该不会出错”，那通常不够。
 
-## 6. 避免把 `anyerror` 当默认方案
+### 避免把 `anyerror` 当默认方案
 
 `anyerror` 会让接口边界变模糊。除非你确实在做边界适配或原型验证，否则优先写具体错误集。
 
 ---
 
-## 常见错误
+## 常见问题与调试
 
-## 错误 1：在不能返回错误的函数里使用 `try`
+### 常见错误
+
+错误 1：在不能返回错误的函数里使用 `try`
 
 ```/dev/null/chapter-error-handling.zig#L410-421
 fn mightFail() !void {
@@ -974,7 +956,7 @@ fn good() !void {
 
 ---
 
-## 错误 2：错误集不兼容
+错误 2：错误集不兼容
 
 ```/dev/null/chapter-error-handling.zig#L423-446
 const SpecificError = error{NotFound};
@@ -1009,7 +991,7 @@ fn narrowCast() SpecificError!void {
 
 ---
 
-## 错误 3：该用 `defer` 时误用了 `errdefer`
+错误 3：该用 `defer` 时误用了 `errdefer`
 
 ```/dev/null/chapter-error-handling.zig#L448-474
 fn allocateAndProcess(allocator: std.mem.Allocator) !void {
@@ -1047,7 +1029,7 @@ fn allocateForCaller(allocator: std.mem.Allocator) ![]u8 {
 
 ---
 
-## 错误 4：把“没有值”误写成错误
+错误 4：把“没有值”误写成错误
 
 如果“没找到”是正常业务结果，就不该强行设计成错误。
 
@@ -1072,9 +1054,9 @@ fn openConfig(path: []const u8) ![]const u8 {
 
 ---
 
-## 调试建议
+### 调试建议
 
-## 打印错误名
+**打印错误名**
 
 最直接、最常用的方法是 `@errorName`：
 
@@ -1095,7 +1077,7 @@ pub fn main(_: std.process.Init) void {
 
 这通常比直接打印错误值更适合教学和日志输出。
 
-## 优先保留错误传播链
+**优先保留错误传播链**
 
 调试时，一个常见坏习惯是过早把错误吞掉，例如：
 
@@ -1105,7 +1087,7 @@ pub fn main(_: std.process.Init) void {
 
 如果你还没确定问题在哪，先让错误继续传播，通常更容易定位根因。
 
-## 在安全检查模式下验证假设
+**在安全检查模式下验证假设**
 
 像 `@errorCast`、`catch unreachable` 这类写法都依赖你的逻辑判断。
 
@@ -1113,7 +1095,7 @@ pub fn main(_: std.process.Init) void {
 
 ---
 
-## 本章小结
+## 本章要点
 
 把整章压缩成几句话，就是：
 
