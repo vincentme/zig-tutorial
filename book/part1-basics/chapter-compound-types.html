@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-3ff95d71.js";
+            window.path_to_searchindex_js = "../searchindex-dab0b333.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-c7628560.js"></script>
+        <script src="../toc-84df0a14.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -183,17 +183,6 @@
                     <main>
                         <h1 id="复合类型"><a class="header" href="#复合类型">复合类型</a></h1>
 <p>本章介绍 Zig 中最常见的复合类型，包括数组、切片、枚举、联合、结构体和元组。它们用于把基础类型组织成更有结构的数据，是后续学习控制流、错误处理、内存管理和工程实践的基础。</p>
-<blockquote>
-<p>💡 <strong>阅读建议</strong></p>
-<p>这一章的内容从“最常用的数据表示方式”逐步过渡到“更灵活的数据建模方式”。
-如果你是第一次接触 Zig，建议优先掌握下面几部分：</p>
-<ul>
-<li>数组与切片</li>
-<li>结构体</li>
-<li>枚举</li>
-</ul>
-<p>联合、非穷尽枚举以及部分与布局相关的内容，第一次阅读时可以先理解核心概念，不必急着记住所有细节。</p>
-</blockquote>
 <h2 id="数组"><a class="header" href="#数组">数组</a></h2>
 <p>数组是固定大小的连续内存序列，其长度是编译期常量，也是类型的一部分。</p>
 <h3 id="基本用法"><a class="header" href="#基本用法">基本用法</a></h3>
@@ -304,7 +293,7 @@ subslice length: 2
 <li><strong>边界检查</strong>：切片长度是运行时值，只能在运行时检查边界</li>
 </ul>
 <blockquote>
-<p><strong>深入学习</strong>：胖指针是 Zig 指针系统的重要组成部分，<a href="../part2-advanced/chapter-pointers.html">指针、切片与对齐</a>将详细讲解各种指针类型及其应用场景。</p>
+<p><strong>进阶</strong>：胖指针是 Zig 指针系统的重要组成部分，<a href="../part2-advanced/chapter-pointers.html">指针、切片与对齐</a>将详细讲解各种指针类型及其应用场景。</p>
 </blockquote>
 <h3 id="切片创建方式"><a class="header" href="#切片创建方式">切片创建方式</a></h3>
 <div class="table-wrapper">
@@ -393,7 +382,7 @@ pub fn main(_: std.process.Init) void {
 </table>
 </div>
 <h2 id="哨兵终止数组"><a class="header" href="#哨兵终止数组">哨兵终止数组</a></h2>
-<p>哨兵终止数组在数组末尾添加一个“哨兵值”来标记结束，主要用于 C 语言兼容性，以及需要明确终止标记的数据表示。</p>
+<p>哨兵终止数组在数组末尾添加一个“哨兵值“来标记结束，主要用于 C 语言兼容性，以及需要明确终止标记的数据表示。</p>
 <p><strong>语法</strong>：</p>
 <ul>
 <li><code>[N:S]T</code>：长度为 <code>N</code>、哨兵值为 <code>S</code>、元素类型为 <code>T</code> 的数组</li>
@@ -685,7 +674,7 @@ as_f32: 3.14
 </code></pre>
 <p>注意：虽然所有成员都是 4 字节，但普通 union 的大小不一定等于最大成员的大小。普通 union 的内存布局由编译器决定，实际大小取决于编译器实现。访问非活动成员在安全构建模式下会触发运行时错误，在 ReleaseFast/ReleaseSmall 模式下是未定义行为。</p>
 <p><strong>extern union</strong>：</p>
-<p><code>extern union</code> 遵循 C ABI，允许访问非活动成员（类型重解释）：</p>
+<p><code>extern union</code> 遵循 C ABI，内存布局与 C 语言一致，大小等于最大成员的大小。与普通 union 不同，<code>extern union</code> 允许访问非活动成员，可用于类型重解释：</p>
 <pre><code class="language-zig">const std = @import("std");
 
 const Data = extern union {
@@ -696,22 +685,12 @@ const Data = extern union {
 
 pub fn main(_: std.process.Init) void {
     const data: Data = .{ .as_i32 = 0x41424344 };
-
-    std.debug.print("as_i32: {}\n", .{data.as_i32});
-    std.debug.print("as_f32: {}\n", .{data.as_f32});
     std.debug.print("as_bytes: {s}\n", .{data.as_bytes});
     std.debug.print("联合大小: {} 字节\n", .{@sizeOf(Data)});
 }
 </code></pre>
-<p><strong>预期输出（小端序平台，如 x86/ARM）：</strong></p>
-<pre><code>as_i32: 1094861636
-as_f32: 12.141422
-as_bytes: DCBA
-联合大小: 4 字节
-</code></pre>
-<p>注意：<code>as_bytes</code> 的输出取决于 CPU 字节序。上例为小端序结果，大端序平台上输出不同。</p>
 <p><strong>packed union</strong>：</p>
-<p><code>packed union</code> 有位级精确的内存布局，所有成员必须有相同的 <code>@bitSizeOf</code>。它可以作为 <code>packed struct</code> 的字段，用来表示同一段位数据的不同解释方式：</p>
+<p><code>packed union</code> 有位级精确的内存布局，所有成员必须有相同的位宽。可以作为 <code>packed struct</code> 的字段，用来表示同一段位数据的不同解释方式：</p>
 <pre><code class="language-zig">const std = @import("std");
 
 const Data = packed union {
@@ -730,47 +709,10 @@ pub fn main(_: std.process.Init) void {
 <pre><code>as_u32: 0x40490FDB
 as_f32: 3.1415927
 </code></pre>
-<p><code>packed union</code> 支持指定 backing integer type：</p>
-<pre><code class="language-zig">const Register = packed struct {
-    control: packed union(u32) {
-        as_u32: u32,
-        bits: packed struct {
-            enable: u1,
-            mode: u3,
-            reserved: u28,
-        },
-    },
-    status: u32,
-};
-</code></pre>
-<h3 id="高级特性"><a class="header" href="#高级特性">高级特性</a></h3>
-<p><strong><code>@unionInit</code></strong>：内建函数，用于在字段名为编译期参数时初始化联合。其中字段名必须在编译期确定，但被写入的值可以来自运行时，因此它也可以出现在普通运行时代码中。</p>
-<pre><code class="language-zig">const std = @import("std");
-
-const MyUnion = union {
-    int: i32,
-    float: f64,
-    string: []const u8,
-};
-
-pub fn main(_: std.process.Init) void {
-    const u1 = MyUnion{ .int = 42 };
-    const u2 = @unionInit(MyUnion, "float", 3.14);
-    const u3 = @unionInit(MyUnion, "string", "hello");
-
-    std.debug.print("u1: {}\n", .{u1.int});
-    std.debug.print("u2: {}\n", .{u2.float});
-    std.debug.print("u3: {s}\n", .{u3.string});
-}
-</code></pre>
-<p><code>@unionInit</code> 的主要用途是在泛型代码中，当字段名是 <code>comptime</code> 参数时无法使用普通初始化语法：</p>
-<pre><code class="language-zig">fn initUnion(comptime field: []const u8, value: anytype) MyUnion {
-    return @unionInit(MyUnion, field, value);
-}
-</code></pre>
 <blockquote>
-<p><strong>相关章节</strong>：更多编译期技巧请参考<a href="../part2-advanced/chapter-comptime.html">编译期计算与元编程</a>和<a href="../part2-advanced/chapter-generics.html">泛型编程</a>。</p>
+<p><strong>进阶</strong>：<code>extern union</code> 和 <code>packed union</code> 的详细用法见高级部分的指针与内存章节。</p>
 </blockquote>
+<h3 id="高级特性"><a class="header" href="#高级特性">高级特性</a></h3>
 <p><strong><code>@tagName</code></strong>：获取带标签联合当前变体的名称字符串，常用于日志和调试：</p>
 <pre><code class="language-zig">const std = @import("std");
 
@@ -780,22 +722,12 @@ const Result = union(enum) {
 };
 
 pub fn main(_: std.process.Init) void {
-    const r1 = Result{ .success = 100 };
-    const r2 = Result{ .failure = "连接失败" };
-
-    std.debug.print("r1 标签: {s}\n", .{@tagName(r1)});
-    std.debug.print("r2 标签: {s}\n", .{@tagName(r2)});
-
-    switch (r1) {
-        .success =&gt; |value| std.debug.print("成功: {}\n", .{value}),
-        .failure =&gt; |msg| std.debug.print("失败: {s}\n", .{msg}),
-    }
+    const r = Result{ .success = 100 };
+    std.debug.print("标签: {s}\n", .{@tagName(r)});
 }
 </code></pre>
 <p><strong>预期输出：</strong></p>
-<pre><code>r1 标签: success
-r2 标签: failure
-成功: 100
+<pre><code>标签: success
 </code></pre>
 <h2 id="结构体"><a class="header" href="#结构体">结构体</a></h2>
 <p>结构体是 Zig 中定义复合类型的主要方式，将多个相关的数据字段组合成一个逻辑单元。</p>
@@ -855,6 +787,30 @@ p.x = 3.0;  // 合法：p 是 var
 const q = Point{ .x = 1.0, .y = 2.0 };
 // q.x = 3.0;  // 编译错误：q 是 const
 </code></pre>
+<p><strong>结果位置语义</strong>：当目标类型已知时，可以省略结构体类型名，直接使用 <code>.{ ... }</code> 语法：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+const Point = struct {
+    x: f32,
+    y: f32,
+};
+
+fn printPoint(p: Point) void {
+    std.debug.print("Point({}, {})\n", .{ p.x, p.y });
+}
+
+pub fn main(_: std.process.Init) void {
+    const p: Point = .{ .x = 1.0, .y = 2.0 };
+    printPoint(p);
+
+    printPoint(.{ .x = 3.0, .y = 4.0 });
+}
+</code></pre>
+<p><strong>预期输出：</strong></p>
+<pre><code>Point(1, 2)
+Point(3, 4)
+</code></pre>
+<p>适用场景：变量声明（类型注解提供结果位置）、函数参数（函数签名提供结果位置）、返回值（返回类型提供结果位置）。类型必须明确，否则编译错误。</p>
 <h3 id="结构体布局"><a class="header" href="#结构体布局">结构体布局</a></h3>
 <p>Zig 提供三种布局方式：</p>
 <div class="table-wrapper">
@@ -900,63 +856,11 @@ pub fn main(_: std.process.Init) void {
 PackedStruct 大小: 8 字节
 ExternStruct 大小: 12 字节
 </code></pre>
-<p><strong><code>packed struct</code> 详解</strong>：</p>
-<ul>
-<li>字段按声明顺序紧密排列，无 padding</li>
-<li>不允许自定义字段对齐（<code>align</code> 修饰符无效）</li>
-<li><code>@bitSizeOf(T)</code> 返回所有字段位宽之和，<code>@sizeOf(T)</code> 返回实际占用字节数（需满足整体对齐要求）</li>
-<li>可以将 <code>packed union</code> 作为字段放在 <code>packed struct</code> 中，但不能放入 <code>extern union</code></li>
-</ul>
-<pre><code class="language-zig">const std = @import("std");
-
-const Flags = packed struct {
-    enable: bool,
-    mode: u3,
-    priority: u2,
-    reserved: u2,
-
-    pub fn asByte(self: Flags) u8 {
-        return @bitCast(self);
-    }
-};
-
-pub fn main(_: std.process.Init) void {
-    const flags = Flags{ .enable = true, .mode = 0b101, .priority = 0b11, .reserved = 0 };
-    std.debug.print("bitSizeOf: {}, sizeOf: {}\n", .{ @bitSizeOf(Flags), @sizeOf(Flags) });
-    std.debug.print("as byte: 0x{X}\n", .{flags.asByte()});
-}
-</code></pre>
-<p><strong>预期输出：</strong></p>
-<pre><code>bitSizeOf: 8, sizeOf: 1
-as byte: 0xED
-</code></pre>
-<h3 id="结果位置语义"><a class="header" href="#结果位置语义">结果位置语义</a></h3>
-<p>当目标类型已知时，可以省略匿名结构体的类型名：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-const Point = struct {
-    x: f32,
-    y: f32,
-};
-
-fn printPoint(p: Point) void {
-    std.debug.print("Point({}, {})\n", .{ p.x, p.y });
-}
-
-pub fn main(_: std.process.Init) void {
-    const p: Point = .{ .x = 1.0, .y = 2.0 };
-    printPoint(p);
-
-    printPoint(.{ .x = 3.0, .y = 4.0 });
-}
-</code></pre>
-<p><strong>预期输出：</strong></p>
-<pre><code>Point(1, 2)
-Point(3, 4)
-</code></pre>
-<p>适用场景：变量声明（类型注解提供结果位置）、函数参数（函数签名提供结果位置）、返回值（返回类型提供结果位置）。类型必须明确，否则编译错误。</p>
+<blockquote>
+<p><strong>进阶</strong>：<code>packed struct</code> 的位操作详细用法见高级部分。</p>
+</blockquote>
 <h3 id="字段默认值"><a class="header" href="#字段默认值">字段默认值</a></h3>
-<p>在结构体中，常见的“默认值”有两种不同方式：</p>
+<p>在结构体中，常见的“默认值“有两种不同方式：</p>
 <ol>
 <li><strong>字段级默认值</strong>：直接写在字段定义后面</li>
 <li><strong>类型级默认实例</strong>：在结构体内部定义一个命名常量，表示一组预设值</li>
@@ -992,36 +896,8 @@ pub fn main(_: std.process.Init) void {
 <pre><code>配置: example.com:8080
 阈值范围: 0.25 - 0.75
 </code></pre>
-<h4 id="方式一字段级默认值"><a class="header" href="#方式一字段级默认值">方式一：字段级默认值</a></h4>
-<p>在 <code>Config</code> 中，默认值直接写在字段定义上：</p>
-<ul>
-<li><code>host</code> 默认为 <code>"localhost"</code></li>
-<li><code>port</code> 默认为 <code>8080</code></li>
-<li><code>timeout</code> 默认为 <code>30</code></li>
-<li><code>debug</code> 默认为 <code>false</code></li>
-</ul>
-<p>因此创建结构体时，只需要提供想要覆盖的字段即可：</p>
-<pre><code class="language-zig">const cfg = Config{ .host = "example.com" };
-</code></pre>
-<p>这里没有显式写出的字段，会自动使用各自的默认值。<br>这种方式适合“多数情况下使用同一组默认配置，只偶尔覆盖少数字段”的场景。</p>
-<h4 id="方式二类型级默认实例"><a class="header" href="#方式二类型级默认实例">方式二：类型级默认实例</a></h4>
-<p>在 <code>Threshold</code> 中，<code>minimum</code> 和 <code>maximum</code> 本身<strong>没有字段默认值</strong>；真正的默认方案来自结构体内部定义的常量：</p>
-<pre><code class="language-zig">const default: Threshold = .{
-    .minimum = 0.25,
-    .maximum = 0.75,
-};
-</code></pre>
-<p>因此：</p>
-<pre><code class="language-zig">const threshold: Threshold = .default;
-</code></pre>
-<p>表示“使用 <code>Threshold.default</code> 这个预先定义好的完整实例”。</p>
-<p>这种方式不是让字段自动补默认值，而是为整个类型提供一个带名字的预设值。<br>它适合下面这类场景：</p>
-<ul>
-<li>需要提供一个完整的默认实例</li>
-<li>以后可能还会有多个命名预设，例如 <code>strict</code>、<code>relaxed</code></li>
-<li>希望调用点明确表达“我在使用某个预定义方案”</li>
-</ul>
-<h4 id="两种方式的区别"><a class="header" href="#两种方式的区别">两种方式的区别</a></h4>
+<p><strong>字段级默认值</strong>（如 <code>Config</code>）直接写在字段定义上——<code>host</code> 默认为 <code>"localhost"</code>、<code>port</code> 默认为 <code>8080</code> 等。创建结构体时只需提供想要覆盖的字段，未显式写出的字段自动使用默认值。这种方式适合“多数情况下使用同一组默认配置，只偶尔覆盖少数字段“的场景。</p>
+<p><strong>类型级默认实例</strong>（如 <code>Threshold</code>）中，字段本身没有默认值，默认方案来自结构体内部定义的常量 <code>default</code>。使用 <code>const threshold: Threshold = .default;</code> 表示“使用 <code>Threshold.default</code> 这个预先定义好的完整实例“。这种方式适合需要提供完整预设值、或以后可能有多个命名预设（如 <code>strict</code>、<code>relaxed</code>）的场景。</p>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -1033,12 +909,9 @@ pub fn main(_: std.process.Init) void {
 </tbody>
 </table>
 </div>
-<h4 id="注意事项"><a class="header" href="#注意事项">注意事项</a></h4>
-<ul>
-<li>字段默认值和这类预设实例中的字面量值，都必须能在编译期确定</li>
-<li>没有字段默认值的字段，在普通结构体字面量初始化时必须显式提供</li>
-<li><code>.default</code> 使用的是 decl literal 语法，编译器会根据结果位置类型将其解析为 <code>Threshold.default</code></li>
-</ul>
+<blockquote>
+<p><strong>注意</strong>：字段默认值和类型级默认实例中的值都必须能在编译期确定。没有字段默认值的字段，在结构体字面量初始化时必须显式提供。<code>.default</code> 使用的是 decl literal 语法，编译器会根据结果位置类型将其解析为 <code>Threshold.default</code>。</p>
+</blockquote>
 <h3 id="泛型结构体"><a class="header" href="#泛型结构体">泛型结构体</a></h3>
 <p>Zig 通过 <code>comptime</code> 参数实现泛型结构体：</p>
 <pre><code class="language-zig">const std = @import("std");
@@ -1049,7 +922,7 @@ fn Vector(comptime T: type) type {
         y: T,
         z: T,
 
-        const Self = @This();
+        const Self = @This(); // @This() 获取当前正在定义的类型
 
         fn add(self: Self, other: Self) Self {
             return .{
@@ -1073,9 +946,8 @@ pub fn main(_: std.process.Init) void {
 <p><strong>预期输出：</strong></p>
 <pre><code>v1 + v2 = (5.0, 7.0, 9.0)
 </code></pre>
-<p><code>@This()</code> 获取当前正在定义的类型，常用于泛型结构体中引用自身类型。</p>
 <blockquote>
-<p><strong>深入学习</strong>：泛型结构体的完整实现和高级用法请参考<a href="../part2-advanced/chapter-generics.html">泛型编程</a>章节。</p>
+<p><strong>进阶</strong>：泛型结构体的完整实现和高级用法请参考<a href="../part2-advanced/chapter-generics.html">泛型编程</a>章节。</p>
 </blockquote>
 <h2 id="元组"><a class="header" href="#元组">元组</a></h2>
 <p>元组是一种特殊的匿名结构体，字段没有名称，使用数字索引访问。元组可以包含不同类型的元素。</p>
@@ -1120,24 +992,6 @@ pub fn main(_: std.process.Init) void {
 <pre><code class="language-text">1 2 zig true
 </code></pre>
 <p><strong>元组与结构体的关系</strong>：元组本质上是无字段名的匿名结构体，字段名为数字索引（0, 1, 2…）。</p>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn main(_: std.process.Init) void {
-    const t1 = .{ 1, 2 };
-    const t2 = .{ "a", "b" };
-    const combined = t1 ++ t2;
-    std.debug.print("连接后长度: {}\n", .{combined.len});
-    std.debug.print("combined[2]: {s}\n", .{combined[2]});
-
-    const TupleType = @TypeOf(combined);
-    std.debug.print("类型: {}\n", .{TupleType});
-}
-</code></pre>
-<p><strong>预期输出：</strong></p>
-<pre><code>连接后长度: 4
-combined[2]: a
-类型: struct { comptime comptime_int = 1, comptime comptime_int = 2, comptime *const [2:0]u8 = "a", comptime *const [2:0]u8 = "b" }
-</code></pre>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -1151,17 +1005,46 @@ combined[2]: a
 </tbody>
 </table>
 </div>
+<h3 id="解包赋值"><a class="header" href="#解包赋值">解包赋值</a></h3>
+<p>Zig 支持从元组、数组或向量中一次性提取多个值到独立变量：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(_: std.process.Init) void {
+    // 元组解包
+    const tuple = .{ 1, 2, 3 };
+    var x: i32 = undefined;
+    var y: i32 = undefined;
+    var z: i32 = undefined;
+    x, y, z = tuple;
+    std.debug.print("元组解包：x={}, y={}, z={}\n", .{ x, y, z });
+
+    // 数组解包
+    const array = [_]u32{ 4, 5, 6 };
+    var p: u32 = undefined;
+    var q: u32 = undefined;
+    var r: u32 = undefined;
+    p, q, r = array;
+    std.debug.print("数组解包：p={}, q={}, r={}\n", .{ p, q, r });
+
+    // 混合声明：可以同时声明常量和变量
+    const tuple2 = .{ 10, 20, 30 };
+    const first, var second: i32, const third = tuple2;
+    second = 25;
+    std.debug.print("混合声明：{}, {}, {}\n", .{ first, second, third });
+}
+</code></pre>
+<p>向量同样支持解包赋值。</p>
 <h2 id="本章要点"><a class="header" href="#本章要点">本章要点</a></h2>
-<p>读完这一章后，建议你先抓住下面这些主线，而不必急着一次记住所有细节：</p>
+<p>本章核心要点：</p>
 <ul>
 <li><strong>数组</strong> 是长度固定、类型统一的连续数据；长度是类型的一部分。</li>
 <li><strong>切片</strong> 是对连续数据的一段视图，运行时携带长度信息；它本身不拥有底层数据。</li>
 <li><strong>哨兵终止数组</strong> 适合表示以特定结束值结尾的数据，常见于与 C 风格字符串或底层接口交互的场景。</li>
 <li><strong>枚举</strong> 用于表示一组离散取值；带底层整数类型的枚举可以更明确地控制表示方式。</li>
 <li><strong>非穷尽枚举</strong> 不能假定所有运行时值都已被当前源码完整列出；使用 <code>switch</code> 时要为未显式匹配到的情况保留兜底处理。</li>
-<li><strong>联合</strong> 表示“一块存储在不同时间按不同类型解释”；如果需要让当前活跃字段始终可安全追踪，应优先考虑 <strong>带标签联合</strong>。</li>
-<li><strong>带标签联合</strong> 常用于表示“一个值在若干变体中取其一”的数据；读取时通常使用 <code>switch</code> 按标签分别处理。</li>
-<li><strong>无标签联合</strong> 更接近底层内存重解释；只有在你非常清楚当前活跃字段时才适合使用。</li>
+<li><strong>联合</strong> 表示“一块存储在不同时间按不同类型解释“；如果需要让当前活跃字段始终可安全追踪，应优先考虑 <strong>带标签联合</strong>。</li>
+<li><strong>带标签联合</strong> 常用于表示“一个值在若干变体中取其一“的数据；读取时通常使用 <code>switch</code> 按标签分别处理。</li>
+<li><strong>无标签联合</strong> 更接近底层内存重解释；只有在确切知道当前活跃字段时才适合使用。</li>
 <li><strong>结构体</strong> 用于把多个相关字段组织成一个整体；可以同时拥有字段、方法、工厂函数和内部常量。</li>
 <li><strong>结构体布局</strong> 需要根据目标选择：
 <ul>
@@ -1176,17 +1059,9 @@ combined[2]: a
 <li>类型级默认实例是为整个类型提供一个预设好的完整值</li>
 </ul>
 </li>
-<li><strong>泛型结构体</strong> 本质上是“返回类型的函数”，用于在同一模式下生成不同具体类型。</li>
-<li><strong>元组</strong> 适合表示一组位置相关、通常较轻量的异构数据；它更强调“按位置访问”，而不是像结构体那样按字段名组织语义。</li>
+<li><strong>泛型结构体</strong> 本质上是“返回类型的函数“，用于在同一模式下生成不同具体类型。</li>
+<li><strong>元组</strong> 适合表示一组位置相关、通常较轻量的异构数据；它更强调“按位置访问“，而不是像结构体那样按字段名组织语义。</li>
 </ul>
-<p>如果你对本章内容还不够熟悉，建议优先回顾这些核心问题：</p>
-<ol>
-<li>数组、切片、哨兵终止数组三者的区别是什么？</li>
-<li>什么时候该用枚举，什么时候该用带标签联合？</li>
-<li>普通 <code>struct</code>、<code>packed struct</code>、<code>extern struct</code> 的定位分别是什么？</li>
-<li>字段默认值和类型级默认实例的区别是什么？</li>
-<li>结构体与元组各自适合表达什么样的数据？</li>
-</ol>
 
                     </main>
 

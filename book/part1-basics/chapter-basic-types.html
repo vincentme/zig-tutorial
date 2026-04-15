@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-3ff95d71.js";
+            window.path_to_searchindex_js = "../searchindex-dab0b333.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-c7628560.js"></script>
+        <script src="../toc-84df0a14.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -182,15 +182,7 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="变量常量与基础类型"><a class="header" href="#变量常量与基础类型">变量、常量与基础类型</a></h1>
-<p>本章是 Zig 语法学习的起点。你会先接触最常见、最基础的几个主题：<code>const</code> 与 <code>var</code> 的区别、作用域与初始化、整数与浮点、布尔值、字符串字面量，以及显式类型转换。</p>
-<p>这一章的目标不是一次讲完所有细节，而是帮助你建立几个最重要的直觉：</p>
-<ul>
-<li>Zig 鼓励你明确区分“可变”和“不可变”</li>
-<li>值的类型通常需要尽早想清楚</li>
-<li>类型转换应当显式表达意图</li>
-<li>字符与字符串在 Zig 中是两个不同层次的概念</li>
-</ul>
-<p>有些小节会顺带提到后续章节才会系统展开的内容，例如数组、元组、可选类型或格式化输出。第一次阅读时，你只需要先抓住主线，不必急着把所有扩展知识一次吃透。</p>
+<p>本章介绍 Zig 最基础的声明语法与类型系统，包括 <code>const</code> 与 <code>var</code> 的区别、作用域与初始化、整数与浮点、布尔值、字符串字面量，以及显式类型转换。</p>
 <h2 id="声明作用域与风格约定"><a class="header" href="#声明作用域与风格约定">声明、作用域与风格约定</a></h2>
 <h3 id="变量声明"><a class="header" href="#变量声明">变量声明</a></h3>
 <p>Zig 是强类型语言，支持类型推断。变量声明使用 <code>const</code>（常量）或 <code>var</code>（变量）：</p>
@@ -209,13 +201,11 @@ pub fn main(_: std.process.Init) void {
 <p>预期输出：</p>
 <pre><code>constant: 42, mutable: 30
 </code></pre>
-<h4 id="undefined"><a class="header" href="#undefined">undefined</a></h4>
 <p><code>undefined</code> 用于声明未初始化的变量，表示该内存区域尚未被赋予有意义的值：</p>
 <pre><code class="language-zig">var buffer: [256]u8 = undefined;  // 声明缓冲区，稍后填充
 var x: i32 = undefined;           // 声明占位变量，解包赋值时立即覆盖
 </code></pre>
 <p><strong>重要</strong>：读取 <code>undefined</code> 值是非法行为（Illegal Behavior）。在 Debug/ReleaseSafe 模式下会触发 panic。<code>undefined</code> 仅用于声明后立即赋值的场景（如解包赋值的占位符、缓冲区分配等）。</p>
-<h4 id="编译期常量"><a class="header" href="#编译期常量">编译期常量</a></h4>
 <p>Zig 中 <code>const</code> 声明的值如果能在编译期确定，会自动成为编译期常量：</p>
 <ul>
 <li><strong>顶层 <code>const</code></strong>：文件级别的 <code>const</code> 声明默认是编译期求值的</li>
@@ -249,7 +239,7 @@ pub fn main(_: std.process.Init) void {
 </tbody>
 </table>
 </div>
-<p>最重要的不是“死记某张表”，而是保持以下几点：</p>
+<p>最重要的不是“死记某张表“，而是保持以下几点：</p>
 <ul>
 <li>同一项目内尽量一致</li>
 <li>名称要能表达意图</li>
@@ -284,7 +274,7 @@ fn add(a: i32, b: i32) i32 {
 </ul>
 <p>这样做的好处是：</p>
 <ul>
-<li>避免“看起来像在改同一个变量，实际上换了一个新变量”的错误</li>
+<li>避免“看起来像在改同一个变量，实际上换了一个新变量“的错误</li>
 <li>降低阅读代码时的歧义</li>
 <li>让编译器更早发现潜在命名冲突</li>
 </ul>
@@ -318,48 +308,6 @@ test "separate scopes" {
 <li>编译器能够更早发现潜在的命名冲突</li>
 <li>一个标识符在其定义的作用域内始终保持相同的含义</li>
 </ul>
-<h3 id="解包赋值语法预览"><a class="header" href="#解包赋值语法预览">解包赋值（语法预览）</a></h3>
-<p>Zig 支持解包赋值，可以从元组、向量或数组中一次性提取多个值：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn main(_: std.process.Init) void {
-    // 元组解包
-    const tuple = .{ 1, 2, 3 };
-    var x: i32 = undefined;
-    var y: i32 = undefined;
-    var z: i32 = undefined;
-    x, y, z = tuple;
-    std.debug.print("元组解包：x={}, y={}, z={}\n", .{ x, y, z });
-
-    // 向量解包
-    const vector: @Vector(3, u32) = .{ 7, 8, 9 };
-    var a: u32 = undefined;
-    var b: u32 = undefined;
-    var c: u32 = undefined;
-    a, b, c = vector;
-    std.debug.print("向量解包：a={}, b={}, c={}\n", .{ a, b, c });
-
-    // 数组解包
-    const array = [_]u32{ 4, 5, 6 };
-    var p: u32 = undefined;
-    var q: u32 = undefined;
-    var r: u32 = undefined;
-    p, q, r = array;
-    std.debug.print("数组解包：p={}, q={}, r={}\n", .{ p, q, r });
-
-    // 混合声明：可以同时声明常量和变量
-    const tuple2 = .{ 10, 20, 30 };
-    const first, var second: i32, const third = tuple2; // 变量需要显式声明类型
-    second = 25; // 可以修改
-    std.debug.print("混合声明：{}, {}, {}\n", .{ first, second, third });
-}
-</code></pre>
-<p><strong>预期输出：</strong></p>
-<pre><code>元组解包：x=1, y=2, z=3
-向量解包：a=7, b=8, c=9
-数组解包：p=4, q=5, r=6
-混合声明：10, 25, 30
-</code></pre>
 <h2 id="基本数据类型"><a class="header" href="#基本数据类型">基本数据类型</a></h2>
 <h3 id="类型总览"><a class="header" href="#类型总览">类型总览</a></h3>
 <p>Zig 提供了以下基础类型：</p>
@@ -413,6 +361,10 @@ pub fn main(_: std.process.Init) void {
     std.debug.print("i32: {}, u32: {}, usize: {}\n", .{ a, b, size });
 }
 </code></pre>
+<p>Zig 还支持任意宽度的整数类型，如 <code>u3</code>、<code>i12</code>、<code>u24</code> 等，宽度范围从 0 到 65535 位。这些类型在位操作、<code>packed struct</code> 字段和协议解析中很常见：</p>
+<pre><code class="language-zig">const flags: u3 = 0b101;
+const port: u16 = 8080;
+</code></pre>
 <h3 id="浮点类型"><a class="header" href="#浮点类型">浮点类型</a></h3>
 <p>Zig 提供了多种浮点类型：<code>f16</code>、<code>f32</code>、<code>f64</code>、<code>f80</code> 和 <code>f128</code>。它们的主要区别在于可表示的精度和范围；位数越高，通常能表示更多有效数字，但相应地也会占用更多空间。</p>
 <p>对初学者来说，可以先建立下面这些直觉：</p>
@@ -439,7 +391,7 @@ pub fn main(_: std.process.Init) void {
 <pre><code>f16: 3.140625, f32: 3.14159, f64: 3.141592653589793
 f80: 3.141592653589793238, f128: 3.14159265358979323846264338327950288
 </code></pre>
-<p>需要注意的是，十进制浮点字面量在赋给二进制浮点类型时，往往不能被“完全精确”地表示，因此实际打印结果可能与书写时的十进制形式略有差异。这也是为什么不同精度的浮点类型，输出结果会有所不同。</p>
+<p>需要注意的是，十进制浮点字面量在赋给二进制浮点类型时，往往不能被“完全精确“地表示，因此实际打印结果可能与书写时的十进制形式略有差异。这也是为什么不同精度的浮点类型，输出结果会有所不同。</p>
 <h3 id="数字字面量与编译期数值类型"><a class="header" href="#数字字面量与编译期数值类型">数字字面量与编译期数值类型</a></h3>
 <p>Zig 的数字字面量支持多种写法：</p>
 <pre><code class="language-zig">const decimal = 42;           // 十进制整数字面量
@@ -509,7 +461,7 @@ pub fn main(_: std.process.Init) void {
 <li>主要用于条件判断和逻辑运算</li>
 </ul>
 <blockquote>
-<p><strong>深入学习</strong>：布尔类型在控制流中的详细用法请参考<a href="chapter-control-flow.html">控制流与资源管理</a>。</p>
+<p><strong>进阶</strong>：布尔类型在控制流中的详细用法请参考<a href="chapter-control-flow.html">控制流与资源管理</a>。</p>
 </blockquote>
 <h3 id="void-和-noreturn"><a class="header" href="#void-和-noreturn">void 和 noreturn</a></h3>
 <p><strong><code>void</code></strong> 是空类型，大小为 0 字节，用于不返回有用值的函数：</p>
@@ -519,15 +471,7 @@ fn logMessage(msg: []const u8) void {
     std.debug.print("{s}\n", .{msg});
 }
 </code></pre>
-<p><strong><code>noreturn</code></strong> 是永不返回的类型，用于表示程序不会继续执行的位置：</p>
-<pre><code class="language-zig">fn infiniteLoop() noreturn {
-    while (true) {}
-}
-</code></pre>
-<p><code>noreturn</code> 表示控制流不会继续返回到当前位置。</p>
-<ul>
-<li>典型例子包括：<code>while (true) {}</code>、<code>unreachable</code>、<code>std.process.exit()</code>；会直接结束当前控制流的表达式（如 <code>return</code>）的类型也为 <code>noreturn</code>。</li>
-</ul>
+<p><code>noreturn</code> 表示控制流不会返回到当前位置，典型场景包括 <code>while (true) {}</code>、<code>unreachable</code>、<code>std.process.exit()</code>。更多用法见函数章节。</p>
 <h2 id="类型转换"><a class="header" href="#类型转换">类型转换</a></h2>
 <h3 id="为什么需要显式类型转换"><a class="header" href="#为什么需要显式类型转换">为什么需要显式类型转换？</a></h3>
 <p>Zig 的设计哲学是“显式优于隐式“，不进行隐式类型转换。以下代码展示了隐式转换可能带来的问题：</p>
@@ -544,6 +488,7 @@ fn logMessage(msg: []const u8) void {
 <tr><th>转换方式</th><th>用途</th><th>安全性</th><th>示例</th></tr>
 </thead>
 <tbody>
+<tr><td><code>@as</code></td><td>显式类型标注</td><td>安全，不做值转换</td><td>消除类型推断歧义</td></tr>
 <tr><td><code>@intCast</code></td><td>整数类型间转换</td><td><strong>运行时安全检查</strong>（Debug/ReleaseSafe模式panic，ReleaseFast/ReleaseSmall为未定义行为）</td><td><code>u32</code> → <code>u8</code></td></tr>
 <tr><td><code>@floatFromInt</code></td><td>整数转浮点</td><td>不会 panic，但大整数可能丢失精度</td><td><code>i32</code> → <code>f32</code></td></tr>
 <tr><td><code>@intFromFloat</code></td><td>浮点转整数</td><td><strong>运行时安全检查</strong>（Debug/ReleaseSafe模式panic，ReleaseFast/ReleaseSmall为未定义行为）</td><td><code>f64</code> → <code>i32</code></td></tr>
@@ -553,8 +498,11 @@ fn logMessage(msg: []const u8) void {
 </table>
 </div>
 <blockquote>
-<p><strong>Result Type Inference</strong>：上表中 <code>@intCast</code>、<code>@truncate</code>、<code>@bitCast</code> 等内建函数支持结果类型推断——通过目标变量的类型自动推断转换的目标类型。例如 <code>const x: u8 = @intCast(val);</code> 中，<code>@intCast</code> 的目标类型由变量 <code>x</code> 的类型 <code>u8</code> 推断得出。</p>
+<p><strong>注意</strong>：上表中 <code>@intCast</code>、<code>@truncate</code>、<code>@bitCast</code> 等内建函数支持结果类型推断（Result Type Inference）——通过目标变量的类型自动推断转换的目标类型。例如 <code>const x: u8 = @intCast(val);</code> 中，<code>@intCast</code> 的目标类型由变量 <code>x</code> 的类型 <code>u8</code> 推断得出。</p>
 </blockquote>
+<p><code>@as</code> 用于显式指定表达式的类型，不做任何值转换：</p>
+<pre><code class="language-zig">const x = @as(u32, 42);  // 显式指定字面量类型
+</code></pre>
 <h3 id="示例"><a class="header" href="#示例">示例</a></h3>
 <pre><code class="language-zig">const std = @import("std");
 
@@ -583,11 +531,11 @@ pub fn main(_: std.process.Init) void {
 <h3 id="最佳实践"><a class="header" href="#最佳实践">最佳实践</a></h3>
 <ol>
 <li><strong>优先使用语义明确的转换方式</strong>：例如整数缩窄时优先考虑 <code>@intCast</code>，避免直接使用 <code>@truncate</code></li>
-<li><strong>区分“范围检查”和“精度丢失”</strong>：<code>@intCast</code>、<code>@intFromFloat</code> 主要关注值是否可表示；<code>@floatFromInt</code> 虽不会 panic，但大整数可能丢失精度</li>
+<li><strong>区分“范围检查“和“精度丢失“</strong>：<code>@intCast</code>、<code>@intFromFloat</code> 主要关注值是否可表示；<code>@floatFromInt</code> 虽不会 panic，但大整数可能丢失精度</li>
 <li><strong>明确不安全操作</strong>：使用 <code>@truncate</code>、<code>@bitCast</code> 时添加注释说明意图；对于可能失败的整数转换，可先检查范围再使用 <code>@intCast</code>，或使用 <code>std.math.cast</code></li>
 </ol>
 <blockquote>
-<p><strong>相关章节</strong>：类型转换失败时的错误处理机制将在<a href="chapter-error-handling.html">错误处理基础</a>中详细讲解。</p>
+<p><strong>进阶</strong>：类型转换失败时的错误处理机制将在<a href="chapter-error-handling.html">错误处理基础</a>中详细讲解。</p>
 </blockquote>
 <h2 id="字符和字符串"><a class="header" href="#字符和字符串">字符和字符串</a></h2>
 <p>Zig 提供了强大的字符和字符串支持，原生支持 Unicode。字符和字符串在 Zig 中是两个不同的概念：字符是 Unicode 码位，字符串是 UTF-8 编码的字节序列。</p>
@@ -645,7 +593,7 @@ comptime_int 值: 90
 <li>在 <code>{0u}</code>、<code>{0x}</code> 这类写法中，前面的 <code>0</code> 表示重复使用第 0 个参数；其中 <code>{u}</code> 按 Unicode 字符输出，<code>{x}</code> 按十六进制输出</li>
 </ul>
 <blockquote>
-<p><strong>深入学习</strong>：字符串格式化（如 <code>{s}</code>, <code>{c}</code>, <code>{u}</code> 等格式说明符）的详细用法请参考<a href="../part2-advanced/chapter-standard-library-detail.html#stdfmt">常用标准库模块详解</a>中的相关内容。</p>
+<p><strong>进阶</strong>：字符串格式化（如 <code>{s}</code>, <code>{c}</code>, <code>{u}</code> 等格式说明符）的详细用法请参考<a href="../part2-advanced/chapter-standard-library-detail.html#stdfmt">常用标准库模块详解</a>中的相关内容。</p>
 </blockquote>
 <h3 id="字符串字面量"><a class="header" href="#字符串字面量">字符串字面量</a></h3>
 <p>双引号用于字符串字面量，存储为 UTF-8 编码的字节序列：</p>
@@ -678,7 +626,7 @@ pub fn main(_: std.process.Init) void {
 <li>支持常见的转义字符：<code>\n</code>（换行）、<code>\t</code>（制表符）、<code>\\</code>（反斜杠）、<code>\"</code>（双引号）</li>
 </ul>
 <blockquote>
-<p><strong>相关章节</strong>：更准确地说，<strong>字符串字面量</strong>的底层类型可理解为哨兵终止字节数组的只读指针（如 <code>*const [N:0]u8</code>）。字符串的长度、索引访问以及哨兵终止数组的含义，将在<a href="chapter-compound-types.html#哨兵终止数组">复合类型</a>章节详细讲解。</p>
+<p><strong>进阶</strong>：更准确地说，<strong>字符串字面量</strong>的底层类型可理解为哨兵终止字节数组的只读指针（如 <code>*const [N:0]u8</code>）。字符串的长度、索引访问以及哨兵终止数组的含义，将在<a href="chapter-compound-types.html#哨兵终止数组">复合类型</a>章节详细讲解。</p>
 </blockquote>
 <h3 id="字符与字符串的区别"><a class="header" href="#字符与字符串的区别">字符与字符串的区别</a></h3>
 <div class="table-wrapper">
@@ -741,15 +689,15 @@ fn main() void {
 <li>适合嵌入代码、JSON、XML 等文本</li>
 </ul>
 <h2 id="本章要点"><a class="header" href="#本章要点">本章要点</a></h2>
-<p>读完这一章后，建议你先牢牢记住下面这些主线，而不必急着把所有细节一次记完：</p>
+<p>本章核心要点：</p>
 <ul>
 <li>使用 <code>const</code> 表示不可变绑定，使用 <code>var</code> 表示可变绑定</li>
-<li><code>undefined</code> 只适用于“先声明、后立即覆盖”的场景，读取 <code>undefined</code> 值属于非法行为</li>
+<li><code>undefined</code> 只适用于“先声明、后立即覆盖“的场景，读取 <code>undefined</code> 值属于非法行为</li>
 <li>Zig 鼓励显式、清晰的命名、注释和作用域管理；局部变量遮蔽规则也相对严格</li>
 <li>整数类型和浮点类型需要结合范围、精度和场景来选择</li>
 <li>数字字面量在未被上下文约束时，通常具有 <code>comptime_int</code> 或 <code>comptime_float</code> 的语义</li>
 <li><code>bool</code> 只有 <code>true</code> 和 <code>false</code> 两个取值，常用于条件判断和逻辑运算</li>
-<li><code>void</code> 表示“没有有用返回值”，<code>noreturn</code> 表示控制流不会回到当前位置</li>
+<li><code>void</code> 表示“没有有用返回值“，<code>noreturn</code> 表示控制流不会回到当前位置</li>
 <li>Zig 不做隐式类型转换；数值转换应使用显式内建函数表达意图</li>
 <li>字符字面量和字符串字面量是两个不同概念：
 <ul>

@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-3ff95d71.js";
+            window.path_to_searchindex_js = "../searchindex-dab0b333.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-c7628560.js"></script>
+        <script src="../toc-84df0a14.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -182,8 +182,8 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="控制流可选类型与资源管理"><a class="header" href="#控制流可选类型与资源管理">控制流、可选类型与资源管理</a></h1>
-<p>本章介绍 Zig 中最常用的控制流与资源管理机制，包括可选类型、<code>if</code>、<code>while</code>、<code>for</code>、<code>switch</code>、<code>defer</code> 和块表达式。你可以把这一章理解为“如何组织程序执行过程”的入门：条件怎么分支、循环怎么展开、值不存在时怎么处理、资源在作用域结束时如何可靠释放。</p>
-<p>Zig 的很多控制流结构不只是语句，也是表达式，可以直接返回值；再配合穷尽性检查、显式解包和作用域化的资源清理，代码的行为会更清楚、更容易验证。关于 <code>errdefer</code> 的完整展开会放在错误处理章节，本章先聚焦于建立控制流与资源管理的整体直觉。</p>
+<p>本章介绍 Zig 中最常用的控制流与资源管理机制：可选类型、<code>if</code>、<code>while</code>、<code>for</code>、<code>switch</code>、<code>defer</code> 和块表达式。</p>
+<p>Zig 的很多控制流结构不只是语句，也是表达式，可以直接返回值；再配合穷尽性检查、显式解包和作用域化的资源清理，代码的行为会更清楚、更容易验证。关于 <code>errdefer</code> 的详细用法见错误处理章节。</p>
 <h2 id="可选类型optional"><a class="header" href="#可选类型optional">可选类型（Optional）</a></h2>
 <p>Zig 的可选类型使用 <code>?T</code> 表示，用于表示值可能存在或不存在的情况。C 语言使用特殊值（如 <code>-1</code>、<code>NULL</code>）表示“不存在“，容易出错；Java 的 <code>null</code> 引用导致 <code>NullPointerException</code>。Zig 通过可选类型在编译期强制处理“不存在“的情况，避免空指针异常。</p>
 <p><strong>核心概念</strong>：</p>
@@ -210,7 +210,7 @@
 <h3 id="解包操作"><a class="header" href="#解包操作">解包操作</a></h3>
 <p>Zig 提供了三种解包可选类型的方式：<code>if</code> 模式匹配、<code>.?</code> 操作符和 <code>orelse</code> 表达式。其中，<code>if</code> 解包会在后文介绍 <code>if</code> 语句时结合示例详细说明</p>
 <h4 id="-操作符"><a class="header" href="#-操作符">.? 操作符</a></h4>
-<p><code>.?</code> 操作符用于解包可选类型；如果值为 <code>null</code>，在 <code>Debug</code> / <code>ReleaseSafe</code> 等开启运行时安全检查的模式下会触发 panic，在关闭安全检查的模式下则不能依赖这种错误被捕获。因此只应在你确信值不为 <code>null</code> 时使用。</p>
+<p><code>.?</code> 操作符用于解包可选类型；如果值为 <code>null</code>，在 <code>Debug</code> / <code>ReleaseSafe</code> 等开启运行时安全检查的模式下会触发 panic，在关闭安全检查的模式下则不能依赖这种错误被捕获。因此只应在确信值不为 <code>null</code> 时使用。</p>
 <pre><code class="language-zig">const std = @import("std");
 
 pub fn main(_: std.process.Init) void {
@@ -414,15 +414,6 @@ pub fn main(_: std.process.Init) void {
         }
     }
 
-    std.debug.print("--\n", .{});
-
-    // 标签和带标签的 break/continue
-    outer: for (0..3) |i2| {
-        for (0..3) |j2| {
-            if (i2 == 1 and j2 == 1) break :outer;
-            std.debug.print("({}, {})\n", .{ i2, j2 });
-        }
-    }
 }
 </code></pre>
 <p><strong>预期输出：</strong></p>
@@ -442,11 +433,6 @@ j = 8
 有效数字：1
 有效数字：2
 有效数字：4
---
-(0, 0)
-(0, 1)
-(0, 2)
-(1, 0)
 </code></pre>
 <h3 id="错误联合类型解包"><a class="header" href="#错误联合类型解包">错误联合类型解包</a></h3>
 <p>while 可以直接处理错误联合类型，成功时获取值，失败时通过 <code>else</code> 捕获错误：</p>
@@ -628,7 +614,7 @@ pub fn main(_: std.process.Init) void {
 <li>第二个例子中，<code>break :search i</code> 产生 <code>usize</code>，<code>else null</code> 产生 <code>null</code>，因此整个表达式的类型是 <code>?usize</code></li>
 </ul>
 <h2 id="switch-语句"><a class="header" href="#switch-语句">switch 语句</a></h2>
-<p><code>if</code> 更适合处理少量、局部的条件判断；当分支较多，或者你希望把“一个值映射成另一个值”时，<code>switch</code> 通常更清晰。<br>在 Zig 中，<code>switch</code> 不仅可用于分支控制，也常直接作为表达式返回结果。</p>
+<p><code>if</code> 更适合处理少量、局部的条件判断；当分支较多，或者希望把“一个值映射成另一个值“时，<code>switch</code> 通常更清晰。<br>在 Zig 中，<code>switch</code> 不仅可用于分支控制，也常直接作为表达式返回结果。</p>
 <p>Zig 的 <code>switch</code> 具有这些特点：</p>
 <ul>
 <li><strong>穷尽性检查</strong>：必须覆盖所有可能情况；如果无法逐个列出，通常需要使用 <code>else</code> 兜底</li>
@@ -900,6 +886,29 @@ pub fn main(_: std.process.Init) void {
 值 15 的类别: 中
 嵌套块结果: 10
 </code></pre>
+<h2 id="unreachable"><a class="header" href="#unreachable">unreachable</a></h2>
+<p><code>unreachable</code> 表示某个代码路径在逻辑上不应被执行。它的类型是 <code>noreturn</code>，因此可以出现在任何需要值的位置。在安全模式（Debug、ReleaseSafe）下执行到 <code>unreachable</code> 会触发 panic。</p>
+<p>常见用途包括：</p>
+<ul>
+<li>在 <code>switch</code> 中标记不可能到达的分支</li>
+<li>在已知不会失败的 <code>catch</code> 中表达断言</li>
+<li>作为编译器优化提示（非安全模式下为未定义行为）</li>
+</ul>
+<pre><code class="language-zig">const std = @import("std");
+
+fn divide(a: u32, b: u32) u32 {
+    if (b == 0) unreachable; // 调用者保证 b != 0
+    return a / b;
+}
+
+pub fn main(_: std.process.Init) void {
+    const result = divide(10, 2);
+    std.debug.print("result = {}\n", .{result});
+}
+</code></pre>
+<blockquote>
+<p><strong>注意</strong>：<code>unreachable</code> 在非安全模式下是未定义行为。仅在确实能证明某条路径不可达时使用，否则应使用正常的错误处理。</p>
+</blockquote>
 <h2 id="本章要点"><a class="header" href="#本章要点">本章要点</a></h2>
 <div class="table-wrapper">
 <table>
@@ -914,6 +923,7 @@ pub fn main(_: std.process.Init) void {
 <tr><td><strong>switch</strong></td><td>穷尽性检查；支持范围匹配、多值匹配、枚举匹配、值捕获</td></tr>
 <tr><td><strong>defer</strong></td><td>作用域结束时执行（LIFO）；<code>errdefer</code> 仅错误时执行</td></tr>
 <tr><td><strong>块表达式</strong></td><td>带标签的作用域，通过 <code>break :label value</code> 返回值</td></tr>
+<tr><td><strong>unreachable</strong></td><td>标记不可达路径；安全模式下触发 panic，非安全模式下为未定义行为</td></tr>
 </tbody>
 </table>
 </div>

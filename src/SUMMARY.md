@@ -4,7 +4,6 @@
 
 # 第一部分：基础
 
-- [第一部分导读](part1-basics/part-overview.md)
 - [认识 Zig：设计目标与学习路线](part1-basics/chapter-introduction.md)
 - [开发环境与第一个程序](part1-basics/chapter-setup.md)
 - [变量、常量与基础类型](part1-basics/chapter-basic-types.md)
@@ -16,7 +15,6 @@
 
 # 第二部分：高级特性
 
-- [第二部分导读](part2-advanced/part-overview.md)
 - [标准库导航与阅读指南](part2-advanced/chapter-standard-library-guide.md)
 - [常用标准库模块详解](part2-advanced/chapter-standard-library-detail.md)
 - [编译期计算与元编程](part2-advanced/chapter-comptime.md)
@@ -31,7 +29,6 @@
 
 # 第三部分：实战与专题
 
-- [第三部分导读](part3-practice/part-overview.md)
 - [实战案例 - CLI 工具开发](part3-practice/chapter-cli-tool.md)
 - [实战案例 - HTTP 服务器设计与最小实现](part3-practice/chapter-http-server.md)
 - [实战案例 - 内存池实现](part3-practice/chapter-memory-pool.md)

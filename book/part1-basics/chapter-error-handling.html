@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-3ff95d71.js";
+            window.path_to_searchindex_js = "../searchindex-dab0b333.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-c7628560.js"></script>
+        <script src="../toc-84df0a14.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -183,51 +183,23 @@
                     <main>
                         <h1 id="错误处理"><a class="header" href="#错误处理">错误处理</a></h1>
 <p>错误处理是 Zig 最核心、也是最具辨识度的语言特性之一。</p>
-<p>许多语言把失败路径放在异常系统中：函数签名通常不直接体现失败可能，调用点也未必显式处理，控制流可能在运行时离开当前路径。Zig 采用了不同的设计：<strong>把失败纳入类型系统</strong>。一个操作是否可能失败、失败时返回什么、错误应当在何处处理、资源应当如何清理，都应当通过类型和控制流清楚表达。</p>
+<p>许多语言把失败路径放在异常系统中，函数签名不直接体现失败可能，控制流可能在运行时离开当前路径。Zig 采用了不同的设计：<strong>把失败纳入类型系统</strong>，通过类型和控制流清楚表达操作是否可能失败、失败时返回什么、错误应当在何处处理。</p>
 <p>本章围绕四个核心概念展开：</p>
 <ul>
-<li><strong>错误集合（error set）</strong>：定义“可能出现哪些错误”</li>
-<li><strong>错误联合类型（error union）</strong>：定义“结果要么是值，要么是错误”</li>
+<li><strong>错误集合（error set）</strong>：定义“可能出现哪些错误“</li>
+<li><strong>错误联合类型（error union）</strong>：定义“结果要么是值，要么是错误“</li>
 <li><strong><code>try</code> / <code>catch</code></strong>：用于传播或处理错误</li>
 <li><strong><code>errdefer</code></strong>：用于失败路径上的资源清理</li>
 </ul>
-<p>本章的目标不是穷尽所有语法细节，而是建立一套稳定的基础认识：</p>
+<p>本章涵盖：</p>
 <ul>
-<li>为什么 Zig 不以异常作为主要错误处理机制</li>
-<li><code>!T</code> 的含义是什么</li>
-<li>何时应当传播错误，何时应当在当前层处理</li>
-<li><code>defer</code> 与 <code>errdefer</code> 的职责边界是什么</li>
-<li><code>!T</code> 与 <code>?T</code> 分别解决什么问题</li>
+<li>错误处理的设计出发点</li>
+<li>错误联合类型 <code>!T</code></li>
+<li>错误传播与处理策略</li>
+<li>失败路径清理：<code>defer</code> 与 <code>errdefer</code></li>
 </ul>
-<h2 id="为什么-zig-不用异常"><a class="header" href="#为什么-zig-不用异常">为什么 Zig 不用异常？</a></h2>
-<p>Zig 的重点不是否定某种机制，而是让<strong>失败路径像成功路径一样显式</strong>。一个操作是否可能失败、失败时返回什么、错误应当在何处处理、资源应当如何清理，都应通过类型和控制流直接表达出来。</p>
-<p>这样做主要有三点好处：</p>
-<ol>
-<li>
-<p><strong>控制流更清楚</strong></p>
-<ul>
-<li>函数签名会直接体现该函数是否可能失败</li>
-<li>调用点必须显式写出 <code>try</code>、<code>catch</code> 或其他处理逻辑</li>
-<li>不存在表面上是普通调用、实际上却可能突然跳入失败路径的隐藏分支</li>
-</ul>
-</li>
-<li>
-<p><strong>接口更精确</strong></p>
-<ul>
-<li>错误是类型的一部分</li>
-<li>调用者可以在编译期知道自己需要面对哪些失败情况</li>
-<li>错误处理不是约定俗成的习惯，而是语言层面的约束</li>
-</ul>
-</li>
-<li>
-<p><strong>更适合系统编程中的资源管理</strong></p>
-<ul>
-<li>资源清理、所有权转移、部分初始化失败等问题可以直接表达</li>
-<li><code>errdefer</code> 这类机制能够与显式错误返回自然配合</li>
-</ul>
-</li>
-</ol>
-<p>因此，本章真正要把握的不是“异常好还是不好”，而是：<strong>Zig 把失败显式纳入类型系统、控制流和资源管理之中。</strong></p>
+<h2 id="错误处理的设计出发点"><a class="header" href="#错误处理的设计出发点">错误处理的设计出发点</a></h2>
+<p>Zig 将失败纳入类型系统，而非依赖异常机制。函数签名直接体现是否可能失败，调用点必须显式处理，控制流始终可见。这一设计使得接口更精确、资源管理更可靠，也更适合系统编程场景。语言设计层面的更多讨论见<a href="chapter-introduction.html">认识 Zig</a>。</p>
 <h2 id="错误集合"><a class="header" href="#错误集合">错误集合</a></h2>
 <p>错误集合用于定义一组命名错误值。</p>
 <p>它可以理解为：函数失败时返回的不是任意字符串或整数，而是一组<strong>受类型系统约束的错误值</strong>。</p>
@@ -375,7 +347,8 @@ fn divide(a: i32, b: i32) !i32 {
 <li><strong>公共接口</strong>：优先显式写出错误集合，使边界更清楚</li>
 <li><strong>内部实现</strong>：可以适度使用推断，减少重复维护</li>
 </ul>
-<p>初学阶段更重要的是先理解：<code>SomeError!T</code> 和 <code>!T</code> 都表示“可能失败”，区别只在于错误集合是<strong>显式写出</strong>，还是<strong>交给编译器推断</strong>。</p>
+<p>初学阶段更重要的是先理解：<code>SomeError!T</code> 和 <code>!T</code> 都表示“可能失败“，区别只在于错误集合是<strong>显式写出</strong>，还是<strong>交给编译器推断</strong>。</p>
+<p><code>anyerror</code> 是包含所有可能错误名的全局错误集合。它主要用于需要接受任意错误的边界场景（如日志函数、通用错误处理器），但会降低接口精度，不适合作为常规函数签名的默认选择。</p>
 <h3 id="错误集合之间的关系与转换"><a class="header" href="#错误集合之间的关系与转换">错误集合之间的关系与转换</a></h3>
 <p>这一节最需要掌握的是三件事：</p>
 <ol>
@@ -806,12 +779,12 @@ const BadError = error{
 <h3 id="调试建议"><a class="header" href="#调试建议">调试建议</a></h3>
 <ul>
 <li>使用 <code>@errorName(err)</code> 打印错误名，便于观察失败原因。</li>
+<li>在 Debug 模式下，错误通过 <code>try</code> 传播时会自动记录栈追踪信息。当错误最终未被处理时，运行时会打印完整的传播路径，便于定位错误源头。</li>
 <li>问题尚未定位时，避免过早用 <code>catch 0</code>、<code>catch return</code> 或 <code>catch unreachable</code> 吞掉错误。</li>
 <li>对 <code>@errorCast</code>、<code>catch unreachable</code> 这类依赖逻辑前提的写法，应在带安全检查的模式下验证。</li>
 </ul>
 <h2 id="本章要点"><a class="header" href="#本章要点">本章要点</a></h2>
-<p>本章真正要建立的，不只是对几个语法的记忆，而是一种组织失败路径的方式：<strong>把失败显式纳入类型系统、控制流和资源管理。</strong></p>
-<p>可以把这一章的核心归纳为以下几点：</p>
+<p>本章核心要点：</p>
 <ol>
 <li>
 <p><strong>失败是显式的。</strong><br>Zig 不把错误隐藏在隐式机制里，而是要求通过类型和控制流明确表达“这里可能失败”。</p>

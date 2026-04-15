@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-3ff95d71.js";
+            window.path_to_searchindex_js = "../searchindex-dab0b333.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-c7628560.js"></script>
+        <script src="../toc-84df0a14.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -183,13 +183,13 @@
                     <main>
                         <h1 id="构建系统入门"><a class="header" href="#构建系统入门">构建系统入门</a></h1>
 <blockquote>
-<p><strong>章节定位</strong>：本章位于基础部分，主题是从“直接操作单个源文件”过渡到“组织一个项目的构建流程”。交叉编译、依赖管理、复杂构建配置等主题放在高级部分的<a href="../part2-advanced/chapter-package-management.html">构建系统与包管理</a>章节展开。</p>
+<p><strong>章节定位</strong>：本章位于基础部分，主题是从“直接操作单个源文件“过渡到“组织一个项目的构建流程“。交叉编译、依赖管理、复杂构建配置等主题放在高级部分的<a href="../part2-advanced/chapter-package-management.html">构建系统与包管理</a>章节展开。</p>
 </blockquote>
 <p>前面的很多示例都直接对单个文件执行命令：</p>
 <pre><code class="language-bash">zig run hello.zig
 zig test math.zig
 </code></pre>
-<p>这种方式适合语法练习、最小实验和临时验证。项目开发则通常需要统一处理程序入口、测试方式、构建参数、可用步骤以及默认输出流程。此时面对的已经不只是“编译某个文件”，而是一个项目级的构建入口，用来组织构建、运行、测试和参数传递。</p>
+<p>这种方式适合语法练习、最小实验和临时验证。项目开发则通常需要统一处理程序入口、测试方式、构建参数、可用步骤以及默认输出流程。此时面对的已经不只是“编译某个文件“，而是一个项目级的构建入口，用来组织构建、运行、测试和参数传递。</p>
 <h2 id="从单文件命令到项目构建"><a class="header" href="#从单文件命令到项目构建">从单文件命令到项目构建</a></h2>
 <p>单文件命令和项目构建面向的是不同层级的问题。</p>
 <p>单文件命令直接作用于当前文件：</p>
@@ -201,7 +201,7 @@ zig test parse.zig
 zig build run
 zig build test
 </code></pre>
-<p>两者的区别不在于“命令更多了”，而在于操作对象不同：</p>
+<p>两者的区别不在于“命令更多了“，而在于操作对象不同：</p>
 <ul>
 <li><code>zig run hello.zig</code>：直接操作一个文件</li>
 <li><code>zig build run</code>：执行项目定义好的 <code>run</code> 步骤</li>
@@ -213,7 +213,7 @@ zig build test
 cd my-project
 zig init
 </code></pre>
-<p>通常会得到一个最小项目结构：</p>
+<p>生成的结构如下：</p>
 <pre><code class="language-text">my-project/
 ├── build.zig
 ├── build.zig.zon
@@ -221,26 +221,31 @@ zig init
     ├── main.zig
     └── root.zig
 </code></pre>
-<p>这些文件的职责如下。</p>
+<p>这些文件的职责如下</p>
 <h3 id="buildzig"><a class="header" href="#buildzig"><code>build.zig</code></a></h3>
 <p><code>build.zig</code> 是构建脚本，使用 Zig 语言编写。它描述项目的构建结构：要构建哪些目标、如何运行这些目标、如何暴露 <code>run</code>、<code>test</code> 等步骤，以及哪些参数可以从命令行传入。</p>
 <p><code>zig build</code>、<code>zig build run</code>、<code>zig build test</code> 的行为都由这里定义。</p>
 <h3 id="buildzigzon"><a class="header" href="#buildzigzon"><code>build.zig.zon</code></a></h3>
-<p><code>build.zig.zon</code> 是项目清单文件，用来描述项目的基础元信息，也参与依赖来源的声明。</p>
-<p>本章只关注两点：它属于项目配置的一部分；更完整的依赖管理会在高级章节展开。</p>
+<p><code>build.zig.zon</code> 是项目清单文件，用来描述项目的基础元信息，也参与依赖来源的声明。它属于项目配置的一部分，更完整的依赖管理会在高级章节展开。</p>
 <p>一个最小的 <code>build.zig.zon</code> 往往类似这样：</p>
 <pre><code class="language-zig">.{
     .name = "my-project",
-    .version = "0.1.0",
+    .version = "0.0.0",
+    .fingerprint = 0xa8b2f3e4c59d7061, // zig init 自动生成，请勿手动修改
+    .minimum_zig_version = "0.16.0",
     .dependencies = .{},
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+    },
 }
 </code></pre>
-<p>这里不展开字段细节，只说明它在项目中的位置和用途。</p>
-<h3 id="srcmainzig"><a class="header" href="#srcmainzig"><code>src/main.zig</code></a></h3>
-<p><code>src/main.zig</code> 通常是可执行程序入口所在的位置。</p>
-<h3 id="srcrootzig"><a class="header" href="#srcrootzig"><code>src/root.zig</code></a></h3>
-<p><code>src/root.zig</code> 通常作为库的根模块入口使用。</p>
-<p>很多最小项目在前期主要关注可执行入口，因此这一文件可能暂时不会频繁使用。</p>
+<blockquote>
+<p><strong>版本说明</strong>：Zig 0.16-dev 起，<code>build.zig.zon</code> 新增了 <code>.fingerprint</code>、<code>.minimum_zig_version</code> 和 <code>.paths</code> 字段。<code>.fingerprint</code> 由 <code>zig init</code> 自动生成，用于全局唯一标识一个包，不应手动修改。<code>.minimum_zig_version</code> 声明包所支持的最低 Zig 版本。<code>.paths</code> 列出包中需要纳入哈希计算和分发的文件集合。</p>
+</blockquote>
+<h3 id="srcmainzig-与-srcrootzig"><a class="header" href="#srcmainzig-与-srcrootzig">src/main.zig 与 src/root.zig</a></h3>
+<p><code>src/main.zig</code> 通常是可执行程序入口所在的位置。<code>src/root.zig</code> 通常作为库的根模块入口使用。很多最小项目在前期主要关注可执行入口，因此 <code>root.zig</code> 可能暂时不会频繁使用。</p>
 <h2 id="buildzig-在做什么"><a class="header" href="#buildzig-在做什么"><code>build.zig</code> 在做什么</a></h2>
 <p><code>build.zig</code> 的核心作用不是把几条命令改写成脚本，而是描述项目有哪些目标、这些目标如何构建，以及外部可以通过哪些步骤触发它们。</p>
 <p>最小示例如下：</p>
@@ -301,7 +306,7 @@ zig build -Doptimize=ReleaseFast
 <h3 id="installartifact"><a class="header" href="#installartifact"><code>installArtifact</code></a></h3>
 <pre><code class="language-zig">b.installArtifact(exe);
 </code></pre>
-<p>这一行的作用是把构建产物纳入项目的安装流程，也就是默认输出的一部分。没有这一步，定义出来的目标不一定会自动进入默认构建流程。</p>
+<p>这一行的作用是把构建产物纳入项目的安装流程，也就是默认输出的一部分。没有这一步，定义出来的目标不会自动进入默认构建流程。</p>
 <p>对应关系如下：</p>
 <ul>
 <li><code>addExecutable</code>：定义目标</li>
@@ -315,7 +320,7 @@ run_step.dependOn(&amp;run_cmd.step);
 </code></pre>
 <p>这里分成两个动作：</p>
 <ul>
-<li><code>addRunArtifact(exe)</code>：定义“如何运行这个产物”</li>
+<li><code>addRunArtifact(exe)</code>：定义“如何运行这个产物“</li>
 <li><code>step("run", ...)</code>：把这个运行动作暴露成项目里的 <code>run</code> 步骤</li>
 </ul>
 <p>这样项目里才会出现下面的命令入口：</p>
@@ -328,10 +333,14 @@ run_step.dependOn(&amp;run_cmd.step);
 <pre><code class="language-bash">zig build
 </code></pre>
 <p>这会执行项目默认构建流程。对上面的例子来说，核心就是把定义好的可执行产物纳入构建与安装流程。</p>
+<p>构建产物默认输出到 <code>zig-out/</code> 目录，构建缓存存放在 <code>.zig-cache/</code> 目录。这两个目录由构建系统自动管理，通常应加入 <code>.gitignore</code>。</p>
 <h3 id="运行项目"><a class="header" href="#运行项目">运行项目</a></h3>
 <pre><code class="language-bash">zig build run
 </code></pre>
 <p>这会执行项目中显式定义的 <code>run</code> 步骤。它不是临时运行一个源文件，而是执行项目定义好的运行入口。</p>
+<p>向程序传递命令行参数时，使用 <code>--</code> 分隔构建参数和程序参数：</p>
+<pre><code class="language-bash">zig build run -- arg1 arg2
+</code></pre>
 <h3 id="查看项目支持哪些步骤"><a class="header" href="#查看项目支持哪些步骤">查看项目支持哪些步骤</a></h3>
 <pre><code class="language-bash">zig build --help
 </code></pre>
@@ -343,7 +352,7 @@ run_step.dependOn(&amp;run_cmd.step);
 <li><code>zig build --help</code>：查看项目提供了哪些入口</li>
 </ul>
 <h2 id="目标平台与优化级别"><a class="header" href="#目标平台与优化级别">目标平台与优化级别</a></h2>
-<p>在基础阶段，<code>target</code> 和 <code>optimize</code> 不展开到全部细节，但它们是最常见的构建参数。</p>
+<p><code>target</code> 和 <code>optimize</code> 是最常见的构建参数。</p>
 <h3 id="target"><a class="header" href="#target"><code>target</code></a></h3>
 <p><code>target</code> 表示目标平台，也就是产物面向的运行环境。</p>
 <p>例如，当前在 macOS 上开发，但需要生成 Windows 或 Linux 的产物时，就需要指定目标平台：</p>
@@ -360,9 +369,9 @@ run_step.dependOn(&amp;run_cmd.step);
 <li>调试阶段更关注调试体验和错误信息</li>
 <li>发布阶段更关注性能、体积或发布行为</li>
 </ul>
-<p>本章不展开各种优化模式之间的完整差异，这里主要关注它作为常见构建参数的作用。</p>
+<p>各种优化模式之间的完整差异属于进阶内容，此处关注它作为常见构建参数的作用即可。</p>
 <h2 id="把配置从构建脚本传给程序"><a class="header" href="#把配置从构建脚本传给程序">把配置从构建脚本传给程序</a></h2>
-<p>构建系统不仅决定“怎么构建”，也可以把配置值传给程序代码。例如：</p>
+<p>构建系统不仅决定“怎么构建“，也可以把配置值传给程序代码。例如：</p>
 <ul>
 <li>是否开启日志</li>
 <li>是否启用某个实验特性</li>
@@ -454,7 +463,7 @@ pub fn build(b: *std.Build) void {
 </ul>
 <p>两者都很常见，只是面向的层级不同。</p>
 <h2 id="更复杂的工程组织"><a class="header" href="#更复杂的工程组织">更复杂的工程组织</a></h2>
-<p>本章到这里已经覆盖了基础部分所需的构建系统认识。下面对更复杂的主题做边界说明。</p>
+<p>以下主题在更复杂的项目中会逐步出现。</p>
 <h3 id="模块拆分"><a class="header" href="#模块拆分">模块拆分</a></h3>
 <p>项目变大以后，代码通常会拆分成多个模块，而不是把所有逻辑都放进 <code>main.zig</code>。这时 <code>build.zig</code> 会承担更多职责，例如创建额外模块、管理导入关系、为不同目标复用模块配置。</p>
 <h3 id="多目标项目"><a class="header" href="#多目标项目">多目标项目</a></h3>
@@ -475,9 +484,9 @@ pub fn build(b: *std.Build) void {
 <li>C 代码集成</li>
 <li>更复杂的平台差异处理</li>
 </ul>
-<p>这些主题都很重要，但更适合放到高级部分系统展开。本章的重点是建立项目级构建入口的基础认识。</p>
+<p>这些主题都放在高级部分系统展开。</p>
 <h2 id="最常用的几个构建命令"><a class="header" href="#最常用的几个构建命令">最常用的几个构建命令</a></h2>
-<p>本章最常用的命令并不多：</p>
+<p>本章提到的命令有：</p>
 <pre><code class="language-bash"># 构建项目
 zig build
 
@@ -496,14 +505,13 @@ zig build -Dtarget=x86_64-windows
 # 查看当前项目定义了哪些步骤
 zig build --help
 </code></pre>
-<p>比命令本身更重要的是下面两个判断：</p>
+<p>比命令本身更重要的是下面两点：</p>
 <ol>
 <li><code>zig build run</code>、<code>zig build test</code> 的前提是项目里定义了对应步骤。</li>
 <li>不清楚一个项目支持什么时，优先看 <code>zig build --help</code>。</li>
 </ol>
-<h2 id="本章与高级构建系统与包管理的边界"><a class="header" href="#本章与高级构建系统与包管理的边界">本章与高级“构建系统与包管理”的边界</a></h2>
-<p>为了避免在基础阶段一次引入过多内容，本章的边界需要明确。</p>
-<p>本章重点解决的是：</p>
+<h2 id="本章与高级构建系统与包管理的边界"><a class="header" href="#本章与高级构建系统与包管理的边界">本章与高级“构建系统与包管理“的边界</a></h2>
+<p>基础部分涵盖的内容：</p>
 <ul>
 <li>为什么项目需要 <code>build.zig</code></li>
 <li><code>zig init</code> 生成的几个核心文件分别做什么</li>
@@ -520,14 +528,13 @@ zig build --help
 <li>系统库与 C 代码集成</li>
 <li>多平台、多目标的复杂构建策略</li>
 </ul>
-<p>这些内容并不是次要主题，只是它们建立在“项目工作流”这一基础之上。先把基础闭环走通，再进入高级配置，会更清楚每个构建部分分别在解决什么问题。</p>
 <h2 id="本章要点"><a class="header" href="#本章要点">本章要点</a></h2>
 <ol>
 <li>单文件命令适合练习和最小实验，项目开发更需要统一的构建入口。</li>
-<li><code>build.zig</code> 的核心作用不是“写几条命令”，而是描述项目的构建、运行和测试工作流。</li>
+<li><code>build.zig</code> 的核心作用不是“写几条命令“，而是描述项目的构建、运行和测试工作流。</li>
 <li><code>zig init</code> 生成的最小项目中，<code>build.zig</code> 负责构建流程，<code>build.zig.zon</code> 是项目清单，<code>src/main.zig</code> 和 <code>src/root.zig</code> 分别对应常见的可执行入口和库入口。</li>
 <li><code>addExecutable</code> 用于定义目标，<code>installArtifact</code> 用于把产物纳入默认安装或输出流程。</li>
-<li><code>addRunArtifact</code> 定义“如何运行这个产物”，而 <code>step("run", ...)</code>、<code>step("test", ...)</code> 则是在项目里显式提供命令入口。</li>
+<li><code>addRunArtifact</code> 定义“如何运行这个产物“，而 <code>step("run", ...)</code>、<code>step("test", ...)</code> 则是在项目里显式提供命令入口。</li>
 <li><code>zig build run</code>、<code>zig build test</code> 是否可用，取决于项目是否定义了对应步骤。</li>
 <li><code>target</code> 和 <code>optimize</code> 是最常见的构建参数，分别对应目标平台和优化级别。</li>
 <li><code>build.zig</code> 也可以把构建期配置传给程序代码。</li>
@@ -541,7 +548,7 @@ zig build --help
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../part2-advanced/part-overview.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../part2-advanced/chapter-standard-library-guide.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -555,7 +562,7 @@ zig build --help
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../part2-advanced/part-overview.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../part2-advanced/chapter-standard-library-guide.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>

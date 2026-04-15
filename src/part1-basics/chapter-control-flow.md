@@ -1,8 +1,8 @@
 # 控制流、可选类型与资源管理
 
-本章介绍 Zig 中最常用的控制流与资源管理机制，包括可选类型、`if`、`while`、`for`、`switch`、`defer` 和块表达式。你可以把这一章理解为“如何组织程序执行过程”的入门：条件怎么分支、循环怎么展开、值不存在时怎么处理、资源在作用域结束时如何可靠释放。
+本章介绍 Zig 中最常用的控制流与资源管理机制：可选类型、`if`、`while`、`for`、`switch`、`defer` 和块表达式。
 
-Zig 的很多控制流结构不只是语句，也是表达式，可以直接返回值；再配合穷尽性检查、显式解包和作用域化的资源清理，代码的行为会更清楚、更容易验证。关于 `errdefer` 的完整展开会放在错误处理章节，本章先聚焦于建立控制流与资源管理的整体直觉。
+Zig 的很多控制流结构不只是语句，也是表达式，可以直接返回值；再配合穷尽性检查、显式解包和作用域化的资源清理，代码的行为会更清楚、更容易验证。关于 `errdefer` 的详细用法见错误处理章节。
 
 ## 可选类型（Optional）
 
@@ -28,7 +28,7 @@ Zig 提供了三种解包可选类型的方式：`if` 模式匹配、`.?` 操作
 
 #### .? 操作符
 
-`.?` 操作符用于解包可选类型；如果值为 `null`，在 `Debug` / `ReleaseSafe` 等开启运行时安全检查的模式下会触发 panic，在关闭安全检查的模式下则不能依赖这种错误被捕获。因此只应在你确信值不为 `null` 时使用。
+`.?` 操作符用于解包可选类型；如果值为 `null`，在 `Debug` / `ReleaseSafe` 等开启运行时安全检查的模式下会触发 panic，在关闭安全检查的模式下则不能依赖这种错误被捕获。因此只应在确信值不为 `null` 时使用。
 
 ```zig
 const std = @import("std");
@@ -262,15 +262,6 @@ pub fn main(_: std.process.Init) void {
         }
     }
 
-    std.debug.print("--\n", .{});
-
-    // 标签和带标签的 break/continue
-    outer: for (0..3) |i2| {
-        for (0..3) |j2| {
-            if (i2 == 1 and j2 == 1) break :outer;
-            std.debug.print("({}, {})\n", .{ i2, j2 });
-        }
-    }
 }
 ```
 
@@ -292,11 +283,6 @@ j = 8
 有效数字：1
 有效数字：2
 有效数字：4
---
-(0, 0)
-(0, 1)
-(0, 2)
-(1, 0)
 ```
 
 ### 错误联合类型解包
@@ -502,7 +488,7 @@ pub fn main(_: std.process.Init) void {
 
 ## switch 语句
 
-`if` 更适合处理少量、局部的条件判断；当分支较多，或者你希望把“一个值映射成另一个值”时，`switch` 通常更清晰。  
+`if` 更适合处理少量、局部的条件判断；当分支较多，或者希望把"一个值映射成另一个值"时，`switch` 通常更清晰。  
 在 Zig 中，`switch` 不仅可用于分支控制，也常直接作为表达式返回结果。
 
 Zig 的 `switch` 具有这些特点：
@@ -811,6 +797,32 @@ pub fn main(_: std.process.Init) void {
 嵌套块结果: 10
 ```
 
+## unreachable
+
+`unreachable` 表示某个代码路径在逻辑上不应被执行。它的类型是 `noreturn`，因此可以出现在任何需要值的位置。在安全模式（Debug、ReleaseSafe）下执行到 `unreachable` 会触发 panic。
+
+常见用途包括：
+
+- 在 `switch` 中标记不可能到达的分支
+- 在已知不会失败的 `catch` 中表达断言
+- 作为编译器优化提示（非安全模式下为未定义行为）
+
+```zig
+const std = @import("std");
+
+fn divide(a: u32, b: u32) u32 {
+    if (b == 0) unreachable; // 调用者保证 b != 0
+    return a / b;
+}
+
+pub fn main(_: std.process.Init) void {
+    const result = divide(10, 2);
+    std.debug.print("result = {}\n", .{result});
+}
+```
+
+> **注意**：`unreachable` 在非安全模式下是未定义行为。仅在确实能证明某条路径不可达时使用，否则应使用正常的错误处理。
+
 ## 本章要点
 
 | 主题           | 核心概念                                           |
@@ -822,3 +834,4 @@ pub fn main(_: std.process.Init) void {
 | **switch**     | 穷尽性检查；支持范围匹配、多值匹配、枚举匹配、值捕获 |
 | **defer**      | 作用域结束时执行（LIFO）；`errdefer` 仅错误时执行   |
 | **块表达式**   | 带标签的作用域，通过 `break :label value` 返回值   |
+| **unreachable** | 标记不可达路径；安全模式下触发 panic，非安全模式下为未定义行为 |

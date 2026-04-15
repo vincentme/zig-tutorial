@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-3ff95d71.js";
+            window.path_to_searchindex_js = "../searchindex-dab0b333.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-c7628560.js"></script>
+        <script src="../toc-84df0a14.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -182,13 +182,15 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="开发环境与第一个程序"><a class="header" href="#开发环境与第一个程序">开发环境与第一个程序</a></h1>
-<p>本章的目标很简单：<strong>把 Zig 装好、确认工具可用、写出并运行第一个程序</strong>。<br>先获得“能跑起来”的正反馈，再逐步理解语法和标准库，会比一开始就陷入版本细节更轻松。</p>
+<p>本章目标：安装 Zig、确认工具可用、写出并运行第一个程序。</p>
 <blockquote>
-<p>💡 <strong>版本说明</strong><br>本教程面向 <strong>Zig 0.16.0-dev</strong>。由于开发版仍在持续演进，标准库和部分 API 可能发生变化。<br>如果你使用的是稳定版或其他开发版，示例代码可能需要做少量调整。</p>
+<p><strong>版本说明</strong>
+本教程面向 <strong>Zig 0.16.0-dev</strong>。由于开发版仍在持续演进，标准库和部分 API 可能发生变化。
+如果使用的是稳定版或其他开发版，示例代码可能需要做少量调整。</p>
 </blockquote>
 <hr>
 <h2 id="本章你会学到什么"><a class="header" href="#本章你会学到什么">本章你会学到什么</a></h2>
-<p>读完本章后，你应该可以：</p>
+<p>本章涵盖：</p>
 <ul>
 <li>安装并验证 Zig 编译器</li>
 <li>为编辑器配置基本的 Zig 开发支持</li>
@@ -199,7 +201,7 @@
 <hr>
 <h2 id="安装-zig"><a class="header" href="#安装-zig">安装 Zig</a></h2>
 <h3 id="官方下载推荐"><a class="header" href="#官方下载推荐">官方下载（推荐）</a></h3>
-<p>最稳妥的方式是从官方页面下载与你的平台匹配的预编译版本：</p>
+<p>最稳妥的方式是从官方页面下载与当前平台匹配的预编译版本：</p>
 <ul>
 <li>访问 <a href="https://ziglang.org/download/">https://ziglang.org/download/</a></li>
 <li>下载对应平台的压缩包</li>
@@ -210,10 +212,10 @@
 <ul>
 <li>更容易拿到教程对应的开发版</li>
 <li>不依赖系统包管理器的更新速度</li>
-<li>避免“教程是新版本，系统装的是旧版本”的落差</li>
+<li>避免“教程是新版本，系统装的是旧版本“的落差</li>
 </ul>
 <h3 id="包管理器安装"><a class="header" href="#包管理器安装">包管理器安装</a></h3>
-<p>如果你更习惯使用包管理器，也可以这样安装。</p>
+<p>也可以使用包管理器安装。</p>
 <p><strong>macOS</strong></p>
 <pre><code class="language-bash">brew install zig
 </code></pre>
@@ -232,7 +234,8 @@ scoop install zig
 choco install zig
 </code></pre>
 <blockquote>
-<p>⚠️ 包管理器提供的版本通常偏稳定，不一定和本教程使用的 <code>0.16.0-dev</code> 完全一致。<br>如果后续示例出现差异，优先先确认版本。</p>
+<p><strong>注意</strong>：包管理器提供的版本通常偏稳定，不一定和本教程使用的 <code>0.16.0-dev</code> 完全一致。
+如果后续示例出现差异，优先先确认版本。</p>
 </blockquote>
 <hr>
 <h2 id="验证安装"><a class="header" href="#验证安装">验证安装</a></h2>
@@ -241,28 +244,30 @@ choco install zig
 # 例如：0.16.0-dev.xxx+xxxxxxxx
 </code></pre>
 <p>如果终端能正确输出版本号，说明安装成功。</p>
-<p>你还可以顺手确认几个最常用的命令是否存在：</p>
+<p>还可以确认几个最常用的命令是否存在：</p>
 <pre><code class="language-bash">zig help
 zig env
 zig version
 zig fmt --help
 </code></pre>
-<p>这里不需要现在就理解所有输出内容，只要知道 Zig 工具链已经正常工作即可。</p>
 <hr>
 <h2 id="编辑器支持"><a class="header" href="#编辑器支持">编辑器支持</a></h2>
-<p>你可以先用任意文本编辑器开始写 Zig。</p>
-<p>如果想获得补全、跳转、错误提示、格式化等体验，可以在常见编辑器中安装 Zig 相关扩展，并启用语言服务器支持。<br>例如 <code>VS Code</code>、<code>Zed</code>、<code>Neovim</code> 等编辑器通常都有对应的 Zig 开发插件或集成方案。</p>
-<p>很多编辑器会自动提示安装或配置 <code>ZLS</code>（Zig Language Server）。<br>如果需要手动安装、更新或排查问题，建议参考 ZLS 官方安装说明：</p>
+<p>任意文本编辑器均可编写 Zig。</p>
+<p>如果想获得补全、跳转、错误提示、格式化等体验，可以在常见编辑器中安装 Zig 相关扩展，并启用语言服务器支持。
+例如 <code>VS Code</code>、<code>Zed</code>、<code>Neovim</code> 等编辑器通常都有对应的 Zig 开发插件或集成方案。</p>
+<p>很多编辑器会自动提示安装或配置 <code>ZLS</code>（Zig Language Server）。
+如果需要手动安装、更新或排查问题，建议参考 ZLS 官方安装说明：</p>
 <ul>
 <li><a href="https://zigtools.org/zls/install/">https://zigtools.org/zls/install/</a></li>
 </ul>
 <blockquote>
-<p>⚠️ 版本兼容很重要<br><code>ZLS</code> 应尽量与所使用的 Zig 版本匹配。<br>如果你使用的是开发版 Zig，也应尽量使用对应版本的 <code>ZLS</code>，否则可能出现补全异常、诊断不准确等问题。</p>
+<p><strong>注意</strong>：版本兼容很重要
+<code>ZLS</code> 应尽量与所使用的 Zig 版本匹配。
+如果使用的是开发版 Zig，也应尽量使用对应版本的 <code>ZLS</code>，否则可能出现补全异常、诊断不准确等问题。</p>
 </blockquote>
 <hr>
 <h2 id="第一个-zig-程序"><a class="header" href="#第一个-zig-程序">第一个 Zig 程序</a></h2>
-<p>先不要急着讨论构建系统、包管理或复杂项目结构。<br>这一节的重点只有一件事：<strong>把一个最小程序跑起来</strong>。</p>
-<p>在任意目录中新建文件 <code>hello.zig</code>：</p>
+<p>在任意目录中创建文件 <code>hello.zig</code>：</p>
 <pre><code class="language-zig">const std = @import("std");
 
 pub fn main() void {
@@ -272,34 +277,37 @@ pub fn main() void {
 <p>运行它：</p>
 <pre><code class="language-bash">zig run hello.zig
 </code></pre>
-<p>你应该会看到输出：</p>
+<p>预期输出：</p>
 <pre><code class="language-text">Hello, World!
 </code></pre>
 <h3 id="这段代码先只理解三件事"><a class="header" href="#这段代码先只理解三件事">这段代码先只理解三件事</a></h3>
 <ol>
 <li>
-<p><code>@import("std")</code><br>导入 Zig 标准库。</p>
+<p><code>@import("std")</code>
+导入 Zig 标准库。</p>
 </li>
 <li>
-<p><code>pub fn main() void</code><br>定义程序入口函数。</p>
+<p><code>pub fn main() void</code>
+定义程序入口函数。</p>
 </li>
 <li>
-<p><code>std.debug.print(...)</code><br>输出一段文本。</p>
+<p><code>std.debug.print(...)</code>
+输出一段文本。</p>
 </li>
 </ol>
-<p>到这里就够了。<br>像 <code>@import</code>、函数、返回值类型、格式化输出等概念，后面都会正式展开。</p>
 <hr>
 <h2 id="关于-stddebugprint-的一个小提醒"><a class="header" href="#关于-stddebugprint-的一个小提醒">关于 <code>std.debug.print</code> 的一个小提醒</a></h2>
-<p><code>std.debug.print</code> 很适合写入门示例，因为它简单直接。<br>但你需要知道一件事：</p>
+<p><code>std.debug.print</code> 很适合写入门示例，因为它简单直接。
+但需要注意：</p>
 <ul>
 <li><code>std.debug.print</code> 默认输出到 <strong>stderr</strong></li>
 <li>它很适合调试和教学中的最小示例</li>
-<li>如果你想更明确地控制输出流，后面可以再学习 <code>stdout</code> 相关 API</li>
+<li>如果想更明确地控制输出流，后面可以再学习 <code>stdout</code> 相关 API</li>
 </ul>
-<p>对初学者来说，这个区别现在知道即可，不必一开始就背下所有 I/O 细节。</p>
 <hr>
 <h2 id="zig-016-中常见的-main-写法"><a class="header" href="#zig-016-中常见的-main-写法">Zig 0.16 中常见的 <code>main</code> 写法</a></h2>
-<p>在 Zig 0.16 中，你会看到不止一种 <code>main</code> 写法。<br>本教程后续示例会根据需要使用不同形式，但你现在只需要先认识它们。</p>
+<p>在 Zig 0.16 中，有不止一种 <code>main</code> 写法。
+本教程后续示例会根据需要使用不同形式，现在只需要先认识它们。</p>
 <h3 id="最小写法"><a class="header" href="#最小写法">最小写法</a></h3>
 <pre><code class="language-zig">const std = @import("std");
 
@@ -323,7 +331,7 @@ pub fn main() !void {
 <p>适合：</p>
 <ul>
 <li>入口函数里要使用 <code>try</code></li>
-<li>你希望把错误直接向外返回</li>
+<li>希望把错误直接向外返回</li>
 <li>示例中已经开始接触显式错误处理</li>
 </ul>
 <h3 id="使用-stdprocessinit--stdprocessinitminimal-的-016-风格写法"><a class="header" href="#使用-stdprocessinit--stdprocessinitminimal-的-016-风格写法">使用 <code>std.process.Init</code> / <code>std.process.Init.Minimal</code> 的 0.16 风格写法</a></h3>
@@ -333,7 +341,7 @@ pub fn main(_: std.process.Init.Minimal) void {
     std.debug.print("Hello from Zig 0.16!\n", .{});
 }
 </code></pre>
-<p>你也可能看到更完整的形式：</p>
+<p>也可能看到更完整的形式：</p>
 <pre><code class="language-zig">const std = @import("std");
 
 pub fn main(_: std.process.Init) void {
@@ -347,28 +355,29 @@ pub fn main(_: std.process.Init) void {
 </ul>
 <p>适合：</p>
 <ul>
-<li>你想和 Zig 0.16 的新式入口风格保持一致</li>
-<li>你在示例或标准库代码里看到了这种写法</li>
+<li>想和 Zig 0.16 的新式入口风格保持一致</li>
+<li>在示例或标准库代码里看到了这种写法</li>
 <li>后续可能需要访问入口初始化信息</li>
 </ul>
-<p>对于入门阶段，你不必先深究二者内部区别。并且如果当前示例并不需要使用这些上下文，完全可以先把参数写成 <code>_</code>，表示“先接收但不使用”以避免编译错误。</p>
+<p>如果示例不需要使用上下文，可以将参数写成 <code>_</code>。</p>
 <h3 id="应该怎么选"><a class="header" href="#应该怎么选">应该怎么选？</a></h3>
-<p>对于本章和你自己的第一个程序：</p>
+<p>对于本章的第一个程序：</p>
 <ul>
 <li><strong>想最快跑起来</strong>：用 <code>pub fn main() void</code></li>
 <li><strong>马上要用 <code>try</code></strong>：用 <code>pub fn main() !void</code></li>
 <li><strong>想和本教程后续多数 0.16 示例保持一致</strong>：用 <code>pub fn main(_: std.process.Init.Minimal) void</code>、<code>pub fn main(_: std.process.Init) void</code>，或它们对应的 <code>!void</code> 版本</li>
 </ul>
 <blockquote>
-<p>💡 一个重要原则<br><code>main</code> 是否接收 <code>std.process.Init</code>，和是否返回 <code>!void</code>，是两个不同维度的问题：</p>
+<p><strong>注意</strong>
+<code>main</code> 是否接收 <code>std.process.Init</code>，和是否返回 <code>!void</code>，是两个不同维度的问题：</p>
 <ul>
-<li>是否接收 <code>init</code>，取决于你是否需要那份初始化上下文</li>
-<li>是否返回 <code>!void</code>，取决于你是否需要传播错误</li>
+<li>是否接收 <code>init</code>，取决于是否需要那份初始化上下文</li>
+<li>是否返回 <code>!void</code>，取决于是否需要传播错误</li>
 </ul>
 </blockquote>
 <hr>
 <h2 id="一个更贴近-016-的输出示例"><a class="header" href="#一个更贴近-016-的输出示例">一个更贴近 0.16 的输出示例</a></h2>
-<p>当你后面开始接触 0.16 的 I/O 风格时，可能会看到类似下面的写法：</p>
+<p>后面接触 0.16 的 I/O 风格时，可能会看到类似下面的写法：</p>
 <pre><code class="language-zig">const std = @import("std");
 
 pub fn main(init: std.process.Init) !void {
@@ -387,10 +396,10 @@ pub fn main(init: std.process.Init) !void {
 <li>这比最小版 <code>Hello, World!</code> 更贴近 0.16 的 I/O 思路</li>
 <li>它也更容易让初学者一开始就被细节绊住</li>
 </ol>
-<p>所以本章建议你先用最小版本跑通，后续再逐步理解这个版本。</p>
+<p>所以本章建议先用最小版本跑通，后续再逐步理解这个版本。</p>
 <hr>
 <h2 id="现在最值得记住的几个命令"><a class="header" href="#现在最值得记住的几个命令">现在最值得记住的几个命令</a></h2>
-<p>在学习早期，你最常用的不是一大堆复杂命令，而是下面这几个：</p>
+<p>在学习早期，最常用的不是一大堆复杂命令，而是下面这几个：</p>
 <h3 id="运行单文件程序"><a class="header" href="#运行单文件程序">运行单文件程序</a></h3>
 <pre><code class="language-bash">zig run hello.zig
 </code></pre>
@@ -403,10 +412,10 @@ pub fn main(init: std.process.Init) !void {
 <h3 id="构建可执行文件"><a class="header" href="#构建可执行文件">构建可执行文件</a></h3>
 <pre><code class="language-bash">zig build-exe hello.zig
 </code></pre>
-<p>对于刚入门的你，先掌握这四个命令，已经足够覆盖大多数单文件练习场景。</p>
+<p>入门阶段掌握这四个命令，已经足够覆盖大多数单文件练习场景。</p>
 <hr>
 <h2 id="一个推荐的最小工作流"><a class="header" href="#一个推荐的最小工作流">一个推荐的最小工作流</a></h2>
-<p>如果你刚开始学 Zig，可以把每次练习都控制在下面这个流程里：</p>
+<p>刚开始学 Zig 时，可以把每次练习控制在以下流程中：</p>
 <ol>
 <li>新建一个 <code>.zig</code> 文件</li>
 <li>写一个很小的示例</li>
@@ -420,7 +429,7 @@ pub fn main(init: std.process.Init) !void {
 zig run hello.zig
 zig test hello.zig
 </code></pre>
-<p>这个节奏非常适合入门，因为它能帮助你快速建立三种感觉：</p>
+<p>这个节奏非常适合入门，因为它能帮助快速建立三种感觉：</p>
 <ul>
 <li>Zig 代码长什么样</li>
 <li>Zig 编译器如何报错</li>
@@ -428,12 +437,12 @@ zig test hello.zig
 </ul>
 <hr>
 <h2 id="关于项目结构先认识不急着展开"><a class="header" href="#关于项目结构先认识不急着展开">关于项目结构：先认识，不急着展开</a></h2>
-<p>如果你运行过：</p>
+<p>如果运行过：</p>
 <pre><code class="language-bash">mkdir hello-zig
 cd hello-zig
 zig init
 </code></pre>
-<p>你会看到类似这样的结构：</p>
+<p>生成的项目结构如下：</p>
 <pre><code class="language-text">hello-zig/
 ├── build.zig
 ├── build.zig.zon
@@ -441,13 +450,13 @@ zig init
     ├── main.zig
     └── root.zig
 </code></pre>
-<p>现在你只需要知道：</p>
+<p>现在只需要知道：</p>
 <ul>
 <li><code>src/main.zig</code> 常作为程序入口</li>
 <li><code>build.zig</code> 是构建脚本</li>
 <li><code>build.zig.zon</code> 是项目清单文件</li>
 </ul>
-<p>这些内容会在<a href="chapter-build-system.html">构建系统入门</a>里专门讲。本章不展开讲解，是为了避免你在还没熟悉语言基础之前就被工程化细节打断。</p>
+<p>这些内容会在<a href="chapter-build-system.html">构建系统入门</a>里专门讲。本章不展开讲解，是为了避免在还没熟悉语言基础之前被工程化细节打断。</p>
 <hr>
 <h2 id="常见问题"><a class="header" href="#常见问题">常见问题</a></h2>
 <h3 id="为什么我复制示例后编不过"><a class="header" href="#为什么我复制示例后编不过">为什么我复制示例后编不过？</a></h3>
@@ -467,19 +476,20 @@ zig init
 <li>编辑器缓存了旧的诊断结果</li>
 </ul>
 <h3 id="我是不是必须立刻学会-stdprocessinit-和-stdio"><a class="header" href="#我是不是必须立刻学会-stdprocessinit-和-stdio">我是不是必须立刻学会 <code>std.process.Init</code> 和 <code>std.Io</code>？</a></h3>
-<p>不是。<br>你只需要先知道：这是 Zig 0.16 中比较常见的新风格。<br>本章目标是先让你把程序跑起来，而不是要求你一开始就彻底理解新 I/O 体系。</p>
+<p>不是。
+你只需要先知道：这是 Zig 0.16 中比较常见的新风格。
+本章目标是先让你把程序跑起来，而不是要求你一开始就彻底理解新 I/O 体系。</p>
 <hr>
 <h2 id="本章小结"><a class="header" href="#本章小结">本章小结</a></h2>
-<p>本章最重要的收获不是“背下所有命令”，而是建立一个可靠的起点：</p>
+<p>本章建立了一个可靠的起点：</p>
 <ul>
 <li>Zig 已经安装成功</li>
-<li>你知道如何验证版本</li>
-<li>你知道如何配置基础编辑器支持</li>
-<li>你已经运行了第一个程序</li>
-<li>你认识了 Zig 0.16 中几种常见的 <code>main</code> 写法</li>
-<li>你知道了最常用的几个命令：<code>zig run</code>、<code>zig test</code>、<code>zig fmt</code>、<code>zig build-exe</code></li>
+<li>知道如何验证版本</li>
+<li>知道如何配置基础编辑器支持</li>
+<li>已经运行了第一个程序</li>
+<li>认识了 Zig 0.16 中几种常见的 <code>main</code> 写法</li>
+<li>知道了最常用的几个命令：<code>zig run</code>、<code>zig test</code>、<code>zig fmt</code>、<code>zig build-exe</code></li>
 </ul>
-<p>接下来，进入下一章：<a href="chapter-basic-types.html">变量、常量与基础类型</a>。<br>从这里开始，你会正式接触 Zig 的基本语法和类型系统。</p>
 
                     </main>
 

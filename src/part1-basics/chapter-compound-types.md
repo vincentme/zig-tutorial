@@ -2,16 +2,6 @@
 
 本章介绍 Zig 中最常见的复合类型，包括数组、切片、枚举、联合、结构体和元组。它们用于把基础类型组织成更有结构的数据，是后续学习控制流、错误处理、内存管理和工程实践的基础。
 
-> 💡 **阅读建议**
->
-> 这一章的内容从“最常用的数据表示方式”逐步过渡到“更灵活的数据建模方式”。
-> 如果你是第一次接触 Zig，建议优先掌握下面几部分：
-> - 数组与切片
-> - 结构体
-> - 枚举
->
-> 联合、非穷尽枚举以及部分与布局相关的内容，第一次阅读时可以先理解核心概念，不必急着记住所有细节。
-
 ## 数组
 
 数组是固定大小的连续内存序列，其长度是编译期常量，也是类型的一部分。
@@ -143,7 +133,7 @@ subslice length: 2
 - **引用语义**：切片是对底层内存的引用，不拥有数据；修改切片会影响原数据
 - **边界检查**：切片长度是运行时值，只能在运行时检查边界
 
-> **深入学习**：胖指针是 Zig 指针系统的重要组成部分，[指针、切片与对齐](../part2-advanced/chapter-pointers.md)将详细讲解各种指针类型及其应用场景。
+> **进阶**：胖指针是 Zig 指针系统的重要组成部分，[指针、切片与对齐](../part2-advanced/chapter-pointers.md)将详细讲解各种指针类型及其应用场景。
 
 ### 切片创建方式
 
@@ -223,7 +213,7 @@ graph TB
 
 ## 哨兵终止数组
 
-哨兵终止数组在数组末尾添加一个“哨兵值”来标记结束，主要用于 C 语言兼容性，以及需要明确终止标记的数据表示。
+哨兵终止数组在数组末尾添加一个"哨兵值"来标记结束，主要用于 C 语言兼容性，以及需要明确终止标记的数据表示。
 
 **语法**：
 - `[N:S]T`：长度为 `N`、哨兵值为 `S`、元素类型为 `T` 的数组
@@ -553,7 +543,7 @@ as_f32: 3.14
 
 **extern union**：
 
-`extern union` 遵循 C ABI，允许访问非活动成员（类型重解释）：
+`extern union` 遵循 C ABI，内存布局与 C 语言一致，大小等于最大成员的大小。与普通 union 不同，`extern union` 允许访问非活动成员，可用于类型重解释：
 
 ```zig
 const std = @import("std");
@@ -566,27 +556,14 @@ const Data = extern union {
 
 pub fn main(_: std.process.Init) void {
     const data: Data = .{ .as_i32 = 0x41424344 };
-
-    std.debug.print("as_i32: {}\n", .{data.as_i32});
-    std.debug.print("as_f32: {}\n", .{data.as_f32});
     std.debug.print("as_bytes: {s}\n", .{data.as_bytes});
     std.debug.print("联合大小: {} 字节\n", .{@sizeOf(Data)});
 }
 ```
 
-**预期输出（小端序平台，如 x86/ARM）：**
-```
-as_i32: 1094861636
-as_f32: 12.141422
-as_bytes: DCBA
-联合大小: 4 字节
-```
-
-注意：`as_bytes` 的输出取决于 CPU 字节序。上例为小端序结果，大端序平台上输出不同。
-
 **packed union**：
 
-`packed union` 有位级精确的内存布局，所有成员必须有相同的 `@bitSizeOf`。它可以作为 `packed struct` 的字段，用来表示同一段位数据的不同解释方式：
+`packed union` 有位级精确的内存布局，所有成员必须有相同的位宽。可以作为 `packed struct` 的字段，用来表示同一段位数据的不同解释方式：
 
 ```zig
 const std = @import("std");
@@ -610,55 +587,9 @@ as_u32: 0x40490FDB
 as_f32: 3.1415927
 ```
 
-`packed union` 支持指定 backing integer type：
-
-```zig
-const Register = packed struct {
-    control: packed union(u32) {
-        as_u32: u32,
-        bits: packed struct {
-            enable: u1,
-            mode: u3,
-            reserved: u28,
-        },
-    },
-    status: u32,
-};
-```
+> **进阶**：`extern union` 和 `packed union` 的详细用法见高级部分的指针与内存章节。
 
 ### 高级特性
-
-**`@unionInit`**：内建函数，用于在字段名为编译期参数时初始化联合。其中字段名必须在编译期确定，但被写入的值可以来自运行时，因此它也可以出现在普通运行时代码中。
-
-```zig
-const std = @import("std");
-
-const MyUnion = union {
-    int: i32,
-    float: f64,
-    string: []const u8,
-};
-
-pub fn main(_: std.process.Init) void {
-    const u1 = MyUnion{ .int = 42 };
-    const u2 = @unionInit(MyUnion, "float", 3.14);
-    const u3 = @unionInit(MyUnion, "string", "hello");
-
-    std.debug.print("u1: {}\n", .{u1.int});
-    std.debug.print("u2: {}\n", .{u2.float});
-    std.debug.print("u3: {s}\n", .{u3.string});
-}
-```
-
-`@unionInit` 的主要用途是在泛型代码中，当字段名是 `comptime` 参数时无法使用普通初始化语法：
-
-```zig
-fn initUnion(comptime field: []const u8, value: anytype) MyUnion {
-    return @unionInit(MyUnion, field, value);
-}
-```
-
-> **相关章节**：更多编译期技巧请参考[编译期计算与元编程](../part2-advanced/chapter-comptime.md)和[泛型编程](../part2-advanced/chapter-generics.md)。
 
 **`@tagName`**：获取带标签联合当前变体的名称字符串，常用于日志和调试：
 
@@ -671,24 +602,14 @@ const Result = union(enum) {
 };
 
 pub fn main(_: std.process.Init) void {
-    const r1 = Result{ .success = 100 };
-    const r2 = Result{ .failure = "连接失败" };
-
-    std.debug.print("r1 标签: {s}\n", .{@tagName(r1)});
-    std.debug.print("r2 标签: {s}\n", .{@tagName(r2)});
-
-    switch (r1) {
-        .success => |value| std.debug.print("成功: {}\n", .{value}),
-        .failure => |msg| std.debug.print("失败: {s}\n", .{msg}),
-    }
+    const r = Result{ .success = 100 };
+    std.debug.print("标签: {s}\n", .{@tagName(r)});
 }
 ```
 
 **预期输出：**
 ```
-r1 标签: success
-r2 标签: failure
-成功: 100
+标签: success
 ```
 
 ## 结构体
@@ -758,6 +679,36 @@ const q = Point{ .x = 1.0, .y = 2.0 };
 // q.x = 3.0;  // 编译错误：q 是 const
 ```
 
+**结果位置语义**：当目标类型已知时，可以省略结构体类型名，直接使用 `.{ ... }` 语法：
+
+```zig
+const std = @import("std");
+
+const Point = struct {
+    x: f32,
+    y: f32,
+};
+
+fn printPoint(p: Point) void {
+    std.debug.print("Point({}, {})\n", .{ p.x, p.y });
+}
+
+pub fn main(_: std.process.Init) void {
+    const p: Point = .{ .x = 1.0, .y = 2.0 };
+    printPoint(p);
+
+    printPoint(.{ .x = 3.0, .y = 4.0 });
+}
+```
+
+**预期输出：**
+```
+Point(1, 2)
+Point(3, 4)
+```
+
+适用场景：变量声明（类型注解提供结果位置）、函数参数（函数签名提供结果位置）、返回值（返回类型提供结果位置）。类型必须明确，否则编译错误。
+
 ### 结构体布局
 
 Zig 提供三种布局方式：
@@ -803,77 +754,13 @@ PackedStruct 大小: 8 字节
 ExternStruct 大小: 12 字节
 ```
 
-**`packed struct` 详解**：
-
-- 字段按声明顺序紧密排列，无 padding
-- 不允许自定义字段对齐（`align` 修饰符无效）
-- `@bitSizeOf(T)` 返回所有字段位宽之和，`@sizeOf(T)` 返回实际占用字节数（需满足整体对齐要求）
-- 可以将 `packed union` 作为字段放在 `packed struct` 中，但不能放入 `extern union`
-
-```zig
-const std = @import("std");
-
-const Flags = packed struct {
-    enable: bool,
-    mode: u3,
-    priority: u2,
-    reserved: u2,
-
-    pub fn asByte(self: Flags) u8 {
-        return @bitCast(self);
-    }
-};
-
-pub fn main(_: std.process.Init) void {
-    const flags = Flags{ .enable = true, .mode = 0b101, .priority = 0b11, .reserved = 0 };
-    std.debug.print("bitSizeOf: {}, sizeOf: {}\n", .{ @bitSizeOf(Flags), @sizeOf(Flags) });
-    std.debug.print("as byte: 0x{X}\n", .{flags.asByte()});
-}
-```
-
-**预期输出：**
-```
-bitSizeOf: 8, sizeOf: 1
-as byte: 0xED
-```
-
-### 结果位置语义
-
-当目标类型已知时，可以省略匿名结构体的类型名：
-
-```zig
-const std = @import("std");
-
-const Point = struct {
-    x: f32,
-    y: f32,
-};
-
-fn printPoint(p: Point) void {
-    std.debug.print("Point({}, {})\n", .{ p.x, p.y });
-}
-
-pub fn main(_: std.process.Init) void {
-    const p: Point = .{ .x = 1.0, .y = 2.0 };
-    printPoint(p);
-
-    printPoint(.{ .x = 3.0, .y = 4.0 });
-}
-```
-
-**预期输出：**
-```
-Point(1, 2)
-Point(3, 4)
-```
-
-适用场景：变量声明（类型注解提供结果位置）、函数参数（函数签名提供结果位置）、返回值（返回类型提供结果位置）。类型必须明确，否则编译错误。
+> **进阶**：`packed struct` 的位操作详细用法见高级部分。
 
 ### 字段默认值
 
-在结构体中，常见的“默认值”有两种不同方式：
+在结构体中，常见的"默认值"有两种不同方式：
 
-1. **字段级默认值**：直接写在字段定义后面  
+1. **字段级默认值**：直接写在字段定义后面
 2. **类型级默认实例**：在结构体内部定义一个命名常量，表示一组预设值
 
 ```zig
@@ -911,62 +798,16 @@ pub fn main(_: std.process.Init) void {
 阈值范围: 0.25 - 0.75
 ```
 
-#### 方式一：字段级默认值
+**字段级默认值**（如 `Config`）直接写在字段定义上——`host` 默认为 `"localhost"`、`port` 默认为 `8080` 等。创建结构体时只需提供想要覆盖的字段，未显式写出的字段自动使用默认值。这种方式适合"多数情况下使用同一组默认配置，只偶尔覆盖少数字段"的场景。
 
-在 `Config` 中，默认值直接写在字段定义上：
-
-- `host` 默认为 `"localhost"`
-- `port` 默认为 `8080`
-- `timeout` 默认为 `30`
-- `debug` 默认为 `false`
-
-因此创建结构体时，只需要提供想要覆盖的字段即可：
-
-```zig
-const cfg = Config{ .host = "example.com" };
-```
-
-这里没有显式写出的字段，会自动使用各自的默认值。  
-这种方式适合“多数情况下使用同一组默认配置，只偶尔覆盖少数字段”的场景。
-
-#### 方式二：类型级默认实例
-
-在 `Threshold` 中，`minimum` 和 `maximum` 本身**没有字段默认值**；真正的默认方案来自结构体内部定义的常量：
-
-```zig
-const default: Threshold = .{
-    .minimum = 0.25,
-    .maximum = 0.75,
-};
-```
-
-因此：
-
-```zig
-const threshold: Threshold = .default;
-```
-
-表示“使用 `Threshold.default` 这个预先定义好的完整实例”。
-
-这种方式不是让字段自动补默认值，而是为整个类型提供一个带名字的预设值。  
-它适合下面这类场景：
-
-- 需要提供一个完整的默认实例
-- 以后可能还会有多个命名预设，例如 `strict`、`relaxed`
-- 希望调用点明确表达“我在使用某个预定义方案”
-
-#### 两种方式的区别
+**类型级默认实例**（如 `Threshold`）中，字段本身没有默认值，默认方案来自结构体内部定义的常量 `default`。使用 `const threshold: Threshold = .default;` 表示"使用 `Threshold.default` 这个预先定义好的完整实例"。这种方式适合需要提供完整预设值、或以后可能有多个命名预设（如 `strict`、`relaxed`）的场景。
 
 | 方式 | 写法位置 | 作用 | 初始化时是否可省略字段 |
 | ---- | -------- | ---- | ---------------------- |
 | 字段级默认值 | 字段定义后 | 给单个字段提供默认值 | 可以省略这些带默认值的字段 |
 | 类型级默认实例 | 结构体内部常量 | 给整个类型提供一个预设实例 | 不能因此自动省略字段，除非直接使用该实例 |
 
-#### 注意事项
-
-- 字段默认值和这类预设实例中的字面量值，都必须能在编译期确定
-- 没有字段默认值的字段，在普通结构体字面量初始化时必须显式提供
-- `.default` 使用的是 decl literal 语法，编译器会根据结果位置类型将其解析为 `Threshold.default`
+> **注意**：字段默认值和类型级默认实例中的值都必须能在编译期确定。没有字段默认值的字段，在结构体字面量初始化时必须显式提供。`.default` 使用的是 decl literal 语法，编译器会根据结果位置类型将其解析为 `Threshold.default`。
 
 ### 泛型结构体
 
@@ -981,7 +822,7 @@ fn Vector(comptime T: type) type {
         y: T,
         z: T,
 
-        const Self = @This();
+        const Self = @This(); // @This() 获取当前正在定义的类型
 
         fn add(self: Self, other: Self) Self {
             return .{
@@ -1008,9 +849,7 @@ pub fn main(_: std.process.Init) void {
 v1 + v2 = (5.0, 7.0, 9.0)
 ```
 
-`@This()` 获取当前正在定义的类型，常用于泛型结构体中引用自身类型。
-
-> **深入学习**：泛型结构体的完整实现和高级用法请参考[泛型编程](../part2-advanced/chapter-generics.md)章节。
+> **进阶**：泛型结构体的完整实现和高级用法请参考[泛型编程](../part2-advanced/chapter-generics.md)章节。
 
 ## 元组
 
@@ -1070,28 +909,6 @@ pub fn main(_: std.process.Init) void {
 
 **元组与结构体的关系**：元组本质上是无字段名的匿名结构体，字段名为数字索引（0, 1, 2...）。
 
-```zig
-const std = @import("std");
-
-pub fn main(_: std.process.Init) void {
-    const t1 = .{ 1, 2 };
-    const t2 = .{ "a", "b" };
-    const combined = t1 ++ t2;
-    std.debug.print("连接后长度: {}\n", .{combined.len});
-    std.debug.print("combined[2]: {s}\n", .{combined[2]});
-
-    const TupleType = @TypeOf(combined);
-    std.debug.print("类型: {}\n", .{TupleType});
-}
-```
-
-**预期输出：**
-```
-连接后长度: 4
-combined[2]: a
-类型: struct { comptime comptime_int = 1, comptime comptime_int = 2, comptime *const [2:0]u8 = "a", comptime *const [2:0]u8 = "b" }
-```
-
 | 特性 | 元组 | 结构体 | 数组 |
 |------|------|--------|------|
 | 字段访问 | 索引（0, 1, 2...） | 名称 | 索引 |
@@ -1099,18 +916,52 @@ combined[2]: a
 | 定义方式 | 匿名 | 命名类型 | 命名类型 |
 | 适用场景 | 临时数据、多返回值 | 长期存储、复用 | 同类数据集合 |
 
+### 解包赋值
+
+Zig 支持从元组、数组或向量中一次性提取多个值到独立变量：
+
+```zig
+const std = @import("std");
+
+pub fn main(_: std.process.Init) void {
+    // 元组解包
+    const tuple = .{ 1, 2, 3 };
+    var x: i32 = undefined;
+    var y: i32 = undefined;
+    var z: i32 = undefined;
+    x, y, z = tuple;
+    std.debug.print("元组解包：x={}, y={}, z={}\n", .{ x, y, z });
+
+    // 数组解包
+    const array = [_]u32{ 4, 5, 6 };
+    var p: u32 = undefined;
+    var q: u32 = undefined;
+    var r: u32 = undefined;
+    p, q, r = array;
+    std.debug.print("数组解包：p={}, q={}, r={}\n", .{ p, q, r });
+
+    // 混合声明：可以同时声明常量和变量
+    const tuple2 = .{ 10, 20, 30 };
+    const first, var second: i32, const third = tuple2;
+    second = 25;
+    std.debug.print("混合声明：{}, {}, {}\n", .{ first, second, third });
+}
+```
+
+向量同样支持解包赋值。
+
 ## 本章要点
 
-读完这一章后，建议你先抓住下面这些主线，而不必急着一次记住所有细节：
+本章核心要点：
 
 - **数组** 是长度固定、类型统一的连续数据；长度是类型的一部分。
 - **切片** 是对连续数据的一段视图，运行时携带长度信息；它本身不拥有底层数据。
 - **哨兵终止数组** 适合表示以特定结束值结尾的数据，常见于与 C 风格字符串或底层接口交互的场景。
 - **枚举** 用于表示一组离散取值；带底层整数类型的枚举可以更明确地控制表示方式。
 - **非穷尽枚举** 不能假定所有运行时值都已被当前源码完整列出；使用 `switch` 时要为未显式匹配到的情况保留兜底处理。
-- **联合** 表示“一块存储在不同时间按不同类型解释”；如果需要让当前活跃字段始终可安全追踪，应优先考虑 **带标签联合**。
-- **带标签联合** 常用于表示“一个值在若干变体中取其一”的数据；读取时通常使用 `switch` 按标签分别处理。
-- **无标签联合** 更接近底层内存重解释；只有在你非常清楚当前活跃字段时才适合使用。
+- **联合** 表示"一块存储在不同时间按不同类型解释"；如果需要让当前活跃字段始终可安全追踪，应优先考虑 **带标签联合**。
+- **带标签联合** 常用于表示"一个值在若干变体中取其一"的数据；读取时通常使用 `switch` 按标签分别处理。
+- **无标签联合** 更接近底层内存重解释；只有在确切知道当前活跃字段时才适合使用。
 - **结构体** 用于把多个相关字段组织成一个整体；可以同时拥有字段、方法、工厂函数和内部常量。
 - **结构体布局** 需要根据目标选择：
   - 普通 `struct` 适合日常编程
@@ -1119,13 +970,5 @@ combined[2]: a
 - **字段默认值** 和 **类型级默认实例** 是两种不同机制：
   - 字段默认值允许在初始化时省略该字段
   - 类型级默认实例是为整个类型提供一个预设好的完整值
-- **泛型结构体** 本质上是“返回类型的函数”，用于在同一模式下生成不同具体类型。
-- **元组** 适合表示一组位置相关、通常较轻量的异构数据；它更强调“按位置访问”，而不是像结构体那样按字段名组织语义。
-
-如果你对本章内容还不够熟悉，建议优先回顾这些核心问题：
-
-1. 数组、切片、哨兵终止数组三者的区别是什么？
-2. 什么时候该用枚举，什么时候该用带标签联合？
-3. 普通 `struct`、`packed struct`、`extern struct` 的定位分别是什么？
-4. 字段默认值和类型级默认实例的区别是什么？
-5. 结构体与元组各自适合表达什么样的数据？
+- **泛型结构体** 本质上是"返回类型的函数"，用于在同一模式下生成不同具体类型。
+- **元组** 适合表示一组位置相关、通常较轻量的异构数据；它更强调"按位置访问"，而不是像结构体那样按字段名组织语义。

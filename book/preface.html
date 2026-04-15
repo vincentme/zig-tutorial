@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-3ff95d71.js";
+            window.path_to_searchindex_js = "searchindex-dab0b333.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-c7628560.js"></script>
+        <script src="toc-84df0a14.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -183,194 +183,100 @@
                     <main>
                         <h1 id="zig-编程语言全面入门教程"><a class="header" href="#zig-编程语言全面入门教程">Zig 编程语言全面入门教程</a></h1>
 <h2 id="写给有编程经验想系统理解-zig-的开发者"><a class="header" href="#写给有编程经验想系统理解-zig-的开发者">——写给有编程经验、想系统理解 Zig 的开发者</a></h2>
-<p>欢迎来到这本 Zig 教程。</p>
-<p>这不是一本“快速背语法”的手册，而是一份以<strong>理解语言设计、建立正确心智模型、逐步进入工程实践</strong>为目标的入门教程。<br>如果你已经写过 C、C++、Rust、Go、Java、Python 或其他主流语言，那么这本书最希望帮助你的，不只是“学会 Zig 怎么写”，而是理解：</p>
+<p>这是一份以<strong>理解语言设计、建立正确心智模型、逐步进入工程实践</strong>为目标的 Zig 入门教程。
+如果你已经写过 C、C++、Rust、Go、Java、Python 或其他主流语言，这本书希望帮助你理解：</p>
 <ul>
 <li>Zig 为什么这样设计</li>
 <li>Zig 和你熟悉的语言到底差在哪里</li>
-<li>哪些地方需要你主动、更明确地表达意图</li>
+<li>哪些地方需要更明确地表达意图</li>
 <li>如何用 Zig 写出清晰、可控、可维护的代码</li>
 </ul>
 <hr>
 <h2 id="这本书适合谁"><a class="header" href="#这本书适合谁">这本书适合谁？</a></h2>
-<p>这本书主要面向：</p>
 <ul>
 <li>已具备至少一门编程语言经验的开发者</li>
 <li>对系统编程、底层控制、性能、可预测性有兴趣的读者</li>
 <li>想从 C/C++/Rust/Go 迁移或横向了解 Zig 的工程师</li>
-<li>希望不仅会“照抄示例”，还想理解语言设计理念的人</li>
+<li>不仅想“照抄示例“，还想理解语言设计理念的人</li>
 </ul>
-<p>这本书<strong>不是</strong>完全零基础编程入门教材。<br>如果你还不熟悉函数、变量、循环、数组、错误处理等基础概念，阅读时会更吃力一些。</p>
+<p>本书<strong>不是</strong>完全零基础编程入门教材。
+如果还不熟悉函数、变量、循环、数组、错误处理等基础概念，阅读时会更吃力一些。</p>
 <hr>
-<h2 id="你会在这本书里学到什么"><a class="header" href="#你会在这本书里学到什么">你会在这本书里学到什么？</a></h2>
-<p>整本书分为三个层次：</p>
+<h2 id="全书结构"><a class="header" href="#全书结构">全书结构</a></h2>
+<p>整本书分为三个部分：</p>
 <h3 id="第一部分基础"><a class="header" href="#第一部分基础">第一部分：基础</a></h3>
-<p>帮助你建立 Zig 的基本语法和思维方式，包括：</p>
-<ul>
-<li>语言定位与核心设计理念</li>
-<li>开发环境与第一个程序</li>
-<li>基础类型、复合类型与函数</li>
-<li>控制流、可选类型、错误处理</li>
-<li>构建系统入门</li>
-</ul>
-<p>完成这一部分后，你应该能够：</p>
-<ul>
-<li>写出并运行简单的 Zig 程序</li>
-<li>理解 <code>const</code> / <code>var</code>、数组 / 切片、<code>?T</code> / <code>!T</code> 等核心概念</li>
-<li>看懂并编写一个基础 Zig 项目</li>
-<li>为后续的标准库、内存管理、C 互操作与工程实践打下基础</li>
-</ul>
+<p>建立 Zig 的基本语法与思维方式：类型、函数、复合类型、控制流、错误处理、构建系统。
+完成后应能独立编写并运行简单 Zig 程序，为后续高级主题打好基础。</p>
+<p>建议按顺序阅读，从语言介绍开始，经过环境搭建、基础语法，到错误处理和构建系统。</p>
 <h3 id="第二部分高级特性"><a class="header" href="#第二部分高级特性">第二部分：高级特性</a></h3>
-<p>进一步深入 Zig 的工程能力与语言机制，包括：</p>
-<ul>
-<li>标准库常用模块</li>
-<li><code>comptime</code> 与元编程</li>
-<li>泛型编程</li>
-<li>指针、切片与对齐</li>
-<li>内存管理模型</li>
-<li>C 互操作</li>
-<li>包管理、测试等主题</li>
-</ul>
-<h3 id="第三部分实战案例"><a class="header" href="#第三部分实战案例">第三部分：实战案例</a></h3>
-<p>通过更完整的案例，把前面的语言知识转化为可落地的项目能力。</p>
+<p>深入标准库、<code>comptime</code>、泛型、指针与内存管理、接口设计、C 互操作、测试与构建系统。
+内容分三层：标准库导航 → 语言机制（comptime / 泛型 / 指针 / 内存）→ 工程实践（接口 / C 互操作 / 测试 / 构建）。</p>
+<p>核心主线是区分编译期抽象与运行时抽象、理解指针与所有权语义、掌握显式资源管理。</p>
+<h3 id="第三部分实战与专题"><a class="header" href="#第三部分实战与专题">第三部分：实战与专题</a></h3>
+<p>通过完整案例（CLI 工具、HTTP 服务器、内存池、配置系统）和专题章节（SIMD、异步 I/O、高级内存管理、性能优化）将语言知识转化为项目能力。</p>
+<p>建议先完成完整案例，再按需进入专题。</p>
 <hr>
 <h2 id="建议怎么阅读"><a class="header" href="#建议怎么阅读">建议怎么阅读？</a></h2>
-<p>推荐你<strong>按顺序阅读</strong>，尤其是第一次接触 Zig 时。</p>
+<p>推荐<strong>按顺序阅读</strong>，尤其是第一次接触 Zig 时。边读边写，尽量亲手运行示例。</p>
 <p>一个比较自然的节奏是：</p>
 <ol>
 <li>先读语言介绍，建立整体认识</li>
-<li>再搭建环境并跑通第一个程序</li>
-<li>然后学习基础类型、函数、复合类型与控制流</li>
-<li>在熟悉基本语法后，再系统理解错误处理</li>
-<li>最后进入构建系统与后续高级主题</li>
+<li>搭建环境并跑通第一个程序</li>
+<li>学习基础类型、函数、复合类型与控制流</li>
+<li>在熟悉基本语法后，系统理解错误处理</li>
+<li>进入构建系统与后续高级主题</li>
 </ol>
-<p>如果你已经有较强的系统编程背景，也可以把这本书当成“<strong>教程 + 参考读物</strong>”结合使用：</p>
-<ul>
-<li>第一次顺读，建立主线理解</li>
-<li>第二次按需回看某些章节，补细节和边界情况</li>
-</ul>
+<p>对于有较强系统编程背景的开发者，也可以把本书当作“教程 + 参考读物“结合使用——第一次顺读建立主线理解，之后按需回看特定章节。</p>
 <hr>
-<h2 id="阅读这本书时建议特别关注什么"><a class="header" href="#阅读这本书时建议特别关注什么">阅读这本书时，建议特别关注什么？</a></h2>
-<p>学习 Zig 时，建议你始终带着下面几个问题阅读：</p>
-<h3 id="这段代码的意图是否足够明确"><a class="header" href="#这段代码的意图是否足够明确">这段代码的意图是否足够明确？</a></h3>
-<p>Zig 非常强调显式表达。<br>很多在其他语言里可以“默认推断”或“习惯省略”的地方，在 Zig 中更鼓励你写清楚。</p>
+<h2 id="阅读时建议关注的几个核心问题"><a class="header" href="#阅读时建议关注的几个核心问题">阅读时建议关注的几个核心问题</a></h2>
+<h3 id="意图是否足够明确"><a class="header" href="#意图是否足够明确">意图是否足够明确？</a></h3>
+<p>Zig 强调显式表达。很多在其他语言里可以“默认推断“或“习惯省略“的地方，Zig 更鼓励写清楚。</p>
 <h3 id="失败路径在哪里"><a class="header" href="#失败路径在哪里">失败路径在哪里？</a></h3>
-<p>在 Zig 里，错误处理不是附属品，而是主流程设计的一部分。<br>你需要习惯思考：</p>
-<ul>
-<li>这一步会失败吗？</li>
-<li>失败时由谁处理？</li>
-<li>失败后资源是否能正确清理？</li>
-</ul>
+<p>错误处理不是附属品，而是主流程设计的一部分。需要习惯思考：这一步会失败吗？失败时由谁处理？失败后资源能否正确清理？</p>
 <h3 id="资源的生命周期是否清楚"><a class="header" href="#资源的生命周期是否清楚">资源的生命周期是否清楚？</a></h3>
-<p>内存、文件句柄、网络连接、锁等都属于资源。<br>Zig 希望你明确知道：</p>
-<ul>
-<li>资源在哪里获取</li>
-<li>资源由谁持有</li>
-<li>资源在什么时候释放</li>
-</ul>
-<h3 id="这段代码是否容易读懂"><a class="header" href="#这段代码是否容易读懂">这段代码是否容易读懂？</a></h3>
-<p>Zig 的很多设计都偏向“让代码更容易被读懂、被验证、被维护”。<br>所以在学习过程中，不要只追求“能写出来”，也要注意“是否表达清楚”。</p>
+<p>内存、文件句柄、网络连接、锁等都属于资源。Zig 要求明确知道：资源在哪里获取、由谁持有、在什么时候释放。</p>
+<h3 id="代码是否容易读懂"><a class="header" href="#代码是否容易读懂">代码是否容易读懂？</a></h3>
+<p>Zig 的设计偏向“让代码更容易被读懂、被验证、被维护“。不要只追求“能写出来“，也要注意“是否表达清楚“。</p>
 <hr>
 <h2 id="版本说明"><a class="header" href="#版本说明">版本说明</a></h2>
 <blockquote>
-<p>本教程面向 <strong>Zig 0.16.0-dev</strong> 这一代 API 风格编写。<br>Zig 仍在积极演进中，开发版与稳定版之间可能存在语法和标准库差异。</p>
+<p><strong>版本说明</strong>：本教程面向 <strong>Zig 0.16.0-dev</strong> 这一代 API 风格编写。
+Zig 仍在积极演进中，开发版与稳定版之间可能存在语法和标准库差异。</p>
 </blockquote>
-<p>阅读时请注意以下几点：</p>
+<p>阅读时请注意：</p>
 <ul>
-<li>本书中的示例优先采用 <strong>0.16 风格</strong> 的标准库接口和项目组织方式</li>
-<li>一些旧文章、旧博客、旧仓库中的写法，可能仍基于 <code>0.11</code>、<code>0.12</code>、<code>0.13</code>、<code>0.14</code> 或 <code>0.15</code></li>
-<li>如果你本地使用的是其他版本，示例代码可能需要做少量调整</li>
+<li>本书示例优先采用 <strong>0.16 风格</strong> 的标准库接口和项目组织方式</li>
+<li>旧文章、旧博客、旧仓库中的写法可能基于 <code>0.11</code>–<code>0.15</code></li>
+<li>如果本地使用其他版本，示例代码可能需要少量调整</li>
 </ul>
 <h3 id="本书中最值得留意的版本差异"><a class="header" href="#本书中最值得留意的版本差异">本书中最值得留意的版本差异</a></h3>
 <h4 id="stdio-与-stdio"><a class="header" href="#stdio-与-stdio"><code>std.io</code> 与 <code>std.Io</code></a></h4>
-<p>在较新的 0.16 开发版语境中，I/O 相关 API 已明显向 <code>std.Io</code> 这一套接口演进。<br>如果你查阅的是旧资料，常常会看到 <code>std.io</code> 风格的写法。</p>
-<h4 id="main-函数写法更灵活不只有一种签名"><a class="header" href="#main-函数写法更灵活不只有一种签名"><code>main</code> 函数写法更灵活，不只有一种签名</a></h4>
-<p>在 0.16 语境下，<code>std.process.Init</code> 相关写法是很常见的新风格之一，但它<strong>不是唯一合法写法</strong>。<br>例如，无参数的 <code>main</code> 依然可能是完全合理的选择。</p>
-<p>本书会根据示例目的，选用最容易解释的写法；在需要和 0.16 新接口配合时，也会使用带 <code>std.process.Init</code> 的形式。</p>
+<p>在较新的 0.16 开发版中，I/O 相关 API 已明显向 <code>std.Io</code> 接口演进。旧资料中常见 <code>std.io</code> 风格的写法。</p>
+<h4 id="main-函数写法更灵活"><a class="header" href="#main-函数写法更灵活"><code>main</code> 函数写法更灵活</a></h4>
+<p>在 0.16 语境下，<code>std.process.Init</code> 相关写法是常见的新风格之一，但<strong>不是唯一合法写法</strong>。无参数的 <code>main</code> 依然完全合理。本书会根据示例目的选用最易解释的写法。</p>
 <h4 id="分配器相关-api-在持续演进"><a class="header" href="#分配器相关-api-在持续演进">分配器相关 API 在持续演进</a></h4>
-<p>如果你查阅旧资料，可能会看到一些与当前版本不完全一致的分配器名称或用法。<br>本书会尽量使用当前教程上下文中一致、便于理解的方式介绍，但你在对照外部资料时，要有“版本差异可能存在”的心理预期。</p>
-<h4 id="异步能力的现状需要区别看待"><a class="header" href="#异步能力的现状需要区别看待">异步能力的现状需要区别看待</a></h4>
-<p>Zig 早期曾提供语言内置的 <code>async</code> / <code>await</code> 机制，但这套方案后来已被移除。当前与异步相关的能力与实践路径仍在调整之中，整体方向也更偏向库层而非把它作为当前入门阶段的核心语言主线。<br>因此，本书不会把“语言级 async/await”作为当前基础主线内容来讲，而会把重点放在更稳定、对入门更关键的语言基础与工程能力上。</p>
+<p>旧资料中可能出现与当前版本不完全一致的分配器名称或用法。对照外部资料时，需留意版本差异。</p>
+<h4 id="异步能力的现状"><a class="header" href="#异步能力的现状">异步能力的现状</a></h4>
+<p>Zig 早期曾提供语言内置的 <code>async</code> / <code>await</code> 机制，后来已被移除。当前异步方向更偏向库层实现。本书不会把“语言级 async/await“作为基础主线内容。</p>
 <hr>
 <h2 id="关于代码示例"><a class="header" href="#关于代码示例">关于代码示例</a></h2>
 <p>本书中的代码示例遵循几个原则：</p>
-<h3 id="优先讲清楚再追求写法炫技"><a class="header" href="#优先讲清楚再追求写法炫技">优先讲清楚，再追求写法炫技</a></h3>
-<p>示例会优先选择：</p>
 <ul>
-<li>容易读懂</li>
-<li>便于解释</li>
-<li>能体现语言设计意图</li>
-</ul>
-<p>而不是一开始就展示最复杂、最“高级”的写法。</p>
-<h3 id="尽量使用当前版本语境下可理解的写法"><a class="header" href="#尽量使用当前版本语境下可理解的写法">尽量使用当前版本语境下可理解的写法</a></h3>
-<p>对于版本敏感的标准库 API，本书会尽量：</p>
-<ul>
-<li>直接给出当前语境下的推荐写法</li>
-<li>在必要时提醒你这属于版本易变区域</li>
-<li>避免把旧版和新版写法混在一起造成困扰</li>
-</ul>
-<h3 id="错误示例只用于教学对比"><a class="header" href="#错误示例只用于教学对比">错误示例只用于教学对比</a></h3>
-<p>当你看到“错误示例”时，它的目的通常是：</p>
-<ul>
-<li>帮你理解为什么某种写法不推荐</li>
-<li>帮你辨认编译器在阻止什么问题</li>
-<li>帮你建立 Zig 强调显式与安全的直觉</li>
-</ul>
-<p>不要把这些示例当成可直接复制到生产代码中的做法。</p>
-<hr>
-<h2 id="学习-zig-时很正常会遇到这些不适应"><a class="header" href="#学习-zig-时很正常会遇到这些不适应">学习 Zig 时，很正常会遇到这些“不适应”</a></h2>
-<p>如果你第一次接触 Zig，下面这些感受都很正常：</p>
-<ul>
-<li>“为什么很多地方都要我显式写出来？”</li>
-<li>“为什么错误处理不能随便略过？”</li>
-<li>“为什么资源管理这么强调责任边界？”</li>
-<li>“为什么编译器这么爱拦我？”</li>
-</ul>
-<p>这不是 Zig 在“故意刁难人”，而是它的设计目标就是：</p>
-<ul>
-<li>尽早暴露问题</li>
-<li>让失败路径可见</li>
-<li>让资源生命周期清楚</li>
-<li>让性能和行为更可预测</li>
-</ul>
-<p>一开始你可能会觉得它“啰嗦”；<br>但当项目逐步变复杂时，这种明确性会越来越有价值。</p>
-<hr>
-<h2 id="这本书最希望帮你建立的几件事"><a class="header" href="#这本书最希望帮你建立的几件事">这本书最希望帮你建立的几件事</a></h2>
-<p>读完基础篇后，如果你能够逐步形成下面这些习惯，这本书就达到目的了：</p>
-<ul>
-<li>看到一个值时，会先想清楚它的类型与语义</li>
-<li>写一个操作时，会先考虑它是否可能失败</li>
-<li>获取一个资源时，会立刻思考谁负责释放</li>
-<li>设计一个函数时，会主动让接口表达清楚意图</li>
-<li>遇到编译错误时，不把它当阻碍，而当成反馈</li>
+<li><strong>优先讲清楚</strong>：示例选择容易读懂、便于解释、能体现语言设计意图的写法，而非最“高级“的写法</li>
+<li><strong>使用当前版本语境下可理解的写法</strong>：对版本敏感的 API 会提醒版本易变区域，避免新旧写法混淆</li>
+<li><strong>错误示例只用于教学对比</strong>：帮助理解编译器在阻止什么问题，不应当作可复制到生产代码中的做法</li>
 </ul>
 <hr>
 <h2 id="最后的建议"><a class="header" href="#最后的建议">最后的建议</a></h2>
-<p>学习 Zig，不必急着“把所有高级特性一次吃透”。</p>
-<p>更好的方式是：</p>
-<ol>
-<li>先把基础语法和核心模型学扎实</li>
-<li>每章示例都亲手敲一遍</li>
-<li>适当改参数、改输入、改结构，观察编译器反馈</li>
-<li>遇到版本差异时，先确认本地 Zig 版本</li>
-<li>把重点放在“理解设计意图”，而不只是“记忆写法”</li>
-</ol>
-<p>只要你愿意接受 Zig 的这些原则：</p>
-<ul>
-<li>显式表达意图</li>
-<li>主动处理失败路径</li>
-<li>对资源生命周期负责</li>
-<li>优先写出清晰、可验证的代码</li>
-</ul>
-<p>那么这门语言会越来越顺手。</p>
-<p>接下来，建议你先阅读第一部分导读，然后开始进入正文。</p>
+<p>按顺序阅读，每章示例亲手运行。遇到版本差异时先确认本地 Zig 版本。
+重点放在理解设计意图，而不是记忆写法。</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
 
-                            <a rel="next prefetch" href="part1-basics/part-overview.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="part1-basics/chapter-introduction.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -381,7 +287,7 @@
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
 
-                    <a rel="next prefetch" href="part1-basics/part-overview.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="part1-basics/chapter-introduction.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>
