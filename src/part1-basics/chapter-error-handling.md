@@ -1,63 +1,61 @@
 # 错误处理
 
-错误处理是 Zig 最核心、也最有辨识度的语言特性之一。
+错误处理是 Zig 最核心、也是最具辨识度的语言特性之一。
 
-很多语言把“失败”放在异常系统里：函数签名不写，调用点也不一定显式处理，控制流可能在运行时突然跳走。Zig 选择了另一条路线：**把失败纳入类型系统**。一个操作是否可能失败、失败后由谁处理、失败时资源如何清理，都应该直接体现在代码里。
+许多语言把失败路径放在异常系统中：函数签名通常不直接体现失败可能，调用点也未必显式处理，控制流可能在运行时离开当前路径。Zig 采用了不同的设计：**把失败纳入类型系统**。一个操作是否可能失败、失败时返回什么、错误应当在何处处理、资源应当如何清理，都应当通过类型和控制流清楚表达。
 
 本章围绕四个核心概念展开：
 
 - **错误集合（error set）**：定义“可能出现哪些错误”
 - **错误联合类型（error union）**：定义“结果要么是值，要么是错误”
-- **`try` / `catch`**：传播或处理错误
-- **`errdefer`**：只在失败路径上执行清理逻辑
+- **`try` / `catch`**：用于传播或处理错误
+- **`errdefer`**：用于失败路径上的资源清理
 
-目标不是罗列所有语法角落，而是建立一套稳定、统一的理解框架：
+本章的目标不是穷尽所有语法细节，而是建立一套稳定的基础认识：
 
-- 为什么 Zig 不用异常作为主线机制
-- `!T` 到底表示什么
-- 什么时候该传播错误，什么时候该就地处理
-- `errdefer` 和 `defer` 的职责边界是什么
-- `!T` 和 `?T` 分别解决什么问题
-
----
+- 为什么 Zig 不以异常作为主要错误处理机制
+- `!T` 的含义是什么
+- 何时应当传播错误，何时应当在当前层处理
+- `defer` 与 `errdefer` 的职责边界是什么
+- `!T` 与 `?T` 分别解决什么问题
 
 ## 为什么 Zig 不用异常？
 
-Zig 选择显式错误处理，主要是为了让代码在三个方面更好：
+Zig 的重点不是否定某种机制，而是让**失败路径像成功路径一样显式**。一个操作是否可能失败、失败时返回什么、错误应当在何处处理、资源应当如何清理，都应通过类型和控制流直接表达出来。
 
-1. **控制流可见**
-   - 函数签名会直接告诉你它可能失败
-   - 调用点必须显式写出 `try`、`catch` 或其他处理方式
-   - 不存在“看起来是普通调用，实际上可能抛异常跳走”的隐藏路径
+这样做主要有三点好处：
+
+1. **控制流更清楚**
+   - 函数签名会直接体现该函数是否可能失败
+   - 调用点必须显式写出 `try`、`catch` 或其他处理逻辑
+   - 不存在表面上是普通调用、实际上却可能突然跳入失败路径的隐藏分支
 
 2. **接口更精确**
    - 错误是类型的一部分
-   - 调用者可以在编译期知道自己需要处理哪些失败情况
-   - 错误处理不再只是约定，而是语言层面的约束
+   - 调用者可以在编译期知道自己需要面对哪些失败情况
+   - 错误处理不是约定俗成的习惯，而是语言层面的约束
 
-3. **系统编程更自然**
-   - 资源清理、所有权转移、部分初始化失败等问题都能直接表达
-   - `errdefer` 这类机制和显式返回错误天然配合
+3. **更适合系统编程中的资源管理**
+   - 资源清理、所有权转移、部分初始化失败等问题可以直接表达
+   - `errdefer` 这类机制能够与显式错误返回自然配合
 
-这里最重要的一点不是“异常不好”，而是：**Zig 希望失败路径和成功路径一样清楚。**
-
----
+因此，本章真正要把握的不是“异常好还是不好”，而是：**Zig 把失败显式纳入类型系统、控制流和资源管理之中。**
 
 ## 错误集合
 
 错误集合用于定义一组命名错误值。
 
-你可以把它理解为：函数可能失败，但失败不是随便返回一个字符串或整数，而是返回一个**受类型系统约束的错误值**。
+它可以理解为：函数失败时返回的不是任意字符串或整数，而是一组**受类型系统约束的错误值**。
 
 ### 为什么需要错误集合？
 
-错误集合带来三件事：
+错误集合带来三方面好处：
 
-- **类型安全**：错误不是随意拼出来的文本
-- **语义清晰**：错误名本身就是接口文档的一部分
-- **编译期约束**：函数签名和调用点都能被检查
+- **类型安全**：错误不是随意拼接的文本
+- **语义明确**：错误名本身就是接口语义的一部分
+- **编译期检查**：函数签名与调用点都可以受到静态约束
 
-例如，“文件不存在”和“权限不足”都叫失败，但它们不是同一类失败。把它们区分开，调用者才能做出不同处理。
+例如，“文件不存在”和“权限不足”都表示操作失败，但它们含义不同，调用者也可能需要采用不同的恢复策略。将不同失败原因区分开来，是接口设计的一部分。
 
 ### 定义错误集合
 
@@ -79,16 +77,16 @@ pub fn main(_: std.process.Init) void {
 }
 ```
 
-这里有几个要点：
+这里有几个基本要点：
 
-- `error{ ... }` 定义一个错误集合
+- `error{ ... }` 用于定义错误集合
 - 集合中的成员是命名错误值
-- 错误值可以比较
-- 写成 `error.NotFound` 通常比 `FileError.NotFound` 更常见
+- 错误值之间可以比较
+- 在实际代码中，`error.NotFound` 往往比 `FileError.NotFound` 更常见
 
 ### 错误名的全局性
 
-Zig 的错误名是**全局共享**的；错误集合的作用是约束“这里允许出现哪些错误名”，而不是为每个错误集合创建彼此独立的命名空间。
+Zig 中的错误名是**全局共享**的。错误集合的作用是约束“当前上下文允许出现哪些错误名”，而不是为每个错误集合单独创建一套命名空间。
 
 ```zig
 const A = error{NotFound};
@@ -103,29 +101,27 @@ comptime {
 
 这个例子说明：
 
-- `A` 和 `B` 是两个不同的错误集合类型
+- `A` 与 `B` 是两个不同的错误集合类型
 - 但它们都包含同一个全局错误名 `NotFound`
-- 因此这里赋值时统一写成 `error.NotFound`，而不是 `A.NotFound` 或 `B.NotFound`
+- 因此赋值时统一使用 `error.NotFound`
 
 可以把错误集合理解为“允许的错误名单”：
 
 - `error{NotFound}` 表示这里只允许 `NotFound`
-- `error{NotFound, AccessDenied}` 表示这里允许 `NotFound` 和 `AccessDenied`
+- `error{NotFound, PermissionDenied}` 表示这里只允许这两个错误
 
-它约束的是**允许出现哪些错误**，而不是重新定义一套新的错误值。
-
-初学时可以先记住一句话：**错误集合限制的是可返回错误的范围；同名错误在不同错误集合里，仍然是同一个全局错误名。**
+因此，错误集合约束的是**可返回错误的范围**，而不是重新定义一套彼此隔离的错误名。
 
 ## 错误类型与错误值
 
 ### 错误联合类型：`!T`
 
-错误集合只回答“可能有哪些错误”，但还没有回答“这个函数在成功时返回什么、失败时又可能出现哪些错误”。这就是错误联合类型的作用。
+错误集合说明了“可能有哪些错误”，但还没有说明“函数成功时返回什么”。这正是错误联合类型要解决的问题。
 
 `ErrorSet!T` 表示：
 
-- 要么得到一个 `T`
-- 要么得到一个属于`ErrorSet`的错误
+- 成功时返回一个 `T`
+- 失败时返回一个属于 `ErrorSet` 的错误
 
 例如：
 
@@ -148,26 +144,54 @@ fn parseNumber(str: []const u8) ParseError!u32 {
 }
 ```
 
-这里的 `ParseError!u32` 不是“可能返回两个值”，而是“返回值是一个二选一的结果”：
+这里的 `ParseError!u32` 表示的不是“两个返回值”，而是“一个结果，其分支要么是 `u32`，要么是 `ParseError` 中的某个错误”。
 
-- 成功分支：`u32`
-- 失败分支：`ParseError`
+### `!T` 和 `?T` 的区别
 
-### `!T` 的两种常见写法
+在进一步展开 `!T` 之前，有必要先把它和另一个容易混淆的类型做对比。`!T` 与 `?T` 都表示"不能直接当作普通 `T` 使用"，但它们解决的问题不同：
 
-你会看到两种形式：
+- `!T`：表示**操作可能失败**
+- `?T`：表示**值可能不存在**
+
+```zig
+fn findUser(id: u32) ?[]const u8 {
+    if (id == 1) return "alice";
+    return null;
+}
+
+fn loadUserConfig(path: []const u8) ![]const u8 {
+    if (path.len == 0) return error.NotFound;
+    return "config";
+}
+```
+
+这里：
+
+- `findUser` 的 `null` 表示“用户不存在”，这是正常业务结果
+- `loadUserConfig` 的错误表示“读取操作失败”，这是错误路径
+
+可以用如下经验法则区分：
+
+- **缺席是正常业务状态** → 使用 `?T`
+- **失败表示操作未完成** → 使用 `!T`
+
+如果一个操作既可能失败，又可能成功但没有值，则可能出现组合类型；但在学习这一阶段，更重要的是先把 `?T` 与 `!T` 的职责区分清楚。
+
+### 显式错误集与错误集推断
+
+错误联合类型通常有两种写法：
 
 - `SomeError!T`
 - `!T`
 
-区别是：
+二者的区别是：
 
-- `SomeError!T`：显式写出错误集合
-- `!T`：让编译器推断错误集合
+- `SomeError!T`：在签名中显式写出错误集合
+- `!T`：由编译器根据函数体推断错误集合
 
-例如：
+```zig
+const std = @import("std");
 
-```/dev/null/chapter-error-handling.zig#L65-76
 fn explicit() error{NotFound, PermissionDenied}!void {
     return error.NotFound;
 }
@@ -175,22 +199,7 @@ fn explicit() error{NotFound, PermissionDenied}!void {
 fn inferred() !void {
     return error.NotFound;
 }
-```
 
-对初学者来说，可以先记住这个经验法则：
-
-- **公共 API**：优先显式写错误集合
-- **内部实现**：可以让编译器推断，减少维护成本
-
-这样做的原因很简单：公共接口更需要可读性和稳定性，内部实现更需要灵活性。
-
----
-
-### 错误集推断
-
-当函数返回 `!T` 时，编译器会根据函数体中可能返回的错误自动推断错误集合。
-
-```/dev/null/chapter-error-handling.zig#L78-89
 fn divide(a: i32, b: i32) !i32 {
     if (b == 0) return error.DivisionByZero;
     if (a == std.math.minInt(i32) and b == -1) {
@@ -200,58 +209,31 @@ fn divide(a: i32, b: i32) !i32 {
 }
 ```
 
-这里编译器会推断出一个包含以下错误的集合：
+对于 `divide`，编译器会推断出包含 `DivisionByZero` 和 `Overflow` 的错误集合。
 
-- `DivisionByZero`
-- `Overflow`
+可以用下面的原则来判断：
 
-推断的优点：
+- **公共接口**：优先显式写出错误集合，使边界更清楚
+- **内部实现**：可以适度使用推断，减少重复维护
 
-- 少写重复代码
-- 实现变化时，错误集会自动跟着变化
-- 不容易出现“函数体已经会返回新错误，但签名忘了更新”的问题
+初学阶段更重要的是先理解：`SomeError!T` 和 `!T` 都表示“可能失败”，区别只在于错误集合是**显式写出**，还是**交给编译器推断**。
 
-但也要注意：
+### 错误集合之间的关系与转换
 
-- 推断出来的错误集是实现细节的一部分
-- 如果你在写库接口，过度依赖推断可能让接口边界不够清晰
+这一节最需要掌握的是三件事：
 
----
+1. 错误集合之间有**子集**与**超集**关系
+2. 接口边界上常常需要做**显式映射**
+3. `@errorCast` 只用于**已经证明安全**的局部收窄
 
-### 错误集合并
-
-如果一个函数可能返回多个来源的错误，可以把错误集合合并。
-
-```/dev/null/chapter-error-handling.zig#L91-103
-const FileError = error{
-    NotFound,
-    PermissionDenied,
-};
-
-const NetworkError = error{
-    ConnectionFailed,
-    Timeout,
-};
-
-const CombinedError = FileError || NetworkError;
-```
-
-`CombinedError` 包含这两个集合中的全部错误。
-
-这在“上层函数整合多个子系统错误”时很常见。
-
----
-
-### 子集与超集
-
-错误集合之间存在子集关系。
+**子集与超集**
 
 如果一个错误集合是另一个的子集，那么：
 
 - **子集可以隐式转换为超集**
 - **超集不能隐式转换为子集**
 
-```/dev/null/chapter-error-handling.zig#L105-117
+```zig
 const FileError = error{ NotFound, PermissionDenied };
 const SpecificError = error{NotFound};
 
@@ -266,144 +248,111 @@ fn example() void {
 }
 ```
 
-原因也很直观：
+可以把它理解为：把“更具体”的集合当成“更一般”的集合是安全的；反过来则不安全，因为较宽的错误集可能包含目标集合中不存在的错误。
 
-- 把“更具体”的东西当成“更一般”的东西是安全的
-- 反过来不安全，因为超集里可能含有子集没有的错误
+**显式映射**
 
----
+当底层错误集不适合直接暴露给上层接口时，应显式整理其语义，而不是直接把底层细节泄漏出去：
 
-### 错误集转换
-
-当你确实需要把较大的错误集收窄到较小的错误集时，有两种思路：
-
-1. **显式映射**
-2. **`@errorCast`**
-
-显式映射：
-
-这是最稳妥、也最推荐的方式。
-
-```/dev/null/chapter-error-handling.zig#L119-136
+```zig
 const LowLevelError = error{
-    DiskError,
-    NetworkError,
+    FileNotFound,
+    PermissionDenied,
+    DiskFull,
 };
 
-const HighLevelError = error{
-    IOError,
-    Timeout,
+const PublicError = error{
+    NotFound,
+    Unavailable,
 };
 
-fn mapError(err: LowLevelError) HighLevelError {
+fn mapError(err: LowLevelError) PublicError {
     return switch (err) {
-        error.DiskError => error.IOError,
-        error.NetworkError => error.Timeout,
+        error.FileNotFound => error.NotFound,
+        error.PermissionDenied => error.Unavailable,
+        error.DiskFull => error.Unavailable,
     };
 }
 ```
 
-这种写法的优点是语义明确：你不是“强行缩小”，而是在设计 API 边界。
+这里的重点不是保留原始错误名，而是把多个底层错误重新组织为更适合对外暴露的接口语义。
 
-`@errorCast`：
+**`@errorCast` 的使用边界**
 
-`@errorCast` 用于把错误值收窄到目标错误集合。
+`@errorCast` 适用于另一类情况：错误语义并不改变，只是当前错误值的静态类型过宽，而当前控制流已经证明它属于更小的目标错误集合。
 
-```/dev/null/chapter-error-handling.zig#L138-149
-const BroadError = error{ NotFound, PermissionDenied };
-const SpecificError = error{NotFound};
-
-fn narrow() SpecificError!void {
-    broad() catch |err| return @errorCast(err);
-}
-
-fn broad() BroadError!void {
-    return error.NotFound;
-}
-```
-
-但要非常清楚一点：
-
-- `@errorCast` 只有在运行时错误值确实属于目标错误集合时才成立
-- 如果实际错误不在目标集合中，会触发安全检查失败
-
-所以它适合“你已经能证明这里只会出现某个子集错误”的场景，不适合拿来掩盖接口设计问题。
-
----
-
-### `anyerror`
-
-`anyerror` 是所有错误的超集。
-
-```/dev/null/chapter-error-handling.zig#L151-154
-fn flexibleFunction() anyerror!void {
-    return error.SomethingWentWrong;
-}
-```
-
-它的含义是：这个函数可能返回任意错误。
-
-这听起来很方便，但代价也很明显：
-
-- 接口不够精确
-- 调用者很难知道应该处理哪些错误
-- 编译器也无法像具体错误集那样帮你做更强的约束
-
-因此建议是：
-
-- **教学示例、原型代码、边界适配层**：可以偶尔使用
-- **正式代码、公共 API**：优先使用具体错误集
-
-一句话概括：**`anyerror` 是逃生门，不是默认选项。**
-
----
-
-### 错误相关内建函数
-
-Zig 提供了一些和错误相关的内建函数，最常见的是下面几个：
-
-| 内建函数 | 作用 |
-| --- | --- |
-| `@errorName(err)` | 获取错误名对应的字符串 |
-| `@errorCast(err)` | 将错误值收窄到更小的错误集 |
-| `@intFromError(err)` | 获取错误值的整数表示 |
-| `@errorFromInt(x)` | 从整数构造错误值 |
-
-其中最常用的是 `@errorName`：
-
-```/dev/null/chapter-error-handling.zig#L156-163
+```zig
 const std = @import("std");
 
-fn logError() !void {
-    return error.NotFound;
+const BroadError = error{
+    NotFound,
+    PermissionDenied,
+    DiskFull,
+};
+
+const NotFoundError = error{NotFound};
+
+fn reportMissing(err: NotFoundError) void {
+    std.debug.print("配置文件不存在：{s}\n", .{@errorName(err)});
 }
 
-pub fn main(_: std.process.Init) void {
-    logError() catch |err| std.debug.print("错误名：{s}\n", .{@errorName(err)});
+fn handleError(err: BroadError) void {
+    switch (err) {
+        error.NotFound => reportMissing(@errorCast(err)),
+        error.PermissionDenied, error.DiskFull => {
+            std.debug.print("配置文件读取失败：{s}\n", .{@errorName(err)});
+        },
+    }
 }
 ```
 
-关于 `@intFromError` 和 `@errorFromInt`，只需要知道两点：
+这里进入 `error.NotFound` 分支后，当前控制流已经证明 `err` 只能是 `error.NotFound`，因此可以安全地用 `@errorCast(err)` 收窄类型。
 
-- 它们主要用于底层场景
-- 不应把错误的整数值当成稳定接口来依赖
+可以用下面的标准区分两种做法：
 
-对大多数应用代码来说，知道它们存在就够了。
+- **需要重新组织接口语义**：使用显式映射
+- **不改变语义，只做局部且可证明安全的收窄**：使用 `@errorCast`
 
----
+**补充：错误集合并**
+
+如果一个函数可能整合多个来源的错误，也可以使用 `||` 合并错误集合：
+
+```zig
+const FileError = error{
+    NotFound,
+    PermissionDenied,
+};
+
+const NetworkError = error{
+    ConnectionFailed,
+    Timeout,
+};
+
+const CombinedError = FileError || NetworkError;
+```
+
+这种写法常见于上层函数整合多个子系统错误的场景。初学阶段知道它的作用即可，更重要的是先掌握错误集的关系、映射与收窄。
 
 ## 错误传播与处理
 
+当一个操作返回错误联合类型时，调用者需要决定如何处理失败路径。常见方式包括：
+
+- 使用 `try` 将错误继续向上传播，适合当前层无法恢复、也不适合决定处理策略的场景
+- 使用 `catch` 在当前层处理错误，适合提供默认值、记录日志、转换错误或终止当前分支
+- 使用 `if` 分别处理成功值与错误值，适合在同一处同时展开两条控制流并保持表达式风格
+
+选择哪一种方式，取决于当前层是否掌握足够的上下文来处理错误，以及是否需要保留清晰的接口边界。
+
 ### `try`：传播错误
 
-`try` 的作用是：
+`try` 用于传播错误。
+
+它的行为可以概括为：
 
 - 如果表达式成功，取出其中的值
-- 如果表达式失败，立即把错误返回给当前函数的调用者
+- 如果表达式失败，立即将错误返回给当前函数的调用者
 
-看一个最基本的例子：
-
-```/dev/null/chapter-error-handling.zig#L165-176
+```zig
 fn divide(a: i32, b: i32) !i32 {
     if (b == 0) return error.DivisionByZero;
     return @divTrunc(a, b);
@@ -415,58 +364,53 @@ fn calculate() !i32 {
 }
 ```
 
-这里 `try divide(10, 2)` 的意思是：
+在这个例子中：
 
-- 成功：把结果绑定给 `result`
-- 失败：当前函数 `calculate` 直接返回那个错误
+- 若 `divide(10, 2)` 成功，`result` 得到正常值
+- 若其失败，`calculate` 直接返回对应错误
 
 ### `try` 的等价理解
 
-你可以把它近似理解为下面这种写法：
+可以把 `try` 近似理解为下面这种写法：
 
-```/dev/null/chapter-error-handling.zig#L178-182
+```zig
 const result = divide(10, 2) catch |err| {
     return err;
 };
 ```
 
-这不是说 `try` 只是语法糖那么简单，而是帮助你理解它的控制流：**失败就立刻返回，成功才继续往下执行。**
+这种写法并不意味着 `try` 只是简单的语法替换，而是用于说明它的控制流语义：**失败则立即返回，成功才继续执行后续逻辑。**
 
 ### `try` 的使用限制
 
-`try` 只能出现在当前函数本身也允许返回错误的地方。
+`try` 只能出现在当前函数本身也允许返回错误的上下文中。
 
-如果你想和本教程其余 Zig 0.16 示例保持一致，也可以让 `main` 接收 `std.process.Init`；这和是否返回 `!void` 是两个独立维度。
+可以把下面这段理解为“说明性伪示例”：
 
-```/dev/null/chapter-error-handling.zig#L184-193
+```zig
 fn mightFail() !void {
     return error.Failed;
 }
 
-// ❌ 错误：返回类型不是错误联合
-pub fn badMain(_: std.process.Init) void {
+// 下面这种写法会编译报错：bad 不能返回错误，却试图用 try 继续传播
+fn bad() void {
     // try mightFail();
 }
 
-// ✅ 正确：当前函数也返回错误联合
-pub fn goodMain(_: std.process.Init) !void {
+fn good() !void {
     try mightFail();
 }
 ```
 
-记忆方式很简单：
-
-> 你只有在“自己也能把错误继续往上交”的前提下，才能使用 `try`。
-
----
+判断原则可以表述为：**只有当当前函数能够继续向上传播错误时，才可以使用 `try`。**
 
 ### `catch`：在当前层处理错误
 
-如果你不想继续传播，而是想在当前层把错误处理掉，就用 `catch`。
+如果不希望继续传播错误，而是希望在当前层将其处理掉，可以使用 `catch`。
 
-### 提供默认值
+**提供默认值**
 
-```/dev/null/chapter-error-handling.zig#L195-201
+```zig
 fn divide(a: i32, b: i32) !i32 {
     if (b == 0) return error.DivisionByZero;
     return @divTrunc(a, b);
@@ -475,14 +419,19 @@ fn divide(a: i32, b: i32) !i32 {
 const result = divide(10, 0) catch 0;
 ```
 
-这里的意思是：如果失败，就直接用 `0` 作为替代值。
+这里表示：如果计算失败，就使用 `0` 作为替代值。
 
-这适合“失败后有合理默认值”的场景。
+这种方式适用于“失败后存在合理默认值”的场景。
 
-### 捕获错误并执行逻辑
+**捕获错误并执行逻辑**
 
-```/dev/null/chapter-error-handling.zig#L203-214
+```zig
 const std = @import("std");
+
+fn divide(a: i32, b: i32) !i32 {
+    if (b == 0) return error.DivisionByZero;
+    return @divTrunc(a, b);
+}
 
 fn example() void {
     const result = divide(10, 0) catch |err| {
@@ -494,37 +443,35 @@ fn example() void {
 }
 ```
 
-这里 `catch |err|` 会把错误值绑定到 `err`，你可以：
+这里的 `catch |err|` 会把错误值绑定到 `err`，以便执行进一步处理，例如：
 
-- 打日志
+- 记录日志
 - 转换错误
 - 返回默认值
 - 提前结束当前函数
 
-### `catch unreachable`
+**`catch unreachable`**
 
-有时你在逻辑上可以证明某个操作不会失败，这时可以写：
+如果能够严格证明某个操作不会失败，可以写成：
 
-```/dev/null/chapter-error-handling.zig#L216-217
+```zig
 const value = parseNumber("42") catch unreachable;
 ```
 
-但这必须非常谨慎。
+它的含义不是“忽略错误”，而是断言这里不可能失败；一旦失败，就说明程序的逻辑假设不成立。
 
-`catch unreachable` 的含义不是“帮我处理错误”，而是：
+如果前面的表达式实际上返回了错误，程序就会执行到 `unreachable`：
 
-- 我断言这里绝不会失败
-- 如果失败了，那就是程序逻辑错误
+- 开启安全检查时，通常会触发运行时安全检查失败
+- 关闭安全检查时，属于未定义行为，不能依赖其结果
 
-因此它只适合“你真的能证明不可能失败”的场景，而不是“我懒得处理”。
+因此，它只适合用于**逻辑上确实可以证明不失败**的场景，不应用来省略本应存在的错误处理。
 
----
+**匹配具体错误**
 
-### 匹配具体错误
+如果不同错误需要不同处理方式，可以在 `catch` 后配合 `switch` 使用。
 
-如果不同错误需要不同处理方式，可以在 `catch` 后面接 `switch`。
-
-```/dev/null/chapter-error-handling.zig#L219-236
+```zig
 const std = @import("std");
 
 const FileError = error{
@@ -546,22 +493,23 @@ fn handleFile() void {
 }
 ```
 
-这类写法很适合：
+这种写法适合以下场景：
 
-- 用户提示
-- 错误分类统计
-- 低层错误到高层语义的转换
-
-如果你不想逐个列出，也可以使用 `else` 兜底，但前提是这确实符合你的接口设计。
-
----
+- 根据错误类别给出不同提示
+- 统计不同错误
+- 将底层错误映射为更高层的语义
 
 ### 用 `if` 同时处理成功和失败
 
-错误联合类型也可以用 `if` 解包：
+错误联合类型也可以使用 `if` 解包。
 
-```/dev/null/chapter-error-handling.zig#L238-251
+```zig
 const std = @import("std");
+
+fn divide(a: i32, b: i32) !i32 {
+    if (b == 0) return error.DivisionByZero;
+    return @divTrunc(a, b);
+}
 
 fn example() void {
     if (divide(10, 2)) |value| {
@@ -572,73 +520,18 @@ fn example() void {
 }
 ```
 
-这种写法适合“成功和失败两边都要写一段完整逻辑”的情况。
-
-你可以这样区分：
-
-- **`try`**：我只关心成功值，失败直接往上交
-- **`catch`**：我主要想处理失败
-- **`if (expr) |value| else |err|`**：成功和失败都要显式展开
-
----
-
-### `!T` 和 `?T` 的区别
-
-这是初学者最容易混淆的地方之一。
-
-- `!T`：表示**操作失败**
-- `?T`：表示**值可能不存在**
-
-这两者不是同一个问题。
-
-例如：
-
-```/dev/null/chapter-error-handling.zig#L253-264
-fn findUser(id: u32) ?[]const u8 {
-    if (id == 1) return "alice";
-    return null;
-}
-
-fn loadUserConfig(path: []const u8) ![]const u8 {
-    if (path.len == 0) return error.NotFound;
-    return "config";
-}
-```
-
-这里：
-
-- `findUser` 返回 `null` 不代表程序出错，只是“没找到”
-- `loadUserConfig` 返回错误表示“操作失败了”
-
-经验法则：
-
-- **缺席是正常业务状态** → 用 `?T`
-- **失败是异常业务路径或系统失败** → 用 `!T`
-
-如果一个操作既可能失败，又可能成功但没有值，那么类型可能是 `!?T` 或 `? !T` 相关组合，但初学阶段先把 `?T` 和 `!T` 的职责分清最重要。
-
----
-
 ## 失败路径清理：`errdefer`
-
-### `errdefer`
-
-`defer` 你已经见过：作用域结束时执行。
-
-`errdefer` 则更专门：**只有当前函数以错误返回时才执行。**
-
-这使它特别适合一种场景：
-
-> 成功时把资源交给调用者，失败时由当前函数负责回收。
 
 ### `defer` 和 `errdefer` 的区别
 
-- **`defer`**：成功、失败都会执行
-- **`errdefer`**：只有失败时执行
+`defer` 与 `errdefer` 都用于作用域结束时的清理，但两者的触发条件不同：
 
-看对比：
+- **`defer`**：无论成功还是失败，作用域结束时都会执行
+- **`errdefer`**：只有当前函数以错误返回时才执行
 
-```/dev/null/chapter-error-handling.zig#L266-279
+因此，`errdefer` 适合处理“成功时将资源交给调用者，失败时由当前函数回收资源”的场景。
+
+```zig
 const std = @import("std");
 
 fn withDefer(allocator: std.mem.Allocator) !void {
@@ -656,58 +549,18 @@ fn withErrdefer(allocator: std.mem.Allocator) ![]u8 {
 }
 ```
 
-为什么第二个例子必须用 `errdefer`？
+在 `withErrdefer` 中，成功时 `memory` 要返回给调用者。如果这里误用 `defer`，那么函数返回时内存会被立即释放，调用者得到的将是无效内存。
 
-因为成功时 `memory` 要返回给调用者。如果这里写成 `defer allocator.free(memory)`，那么函数一返回，内存就被释放了，调用者拿到的是无效内存。
+可以用下面这个标准来判断：
 
-所以判断标准非常明确：
+- **资源生命周期在当前函数内结束** → 使用 `defer`
+- **成功时资源所有权转移给调用者** → 使用 `errdefer`
 
-- **资源生命周期在函数内结束** → 用 `defer`
-- **成功时资源所有权转移给调用者** → 用 `errdefer`
+### 基本用法：失败时回收，成功时转移所有权
 
----
+`errdefer` 最常见的用途是：资源先由当前函数获取；如果后续失败，就由当前函数回收；如果成功返回，就把资源交给调用者继续管理。
 
-### `errdefer` 的基本用法
-
-```/dev/null/chapter-error-handling.zig#L281-300
-const std = @import("std");
-
-const User = struct {
-    id: usize,
-    name: []const u8,
-};
-
-fn createUser(allocator: std.mem.Allocator, id: usize, name: []const u8) !*User {
-    const user = try allocator.create(User);
-    errdefer allocator.destroy(user);
-
-    user.* = .{
-        .id = id,
-        .name = name,
-    };
-
-    if (id == 0) return error.InvalidUserId;
-
-    return user;
-}
-```
-
-这里的控制流是：
-
-- 分配 `user`
-- 注册失败清理：如果后面出错，就销毁 `user`
-- 如果 `id == 0`，函数返回错误，`errdefer` 自动执行
-- 如果成功返回 `user`，`errdefer` 不执行，调用者接管所有权
-
-这正是 `errdefer` 最典型的用途。
-
----
-
-### 多资源管理
-
-当一个函数分配多个资源时，`errdefer` 可以把“部分成功、后续失败”的清理逻辑写得非常自然。
-
-```/dev/null/chapter-error-handling.zig#L302-326
+```zig
 const std = @import("std");
 
 const Config = struct {
@@ -733,51 +586,21 @@ fn loadConfig(allocator: std.mem.Allocator, name: []const u8, count: usize) !*Co
 }
 ```
 
-如果 `count > 1000`：
+这个例子体现了 `errdefer` 的典型模式：
 
-- 先执行 `allocator.free(items)`
-- 再执行 `allocator.destroy(config)`
+- `config` 和 `items` 获取成功后，后续步骤仍可能失败
+- 如果函数以错误返回，已经获取的资源会自动清理
+- 如果函数成功返回，资源所有权转移给调用者，由调用者负责后续释放
 
-这说明多个 `errdefer` 的执行顺序是 **LIFO**（后进先出），和 `defer` 一样。
+这里故意把失败检查放在资源获取之后，是为了说明：当函数在“部分成功”之后出错时，`errdefer` 可以自动完成回滚。
 
-这很合理，因为资源通常也是按“先拿外层、再拿内层”的顺序获取的，清理时正好反过来。
-
----
-
-### `errdefer` 的执行顺序
-
-```/dev/null/chapter-error-handling.zig#L328-339
-fn example() !void {
-    const resource1 = try acquire1();
-    errdefer release1(resource1);
-
-    const resource2 = try acquire2();
-    errdefer release2(resource2);
-
-    const resource3 = try acquire3();
-    errdefer release3(resource3);
-
-    return error.Failed;
-}
-```
-
-如果最后返回错误，执行顺序是：
-
-1. `release3(resource3)`
-2. `release2(resource2)`
-3. `release1(resource1)`
-
-记住一句话就够了：
-
-> `errdefer` 和 `defer` 一样，都是倒序执行。
-
----
+如果 `count > 1000`，函数会以错误返回，此时会先释放 `items`，再销毁 `config`。这也说明多个 `errdefer` 与 `defer` 一样，都是按**后进先出（LIFO）**的顺序执行。
 
 ### `errdefer |err|`
 
-`errdefer` 还可以捕获当前返回的错误值：
+`errdefer` 还可以捕获当前即将返回的错误值：
 
-```/dev/null/chapter-error-handling.zig#L341-356
+```zig
 const std = @import("std");
 
 fn sendRequest(url: []const u8) !void {
@@ -793,21 +616,19 @@ fn sendRequest(url: []const u8) !void {
 }
 ```
 
-这适合做：
+这种写法适合：
 
-- 失败日志
-- 附加上下文
-- 按错误类型做不同清理
+- 记录失败日志
+- 在清理时附加错误上下文
+- 按错误类型执行简单的收尾逻辑
 
-但要注意：`errdefer |err|` 的主要职责仍然是**失败路径上的收尾**，不要把它变成复杂业务逻辑的主战场。
-
----
+但应当注意，`errdefer |err|` 的主要职责仍然是**失败路径上的收尾**，不宜在其中放入过多复杂业务逻辑。
 
 ## 一个完整示例
 
-下面把 `!T`、`try`、`catch`、`errdefer` 放到同一个例子里。
+下面将 `!T`、`try`、`catch` 与 `errdefer` 放在同一个例子中：
 
-```/dev/null/chapter-error-handling.zig#L358-395
+```zig
 const std = @import("std");
 
 const Buffer = struct {
@@ -849,261 +670,94 @@ pub fn main(_: std.process.Init) !void {
 }
 ```
 
-这个例子里：
+**预期输出：**
 
-- `createBuffer` 用 `!Buffer` 表示“可能失败”
-- 参数检查失败时直接 `return error...`
-- 分配内存后用 `errdefer` 保证失败路径不泄漏
-- `main` 用 `catch` 打印错误并继续向上返回
-- 成功拿到 `buffer` 后，用 `defer` 在函数结束时释放资源
-
-这正是 Zig 错误处理最常见、也最推荐的组织方式。
-
----
-
-## 最佳实践
-
-### 把错误处理当成接口设计的一部分
-
-不要把错误处理看成“最后补上的边角料”。
-
-更好的思路是：
-
-- 这个函数会因为什么失败？
-- 哪些失败应该暴露给调用者？
-- 哪些失败应该在当前层转换或吸收？
-- 成功和失败时资源分别由谁负责？
-
-这些问题越早想清楚，代码越整洁。
-
-### 公共接口优先使用清晰的错误集
-
-```/dev/null/chapter-error-handling.zig#L397-408
-const ConfigError = error{
-    FileNotFound,
-    InvalidFormat,
-    MissingRequiredField,
-    ValueOutOfRange,
-};
-
-// 不推荐
-const BadError = error{
-    Failed,
-    Bad,
-    Error,
-};
+```text
+缓冲区 11 字节：Hello, Zig!
 ```
 
-好的错误名应该：
+这个示例把前面的几个要点串在了一起：
 
-- 语义明确
-- 能帮助调用者决定处理策略
-- 尽量避免模糊词，如 `Failed`、`Bad`、`Error`
+- `createBuffer` 使用 `!Buffer` 表示“该操作可能失败”
+- 资源分配成功后，用 `errdefer` 保证失败路径不会泄漏
+- `main` 中的 `catch` 并不是为了吞掉错误，而是先补充一条日志，再把错误继续返回给上层
+- 成功获得资源后，由调用者用 `defer` 管理资源生命周期
 
-### 能传播就先传播，能处理再处理
+这也是 Zig 中较为典型的错误处理组织方式。
 
-一般原则是：
+## 实践建议与常见问题
 
-- 当前层没有恢复策略 → `try`
-- 当前层知道如何恢复或转换 → `catch`
+### 实践建议
 
-不要为了“显得处理过了”而到处写无意义的 `catch`。
+1. **把错误处理当成接口设计的一部分。**  
+   设计接口时，最好尽早想清楚三件事：函数会因为什么失败、哪些错误应暴露给调用者、成功与失败时资源分别由谁负责。边界越清楚，后续实现通常越稳定。
 
-### `defer` 管函数内生命周期，`errdefer` 管失败回滚
+2. **公共接口优先使用清晰、具体的错误集。**
 
-这是最重要的实践规则之一：
+   ```zig
+   const ConfigError = error{
+       FileNotFound,
+       InvalidFormat,
+       MissingRequiredField,
+       ValueOutOfRange,
+   };
 
-- **函数内自己用完的资源** → `defer`
-- **成功时交给调用者的资源** → `errdefer`
+   // 不推荐
+   const BadError = error{
+       Failed,
+       Bad,
+       Error,
+   };
+   ```
 
-如果这条规则混乱，资源管理通常也会跟着混乱。
+   错误名应尽量语义明确，并能帮助调用者决定处理策略。像 `Failed`、`Bad`、`Error` 这样的名称通常过于笼统。
 
-### 谨慎使用 `catch unreachable`
+3. **当前层不能处理时，就直接传播。**  
+   没有恢复策略时，优先使用 `try`；只有在当前层确实知道如何恢复、转换或终止时，再使用 `catch`。为了“看起来处理过”而写的 `catch` 往往只会让控制流变得更模糊。
 
-只有在你能证明“不可能失败”时才使用。
+4. **谨慎使用 `catch unreachable`。**  
+   只有在能够证明“这里不可能失败”时，才应使用 `catch unreachable`。它表达的是断言，而不是简写版的错误处理。
 
-如果只是“我觉得应该不会出错”，那通常不够。
+5. **避免把 `anyerror` 当作默认方案。**  
+   `anyerror` 会降低接口精度。除非确实处于边界适配、原型验证或特殊抽象层中，否则应优先使用具体错误集。
 
-### 避免把 `anyerror` 当默认方案
+### 常见问题
 
-`anyerror` 会让接口边界变模糊。除非你确实在做边界适配或原型验证，否则优先写具体错误集。
+1. **错误集不能随意缩小。**  
+   函数签名声明了哪些错误，就只能返回这些错误。需要把更宽的错误集变成更窄的错误集时，应显式映射；只有在能够证明安全时，才使用 `@errorCast`。
 
----
+2. **不要把 `errdefer` 当成普通清理工具。**  
+   资源生命周期在当前函数内结束时，应使用 `defer`；只有成功时资源要交给调用者、失败时当前函数负责回滚，才使用 `errdefer`。
 
-## 常见问题与调试
-
-### 常见错误
-
-错误 1：在不能返回错误的函数里使用 `try`
-
-```/dev/null/chapter-error-handling.zig#L410-421
-fn mightFail() !void {
-    return error.Failed;
-}
-
-// ❌ 错误
-fn bad() void {
-    // try mightFail();
-}
-
-// ✅ 正确
-fn good() !void {
-    try mightFail();
-}
-```
-
-根本原因不是“语法不允许”，而是：`try` 需要一个地方把错误继续交出去。
-
----
-
-错误 2：错误集不兼容
-
-```/dev/null/chapter-error-handling.zig#L423-446
-const SpecificError = error{NotFound};
-const BroadError = error{NotFound, PermissionDenied};
-
-fn broad() BroadError!void {
-    return error.PermissionDenied;
-}
-
-// ❌ 错误：BroadError 不能隐式缩小为 SpecificError
-fn narrowBad() SpecificError!void {
-    return broad();
-}
-
-// ✅ 方式 1：显式映射
-fn narrowMapped() SpecificError!void {
-    broad() catch |err| switch (err) {
-        error.NotFound => return error.NotFound,
-        error.PermissionDenied => return error.NotFound,
-    };
-}
-
-// ✅ 方式 2：只有在你能证明安全时才用 @errorCast
-fn narrowCast() SpecificError!void {
-    broad() catch |err| return @errorCast(err);
-}
-```
-
-这里真正要理解的是：
-
-> 函数签名写了什么，你就只能返回那个集合允许的错误。
-
----
-
-错误 3：该用 `defer` 时误用了 `errdefer`
-
-```/dev/null/chapter-error-handling.zig#L448-474
-fn allocateAndProcess(allocator: std.mem.Allocator) !void {
-    const memory = try allocator.alloc(u8, 100);
-    errdefer allocator.free(memory);
-
-    try process(memory);
-
-    // 成功返回时没有释放，也没有转移所有权：泄漏
-}
-```
-
-正确写法应该是：
-
-```/dev/null/chapter-error-handling.zig#L476-483
-fn allocateAndProcess(allocator: std.mem.Allocator) !void {
-    const memory = try allocator.alloc(u8, 100);
-    defer allocator.free(memory);
-
-    try process(memory);
-}
-```
-
-如果资源成功时要交给调用者，那才应该写成：
-
-```/dev/null/chapter-error-handling.zig#L485-493
-fn allocateForCaller(allocator: std.mem.Allocator) ![]u8 {
-    const memory = try allocator.alloc(u8, 100);
-    errdefer allocator.free(memory);
-
-    try initialize(memory);
-    return memory;
-}
-```
-
----
-
-错误 4：把“没有值”误写成错误
-
-如果“没找到”是正常业务结果，就不该强行设计成错误。
-
-```/dev/null/chapter-error-handling.zig#L495-506
-fn findUser(id: u32) ?[]const u8 {
-    if (id == 1) return "alice";
-    return null;
-}
-
-fn openConfig(path: []const u8) ![]const u8 {
-    if (path.len == 0) return error.NotFound;
-    return "config";
-}
-```
-
-这里：
-
-- `findUser` 的 `null` 是正常结果
-- `openConfig` 的错误是失败结果
-
-把这两者混在一起，会让接口语义变差。
-
----
+3. **区分“没有值”和“操作失败”。**  
+   `?T` 适合表示正常的“没有结果”，`!T` 适合表示操作失败。两者混用会削弱接口语义。
 
 ### 调试建议
 
-**打印错误名**
-
-最直接、最常用的方法是 `@errorName`：
-
-```/dev/null/chapter-error-handling.zig#L508-519
-const std = @import("std");
-
-fn riskyOperation() !u32 {
-    return error.Timeout;
-}
-
-pub fn main(_: std.process.Init) void {
-    _ = riskyOperation() catch |err| {
-        std.debug.print("错误：{s}\n", .{@errorName(err)});
-        return;
-    };
-}
-```
-
-这通常比直接打印错误值更适合教学和日志输出。
-
-**优先保留错误传播链**
-
-调试时，一个常见坏习惯是过早把错误吞掉，例如：
-
-- 直接 `catch 0`
-- 直接 `catch return`
-- 直接 `catch unreachable`
-
-如果你还没确定问题在哪，先让错误继续传播，通常更容易定位根因。
-
-**在安全检查模式下验证假设**
-
-像 `@errorCast`、`catch unreachable` 这类写法都依赖你的逻辑判断。
-
-因此在开发阶段，应该优先在带安全检查的模式下运行和验证，尽早暴露错误假设。
-
----
+- 使用 `@errorName(err)` 打印错误名，便于观察失败原因。
+- 问题尚未定位时，避免过早用 `catch 0`、`catch return` 或 `catch unreachable` 吞掉错误。
+- 对 `@errorCast`、`catch unreachable` 这类依赖逻辑前提的写法，应在带安全检查的模式下验证。
 
 ## 本章要点
 
-把整章压缩成几句话，就是：
+本章真正要建立的，不只是对几个语法的记忆，而是一种组织失败路径的方式：**把失败显式纳入类型系统、控制流和资源管理。**
 
-1. **错误集合**定义“可能有哪些错误”
-2. **错误联合类型 `!T`** 定义“结果要么是值，要么是错误”
-3. **`try`** 用于把错误继续传播给调用者
-4. **`catch`** 用于在当前层处理错误
-5. **`errdefer`** 用于失败路径上的清理，尤其适合所有权转移
-6. **`?T` 不是错误**，而是“值可能不存在”
+可以把这一章的核心归纳为以下几点：
 
-如果你已经真正理解了这六点，那么 Zig 的错误处理模型就已经建立起来了。后面无论遇到文件 I/O、分配器、网络请求还是自定义库接口，本质上都还是这套规则的展开。
+1. **失败是显式的。**  
+   Zig 不把错误隐藏在隐式机制里，而是要求通过类型和控制流明确表达“这里可能失败”。
+
+2. **错误集合与错误联合类型分工明确。**  
+   错误集合描述“可能因为什么失败”，错误联合类型 `!T` 描述“结果要么是值，要么是错误”。
+
+3. **传播与处理要有边界。**  
+   当前层不能处理时，用 `try` 继续传播；能够处理时，再用 `catch` 或 `if` 明确展开成功与失败两条路径。
+
+4. **“没有值”与“操作失败”不是一回事。**  
+   `?T` 表示值可能不存在，`!T` 表示操作可能失败；两者语义不同，不应混用。
+
+5. **资源清理要与失败路径一起设计。**  
+   `defer` 用于正常生命周期内的清理，`errdefer` 用于失败路径上的回滚，尤其适合成功时将资源交给调用者的场景。
+
+6. **接口设计应兼顾错误语义与所有权边界。**  
+   公共接口应优先使用清晰、具体的错误集，并尽量明确成功与失败时资源分别由谁负责。
