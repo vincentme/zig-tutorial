@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-211d7412.js";
+            window.path_to_searchindex_js = "../searchindex-3ff95d71.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-c7628560.js"></script>
@@ -470,7 +470,7 @@ const NetworkError = error{
 
 const CombinedError = FileError || NetworkError;
 </code></pre>
-<p>这种写法常见于上层函数整合多个子系统错误的场景。初学阶段知道它的作用即可，更重要的是先掌握错误集的关系、映射与收窄。后面的示例与日志输出中也会多次用到 <code>@errorName(err)</code> 来打印错误名。</p>
+<p>这种写法常见于上层函数整合多个子系统错误的场景。初学阶段知道它的作用即可，更重要的是先掌握错误集的关系、映射与收窄。</p>
 <h2 id="错误传播与处理"><a class="header" href="#错误传播与处理">错误传播与处理</a></h2>
 <p>当一个操作返回错误联合类型时，调用者需要决定如何处理失败路径。常见方式包括：</p>
 <ul>

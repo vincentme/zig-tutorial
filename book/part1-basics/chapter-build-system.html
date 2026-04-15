@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-211d7412.js";
+            window.path_to_searchindex_js = "../searchindex-3ff95d71.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-c7628560.js"></script>
@@ -183,168 +183,204 @@
                     <main>
                         <h1 id="构建系统入门"><a class="header" href="#构建系统入门">构建系统入门</a></h1>
 <blockquote>
-<p>💡 <strong>重要章节</strong>：构建系统是 Zig 的核心特性之一，掌握基本的构建命令对于项目开发至关重要。</p>
-<p><strong>章节定位</strong>：本章属于基础部分，重点是把你从“单文件练习”带到“项目化开发”。关于交叉编译、依赖管理、复杂构建配置等高级主题，请参见高级部分的<a href="../part2-advanced/chapter-package-management.html">构建系统与包管理</a>章节。</p>
+<p><strong>章节定位</strong>：本章位于基础部分，主题是从“直接操作单个源文件”过渡到“组织一个项目的构建流程”。交叉编译、依赖管理、复杂构建配置等主题放在高级部分的<a href="../part2-advanced/chapter-package-management.html">构建系统与包管理</a>章节展开。</p>
 </blockquote>
-<p>如果你已经在上一章通过 <code>zig init</code> 看过一个 Zig 项目的基本结构，本章可以理解为对那部分内容的<strong>正式展开</strong>：我们不再停留在“看到这些文件”，而是进一步解释它们分别做什么，以及你最常用的构建命令应该怎么用。</p>
-<h2 id="构建系统概述"><a class="header" href="#构建系统概述">构建系统概述</a></h2>
-<h3 id="为什么-zig-内置构建系统"><a class="header" href="#为什么-zig-内置构建系统">为什么 Zig 内置构建系统？</a></h3>
-<p>与其他语言不同，Zig 将构建系统作为语言的核心特性：</p>
-<ol>
-<li><strong>零依赖</strong>：不需要 Make、CMake、npm 等外部工具</li>
-<li><strong>跨平台</strong>：统一的构建体验，无需处理平台差异</li>
-<li><strong>类型安全</strong>：构建脚本使用 Zig 编写，编译期检查</li>
-<li><strong>与语言集成</strong>：无缝支持交叉编译、测试、文档生成</li>
-</ol>
-<h3 id="构建系统的核心概念"><a class="header" href="#构建系统的核心概念">构建系统的核心概念</a></h3>
+<p>前面的很多示例都直接对单个文件执行命令：</p>
+<pre><code class="language-bash">zig run hello.zig
+zig test math.zig
+</code></pre>
+<p>这种方式适合语法练习、最小实验和临时验证。项目开发则通常需要统一处理程序入口、测试方式、构建参数、可用步骤以及默认输出流程。此时面对的已经不只是“编译某个文件”，而是一个项目级的构建入口，用来组织构建、运行、测试和参数传递。</p>
+<h2 id="从单文件命令到项目构建"><a class="header" href="#从单文件命令到项目构建">从单文件命令到项目构建</a></h2>
+<p>单文件命令和项目构建面向的是不同层级的问题。</p>
+<p>单文件命令直接作用于当前文件：</p>
+<pre><code class="language-bash">zig run hello.zig
+zig test parse.zig
+</code></pre>
+<p>项目构建则围绕整个项目组织工作流。常见命令通常是：</p>
+<pre><code class="language-bash">zig build
+zig build run
+zig build test
+</code></pre>
+<p>两者的区别不在于“命令更多了”，而在于操作对象不同：</p>
 <ul>
-<li><strong>构建步骤（Build Step）</strong>：一个可执行的构建任务</li>
-<li><strong>构建图（Build Graph）</strong>：步骤之间的依赖关系</li>
-<li><strong>构建器（Builder）</strong>：管理构建过程的核心对象</li>
-<li><strong>模块（Module）</strong>：编译单元，包含源文件和依赖</li>
+<li><code>zig run hello.zig</code>：直接操作一个文件</li>
+<li><code>zig build run</code>：执行项目定义好的 <code>run</code> 步骤</li>
 </ul>
-<h2 id="基础项目结构"><a class="header" href="#基础项目结构">基础项目结构</a></h2>
-<p>如果你已经运行过 <code>zig init</code>，下面这部分内容会是一次更系统的回顾；如果还没有，也可以把它当作第一次正式认识 Zig 项目布局。</p>
+<p><code>zig build</code> 的作用不是替代手写的编译或运行命令，而是在项目层面组织工作流。</p>
+<h2 id="zig-init-生成的最小项目"><a class="header" href="#zig-init-生成的最小项目"><code>zig init</code> 生成的最小项目</a></h2>
+<p>在一个空目录中执行下面的命令：</p>
 <pre><code class="language-bash">mkdir my-project
 cd my-project
 zig init
 </code></pre>
-<p>生成的文件结构：</p>
-<pre><code>my-project/
-├── build.zig           # 构建脚本
-├── build.zig.zon       # 依赖清单（Zig Object Notation）
-└── src/
-    ├── main.zig        # 主程序入口
-    └── root.zig        # 库根文件
-</code></pre>
-<h3 id="buildzigzon-文件"><a class="header" href="#buildzigzon-文件">build.zig.zon 文件</a></h3>
-<p>依赖清单文件，类似 package.json：</p>
-<pre><code class="language-zig">.{
-    .name = "my-project",
-    .version = "0.1.0",
-    .dependencies = .{
-        // 添加外部依赖
-    },
-}
-</code></pre>
-<h2 id="buildzig-脚本详解"><a class="header" href="#buildzig-脚本详解">build.zig 脚本详解</a></h2>
-<h3 id="最小构建脚本"><a class="header" href="#最小构建脚本">最小构建脚本</a></h3>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn build(b: *std.Build) void {
-    const exe = b.addExecutable(.{
-        .name = "my-app",
-        .root_module = b.createModule(.{
-            .root_source_file = b.path("src/main.zig"),
-            .target = b.standardTargetOptions(.{}),
-            .optimize = b.standardOptimizeOption(.{}),
-        }),
-    });
-    
-    b.installArtifact(exe);
-    
-    const run_cmd = b.addRunArtifact(exe);
-    const run_step = b.step("run", "Run the application");
-    run_step.dependOn(&amp;run_cmd.step);
-}
-</code></pre>
-<h3 id="构建选项"><a class="header" href="#构建选项">构建选项</a></h3>
-<pre><code class="language-zig">pub fn build(b: *std.Build) void {
-    const target = b.standardTargetOptions(.{});
-    const optimize = b.standardOptimizeOption(.{});
-    
-    const enable_logging = b.option(
-        bool,
-        "logging",
-        "Enable logging"
-    ) orelse false;
-    
-    const exe = b.addExecutable(.{
-        .name = "my-app",
-        .root_module = b.createModule(.{
-            .root_source_file = b.path("src/main.zig"),
-            .target = target,
-            .optimize = optimize,
-        }),
-    });
-    
-    const options = b.addOptions();
-    options.addOption(bool, "enable_logging", enable_logging);
-    exe.root_module.addOptions("config", options);
-    
-    b.installArtifact(exe);
-}
-</code></pre>
-<p>在代码中使用选项：</p>
-<pre><code class="language-zig">const config = @import("config");
-
-pub fn main(_: std.process.Init) void {
-    if (config.enable_logging) {
-        std.debug.print("Logging enabled\n", .{});
-    }
-}
-</code></pre>
-<h2 id="多文件项目组织"><a class="header" href="#多文件项目组织">多文件项目组织</a></h2>
-<h3 id="项目结构"><a class="header" href="#项目结构">项目结构</a></h3>
-<pre><code>my-project/
+<p>通常会得到一个最小项目结构：</p>
+<pre><code class="language-text">my-project/
 ├── build.zig
 ├── build.zig.zon
 └── src/
-    ├── main.zig        # 主程序
-    ├── lib.zig         # 库代码
-    └── utils/
-        ├── math.zig    # 工具模块
-        └── string.zig
+    ├── main.zig
+    └── root.zig
 </code></pre>
-<h3 id="构建脚本"><a class="header" href="#构建脚本">构建脚本</a></h3>
+<p>这些文件的职责如下。</p>
+<h3 id="buildzig"><a class="header" href="#buildzig"><code>build.zig</code></a></h3>
+<p><code>build.zig</code> 是构建脚本，使用 Zig 语言编写。它描述项目的构建结构：要构建哪些目标、如何运行这些目标、如何暴露 <code>run</code>、<code>test</code> 等步骤，以及哪些参数可以从命令行传入。</p>
+<p><code>zig build</code>、<code>zig build run</code>、<code>zig build test</code> 的行为都由这里定义。</p>
+<h3 id="buildzigzon"><a class="header" href="#buildzigzon"><code>build.zig.zon</code></a></h3>
+<p><code>build.zig.zon</code> 是项目清单文件，用来描述项目的基础元信息，也参与依赖来源的声明。</p>
+<p>本章只关注两点：它属于项目配置的一部分；更完整的依赖管理会在高级章节展开。</p>
+<p>一个最小的 <code>build.zig.zon</code> 往往类似这样：</p>
+<pre><code class="language-zig">.{
+    .name = "my-project",
+    .version = "0.1.0",
+    .dependencies = .{},
+}
+</code></pre>
+<p>这里不展开字段细节，只说明它在项目中的位置和用途。</p>
+<h3 id="srcmainzig"><a class="header" href="#srcmainzig"><code>src/main.zig</code></a></h3>
+<p><code>src/main.zig</code> 通常是可执行程序入口所在的位置。</p>
+<h3 id="srcrootzig"><a class="header" href="#srcrootzig"><code>src/root.zig</code></a></h3>
+<p><code>src/root.zig</code> 通常作为库的根模块入口使用。</p>
+<p>很多最小项目在前期主要关注可执行入口，因此这一文件可能暂时不会频繁使用。</p>
+<h2 id="buildzig-在做什么"><a class="header" href="#buildzig-在做什么"><code>build.zig</code> 在做什么</a></h2>
+<p><code>build.zig</code> 的核心作用不是把几条命令改写成脚本，而是描述项目有哪些目标、这些目标如何构建，以及外部可以通过哪些步骤触发它们。</p>
+<p>最小示例如下：</p>
 <pre><code class="language-zig">const std = @import("std");
 
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
-    
-    // 创建库模块
-    const lib_mod = b.createModule(.{
-        .root_source_file = b.path("src/lib.zig"),
-        .target = target,
-        .optimize = optimize,
-    });
-    
-    // 创建可执行文件
+
     const exe = b.addExecutable(.{
         .name = "my-app",
         .root_module = b.createModule(.{
             .root_source_file = b.path("src/main.zig"),
             .target = target,
             .optimize = optimize,
-            .imports = &amp;.{
-                .{ .name = "lib", .module = lib_mod },
-            },
         }),
     });
-    
+
     b.installArtifact(exe);
-    
-    // 运行步骤
+
     const run_cmd = b.addRunArtifact(exe);
     const run_step = b.step("run", "Run the application");
     run_step.dependOn(&amp;run_cmd.step);
 }
 </code></pre>
-<p>在 main.zig 中导入：</p>
-<pre><code class="language-zig">const std = @import("std");
-const lib = @import("lib");
-
-pub fn main(_: std.process.Init) void {
-    lib.someFunction();
-}
+<p>这段代码包含了一个最小项目的几个核心部分。</p>
+<h3 id="target-和-optimize"><a class="header" href="#target-和-optimize"><code>target</code> 和 <code>optimize</code></a></h3>
+<pre><code class="language-zig">const target = b.standardTargetOptions(.{});
+const optimize = b.standardOptimizeOption(.{});
 </code></pre>
-<h2 id="测试集成"><a class="header" href="#测试集成">测试集成</a></h2>
-<pre><code class="language-zig">pub fn build(b: *std.Build) void {
+<p>这两行给项目接入了标准构建参数：</p>
+<ul>
+<li><code>target</code>：目标平台</li>
+<li><code>optimize</code>：优化级别</li>
+</ul>
+<p>因此可以这样调用项目：</p>
+<pre><code class="language-bash">zig build -Dtarget=x86_64-windows
+zig build -Doptimize=ReleaseFast
+</code></pre>
+<p>它们构成了项目的标准参数入口。</p>
+<h3 id="addexecutable"><a class="header" href="#addexecutable"><code>addExecutable</code></a></h3>
+<pre><code class="language-zig">const exe = b.addExecutable(.{
+    .name = "my-app",
+    .root_module = b.createModule(.{
+        .root_source_file = b.path("src/main.zig"),
+        .target = target,
+        .optimize = optimize,
+    }),
+});
+</code></pre>
+<p>这一段定义了一个可执行目标，包括：</p>
+<ul>
+<li>目标名称：<code>my-app</code></li>
+<li>入口源文件：<code>src/main.zig</code></li>
+<li>构建参数：<code>target</code> 与 <code>optimize</code></li>
+</ul>
+<p>其中 <code>root_module</code> 表示这个编译目标的根模块配置，用来组织源文件和构建参数。</p>
+<h3 id="installartifact"><a class="header" href="#installartifact"><code>installArtifact</code></a></h3>
+<pre><code class="language-zig">b.installArtifact(exe);
+</code></pre>
+<p>这一行的作用是把构建产物纳入项目的安装流程，也就是默认输出的一部分。没有这一步，定义出来的目标不一定会自动进入默认构建流程。</p>
+<p>对应关系如下：</p>
+<ul>
+<li><code>addExecutable</code>：定义目标</li>
+<li><code>installArtifact</code>：把目标纳入默认输出流程</li>
+</ul>
+<h3 id="addrunartifact-和-steprun-"><a class="header" href="#addrunartifact-和-steprun-"><code>addRunArtifact</code> 和 <code>step("run", ...)</code></a></h3>
+<pre><code class="language-zig">const run_cmd = b.addRunArtifact(exe);
+
+const run_step = b.step("run", "Run the application");
+run_step.dependOn(&amp;run_cmd.step);
+</code></pre>
+<p>这里分成两个动作：</p>
+<ul>
+<li><code>addRunArtifact(exe)</code>：定义“如何运行这个产物”</li>
+<li><code>step("run", ...)</code>：把这个运行动作暴露成项目里的 <code>run</code> 步骤</li>
+</ul>
+<p>这样项目里才会出现下面的命令入口：</p>
+<pre><code class="language-bash">zig build run
+</code></pre>
+<p><code>zig build</code> 能执行哪些步骤，不是固定不变的，而是由当前项目的 <code>build.zig</code> 决定的。</p>
+<h2 id="一个最小可运行项目的闭环"><a class="header" href="#一个最小可运行项目的闭环">一个最小可运行项目的闭环</a></h2>
+<p>把前面的内容串起来，一个最小项目的基本工作流就是下面这几个命令。</p>
+<h3 id="构建项目"><a class="header" href="#构建项目">构建项目</a></h3>
+<pre><code class="language-bash">zig build
+</code></pre>
+<p>这会执行项目默认构建流程。对上面的例子来说，核心就是把定义好的可执行产物纳入构建与安装流程。</p>
+<h3 id="运行项目"><a class="header" href="#运行项目">运行项目</a></h3>
+<pre><code class="language-bash">zig build run
+</code></pre>
+<p>这会执行项目中显式定义的 <code>run</code> 步骤。它不是临时运行一个源文件，而是执行项目定义好的运行入口。</p>
+<h3 id="查看项目支持哪些步骤"><a class="header" href="#查看项目支持哪些步骤">查看项目支持哪些步骤</a></h3>
+<pre><code class="language-bash">zig build --help
+</code></pre>
+<p>不同项目可以在 <code>build.zig</code> 中定义不同步骤，因此接手一个新项目时，先查看它提供了哪些步骤通常更有效。</p>
+<p>对应关系如下：</p>
+<ul>
+<li><code>zig build</code>：项目默认构建入口</li>
+<li><code>zig build run</code>：项目运行入口</li>
+<li><code>zig build --help</code>：查看项目提供了哪些入口</li>
+</ul>
+<h2 id="目标平台与优化级别"><a class="header" href="#目标平台与优化级别">目标平台与优化级别</a></h2>
+<p>在基础阶段，<code>target</code> 和 <code>optimize</code> 不展开到全部细节，但它们是最常见的构建参数。</p>
+<h3 id="target"><a class="header" href="#target"><code>target</code></a></h3>
+<p><code>target</code> 表示目标平台，也就是产物面向的运行环境。</p>
+<p>例如，当前在 macOS 上开发，但需要生成 Windows 或 Linux 的产物时，就需要指定目标平台：</p>
+<pre><code class="language-bash">zig build -Dtarget=x86_64-windows
+</code></pre>
+<p><code>target</code> 决定产物面向哪个目标环境。</p>
+<h3 id="optimize"><a class="header" href="#optimize"><code>optimize</code></a></h3>
+<p><code>optimize</code> 表示优化级别，也就是这次构建更偏向调试，还是更偏向发布。</p>
+<p>例如：</p>
+<pre><code class="language-bash">zig build -Doptimize=ReleaseFast
+</code></pre>
+<p>它描述的是这次构建的取向：</p>
+<ul>
+<li>调试阶段更关注调试体验和错误信息</li>
+<li>发布阶段更关注性能、体积或发布行为</li>
+</ul>
+<p>本章不展开各种优化模式之间的完整差异，这里主要关注它作为常见构建参数的作用。</p>
+<h2 id="把配置从构建脚本传给程序"><a class="header" href="#把配置从构建脚本传给程序">把配置从构建脚本传给程序</a></h2>
+<p>构建系统不仅决定“怎么构建”，也可以把配置值传给程序代码。例如：</p>
+<ul>
+<li>是否开启日志</li>
+<li>是否启用某个实验特性</li>
+<li>是否切换某种行为模式</li>
+</ul>
+<p>最小示例如下：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
-    
-    // 主程序
+
+    const enable_logging = b.option(
+        bool,
+        "logging",
+        "Enable logging output",
+    ) orelse false;
+
     const exe = b.addExecutable(.{
         .name = "my-app",
         .root_module = b.createModule(.{
@@ -353,9 +389,43 @@ pub fn main(_: std.process.Init) void {
             .optimize = optimize,
         }),
     });
+
+    const options = b.addOptions();
+    options.addOption(bool, "enable_logging", enable_logging);
+    exe.root_module.addOptions("config", options);
+
     b.installArtifact(exe);
-    
-    // 测试
+}
+</code></pre>
+<p>这个过程包含三个动作：用 <code>b.option(...)</code> 从构建命令读取参数，用 <code>b.addOptions()</code> 组织这些配置，再把它们作为一个模块加到程序里。</p>
+<p>这样，代码中就可以通过 <code>@import("config")</code> 读取配置：</p>
+<pre><code class="language-zig">const std = @import("std");
+const config = @import("config");
+
+pub fn main() void {
+    if (config.enable_logging) {
+        std.debug.print("logging enabled\n", .{});
+    }
+}
+</code></pre>
+<p>运行时可以这样传入参数：</p>
+<pre><code class="language-bash">zig build -Dlogging=true
+</code></pre>
+<p><code>build.zig</code> 不只决定如何构建，也可以决定程序在构建时拿到哪些配置。</p>
+<h2 id="如何把测试接入-zig-build-test"><a class="header" href="#如何把测试接入-zig-build-test">如何把测试接入 <code>zig build test</code></a></h2>
+<p>单文件测试前面已经出现过：</p>
+<pre><code class="language-bash">zig test math.zig
+</code></pre>
+<p>项目阶段更常见的做法，是把测试接入项目工作流，使测试也成为统一入口的一部分：</p>
+<pre><code class="language-bash">zig build test
+</code></pre>
+<p>最小示例如下：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn build(b: *std.Build) void {
+    const target = b.standardTargetOptions(.{});
+    const optimize = b.standardOptimizeOption(.{});
+
     const unit_tests = b.addTest(.{
         .root_module = b.createModule(.{
             .root_source_file = b.path("src/main.zig"),
@@ -363,23 +433,58 @@ pub fn main(_: std.process.Init) void {
             .optimize = optimize,
         }),
     });
-    
+
     const run_unit_tests = b.addRunArtifact(unit_tests);
+
     const test_step = b.step("test", "Run unit tests");
     test_step.dependOn(&amp;run_unit_tests.step);
 }
 </code></pre>
-<p>运行测试：</p>
-<pre><code class="language-bash">zig build test
-</code></pre>
-<h2 id="常见构建命令"><a class="header" href="#常见构建命令">常见构建命令</a></h2>
+<p>这一段和前面的 <code>run</code> 逻辑对应关系很直接：</p>
+<ul>
+<li><code>addTest(...)</code>：定义测试目标</li>
+<li><code>addRunArtifact(...)</code>：定义如何运行测试产物</li>
+<li><code>step("test", ...)</code>：给项目提供 <code>zig build test</code> 入口</li>
+</ul>
+<p><code>zig build test</code> 能否使用，取决于项目是否定义了对应的 <code>test</code> 步骤。</p>
+<p>两种测试方式的区别如下：</p>
+<ul>
+<li><code>zig test file.zig</code>：直接对一个文件或目标执行测试</li>
+<li><code>zig build test</code>：执行项目定义好的测试工作流</li>
+</ul>
+<p>两者都很常见，只是面向的层级不同。</p>
+<h2 id="更复杂的工程组织"><a class="header" href="#更复杂的工程组织">更复杂的工程组织</a></h2>
+<p>本章到这里已经覆盖了基础部分所需的构建系统认识。下面对更复杂的主题做边界说明。</p>
+<h3 id="模块拆分"><a class="header" href="#模块拆分">模块拆分</a></h3>
+<p>项目变大以后，代码通常会拆分成多个模块，而不是把所有逻辑都放进 <code>main.zig</code>。这时 <code>build.zig</code> 会承担更多职责，例如创建额外模块、管理导入关系、为不同目标复用模块配置。</p>
+<h3 id="多目标项目"><a class="header" href="#多目标项目">多目标项目</a></h3>
+<p>一个项目不一定只有一个可执行程序。它还可能同时包含：</p>
+<ul>
+<li>多个可执行目标</li>
+<li>库目标</li>
+<li>示例程序</li>
+<li>测试目标</li>
+<li>文档或其他辅助步骤</li>
+</ul>
+<p>这会让 <code>build.zig</code> 的结构更丰富，但核心思想不变：用步骤组织项目工作流。</p>
+<h3 id="外部依赖与系统库"><a class="header" href="#外部依赖与系统库">外部依赖与系统库</a></h3>
+<p>随着项目复杂度上升，还会遇到：</p>
+<ul>
+<li>外部依赖接入</li>
+<li>系统库链接</li>
+<li>C 代码集成</li>
+<li>更复杂的平台差异处理</li>
+</ul>
+<p>这些主题都很重要，但更适合放到高级部分系统展开。本章的重点是建立项目级构建入口的基础认识。</p>
+<h2 id="最常用的几个构建命令"><a class="header" href="#最常用的几个构建命令">最常用的几个构建命令</a></h2>
+<p>本章最常用的命令并不多：</p>
 <pre><code class="language-bash"># 构建项目
 zig build
 
-# 运行程序
+# 运行项目中定义的 run 步骤
 zig build run
 
-# 运行测试
+# 运行项目中定义的 test 步骤
 zig build test
 
 # 指定优化级别
@@ -391,93 +496,41 @@ zig build -Dtarget=x86_64-windows
 # 查看当前项目定义了哪些步骤
 zig build --help
 </code></pre>
-<blockquote>
-<p>⚠️ <code>zig build</code> 能使用哪些步骤，取决于当前项目的 <code>build.zig</code> 里定义了什么。<br>例如 <code>zig init</code> 生成的默认项目通常会提供 <code>run</code>、<code>test</code>、<code>install</code> 等步骤，但不会默认提供 <code>clean</code> 这样的自定义步骤。</p>
-</blockquote>
-<h2 id="构建系统参考资源"><a class="header" href="#构建系统参考资源">构建系统参考资源</a></h2>
-<ul>
-<li><strong>官方文档</strong>：https://ziglang.org/learn/build-system/</li>
-<li><strong>标准库文档</strong>：运行 <code>zig std</code> 查看 <code>std.Build</code> 模块</li>
-<li><strong>示例项目</strong>：https://github.com/ziglang/zig/tree/master/build_examples</li>
-</ul>
-<hr>
-<h2 id="章节练习题"><a class="header" href="#章节练习题">章节练习题</a></h2>
-<h3 id="基础题"><a class="header" href="#基础题">基础题</a></h3>
-<p><strong>题目1</strong>：创建一个简单的 build.zig 文件，构建一个可执行程序。</p>
-<p><strong>要求</strong>：</p>
-<ul>
-<li>项目名称为 “hello-world”</li>
-<li>主文件为 src/main.zig</li>
-<li>支持运行命令 <code>zig build run</code></li>
-</ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn build(b: *std.Build) void {
-    const target = b.standardTargetOptions(.{});
-    const optimize = b.standardOptimizeOption(.{});
-
-    const exe = b.addExecutable(.{
-        .name = "hello-world",
-        .root_module = b.createModule(.{
-            .root_source_file = b.path("src/main.zig"),
-            .target = target,
-            .optimize = optimize,
-        }),
-    });
-
-    b.installArtifact(exe);
-
-    const run_cmd = b.addRunArtifact(exe);
-    if (b.args) |args| {
-        run_cmd.addArgs(args);
-    }
-
-    const run_step = b.step("run", "Run the app");
-    run_step.dependOn(&amp;run_cmd.step);
-}
-</code></pre>
-<p><strong>题目2</strong>：配置构建选项，支持 Debug 和 Release 两种模式。</p>
-<p><strong>要求</strong>：</p>
-<ul>
-<li>使用 <code>standardOptimizeOption</code></li>
-<li>输出当前优化级别</li>
-</ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn build(b: *std.Build) void {
-    const optimize = b.standardOptimizeOption(.{});
-    
-    // 输出优化级别（仅用于演示）
-    std.debug.print("优化级别：{}\n", .{optimize});
-}
-</code></pre>
-<p><strong>题目3</strong>：添加一个自定义构建步骤，输出 “Building…” 消息。</p>
-<p><strong>要求</strong>：</p>
-<ul>
-<li>创建名为 “greet” 的自定义步骤</li>
-<li>执行时输出 “Building my project!”</li>
-</ul>
-<p><strong>参考答案</strong>：</p>
-<pre><code class="language-zig">pub fn build(b: *std.Build) void {
-    const greet_step = b.step("greet", "Print greeting");
-    
-    const greet_cmd = b.addSystemCommand(&amp;[_][]const u8{
-        "echo", "Building my project!",
-    });
-    
-    greet_step.dependOn(&amp;greet_cmd.step);
-}
-</code></pre>
-<hr>
-<h2 id="下一步学习"><a class="header" href="#下一步学习">下一步学习</a></h2>
-<p>恭喜您完成了构建系统入门。到这里，第一部分的主线也基本闭合了：你已经接触了基础语法、控制流、错误处理，以及如何把这些代码组织成一个真正的项目。</p>
-<p>接下来你可以按下面的顺序继续：</p>
+<p>比命令本身更重要的是下面两个判断：</p>
 <ol>
-<li><strong>实践练习</strong>：完成本章练习题，把 <code>build.zig</code> 和项目结构真正跑一遍</li>
-<li><strong>回看第一部分</strong>：如果你对错误处理、切片、函数参数等概念还不够稳，建议在进入高级主题前先补一遍基础</li>
-<li><strong>深入学习</strong>：阅读<a href="../part2-advanced/chapter-package-management.html">构建系统与包管理</a>章节，继续了解更复杂的构建配置与依赖管理</li>
+<li><code>zig build run</code>、<code>zig build test</code> 的前提是项目里定义了对应步骤。</li>
+<li>不清楚一个项目支持什么时，优先看 <code>zig build --help</code>。</li>
+</ol>
+<h2 id="本章与高级构建系统与包管理的边界"><a class="header" href="#本章与高级构建系统与包管理的边界">本章与高级“构建系统与包管理”的边界</a></h2>
+<p>为了避免在基础阶段一次引入过多内容，本章的边界需要明确。</p>
+<p>本章重点解决的是：</p>
+<ul>
+<li>为什么项目需要 <code>build.zig</code></li>
+<li><code>zig init</code> 生成的几个核心文件分别做什么</li>
+<li>一个最小项目如何接通构建、运行、测试</li>
+<li><code>target</code> 和 <code>optimize</code> 的基本含义</li>
+<li>如何把简单配置从构建脚本传给程序</li>
+</ul>
+<p>下面这些主题，会放到高级章节继续展开：</p>
+<ul>
+<li><code>build.zig.zon</code> 的依赖声明细节</li>
+<li>外部依赖接入</li>
+<li>哈希获取与固定</li>
+<li>更复杂的模块组织</li>
+<li>系统库与 C 代码集成</li>
+<li>多平台、多目标的复杂构建策略</li>
+</ul>
+<p>这些内容并不是次要主题，只是它们建立在“项目工作流”这一基础之上。先把基础闭环走通，再进入高级配置，会更清楚每个构建部分分别在解决什么问题。</p>
+<h2 id="本章要点"><a class="header" href="#本章要点">本章要点</a></h2>
+<ol>
+<li>单文件命令适合练习和最小实验，项目开发更需要统一的构建入口。</li>
+<li><code>build.zig</code> 的核心作用不是“写几条命令”，而是描述项目的构建、运行和测试工作流。</li>
+<li><code>zig init</code> 生成的最小项目中，<code>build.zig</code> 负责构建流程，<code>build.zig.zon</code> 是项目清单，<code>src/main.zig</code> 和 <code>src/root.zig</code> 分别对应常见的可执行入口和库入口。</li>
+<li><code>addExecutable</code> 用于定义目标，<code>installArtifact</code> 用于把产物纳入默认安装或输出流程。</li>
+<li><code>addRunArtifact</code> 定义“如何运行这个产物”，而 <code>step("run", ...)</code>、<code>step("test", ...)</code> 则是在项目里显式提供命令入口。</li>
+<li><code>zig build run</code>、<code>zig build test</code> 是否可用，取决于项目是否定义了对应步骤。</li>
+<li><code>target</code> 和 <code>optimize</code> 是最常见的构建参数，分别对应目标平台和优化级别。</li>
+<li><code>build.zig</code> 也可以把构建期配置传给程序代码。</li>
 </ol>
 
                     </main>
