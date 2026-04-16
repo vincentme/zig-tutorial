@@ -1,6 +1,6 @@
 # 内存管理模型
 
-> **章节定位**：本章属于第二部分的核心章节之一，重点不是教你“记住几个分配器名字”，而是帮助你建立 Zig 中最重要的一组工程直觉：
+> **进阶**：本章属于第二部分的核心章节之一，目标是建立 Zig 中最重要的一组工程直觉：
 >
 > - 内存是一种资源
 > - 分配可能失败，释放必须可靠
@@ -9,15 +9,15 @@
 >
 > 如果说第一部分解决的是“代码怎么写”，那么本章更关注“资源责任怎么划分、失败路径怎么收口、接口为什么这样设计”。
 >
-> **相关阅读与衔接建议**：
-> - 如果你刚读完[指针、切片与对齐](chapter-pointers.md)，这一章会把“如何访问数据”进一步推进到“谁拥有数据、谁负责释放”。
-> - 如果你还没有建立 `std.heap` 中常见 allocator 的基础入口直觉，也可以先阅读[常用标准库模块详解](chapter-standard-library-detail.md)中对应的小节，再回到本章理解更完整的资源模型。
-> - 如果你接下来准备阅读[接口、组合与设计模式](chapter-interfaces.md)，可以特别留意本章里“分配器是接口设计一部分”这一主线。
-> - 如果你更想先看实践案例，也可以在读完本章后回到第三部分对照阅读[高级内存管理技巧（专题）](../part3-practice/chapter-advanced-memory.md)，观察这些原则在案例里的落地方式。
+> **相关阅读**：
+> - 如果刚读完[指针、切片与对齐](chapter-pointers.md)，这一章会把“如何访问数据”进一步推进到“谁拥有数据、谁负责释放”。
+> - 如果还没有建立 `std.heap` 中常见 allocator 的基础入口直觉，也可以先阅读[常用标准库模块详解](chapter-standard-library-detail.md)中对应的小节，再回到本章理解更完整的资源模型。
+> - 如果接下来准备阅读[接口、组合与设计模式](chapter-interfaces.md)，可以特别留意本章里“分配器是接口设计一部分”这一主线。
+> - 如果更想先看实践案例，也可以在读完本章后回到第三部分对照阅读[高级内存管理技巧（专题）](../part3-practice/chapter-advanced-memory.md)，观察这些原则在案例里的落地方式。
 
 ---
 
-## 先建立一个总视角：Zig 的内存管理在解决什么问题？
+## 总视角：Zig 的内存管理在解决什么问题？
 
 在系统编程里，很多最难定位的问题都和内存有关。例如：
 
@@ -27,12 +27,12 @@
 - 越界访问：读写超出合法范围
 - 生命周期混乱：调用者和被调用者都以为“对方会负责”
 
-Zig 没有垃圾回收器，也没有 Rust 那样的借用检查器来替你自动兜底。  
+Zig 没有垃圾回收器，也没有 Rust 那样的借用检查器自动兜底。  
 它选择的是另一条路线：
 
 > **把资源责任表达得更明确，把分配行为放回接口层，把调试期检查交给工具和运行时防护。**
 
-这意味着 Zig 给了你更高的自由度，也要求你建立更强的资源管理纪律。
+这意味着 Zig 提供了更高的自由度，也要求建立更强的资源管理纪律。
 
 ---
 
@@ -73,7 +73,7 @@ Zig 没有垃圾回收器，也没有 Rust 那样的借用检查器来替你自�
 
 ## 所有权、借用与生命周期
 
-虽然 Zig 没有 Rust 式所有权系统，但你依然需要主动建立这套思维。
+虽然 Zig 没有 Rust 式所有权系统，但依然需要主动建立这套思维。
 
 ### 所有权最重要的三个问题
 
@@ -136,13 +136,13 @@ test "borrowed slice does not transfer ownership" {
 - 并不拥有这块数据
 - 也不负责释放
 
-> **经验法则**：  
+> **注意**：  
 > 返回新分配的数据，通常意味着把释放责任交给调用者；  
 > 接收 `[]const T`、`*const T` 这类只读视图，通常意味着“只借用、不拥有”。
 
 ---
 
-## 栈与堆：先区分两种最常见的内存来源
+## 栈与堆：两种最常见的内存来源
 
 理解 Zig 内存管理时，最容易先混淆的是：哪些值在栈上，哪些值需要显式分配。
 
@@ -198,9 +198,9 @@ test "heap allocation requires explicit cleanup" {
 其实更合理的理解是：
 
 - **能用栈时，通常优先用栈**
-- **只有当你确实需要动态生命周期或动态大小时，再引入堆分配**
+- **只有当确实需要动态生命周期或动态大小时，再引入堆分配**
 
-因为一旦进入堆分配，你就必须额外处理：
+因为一旦进入堆分配，就必须额外处理：
 
 - 分配失败
 - 释放责任
@@ -242,17 +242,39 @@ fn buildSomething(allocator: std.mem.Allocator) !Result
 
 显式传 allocator 也意味着：
 
-- 你可以在测试里替换分配策略
-- 你可以用测试分配器检测泄漏
-- 你可以更容易地构造失败路径
+- 可以在测试里替换分配策略
+- 可以用测试分配器检测泄漏
+- 可以更容易地构造失败路径
+
+### `Allocator` 的接口结构：`ptr` + `vtable`
+
+理解 `std.mem.Allocator` 的内部结构有助于回答"allocator 为什么可以随意替换"。
+
+Zig 标准库中，`Allocator` 本身是一个**胖指针**（fat pointer），只包含两个字段：
+
+```zig
+// 来自 std/mem/Allocator.zig
+ptr: *anyopaque,       // 指向具体分配器实例的类型擦除指针
+vtable: *const VTable, // 指向方法表的指针
+```
+
+其中 `VTable` 定义了四个函数指针：`alloc`、`resize`、`remap`、`free`。
+
+这意味着：
+
+- 任何实现了这四个方法的类型，都可以通过 `.allocator()` 方法生成一个 `Allocator` 值
+- 调用方只和 `Allocator` 这个统一接口打交道，不关心背后是 `DebugAllocator`、`ArenaAllocator` 还是 `page_allocator`
+- 这本质上是运行时多态：通过 `vtable` 做方法分派，通过 `ptr` 传递实例状态
+
+正因如此，函数签名里写 `allocator: std.mem.Allocator` 就够了——调用者可以传入任何分配器实现，被调用者不需要知道细节。这就是 Zig 中"分配器是接口"的实际含义。
 
 ---
 
-## 常见分配器：先知道它们解决什么问题
+## 常见分配器：它们各自解决什么问题
 
-本节不是让你背 API，而是先建立“这些分配器分别适合什么场景”。
+本节的重点是建立“这些分配器分别适合什么场景”。
 
-## `std.testing.allocator`
+### `std.testing.allocator`
 
 这是测试里最值得优先熟悉的分配器。
 
@@ -275,48 +297,53 @@ test "std.testing.allocator catches leaks when cleanup is missing" {
 }
 ```
 
-> 在教程和日常练习里，如果你正在写 `test`，优先考虑 `std.testing.allocator`。
+> 在教程和日常练习里，如果正在写 `test`，优先考虑 `std.testing.allocator`。
 
 ---
 
-## `std.heap.DebugAllocator`
+### `std.heap.DebugAllocator`
 
-这是调试期非常有价值的分配器包装器。
+这是调试期非常有价值的分配器包装器。和 `std.testing.allocator`（只能在 `test` 块中使用）不同，`DebugAllocator` 可以在正式程序中使用。
 
-特点：
+它的核心价值是**运行时问题检测**：
 
-- 更适合开发阶段定位问题
-- 可以帮助发现泄漏、重复释放等错误
-- 适合需要手动管理生命周期的示例程序
+- **泄漏检测**：`deinit()` 返回 `std.heap.Check`（`.ok` 或 `.leak`），并在日志中打印泄漏地址和分配时的堆栈回溯
+- **双重释放检测**：打印首次分配、首次释放、第二次释放三条堆栈回溯
+- **悬空指针辅助**：释放后的内存不会被复用，访问会触发页面错误
+
+下面的例子故意省略了一次 `free`，展示 `DebugAllocator` 如何报告泄漏：
 
 ```zig
 const std = @import("std");
 
-test "DebugAllocator can be used in development-style examples" {
-    var gpa: std.heap.DebugAllocator(.{}) = .init;
-    defer _ = gpa.deinit();
+pub fn main(_: std.process.Init) !void {
+    var debug_alloc: std.heap.DebugAllocator(.{}) = .init;
 
-    const allocator = gpa.allocator();
+    const allocator = debug_alloc.allocator();
 
-    const data = try allocator.alloc(u8, 32);
-    defer allocator.free(data);
+    const a = try allocator.alloc(u8, 64);
+    allocator.free(a); // 正常释放
 
-    try std.testing.expectEqual(@as(usize, 32), data.len);
+    const b = try allocator.alloc(u8, 128);
+    _ = b; // 故意不释放，模拟泄漏
+
+    // deinit() 会检查所有分配是否已释放
+    // 如果发现泄漏，会输出类似以下信息到 stderr：
+    //   error: memory address 0x7f...leaked
+    //   （以及分配该内存时的堆栈回溯）
+    const check = debug_alloc.deinit();
+    if (check == .leak) {
+        std.debug.print("leaked memory detected!\n", .{});
+    }
 }
 ```
 
-### 一个容易混淆的点
-
-有些资料会把不同版本里的“通用调试分配器”叫法混在一起。  
-在本教程当前语境里，更稳妥的做法是：
-
-- 直接按你本地版本的标准库名字来确认
-- 不要把旧资料里的习惯叫法硬套进来
-- 重点理解“调试期优先选容易发现问题的分配器”这个原则
+> 在 `test` 块里，`std.testing.allocator` 底层就是 `DebugAllocator`，测试结束时自动做泄漏检查。
+> 但在 `pub fn main` 或其他非测试上下文中，需要自己创建 `DebugAllocator` 实例来获得这些调试能力。
 
 ---
 
-## `std.heap.ArenaAllocator`
+### `std.heap.ArenaAllocator`
 
 Arena 的核心思想是：
 
@@ -328,15 +355,38 @@ Arena 的核心思想是：
 - 中间不想单独逐个释放
 - 更关心整体阶段结束时统一回收
 
+**不使用 Arena 时**：每次分配都需要单独释放，分配越多，清理路径越复杂：
+
 ```zig
 const std = @import("std");
 
-test "ArenaAllocator frees everything at once" {
+test "without arena: each allocation needs individual free" {
+    const allocator = std.testing.allocator;
+
+    const a = try allocator.alloc(u8, 10);
+    errdefer allocator.free(a);
+    const b = try allocator.alloc(u8, 20);
+    errdefer allocator.free(b);
+    const c = try allocator.alloc(u8, 30);
+
+    // 三次分配 → 三次释放，顺序不能出错
+    allocator.free(c);
+    allocator.free(b);
+    allocator.free(a);
+}
+```
+
+**使用 Arena 后**：只需一次 `deinit`，所有通过该 arena 分配的内存统一回收：
+
+```zig
+const std = @import("std");
+
+test "with arena: single deinit frees everything" {
     var debug_allocator: std.heap.DebugAllocator(.{}) = .init;
     defer _ = debug_allocator.deinit();
 
     var arena = std.heap.ArenaAllocator.init(debug_allocator.allocator());
-    defer arena.deinit();
+    defer arena.deinit(); // 一次调用释放下面所有分配
 
     const allocator = arena.allocator();
 
@@ -344,11 +394,14 @@ test "ArenaAllocator frees everything at once" {
     const b = try allocator.alloc(u8, 20);
     const c = try allocator.alloc(u8, 30);
 
+    // 不需要逐个 free —— arena.deinit() 统一回收
     try std.testing.expectEqual(@as(usize, 10), a.len);
     try std.testing.expectEqual(@as(usize, 20), b.len);
     try std.testing.expectEqual(@as(usize, 30), c.len);
 }
 ```
+
+当分配次数从 3 次变成 30 次甚至 300 次时，Arena 的优势会更加明显：无需为每次分配维护对应的释放路径。
 
 ### Arena 的代价
 
@@ -362,7 +415,7 @@ Arena 很方便，但不要把它理解成“万能方案”。
 
 ---
 
-## `std.heap.FixedBufferAllocator`
+### `std.heap.FixedBufferAllocator`
 
 Fixed Buffer 的核心思想是：
 
@@ -403,7 +456,7 @@ test "FixedBufferAllocator allocates from caller-owned storage" {
 
 ---
 
-## `std.heap.page_allocator`
+### `std.heap.page_allocator`
 
 这是更接近操作系统页面分配的方案。
 
@@ -411,7 +464,25 @@ test "FixedBufferAllocator allocates from caller-owned storage" {
 
 - 较大的分配
 - 更底层的内存控制
-- 你明确知道自己为什么不用其他更高层的封装
+- 明确知道自己为什么不用其他更高层的封装
+
+`page_allocator` 是一个全局常量，不需要初始化，适合在 `pub fn main` 中直接使用：
+
+```zig
+const std = @import("std");
+
+pub fn main(_: std.process.Init) !void {
+    const allocator = std.heap.page_allocator;
+
+    const buffer = try allocator.alloc(u8, 1024);
+    defer allocator.free(buffer);
+
+    @memset(buffer, 0);
+    std.debug.print("allocated {d} bytes\n", .{buffer.len});
+}
+```
+
+在测试中也可以直接使用，但要注意 `page_allocator` 不会检测泄漏——它只负责分配和释放：
 
 ```zig
 const std = @import("std");
@@ -428,66 +499,32 @@ test "page_allocator can allocate memory directly from the system" {
 
 对大多数初学者来说，更重要的不是立刻使用它，而是知道：
 
-- Zig 并不强迫你只通过一种固定策略分配
+- Zig 并不强迫只通过一种固定策略分配
 - 分配器本身就是工程权衡的一部分
+- `page_allocator` 常被用作 `DebugAllocator` 或 `ArenaAllocator` 的底层后端
 
 ---
 
-## 资源清理：`defer` 和 `errdefer` 是本章最该掌握的实战工具
+## 资源清理：`defer` 和 `errdefer` 在内存管理中的核心模式
 
-如果只从本章带走两个关键字，那应该是：
+> **相关阅读**：`defer` 在作用域结束时无条件执行，`errdefer` 只在函数以错误返回时执行，多个 `defer`/`errdefer` 按 LIFO 顺序执行。如果还不熟悉它们的基本语法和执行顺序，请先阅读[错误处理](../part1-basics/chapter-error-handling.md)中的相关章节。
 
-- `defer`
-- `errdefer`
-
-## `defer`：无论成功还是失败，离开作用域时都执行
-
-```zig
-const std = @import("std");
-
-fn makeMessage(allocator: std.mem.Allocator) ![]u8 {
-    const msg = try allocator.alloc(u8, 5);
-    return msg;
-}
-
-test "defer guarantees cleanup at scope end" {
-    const allocator = std.testing.allocator;
-
-    const msg = try makeMessage(allocator);
-    defer allocator.free(msg);
-
-    try std.testing.expectEqual(@as(usize, 5), msg.len);
-}
-```
-
-### `defer` 的典型用途
-
-- 释放内存
-- 关闭文件
-- 解锁互斥锁
-- 归还临时资源
-- 记录作用域收尾逻辑
-
----
-
-## `errdefer`：只有在出错返回时才执行
-
-这是 Zig 里非常实用的失败路径收口工具。
+在内存管理场景中，最值得掌握的是 `errdefer` **清理半初始化资源**的模式。当一个函数需要进行多次分配时，任何一次分配都可能失败，此时已经成功分配的资源必须被回收，否则就会泄漏：
 
 ```zig
 const std = @import("std");
 
 fn makePair(allocator: std.mem.Allocator) !struct { a: []u8, b: []u8 } {
     const a = try allocator.alloc(u8, 8);
-    errdefer allocator.free(a);
+    errdefer allocator.free(a); // 如果后续失败，回收 a
 
     const b = try allocator.alloc(u8, 16);
-    errdefer allocator.free(b);
+    errdefer allocator.free(b); // 如果后续失败，回收 b
 
     return .{ .a = a, .b = b };
 }
 
-test "caller frees successful result" {
+test "errdefer cleans up on partial failure" {
     const allocator = std.testing.allocator;
 
     const pair = try makePair(allocator);
@@ -499,15 +536,14 @@ test "caller frees successful result" {
 }
 ```
 
-这里的逻辑很值得体会：
+这段代码体现了内存管理中最典型的 `errdefer` 模式：
 
-- 如果第二次分配失败，`a` 会被 `errdefer` 自动释放
-- 如果函数整体成功返回，`errdefer` 不执行
-- 成功路径上的资源责任，再转交给调用者
+- **每次成功分配后立即写 `errdefer`**：确保分配和回收逻辑紧邻，不会遗漏
+- **成功路径**：函数正常返回，`errdefer` 不执行，所有权转交给调用者
+- **失败路径**：后续 `try` 触发错误返回，`errdefer` 按 LIFO 顺序回收已分配资源
+- **调用者**：只在成功时获得资源，用 `defer` 负责最终释放
 
-> **经验法则**：  
-> `defer` 适合“无论如何都要做”；  
-> `errdefer` 适合“只在失败回滚时做”。
+这个"分配 → `errdefer` → 下一步"的写法在标准库和实际项目中非常普遍。掌握它，失败路径上的资源泄漏问题就基本不会出现。
 
 ---
 
@@ -515,7 +551,7 @@ test "caller frees successful result" {
 
 一个更符合 Zig 风格的接口，通常会体现以下几个原则。
 
-## 原则 1：不要偷偷依赖全局分配器
+### 原则 1：不要偷偷依赖全局分配器
 
 不推荐的思路是：
 
@@ -529,7 +565,7 @@ test "caller frees successful result" {
 - 生命周期边界不清楚
 - 模块之间耦合变重
 
-## 原则 2：让会分配的函数显式接收 allocator
+### 原则 2：让会分配的函数显式接收 allocator
 
 ```zig
 const std = @import("std");
@@ -550,7 +586,7 @@ test "allocator-passing keeps ownership explicit" {
 }
 ```
 
-## 原则 3：文档和命名要表达资源责任
+### 原则 3：文档和命名要表达资源责任
 
 例如函数名、注释和返回值设计应当帮助读者判断：
 
@@ -562,45 +598,14 @@ test "allocator-passing keeps ownership explicit" {
 
 ---
 
-## 容器和分配器：哪些是稳定原则，哪些是版本敏感区域？
+## 容器与版本敏感区域
 
-这一节非常重要，因为很多读者会同时接触：
+> **版本说明**：容器 API（如 `ArrayList` 的初始化与方法签名）可能随版本演进。
+> 稳定的是原则：显式传递分配器、调用者持有释放责任、资源清理路径清晰。
+> 遇到版本差异时，优先理解"谁分配、谁释放、生命周期到哪里"这一层，
+> 再核对当前版本的具体方法名。
 
-- 官方文档
-- 旧博客
-- 不同 Zig 版本的代码片段
-- 当前开发版标准库源码
-
-于是就很容易问：
-
-> “为什么同样是 `ArrayList`，不同资料里的写法长得完全不一样？”
-
-答案通常不是“谁对谁错”，而是：
-
-> **容器 API 属于比基础语法更容易随版本演进的区域。**
-
----
-
-## 版本敏感说明：阅读容器 API 时的正确姿势
-
-### 先记住：稳定的是原则，不一定是某个具体方法名
-
-更值得长期记住的是这些原则：
-
-1. **把容器理解成状态 + 分配行为**
-2. **显式分配时要有 allocator 上下文**
-3. **释放责任需要写清楚**
-4. **当前版本的标准库源码比旧文章更可靠**
-
-### 对当前教程语境更稳妥的理解方式
-
-在较新的 Zig 版本语境里，很多容器 API 更强调：
-
-- 空状态要明确
-- 扩容时显式传入 allocator
-- 销毁时明确给出释放所需上下文
-
-因此你可能会看到这类风格：
+在较新的 Zig 版本语境里，容器 API 更强调空状态明确、扩容时显式传入 allocator、销毁时给出释放上下文。例如：
 
 ```zig
 const std = @import("std");
@@ -619,51 +624,6 @@ test "current ArrayList style is explicit about allocation context" {
 }
 ```
 
-### 这一节真正想提醒你的是什么？
-
-不是让你死记：
-
-- “永远必须这样写”
-- “旧文章一定都错了”
-- “以后 Zig 永远不会再变”
-
-而是提醒你：
-
-- **基础语法通常比容器 API 更稳定**
-- **容器、构建系统、I/O 等区域更容易随版本迭代**
-- **看到不同写法时，优先确认本地 Zig 版本和当前标准库源码**
-
----
-
-## 一个容易踩坑的误区：把版本快照当成永恒规范
-
-在开发版语境下，尤其要避免这几种心态：
-
-### 误区 1：看到一种写法，就把它当成“唯一正确答案”
-
-更好的做法是：
-
-- 先确认版本
-- 再确认上下文
-- 最后理解设计方向
-
-### 误区 2：只记方法名，不理解资源责任
-
-即使 API 名字变了，真正重要的问题仍然是：
-
-- 什么时候发生分配？
-- 谁拥有底层内存？
-- 释放时需要什么上下文？
-
-### 误区 3：用旧资料时不做版本核对
-
-这在下面这些区域尤其危险：
-
-- 容器
-- 构建系统
-- I/O
-- 某些调试工具接口
-
 ---
 
 ## 线程安全不是“换一个分配器名字”就自动得到的
@@ -676,7 +636,7 @@ test "current ArrayList style is explicit about allocation context" {
 - 分配器只是整个资源共享模型的一部分
 - 不是说“换个听起来线程安全的封装”就一切自动正确
 
-因此，在并发场景下你应优先问：
+因此，在并发场景下应优先问：
 
 1. 哪些对象真的需要跨线程共享？
 2. 是否可以减少共享分配器的使用范围？
@@ -691,7 +651,7 @@ test "current ArrayList style is explicit about allocation context" {
 
 ## 内存管理中的常见设计建议
 
-## 1. 能不分配就不分配
+### 1. 能不分配就不分配
 
 很多时候，最好的内存优化不是换分配器，而是根本不分配。
 
@@ -702,11 +662,11 @@ test "current ArrayList style is explicit about allocation context" {
 - 用栈对象而不是堆对象
 - 推迟分配，直到确实需要
 
-## 2. 让失败路径和成功路径一样清楚
+### 2. 让失败路径和成功路径一样清楚
 
-如果你的代码只有“成功怎么走”很清楚，而“中途失败怎么回滚”很模糊，那么资源 bug 往往只是时间问题。
+如果代码只有“成功怎么走”很清楚，而“中途失败怎么回滚”很模糊，那么资源 bug 往往只是时间问题。
 
-## 3. 优先写出责任边界清楚的代码
+### 3. 优先写出责任边界清楚的代码
 
 比起一开始就追求“最省一次分配”，更重要的是：
 
@@ -715,7 +675,7 @@ test "current ArrayList style is explicit about allocation context" {
 - 谁释放
 - 谁只借用
 
-## 4. 先正确，再优化
+### 4. 先正确，再优化
 
 很多内存技巧都能提性能，但越底层的优化越依赖正确前提。  
 所以顺序通常应当是：
@@ -728,31 +688,20 @@ test "current ArrayList style is explicit about allocation context" {
 
 ## 本章小结
 
-这一章最值得你真正带走的，不是某个分配器的名字，而是下面这些判断。
+这一章最值得带走的判断：
 
-### 你应该优先记住的内容
+1. Zig 把内存视为需要显式管理的资源
+2. 分配器不是附属品，而是接口设计的一部分
+3. "谁分配，谁释放"是最重要的资源责任原则之一
+4. `defer` 和 `errdefer` 是收拢资源清理逻辑的关键工具
+5. 栈和堆不是"高级/低级"的关系，而是不同的生命周期选择
+6. 调试期优先选择更容易发现问题的分配策略
+7. 容器 API 比基础语法更容易随版本演进
 
-- Zig 把内存视为需要显式管理的资源
-- 分配器不是附属品，而是接口设计的一部分
-- “谁分配，谁释放”是最重要的资源责任原则之一
-- `defer` 和 `errdefer` 是收拢资源清理逻辑的关键工具
-- 栈和堆不是“高级/低级”的关系，而是不同的生命周期选择
-- 调试期优先选择更容易发现问题的分配策略
-- 容器 API 比基础语法更容易随版本演进
-
-### 读完这一章后，你应该能开始回答这些问题
-
-- 这个函数是否会分配？
-- 如果会分配，为什么 allocator 应该显式传入？
-- 返回值的所有权属于谁？
-- 清理逻辑是否能覆盖失败路径？
-- 这里是在借用数据，还是在转移资源责任？
-- 这段容器代码是稳定原则，还是版本敏感写法？
-
-如果你已经能带着这些问题去阅读标准库和第三部分案例，那么这一章就达到目的了。
+读完这一章后，应该能开始回答这些问题：这个函数是否会分配？allocator 应该显式传入吗？返回值的所有权属于谁？清理逻辑是否能覆盖失败路径？这里是在借用数据，还是在转移资源责任？如果已经能带着这些问题去阅读标准库和第三部分案例，那么这一章就达到目的了。
 
 ---
 
-> 💡 **下一章预告**
+> **相关阅读**：
 >
 > 下一章我们将进入[接口、组合与设计模式](chapter-interfaces.md)，继续讨论：当代码规模变大时，应该如何组织抽象、表达能力边界，以及在编译期抽象与运行时抽象之间做出选择。

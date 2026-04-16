@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-dab0b333.js";
+            window.path_to_searchindex_js = "../searchindex-5349b6ee.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-84df0a14.js"></script>
@@ -183,11 +183,11 @@
                     <main>
                         <h1 id="并发编程概述"><a class="header" href="#并发编程概述">并发编程概述</a></h1>
 <blockquote>
-<p>💡 <strong>章节定位</strong></p>
+<p><strong>进阶</strong>：</p>
 <p>本章的重点是建立 Zig 中并发编程的<strong>稳定概念框架</strong>：线程、共享状态、同步原语、原子操作与常见取舍。</p>
 <p>与 I/O 相关的“异步方向”在开发版语境下仍然更容易演进，因此本章不会把某些 dev 版接口当作稳定 API 手册来讲解。关于这一方向的阅读建议，请结合第三部分的<a href="../part3-practice/chapter-async.html">异步 I/O：现状与未来方向</a>一起看。</p>
 </blockquote>
-<h2 id="先区分三个容易混淆的概念"><a class="header" href="#先区分三个容易混淆的概念">先区分三个容易混淆的概念</a></h2>
+<h2 id="三个容易混淆的概念"><a class="header" href="#三个容易混淆的概念">三个容易混淆的概念</a></h2>
 <p>在进入具体代码之前，必须先分清：<strong>异步（asynchrony）</strong>、<strong>并发（concurrency）</strong>、<strong>并行（parallelism）</strong>。</p>
 <div class="table-wrapper">
 <table>
@@ -201,13 +201,13 @@
 </tbody>
 </table>
 </div>
-<h3 id="异步先关注顺序是否重要"><a class="header" href="#异步先关注顺序是否重要">异步：先关注“顺序是否重要”</a></h3>
+<h3 id="异步顺序是否重要"><a class="header" href="#异步顺序是否重要">异步：“顺序是否重要”</a></h3>
 <p>异步首先讨论的是<strong>正确性约束</strong>，而不是“有没有多线程”。</p>
 <p>如果两个操作只要最终都完成即可，中间顺序并不重要，那么它们就具有异步性。</p>
-<h3 id="并发先关注系统是否能同时推进多个任务"><a class="header" href="#并发先关注系统是否能同时推进多个任务">并发：先关注“系统是否能同时推进多个任务”</a></h3>
+<h3 id="并发系统是否能同时推进多个任务"><a class="header" href="#并发系统是否能同时推进多个任务">并发：“系统是否能同时推进多个任务”</a></h3>
 <p>并发讨论的是<strong>组织方式</strong>。</p>
 <p>即使只有一个 CPU 核心，系统也可以通过任务切换，在时间上交替推进多个任务。这仍然是并发，但不一定是并行。</p>
-<h3 id="并行先关注硬件层面是否真的同时执行"><a class="header" href="#并行先关注硬件层面是否真的同时执行">并行：先关注“硬件层面是否真的同时执行”</a></h3>
+<h3 id="并行硬件层面是否真的同时执行"><a class="header" href="#并行硬件层面是否真的同时执行">并行：“硬件层面是否真的同时执行”</a></h3>
 <p>并行强调的是<strong>物理同时执行</strong>。这通常依赖多核 CPU，或者其他底层并行资源。</p>
 <p>因此，常见的关系可以这样理解：</p>
 <ul>
@@ -217,7 +217,7 @@
 </ul>
 <h2 id="zig-中并发编程的阅读重点"><a class="header" href="#zig-中并发编程的阅读重点">Zig 中并发编程的阅读重点</a></h2>
 <p>Zig 在并发上的一个重要特点是：<strong>尽量把成本和机制显式化</strong>。</p>
-<p>这意味着你在 Zig 中更常直接面对：</p>
+<p>这意味着在 Zig 中更常直接面对：</p>
 <ul>
 <li>线程</li>
 <li>锁</li>
@@ -228,12 +228,12 @@
 <p>而不是一开始就被隐藏在“自动调度器”或“语言级运行时”之后。</p>
 <p>这有两个直接后果：</p>
 <ol>
-<li>你能更清楚地看到并发成本和数据边界</li>
-<li>你也更需要自己做出正确的设计判断</li>
+<li>能更清楚地看到并发成本和数据边界</li>
+<li>也更需要自己做出正确的设计判断</li>
 </ol>
 <h2 id="什么时候需要并发"><a class="header" href="#什么时候需要并发">什么时候需要并发？</a></h2>
 <p>不是所有程序都需要并发。</p>
-<p>更准确地说，你通常在下面这些场景里才真的需要它：</p>
+<p>更准确地说，通常在下面这些场景里才真的需要它：</p>
 <ul>
 <li>需要同时处理多个任务</li>
 <li>存在明显的等待时间，希望程序更有响应性</li>
@@ -274,23 +274,23 @@ pub fn main() !void {
 <li>主线程通过 <code>join()</code> 等待它们结束</li>
 </ul>
 <h3 id="join-与-detach"><a class="header" href="#join-与-detach"><code>join()</code> 与 <code>detach()</code></a></h3>
-<p>线程创建之后，你通常要明确选择如何结束它的生命周期。</p>
+<p>线程创建之后，通常要明确选择如何结束它的生命周期。</p>
 <h4 id="join等待线程完成"><a class="header" href="#join等待线程完成"><code>join()</code>：等待线程完成</a></h4>
 <p>适用于：</p>
 <ul>
-<li>你需要确认工作已经完成</li>
+<li>需要确认工作已经完成</li>
 <li>后续逻辑依赖线程结果</li>
-<li>你希望生命周期最清晰</li>
+<li>希望生命周期最清晰</li>
 </ul>
 <h4 id="detach让线程独立运行"><a class="header" href="#detach让线程独立运行"><code>detach()</code>：让线程独立运行</a></h4>
 <p>适用于：</p>
 <ul>
-<li>你不打算等待该线程</li>
+<li>不打算等待该线程</li>
 <li>它确实是一个后台任务</li>
-<li>你能保证它不会访问已经释放的资源</li>
+<li>能保证它不会访问已经释放的资源</li>
 </ul>
 <blockquote>
-<p>⚠️ <strong>实践建议</strong></p>
+<p><strong>注意</strong>：</p>
 <p>大多数教程和普通工程代码里，<strong>优先选择 <code>join()</code></strong> 会更安全。<code>detach()</code> 更容易引入生命周期错误，尤其是后台线程引用了栈对象、临时缓冲区或即将销毁的分配器时。</p>
 </blockquote>
 <h2 id="共享状态为什么需要同步"><a class="header" href="#共享状态为什么需要同步">共享状态：为什么需要同步？</a></h2>
@@ -355,11 +355,11 @@ pub fn main() !void {
 <h3 id="这段代码体现了什么"><a class="header" href="#这段代码体现了什么">这段代码体现了什么？</a></h3>
 <ul>
 <li>锁保护的是<strong>共享状态</strong>，不是“线程本身”</li>
-<li><code>defer</code> 能帮助你减少忘记解锁的风险</li>
+<li><code>defer</code> 能帮助减少忘记解锁的风险</li>
 <li>把锁和数据封装在一起，通常比在外面散落管理更清晰</li>
 </ul>
 <h3 id="什么时候优先用锁"><a class="header" href="#什么时候优先用锁">什么时候优先用锁？</a></h3>
-<p>当你面对的是：</p>
+<p>当面对的是：</p>
 <ul>
 <li>结构体</li>
 <li>map / list / 缓冲区</li>
@@ -377,16 +377,20 @@ pub fn main() !void {
 <p>这时可以使用 <code>std.Thread.Condition</code>。</p>
 <pre><code class="language-zig">const std = @import("std");
 
+// 这些变量必须声明为模块级（全局），因为 std.Thread.spawn 要求线程函数
+// 的签名是固定的（不能捕获局部变量的闭包），所以共享状态只能通过全局变量
+// 或显式传入的指针来实现。这里用全局变量是为了让示例尽可能简洁。
 var mutex: std.Thread.Mutex = .{};
 var cond: std.Thread.Condition = .{};
 var ready = false;
 
 fn producer() void {
+    std.time.sleep(100 * std.time.ns_per_ms); // 模拟生产耗时
     mutex.lock();
     defer mutex.unlock();
 
     ready = true;
-    cond.signal();
+    cond.signal(); // 通知等待中的消费者
 }
 
 fn consumer() void {
@@ -397,11 +401,18 @@ fn consumer() void {
         cond.wait(&amp;mutex);
     }
 
-    std.debug.print("resource is ready\n", .{});
+    std.debug.print("consumer: resource is ready\n", .{});
+}
+
+pub fn main(_: std.process.Init) !void {
+    const producer_thread = try std.Thread.spawn(.{}, producer, .{});
+    const consumer_thread = try std.Thread.spawn(.{}, consumer, .{});
+
+    consumer_thread.join();
+    producer_thread.join();
 }
 </code></pre>
-<h3 id="这里最重要的不是函数名而是模式"><a class="header" href="#这里最重要的不是函数名而是模式">这里最重要的不是函数名，而是模式</a></h3>
-<p>请特别记住这一点：</p>
+<h3 id="条件变量的核心模式"><a class="header" href="#条件变量的核心模式">条件变量的核心模式</a></h3>
 <ul>
 <li>等待条件变量时，要和一把互斥锁配合使用</li>
 <li>条件检查通常写在 <code>while</code> 循环里，而不是 <code>if</code></li>
@@ -443,14 +454,16 @@ const AtomicCounter = struct {
 <li>逻辑已经很难一眼看懂的并发代码</li>
 </ul>
 <blockquote>
-<p>💡 一个实用经验：</p>
-<p>如果你在写原子代码时已经开始怀疑“这到底是否还容易验证”，那通常就该重新评估，看看是不是应该回到锁。</p>
+<p><strong>注意</strong>：</p>
+<p>如果在写原子代码时已经开始怀疑“这到底是否还容易验证”，那通常就该重新评估，看看是不是应该回到锁。</p>
 </blockquote>
 <h2 id="线程局部变量避免不必要的共享"><a class="header" href="#线程局部变量避免不必要的共享">线程局部变量：避免不必要的共享</a></h2>
 <p>并发设计里，一个很重要的思路是：<strong>如果能不共享，就尽量不共享。</strong></p>
 <p>线程局部变量（<code>threadlocal</code>）正是这个方向的一种工具。</p>
 <pre><code class="language-zig">const std = @import("std");
 
+// threadlocal 变量必须声明在模块级。每个线程都会拥有自己独立的一份副本，
+// 互不干扰，因此不需要锁保护。
 threadlocal var local_counter: usize = 0;
 
 fn worker(id: usize) void {
@@ -459,7 +472,23 @@ fn worker(id: usize) void {
         std.debug.print("thread {} local = {}\n", .{ id, local_counter });
     }
 }
+
+pub fn main(_: std.process.Init) !void {
+    var threads: [3]std.Thread = undefined;
+
+    for (&amp;threads, 0..) |*t, i| {
+        t.* = try std.Thread.spawn(.{}, worker, .{i});
+    }
+
+    for (threads) |t| {
+        t.join();
+    }
+
+    // 主线程也有自己的 local_counter 副本，它从未被修改过，仍然是 0
+    std.debug.print("main thread local = {}\n", .{local_counter});
+}
 </code></pre>
+<p>运行后会看到，每个线程的 <code>local_counter</code> 都从 0 独立递增到 3，互不影响。主线程的副本始终为 0。</p>
 <p>每个线程都会拥有自己独立的一份 <code>local_counter</code>，因此它不需要互斥锁保护。</p>
 <h3 id="它适合什么场景"><a class="header" href="#它适合什么场景">它适合什么场景？</a></h3>
 <ul>
@@ -490,15 +519,15 @@ fn worker(id: usize) void {
 </div>
 <p>这张表不是绝对规则，但很适合作为第一判断。</p>
 <h2 id="当前语境下如何看待异步-io方向"><a class="header" href="#当前语境下如何看待异步-io方向">当前语境下，如何看待“异步 I/O”方向？</a></h2>
-<p>你可能已经在博客、issue、标准库源码或开发版讨论中看到过与异步 I/O 相关的方向性接口。</p>
+<p>可能已经在博客、issue、标准库源码或开发版讨论中看到过与异步 I/O 相关的方向性接口。</p>
 <p>对于本教程读者，更重要的是建立一个<strong>稳妥认知</strong>：</p>
 <ol>
 <li>这属于更容易演进的区域</li>
 <li>它和线程模型不是简单替代关系</li>
 <li>教学上更适合先掌握线程、锁、条件变量、原子这些稳定概念</li>
-<li>真要落地具体 API，必须以你本地版本和源码为准</li>
+<li>真要落地具体 API，必须以本地版本和源码为准</li>
 </ol>
-<p>因此，本章不把某个开发版里的 I/O 并发接口当作“你现在必须背下来的主线知识”。</p>
+<p>因此，本章不把某个开发版里的 I/O 并发接口当作“现在必须背下来的主线知识”。</p>
 <h2 id="并发编程最常见的几个坑"><a class="header" href="#并发编程最常见的几个坑">并发编程最常见的几个坑</a></h2>
 <h3 id="1-把睡眠等待当同步机制"><a class="header" href="#1-把睡眠等待当同步机制">1. 把“睡眠等待”当同步机制</a></h3>
 <p><code>std.time.sleep()</code> 可以模拟场景，但不能代替真正的同步原语。</p>
@@ -529,9 +558,18 @@ fn worker(id: usize) void {
 </ul>
 <p>都可能导致非常难查的问题。</p>
 <h3 id="5-过早使用更高级的并发技巧"><a class="header" href="#5-过早使用更高级的并发技巧">5. 过早使用“更高级”的并发技巧</a></h3>
-<p>在你还没完全掌握线程、锁、条件变量之前，过早上复杂 lock-free 结构、复杂原子协议，通常只会让代码更难验证。</p>
+<p>在还没完全掌握线程、锁、条件变量之前，过早上复杂 lock-free 结构、复杂原子协议，通常只会让代码更难验证。</p>
+<h2 id="关于线程池thread-pool"><a class="header" href="#关于线程池thread-pool">关于线程池（Thread Pool）</a></h2>
+<p>可能会好奇标准库是否提供了线程池。在当前的 0.16-dev 版本中，<code>std.Thread</code> 不包含通用的线程池实现。早期版本曾经存在过 <code>std.Thread.Pool</code>，但在标准库重构过程中已被移除。</p>
+<p>如果项目需要线程池模式，目前的常见做法是：</p>
+<ul>
+<li>自己维护一组工作线程 + 任务队列</li>
+<li>使用社区提供的第三方库</li>
+<li>关注 <code>std.Io</code> 下正在演进的异步 I/O 基础设施，它在某些场景下可以替代传统线程池</li>
+</ul>
+<p>对于学习目的，手动管理一组线程加上条件变量通知，恰好是理解线程池内部工作原理的好练习。</p>
 <h2 id="本章小结"><a class="header" href="#本章小结">本章小结</a></h2>
-<p>本章最重要的目标，不是让你一次掌握所有并发技巧，而是建立这几个核心判断：</p>
+<p>本章的核心判断：</p>
 <ul>
 <li>并发、并行、异步不是一回事</li>
 <li>Zig 中更常从<strong>显式线程模型</strong>开始理解并发</li>
@@ -540,7 +578,7 @@ fn worker(id: usize) void {
 <li>能不共享，就尽量不共享</li>
 <li>对版本敏感的异步 I/O 方向，先把它当作“需要结合本地版本核对的高级主题”</li>
 </ul>
-<p>如果你已经能看清这些边界，那么在后续阅读测试、构建、网络和实战章节时，就更不容易把“并发写法”误当成“只是语法技巧”。</p>
+<p>如果已经能看清这些边界，那么在后续阅读测试、构建、网络和实战章节时，就更不容易把“并发写法”误当成“只是语法技巧”。</p>
 
                     </main>
 

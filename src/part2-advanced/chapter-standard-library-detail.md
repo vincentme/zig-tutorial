@@ -1,7 +1,7 @@
 # 常用标准库模块详解
 
 这一章不是标准库 API 手册，也不打算把所有函数逐条列出来。  
-它的目标更实际一些：帮助你建立一组**第一次独立写 Zig 程序时最值得先掌握的标准库模块直觉**。
+它的目标更实际一些：建立一组**独立写 Zig 程序时最值得先掌握的标准库模块直觉**。
 
 如果上一章《标准库导航与阅读指南》主要回答的是：
 
@@ -18,7 +18,7 @@
 
 阅读这一章时，建议始终记住一个原则：
 
-> **先建立“模块职责 → 高频入口 → 最小示例 → 去哪里深入”的直觉，不要试图一次记住所有 API。**
+> **建立"模块职责 → 高频入口 → 最小示例 → 去哪里深入"的直觉，不要试图一次记住所有 API。**
 
 ---
 
@@ -26,7 +26,7 @@
 
 学 Zig 时，语法和标准库几乎总是交织在一起出现。
 
-你刚学会变量、函数、切片和错误处理之后，很快就会遇到下面这些问题：
+刚学会变量、函数、切片和错误处理之后，很快就会遇到下面这些问题：
 
 - 怎么比较两个字符串？
 - 怎么把值格式化到缓冲区里？
@@ -52,13 +52,13 @@
 `std.mem` 是 Zig 中最基础、也最高频的标准库模块之一。
 
 很多初学者一开始会把“字符串处理”理解成某种单独的大主题，但在 Zig 里，更常见的现实是：  
-你手上的往往不是“神秘字符串对象”，而是 `[]const u8` 这样的**字节切片**。
+手上的往往不是"神秘字符串对象"，而是 `[]const u8` 这样的**字节切片**。
 
 这也是为什么很多看起来像“字符串问题”的操作，最终都会落到 `std.mem` 上。
 
 ### 这一节最值得先认识的入口
 
-第一次学习时，最值得优先熟悉这些函数：
+最值得优先熟悉这些函数：
 
 - `eql`
 - `startsWith`
@@ -92,6 +92,13 @@ pub fn main() void {
 }
 ```
 
+**预期输出：**
+
+```shell
+a == b: true
+a == c: false
+```
+
 这里的 `u8` 表示比较的是 `u8` 元素切片。  
 对字符串字面量来说，最常见的就是 `u8`。
 
@@ -115,6 +122,12 @@ pub fn main() void {
 }
 ```
 
+**预期输出：**
+```shell
+starts with chapter: true
+ends with .md: true
+```
+
 这类函数在处理：
 
 - 文件名
@@ -126,7 +139,7 @@ pub fn main() void {
 
 ### `indexOf`
 
-如果你想在切片中查找子串，可以先想到 `indexOf`：
+在切片中查找子串时，可以用 `indexOf`：
 
 ```zig
 const std = @import("std");
@@ -167,7 +180,7 @@ pub fn main() void {
 
 ### `copyForwards`
 
-当你已经有一个目标缓冲区，想把内容复制进去时，可以用 `copyForwards`：
+已经有一个目标缓冲区，想把内容复制进去时，可以用 `copyForwards`：
 
 ```zig
 const std = @import("std");
@@ -191,14 +204,14 @@ pub fn main() void {
 
 ### 使用 `std.mem` 时要建立的直觉
 
-第一次学习 `std.mem`，最重要的不是“记住十几个函数名”，而是建立下面这些直觉：
+使用 `std.mem` 时，核心直觉是：
 
-1. 你处理的往往是切片，而不是“高级字符串对象”
+1. 处理的往往是切片，而不是"高级字符串对象"
 2. 切片比较通常要比较内容，而不是依赖某种隐式相等语义
 3. 很多文本问题，在 Zig 里首先是“字节序列问题”
-4. 当你已经有一块缓冲区时，复制、查找、裁剪等操作往往都可以用 `std.mem` 完成
+4. 已经有一块缓冲区时，复制、查找、裁剪等操作往往都可以用 `std.mem` 完成
 
-> **相关阅读**：如果你想进一步理解切片、数组和底层数据视图的关系，可以回看[复合类型](../part1-basics/chapter-compound-types.md)。
+> **相关阅读**：关于切片、数组和底层数据视图的关系，可以回看[复合类型](../part1-basics/chapter-compound-types.md)。
 
 ---
 
@@ -208,15 +221,15 @@ pub fn main() void {
 
 它经常出现在两类场景中：
 
-1. 你想把值格式化到某个输出目标
-2. 你想在内存中构造一段格式化后的文本
+1. 把值格式化到某个输出目标
+2. 在内存中构造一段格式化后的文本
 
 很多初学者最先接触格式化，是通过 `std.debug.print`。  
-但当你想把文本写进缓冲区、或分配出一个新的字符串时，就会更明显地接触到 `std.fmt`。
+但当需要把文本写进缓冲区、或分配出一个新的字符串时，就会更明显地接触到 `std.fmt`。
 
 ### 这一节最值得先认识的入口
 
-第一次学习时，建议优先理解：
+建议优先理解：
 
 - `bufPrint`
 - `allocPrint`
@@ -228,7 +241,7 @@ pub fn main() void {
 
 ### `bufPrint`：把格式化结果写入缓冲区
 
-如果你已经有一块固定大小的缓冲区，可以用 `bufPrint`：
+已经有一块固定大小的缓冲区时，可以用 `bufPrint`：
 
 ```zig
 const std = @import("std");
@@ -257,7 +270,7 @@ pub fn main() !void {
 
 ### `allocPrint`：分配并返回格式化结果
 
-如果你不想自己先准备缓冲区，而是希望直接得到一段新分配的文本，可以用 `allocPrint`：
+不想自己先准备缓冲区，而是希望直接得到一段新分配的文本时，可以用 `allocPrint`：
 
 ```zig
 const std = @import("std");
@@ -279,7 +292,7 @@ pub fn main() !void {
 这里的关键语义是：
 
 - `allocPrint` 会分配内存
-- 所以你要显式传入 allocator
+- 所以要显式传入 allocator
 - 返回的字符串需要由调用者负责释放
 
 这也说明 `std.fmt` 很容易和 allocator 联系起来。
@@ -293,12 +306,12 @@ pub fn main() !void {
 
 在实际代码中，它们经常一起出现：
 
-- 你可能先用 `std.fmt` 把文本构造好
+- 可能先用 `std.fmt` 把文本构造好
 - 再用别的方式写到文件、网络、缓冲区或调试输出中
 
 ### 使用 `std.fmt` 时要建立的直觉
 
-第一次学习 `std.fmt`，建议先抓住这几点：
+使用 `std.fmt` 时，核心要点是：
 
 1. 先区分“输出到哪里”和“如何格式化”
 2. 有固定缓冲区时，优先考虑 `bufPrint`
@@ -306,8 +319,8 @@ pub fn main() !void {
 4. 一旦发生分配，就要立刻想到释放责任
 
 > **相关阅读**：
-> - 如果你想更系统地理解 allocator 与释放责任，请继续阅读[内存管理模型](chapter-memory-management.md)。
-> - 如果你只是想快速打印调试信息，可以继续看下一节 `std.debug`。
+> - 关于 allocator 与释放责任的系统理解，请继续阅读[内存管理模型](chapter-memory-management.md)。
+> - 只是想快速打印调试信息的话，可以继续看下一节 `std.debug`。
 
 ---
 
@@ -316,7 +329,7 @@ pub fn main() !void {
 `std.debug` 是学习和调试阶段最常用的标准库入口之一。
 
 它的重要性并不在于“复杂”或“高级”，而在于：  
-**它能让你更快看清程序状态。**
+**它能更快看清程序状态。**
 
 对初学者来说，最常见的用途通常就是：
 
@@ -349,7 +362,7 @@ pub fn main() void {
 
 ### `std.debug.assert`
 
-当你想表达“这里必须满足某个条件，否则程序逻辑就不成立”时，可以用 `assert`：
+想表达"这里必须满足某个条件，否则程序逻辑就不成立"时，可以用 `assert`：
 
 ```zig
 const std = @import("std");
@@ -375,117 +388,38 @@ pub fn main() void {
 
 1. `print` 很适合调试阶段快速观察状态
 2. `assert` 适合表达“不应该被破坏的假设”
-3. 调试输出能帮你更快定位问题，但不能替代清晰的设计
+3. 调试输出能更快定位问题，但不能替代清晰的设计
 4. 调试期工具越早介入，越容易发现问题的真实来源
 
 > **相关阅读**：
-> - 如果你想系统理解错误路径和失败处理，请阅读[错误处理：!T、try 与 errdefer](../part1-basics/chapter-error-handling.md)。
-> - 如果你想学习如何在测试中验证行为，请继续阅读后面的 `std.testing` 小节与[测试与验证：从单元测试到基准测量](chapter-testing.md)。
+> - 关于错误路径和失败处理的系统理解，请阅读[错误处理：!T、try 与 errdefer](../part1-basics/chapter-error-handling.md)。
+> - 关于如何在测试中验证行为，请继续阅读后面的 `std.testing` 小节与[测试与验证：从单元测试到基准测量](chapter-testing.md)。
 
 ---
 
 ## `std.testing`
 
-`std.testing` 是 Zig 标准库中最核心的测试辅助入口。  
-但这一节的目标不是替代测试章节，而只是先帮你建立模块入口直觉。
+`std.testing` 是 Zig 标准库中最核心的测试辅助入口。它提供了一组断言函数和测试专用设施，用于在 `test` 块中验证代码行为。最常用的 API 包括：
 
-### 这一节最值得先认识的入口
+- **`expect`** — 验证布尔表达式为真，适合简单条件判断。
+- **`expectEqual`** — 比较两个值是否相等，失败时能清晰显示期望值与实际值的差异。
+- **`expectError`** — 验证函数是否返回了预期的错误，用于测试错误路径。
+- **`std.testing.allocator`** — 测试专用分配器，能自动检测内存泄漏和重复释放。
 
-第一次学习时，最值得优先认识：
-
-- `expect`
-- `expectEqual`
-- `expectError`
-- `std.testing.allocator`
-
-### `expect`
-
-最基本的断言函数之一，用于验证某个布尔表达式为真：
-
-```zig
-const std = @import("std");
-
-test "basic boolean expectation" {
-    try std.testing.expect(1 + 1 == 2);
-}
-```
-
-它适合：
-
-- 简单条件判断
-- 不需要特别强调“期望值”和“实际值”的场景
-
-### `expectEqual`
-
-当你更想明确比较两个值时，通常可以用 `expectEqual`：
-
-```zig
-const std = @import("std");
-
-test "expectEqual compares values" {
-    try std.testing.expectEqual(@as(i32, 42), @as(i32, 42));
-}
-```
-
-比起直接写 `expect(a == b)`，它通常在失败时更容易定位问题。
-
-### `expectError`
-
-如果一个函数会返回错误，你也可以直接验证错误路径：
-
-```zig
-const std = @import("std");
-
-fn divide(a: i32, b: i32) !i32 {
-    if (b == 0) return error.DivisionByZero;
-    return @divTrunc(a, b);
-}
-
-test "divide reports DivisionByZero" {
-    try std.testing.expectError(error.DivisionByZero, divide(10, 0));
-}
-```
-
-这一点在 Zig 中尤其重要，因为错误路径本来就是接口语义的一部分。
-
-### `std.testing.allocator`
-
-在测试里，`std.testing.allocator` 很常见。  
-你可以先把它理解成：
-
-- 一个特别适合测试场景的 allocator
-- 它能帮助你更容易发现资源释放上的问题
-
-例如：
-
-```zig
-const std = @import("std");
-
-test "allocate with testing allocator" {
-    const allocator = std.testing.allocator;
-
-    const buffer = try allocator.alloc(u8, 16);
-    defer allocator.free(buffer);
-
-    try std.testing.expectEqual(@as(usize, 16), buffer.len);
-}
-```
+> **相关阅读**：断言函数的完整示例和测试方法论见[《测试与验证》（chapter-testing.md）](chapter-testing.md)。
 
 ### 使用 `std.testing` 时要建立的直觉
 
 1. 测试不是额外装饰，而是接口设计的一部分
-2. `std.testing` 是标准库中最常见的测试入口
-3. 错误路径、资源释放、边界条件都值得测试
-4. 测试 allocator 的价值，不只是“能分配”，而是“更容易暴露问题”
-
-> **相关阅读**：如果你想系统学习 Zig 的测试写法、断言方式、错误路径验证和简单测量方法，请继续阅读[测试与验证：从单元测试到基准测量](chapter-testing.md)。本节只负责建立模块入口直觉。
+2. 错误路径、资源释放、边界条件都值得测试
+3. `std.testing.allocator` 的价值不只是"能分配"，而是"更容易暴露泄漏和生命周期问题"
 
 ---
 
 ## `std.fs`
 
-只要你开始写真实程序，文件和目录几乎一定会出现。  
-这时，`std.fs` 往往就是你最该先想到的模块。
+只要开始写真实程序，文件和目录几乎一定会出现。
+这时，`std.fs` 往往就是最该先想到的模块。
 
 它负责的典型问题包括：
 
@@ -495,10 +429,10 @@ test "allocate with testing allocator" {
 - 遍历目录
 - 读取文件元信息
 
-### 这一节要先建立的心智模型
+### 心智模型
 
-第一次学习 `std.fs` 时，不必急着记很多 API 名字。  
-更重要的是先建立下面这个直觉：
+初次接触 `std.fs` 时，不必急着记很多 API 名字。  
+更重要的是建立下面这个直觉：
 
 - **文件和目录相关问题，优先想到 `std.fs`**
 - **很多操作都围绕“某个目录视角”或“某个文件句柄”展开**
@@ -521,7 +455,7 @@ pub fn main() !void {
 }
 ```
 
-这里可以先抓住几个关键点：
+这里有几个关键点：
 
 - `std.fs.cwd()` 表示当前工作目录
 - 通过目录对象去创建文件
@@ -546,7 +480,7 @@ pub fn main() !void {
 }
 ```
 
-对初学者来说，这个例子最重要的不是记住每个细节，而是理解：
+这个例子的核心在于理解：
 
 - 目录遍历通常需要显式打开目录
 - 遍历器逐项产出条目
@@ -559,7 +493,7 @@ pub fn main() !void {
 3. 很多能力都从某个目录对象出发，而不是全局“神奇函数”
 4. `std.fs` 往往是 CLI 工具、配置读取、代码生成等场景的核心模块
 
-> **相关阅读**：如果你想看 `std.fs` 在更真实工具中的使用方式，可以继续阅读[实战案例 - CLI 工具开发](../part3-practice/chapter-cli-tool.md)。
+> **相关阅读**：关于 `std.fs` 在更真实工具中的使用方式，可以继续阅读[实战案例 - CLI 工具开发](../part3-practice/chapter-cli-tool.md)。
 
 ---
 
@@ -567,39 +501,36 @@ pub fn main() !void {
 
 `std.process` 主要和“程序作为一个进程运行时能接触到的上下文”有关。
 
-你可以先把它和下面几类需求联系起来：
+可以把它和下面几类需求联系起来：
 
 - 读取命令行参数
 - 读取环境变量
 - 处理退出状态
 - 理解程序运行时的外部上下文
 
-### 这一节要先建立的心智模型
+### 心智模型
 
-第一次学习时，最重要的不是记住所有细节，而是先知道：
+核心要点是：
 
 - **只要问题和参数、环境变量、进程上下文有关，就先想到 `std.process`**
 - 这类能力天然更接近“程序入口”与“操作系统环境”
 
 ### 一个最小示例：读取参数
 
-不同版本的 Zig 在程序入口与参数接口上可能会有细节变化，因此更建议你先抓住思路：
+在 Zig 0.16-dev 中，程序入口通过 `std.process.Init` 参数显式传递进程上下文，命令行参数就是其中的一部分。核心思路是：
 
-- 参数来自进程启动时传入的上下文
-- 读取它们通常需要和 allocator 配合
-- 相关 API 在开发版中可能发生调整
+- 参数来自进程启动时传入的上下文，通过 `init.minimal.args` 获取
+- 使用 `.iterate()` 或 `.iterateAllocator()` 创建迭代器，逐个读取参数
+- 不再需要手动分配和释放内存来收集参数
 
-下面给出一个常见思路示例：
+下面给出一个示例：
 
 ```zig
 const std = @import("std");
 
-pub fn main() !void {
-    const allocator = std.heap.page_allocator;
-    const args = try std.process.argsAlloc(allocator);
-    defer std.process.argsFree(allocator, args);
-
-    for (args) |arg| {
+pub fn main(init: std.process.Init) void {
+    var args = init.minimal.args.iterate();
+    while (args.next()) |arg| {
         std.debug.print("{s}\n", .{arg});
     }
 }
@@ -607,144 +538,60 @@ pub fn main() !void {
 
 这个例子最重要的重点是：
 
-- 参数往往需要通过 allocator 收集
-- 参数资源通常也要对应释放
+- 参数通过程序入口的 `Init` 参数显式传入，而非调用全局函数获取
+- `.iterate()` 返回一个迭代器，用 `while` + `.next()` 逐个遍历
 - 进程相关 API 比 `std.mem`、`std.debug` 这类模块更容易受版本变化影响
 
 ### 一个最小示例：读取环境变量
 
-环境变量也是常见入口之一：
+环境变量也是常见入口之一。在 0.16-dev 中，`Init` 参数提供了预初始化的 `environ_map`，可以直接按名称查找：
 
 ```zig
 const std = @import("std");
 
-pub fn main() !void {
-    if (std.process.getEnvVarOwned(std.heap.page_allocator, "HOME")) |home| {
-        defer std.heap.page_allocator.free(home);
+pub fn main(init: std.process.Init) void {
+    if (init.environ_map.get("HOME")) |home| {
         std.debug.print("HOME={s}\n", .{home});
-    } else |err| switch (err) {
-        error.EnvironmentVariableNotFound => {
-            std.debug.print("HOME is not set\n", .{});
-        },
-        else => return err,
+    } else {
+        std.debug.print("HOME is not set\n", .{});
     }
 }
 ```
 
-这里再次体现了一个重要特点：
+这里体现了 0.16-dev 的一个重要设计特点：
 
-- 进程环境相关能力常常和 allocator、错误处理一起出现
+- 环境变量已经由运行时预先解析到 `environ_map` 中，直接用 `.get()` 查询即可
+- 不再需要手动分配内存或处理 `EnvironmentVariableNotFound` 错误——找不到时返回 `null`
 
 ### 使用 `std.process` 时要建立的直觉
 
-1. 参数与环境变量都属于“进程上下文”的一部分
-2. 这类 API 常和 allocator、错误处理一起出现
-3. 在开发版 Zig 中，这一块比 `std.mem` 之类更容易发生接口演进
-4. 遇到版本差异时，优先抓“程序上下文由谁提供、资源由谁释放”这一层稳定思路
+1. 参数与环境变量都属于"进程上下文"的一部分
+2. 在 0.16-dev 中，这些上下文通过 `std.process.Init` 参数在程序入口**显式传入**，而非通过全局函数获取
+3. 这种设计让依赖关系更清晰：函数签名本身就说明了"我需要进程上下文"
+4. 遇到版本差异时，优先抓住"程序上下文由谁提供、怎样访问"这一层稳定思路
 
-> **相关阅读**：如果你想在更真实的工具程序中理解参数处理与进程上下文，可以继续阅读[实战案例 - CLI 工具开发](../part3-practice/chapter-cli-tool.md)。
+> **相关阅读**：关于参数处理与进程上下文在更真实工具程序中的使用方式，可以继续阅读[实战案例 - CLI 工具开发](../part3-practice/chapter-cli-tool.md)。
 
 ---
 
 ## `std.heap`
 
-`std.heap` 是你第一次系统接触 allocator 分类时最常见的标准库入口之一。
+`std.heap` 是系统接触 allocator 分类时最常见的标准库入口之一。这一节只建立**第一轮 allocator 直觉**，认识几个常见名字即可。
 
-但这一节只打算帮你建立**第一轮 allocator 直觉**，而不在这里系统讲完内存管理模型。
+常见的分配器：
 
-### 这一节最值得先认识的内容
+- **`page_allocator`** — 直接向操作系统申请整页内存。随手可用，适合入门示例，但不是所有工程场景的最佳默认选择。
+- **`ArenaAllocator`** — 适合"集中分配、集中释放"的场景，减少逐个释放的负担，所有对象共享同一个释放时机。
+- **`FixedBufferAllocator`** — 在一块已有的固定内存上做分配，不需要向操作系统再要内存。
+- **`std.testing.allocator`** — 测试专用分配器，能自动检测泄漏（详见 `std.testing` 一节）。
 
-第一次学习时，可以先对下面这些名字有印象：
-
-- `page_allocator`
-- `ArenaAllocator`
-- `FixedBufferAllocator`
-- `std.testing.allocator`（测试场景中常见）
-- 一些调试期 allocator 的存在意义
-
-### `page_allocator`
-
-这是最容易先认识的 allocator 之一：
-
-```zig
-const std = @import("std");
-
-pub fn main() !void {
-    const allocator = std.heap.page_allocator;
-
-    const buffer = try allocator.alloc(u8, 32);
-    defer allocator.free(buffer);
-
-    @memset(buffer, 'a');
-    std.debug.print("len={d}\n", .{buffer.len});
-}
-```
-
-你可以先把它理解成：
-
-- 一个随手可用的 allocator
-- 适合小例子和入门示例
-- 但它不是“所有工程场景下的默认最佳答案”
-
-### `ArenaAllocator`
-
-如果你有一批对象会在某个阶段统一释放，arena 风格通常会更自然：
-
-```zig
-const std = @import("std");
-
-pub fn main() !void {
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    defer arena.deinit();
-
-    const allocator = arena.allocator();
-
-    const a = try allocator.alloc(u8, 16);
-    const b = try allocator.alloc(u8, 32);
-
-    std.debug.print("a={d}, b={d}\n", .{ a.len, b.len });
-}
-```
-
-第一次学习时，你只需要抓住这个直觉：
-
-- arena 适合“集中分配，集中释放”的场景
-- 它能减少逐个释放的负担
-- 但也意味着对象通常共享同一个释放时机
-
-### `FixedBufferAllocator`
-
-如果你已经有一块固定内存，想在其中做分配，可以使用固定缓冲区 allocator：
-
-```zig
-const std = @import("std");
-
-pub fn main() !void {
-    var storage: [128]u8 = undefined;
-    var fba = std.heap.FixedBufferAllocator.init(&storage);
-    const allocator = fba.allocator();
-
-    const slice = try allocator.alloc(u8, 32);
-    std.debug.print("allocated={d}\n", .{slice.len});
-}
-```
-
-它很适合帮助你建立一个重要直觉：
-
-- allocator 不一定非得向操作系统再要内存
-- 有时只是“在已有内存里组织分配”
+> **相关阅读**：完整的分配器示例和使用指南见[《内存管理模型》（chapter-memory-management.md）](chapter-memory-management.md)。
 
 ### 使用 `std.heap` 时要建立的直觉
 
 1. Zig 的 allocator 不是背景设施，而是显式接口的一部分
 2. 不同 allocator 解决的是不同资源组织问题
-3. `page_allocator`、arena、fixed buffer allocator 各有适用场景
-4. 一旦发生分配，就要立即想到：
-   - 谁负责释放？
-   - 什么时候释放？
-   - 释放方式是什么？
-
-> **相关阅读**：如果你想系统理解 allocator、所有权、生命周期与释放责任，请继续阅读[内存管理模型](chapter-memory-management.md)。本节只负责建立 `std.heap` 的基础入口直觉。
+3. 一旦发生分配，就要立即想到：谁负责释放？什么时候释放？
 
 ---
 
@@ -775,8 +622,8 @@ pub fn main() !void {
 
 也就是说：
 
-- `std.debug` 帮你快速“看见”
-- `std.testing` 帮你长期“验证”
+- `std.debug` 用于快速“看见”
+- `std.testing` 用于长期“验证”
 
 ### `std.fs` + `std.process`
 
@@ -801,7 +648,7 @@ pub fn main() !void {
 
 ## 本章小结
 
-这一章最重要的，不是让你记住多少函数名，而是建立下面这些第一轮直觉：
+这一章的核心目标是建立下面这些第一轮直觉：
 
 1. 处理切片、字节和很多“字符串问题”时，优先想到 `std.mem`
 2. 处理格式化时，优先想到 `std.fmt`
@@ -811,8 +658,8 @@ pub fn main() !void {
 6. 参数、环境变量、进程上下文相关需求，优先想到 `std.process`
 7. 动态分配和 allocator 相关入口，优先想到 `std.heap`
 
-如果你已经建立了这张“高频模块入口地图”，这一章的目标就达成了。  
-接下来的深入学习中，你不需要背完整 API，而是可以按下面的思路继续推进：
+如果已经建立了这张“高频模块入口地图”，这一章的目标就达成了。  
+接下来的深入学习中，无需背完整 API，可以按下面的思路继续推进：
 
 - 想系统理解 allocator 和资源责任 → 读[内存管理模型](chapter-memory-management.md)
 - 想系统学习测试方法 → 读[测试与验证：从单元测试到基准测量](chapter-testing.md)

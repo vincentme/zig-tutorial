@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-dab0b333.js";
+            window.path_to_searchindex_js = "../searchindex-5349b6ee.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-84df0a14.js"></script>
@@ -183,8 +183,8 @@
                     <main>
                         <h1 id="测试与验证从单元测试到基准测量"><a class="header" href="#测试与验证从单元测试到基准测量">测试与验证：从单元测试到基准测量</a></h1>
 <blockquote>
-<p><strong>章节定位</strong>：这一章是第二部分中非常重要的一环。<br>到了这里，测试已经不再只是“写完代码后顺手检查一下”，而是你设计 API、验证错误路径、约束资源释放行为的基本工具。</p>
-<p><strong>阅读目标</strong>：</p>
+<p><strong>进阶</strong>：这一章是第二部分中非常重要的一环。<br>到了这里，测试已经不再只是“写完代码后顺手检查一下”，而是设计 API、验证错误路径、约束资源释放行为的基本工具。</p>
+<p><strong>进阶</strong>：</p>
 <ul>
 <li>理解 Zig 中 <code>test</code> 块的基本使用方式</li>
 <li>学会用 <code>std.testing</code> 编写清晰的断言</li>
@@ -192,12 +192,12 @@
 <li>了解嵌套测试、测试过滤和简单基准测量的定位</li>
 <li>区分“稳定的测试主线”和“版本更敏感的构建/集成细节”</li>
 </ul>
-<p><strong>相关阅读与衔接建议</strong>：</p>
+<p><strong>相关阅读</strong>：</p>
 <ul>
-<li>如果你还没有建立 <code>std.testing</code> 的模块入口直觉，可以先阅读<a href="chapter-standard-library-detail.html">常用标准库模块详解</a>中的相关小节，再回到本章系统学习测试方法。</li>
-<li>如果你刚读完<a href="chapter-memory-management.html">内存管理模型</a>，可以重点关注本章中“错误路径”和“资源释放责任”的测试方式，这两章是直接连在一起的。</li>
-<li>如果你准备继续阅读<a href="chapter-package-management.html">构建系统与包管理</a>，可以把本章理解为“先把模块验证清楚，再把测试接入项目构建流程”的过渡章节。</li>
-<li>如果你准备进入第三部分实战案例，那么本章最值得反复回看的部分通常是：测试命名、错误路径验证、<code>std.testing.allocator</code> 和简单测量方法。</li>
+<li>如果还没有建立 <code>std.testing</code> 的模块入口直觉，可以先阅读<a href="chapter-standard-library-detail.html">常用标准库模块详解</a>中的相关小节，再回到本章系统学习测试方法。</li>
+<li>如果刚读完<a href="chapter-memory-management.html">内存管理模型</a>，可以重点关注本章中“错误路径”和“资源释放责任”的测试方式，这两章是直接连在一起的。</li>
+<li>如果准备继续阅读<a href="chapter-package-management.html">构建系统与包管理</a>，可以把本章理解为“先把模块验证清楚，再把测试接入项目构建流程”的过渡章节。</li>
+<li>如果准备进入第三部分实战案例，那么本章最值得反复回看的部分通常是：测试命名、错误路径验证、<code>std.testing.allocator</code> 和简单测量方法。</li>
 </ul>
 </blockquote>
 <hr>
@@ -249,7 +249,7 @@ test "add returns the sum of two integers" {
 <p>最基本的运行方式是：</p>
 <pre><code class="language-bash">zig test src/main.zig
 </code></pre>
-<p>如果你的测试写在某个模块文件里，也可以直接测试那个文件：</p>
+<p>如果测试写在某个模块文件里，也可以直接测试那个文件：</p>
 <pre><code class="language-bash">zig test src/math.zig
 </code></pre>
 <hr>
@@ -281,10 +281,10 @@ test "clamp returns original value when already in range" {
 <li>重构时更容易同步更新测试</li>
 <li>测试本身也能起到“行为文档”的作用</li>
 </ul>
-<p>当然，当模块很大、测试很多时，你也可以把测试拆到单独文件中。<br>但在本教程阶段，<strong>先理解“测试描述行为”这件事，比纠结文件布局更重要</strong>。</p>
+<p>当然，当模块很大、测试很多时，也可以把测试拆到单独文件中。<br>但在本教程阶段，<strong>理解“测试描述行为”这件事，比纠结文件布局更重要</strong>。</p>
 <hr>
 <h2 id="最常用的断言函数"><a class="header" href="#最常用的断言函数">最常用的断言函数</a></h2>
-<p>Zig 的测试辅助主要来自 <code>std.testing</code>。<br>第一次学习时，不需要把所有辅助函数都记住，先掌握下面这些最常用的即可。</p>
+<p>Zig 的测试辅助主要来自 <code>std.testing</code>。<br>不需要把所有辅助函数都记住，掌握下面这些最常用的即可。</p>
 <h3 id="expect"><a class="header" href="#expect"><code>expect</code></a></h3>
 <p>用于断言一个布尔表达式为真：</p>
 <pre><code class="language-zig">const std = @import("std");
@@ -366,33 +366,12 @@ test "floating-point values should use approximate comparison" {
 <li>写了很多测试，但没有抓住真正容易出错的点</li>
 </ul>
 <p>更实用的顺序通常是：</p>
-<h3 id="1-先测核心行为"><a class="header" href="#1-先测核心行为">1. 先测核心行为</a></h3>
-<p>也就是这个函数最主要的承诺是什么。</p>
-<p>例如 <code>divide(a, b)</code>：</p>
-<ul>
-<li>正常除法能否返回结果</li>
-<li>除数为零时是否返回预期错误</li>
-</ul>
-<h3 id="2-再测边界条件"><a class="header" href="#2-再测边界条件">2. 再测边界条件</a></h3>
-<p>例如：</p>
-<ul>
-<li>空输入</li>
-<li>最小值/最大值</li>
-<li>长度为 0 或 1 的切片</li>
-<li>极小/极大容量</li>
-<li>容器空/满状态</li>
-</ul>
-<h3 id="3-再测失败路径"><a class="header" href="#3-再测失败路径">3. 再测失败路径</a></h3>
-<p>尤其是涉及：</p>
-<ul>
-<li>分配失败</li>
-<li>输入无效</li>
-<li>文件不存在</li>
-<li>解析失败</li>
-<li>资源初始化中途失败</li>
-</ul>
-<h3 id="4-最后再补回归测试"><a class="header" href="#4-最后再补回归测试">4. 最后再补回归测试</a></h3>
-<p>如果你修过一个 bug，就应该尽量为那个 bug 增加一个测试，让它以后不会悄悄回来。</p>
+<ol>
+<li><strong>先测核心行为</strong> — 也就是这个函数最主要的承诺是什么。例如 <code>divide(a, b)</code>：正常除法能否返回结果？除数为零时是否返回预期错误？</li>
+<li><strong>再测边界条件</strong> — 空输入、最小值/最大值、长度为 0 或 1 的切片、极小/极大容量、容器空/满状态。</li>
+<li><strong>再测失败路径</strong> — 尤其是分配失败、输入无效、文件不存在、解析失败、资源初始化中途失败等场景。</li>
+<li><strong>最后再补回归测试</strong> — 如果修过一个 bug，就应该尽量为那个 bug 增加一个测试，让它以后不会悄悄回来。</li>
+</ol>
 <hr>
 <h2 id="一个更完整的测试示例"><a class="header" href="#一个更完整的测试示例">一个更完整的测试示例</a></h2>
 <p>下面这个例子展示了正常路径、边界条件和错误路径如何组合：</p>
@@ -461,7 +440,7 @@ test "parsePort rejects zero" {
 </ul>
 <hr>
 <h2 id="用测试验证资源释放责任"><a class="header" href="#用测试验证资源释放责任">用测试验证资源释放责任</a></h2>
-<p>在 Zig 中，资源释放责任需要说清楚。<br>测试也应该帮助你验证这件事。</p>
+<p>在 Zig 中，资源释放责任需要说清楚。<br>测试也应该帮助验证这件事。</p>
 <p>最常见的方式之一，是在测试中使用 <code>std.testing.allocator</code>。</p>
 <h3 id="stdtestingallocator-的作用"><a class="header" href="#stdtestingallocator-的作用"><code>std.testing.allocator</code> 的作用</a></h3>
 <p>它是测试环境中的专用分配器，适合用来帮助发现：</p>
@@ -495,7 +474,7 @@ test "duplicate allocates and returns a copy" {
 <li>因此调用者必须负责 <code>free</code></li>
 </ul>
 <h3 id="为什么这类测试很有价值"><a class="header" href="#为什么这类测试很有价值">为什么这类测试很有价值？</a></h3>
-<p>因为它迫使你把接口说清楚：</p>
+<p>因为它迫使接口说清楚：</p>
 <ul>
 <li>是借用现有切片，还是返回新分配结果？</li>
 <li>谁负责释放？</li>
@@ -527,7 +506,7 @@ test "buildMessage returns allocated greeting text" {
     try std.testing.expectEqualStrings("hello, zig", msg);
 }
 </code></pre>
-<p>这里你可以看到：</p>
+<p>这里可以看到：</p>
 <ul>
 <li>临时容器 <code>list</code> 自己负责内部释放</li>
 <li>返回值 <code>msg</code> 的所有权转移给调用者</li>
@@ -553,16 +532,16 @@ const Counter = struct {
     }
 };
 </code></pre>
-<h3 id="你第一次学习时要记住什么"><a class="header" href="#你第一次学习时要记住什么">你第一次学习时要记住什么？</a></h3>
+<h3 id="关键要点"><a class="header" href="#关键要点">关键要点</a></h3>
 <p>最重要的是：</p>
 <ul>
 <li>这是 Zig 支持的一种测试组织方式</li>
 <li>它适合把小范围行为测试放在声明附近</li>
-<li>但它不是你一开始必须依赖的主线能力</li>
+<li>但它不是一开始必须依赖的主线能力</li>
 </ul>
 <p>很多时候，<strong>顶层测试块已经足够</strong>。</p>
 <h3 id="关于-refalldecls"><a class="header" href="#关于-refalldecls">关于 <code>refAllDecls</code></a></h3>
-<p>你在一些资料中可能会看到 <code>std.testing.refAllDecls(...)</code>。<br>它的作用通常是帮助引用声明，从而让某些嵌套测试也被纳入测试流程。</p>
+<p>一些资料中可能出现 <code>std.testing.refAllDecls(...)</code>。<br>它的作用通常是帮助引用声明，从而让某些嵌套测试也被纳入测试流程。</p>
 <p>但对本教程阶段来说，更值得记住的是这条原则：</p>
 <blockquote>
 <p><strong>先把顶层测试写清楚，再把嵌套测试当作组织手段，而不是核心能力。</strong></p>
@@ -570,7 +549,7 @@ const Counter = struct {
 <p>也就是说，<code>refAllDecls</code> 是“知道它存在即可”的高级补充，第一次阅读不必深究其内部机制。</p>
 <hr>
 <h2 id="测试过滤与选择性运行"><a class="header" href="#测试过滤与选择性运行">测试过滤与选择性运行</a></h2>
-<p>当测试数量变多时，你通常不会每次都想跑全部测试。<br>这时可以使用测试过滤。</p>
+<p>当测试数量变多时，通常不需要每次都跑全部测试。<br>这时可以使用测试过滤。</p>
 <p>例如：</p>
 <pre><code class="language-bash">zig test src/math.zig --test-filter "divide"
 </code></pre>
@@ -674,26 +653,12 @@ test "Stack.push returns error.Full when capacity is exceeded" {
 </ul>
 <p>而不是把这三件事塞进一个超长测试里。</p>
 <hr>
-<h2 id="基准测试先把定位说清楚"><a class="header" href="#基准测试先把定位说清楚">基准测试：先把定位说清楚</a></h2>
-<p>很多人第一次接触“基准测试”时，会下意识把它理解成：</p>
-<ul>
-<li>复杂性能平台</li>
-<li>非常精密的测量框架</li>
-<li>一套必须标准化的流程</li>
-</ul>
-<p>但在教程阶段，更重要的是先建立正确认识：</p>
+<h2 id="基准测试"><a class="header" href="#基准测试">基准测试</a></h2>
 <blockquote>
-<p><strong>基准测试的目标，不是“看起来很专业地测一个数字”，而是帮助你比较实现差异，并验证优化是否真的有效。</strong></p>
+<p><strong>基准测试的目标，是帮助比较实现差异，并验证优化是否真的有效。</strong></p>
 </blockquote>
-<h3 id="先记住三条原则"><a class="header" href="#先记住三条原则">先记住三条原则</a></h3>
-<ol>
-<li><strong>先保证正确，再谈快</strong></li>
-<li><strong>先测量，再优化</strong></li>
-<li><strong>对结果保持怀疑，避免过度解读一次测量</strong></li>
-</ol>
-<hr>
-<h2 id="用-stdtimetimer-做简单测量"><a class="header" href="#用-stdtimetimer-做简单测量">用 <code>std.time.Timer</code> 做简单测量</a></h2>
-<p>在本教程里，我们先用最轻量的方式理解基准测量：</p>
+<p>三条核心原则：<strong>先保证正确，再谈快</strong>；<strong>先测量，再优化</strong>；<strong>对结果保持怀疑，避免过度解读一次测量</strong>。</p>
+<p>下面用概念性的方式展示基本计时思路：</p>
 <pre><code class="language-zig">const std = @import("std");
 
 fn sum(items: []const u64) u64 {
@@ -704,74 +669,21 @@ fn sum(items: []const u64) u64 {
     return total;
 }
 
-test "simple timing example" {
-    var data: [1000]u64 = undefined;
-    for (&amp;data, 0..) |*item, i| {
-        item.* = i;
-    }
-
-    var timer = try std.time.Timer.start();
-    const result = sum(&amp;data);
-    const elapsed_ns = timer.read();
-
-    try std.testing.expect(result &gt; 0);
-
-    std.debug.print("sum elapsed: {} ns\n", .{elapsed_ns});
-}
+// 注意：Zig 0.16-dev 中尚无 std.time.Timer 或 std.time.Instant 等
+// 高层计时 API。具体的计时方式取决于目标平台和 I/O 模型。
+// 以下为概念示意，展示计时测量的基本思路：
+//
+// 1. 记录起始时间
+// 2. 执行待测逻辑（如 sum(&amp;data)）
+// 3. 记录结束时间
+// 4. 计算差值，得到耗时
 </code></pre>
-<h3 id="这类测量要怎么理解"><a class="header" href="#这类测量要怎么理解">这类测量要怎么理解？</a></h3>
-<p>它适合：</p>
-<ul>
-<li>粗略观察某段逻辑耗时</li>
-<li>对比两个实现的大致差异</li>
-<li>作为“是否值得继续分析”的第一步</li>
-</ul>
-<p>它不适合：</p>
-<ul>
-<li>得出非常精确、可移植、可复现的性能结论</li>
-<li>忽略环境因素后直接宣布“实现 A 一定比实现 B 快”</li>
-<li>代替更严谨的性能分析工具</li>
-</ul>
-<hr>
-<h2 id="为什么基准测试容易误导"><a class="header" href="#为什么基准测试容易误导">为什么基准测试容易误导？</a></h2>
-<p>因为性能受很多因素影响：</p>
-<ul>
-<li>编译优化级别</li>
-<li>输入规模</li>
-<li>数据分布</li>
-<li>缓存状态</li>
-<li>机器负载</li>
-<li>操作系统调度</li>
-<li>是否包含 I/O</li>
-<li>是否包含内存分配</li>
-</ul>
-<p>所以，看到一次测量结果后，更成熟的做法是问：</p>
-<ul>
-<li>这个输入是否具有代表性？</li>
-<li>测到的是目标逻辑，还是别的开销？</li>
-<li>是否需要多次重复？</li>
-<li>是否需要换一个更贴近实际的数据集？</li>
-</ul>
-<hr>
-<h2 id="测试与基准测试不要混在一起理解"><a class="header" href="#测试与基准测试不要混在一起理解">测试与基准测试不要混在一起理解</a></h2>
-<p>虽然测试和基准都用于“验证”，但它们关注的问题不同。</p>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>类型</th><th>主要问题</th><th>典型输出</th></tr>
-</thead>
-<tbody>
-<tr><td>测试</td><td>对不对</td><td>通过 / 失败</td></tr>
-<tr><td>基准</td><td>快不快</td><td>时间、吞吐、分配次数等</td></tr>
-</tbody>
-</table>
-</div>
-<p>所以更合理的顺序是：</p>
-<ol>
-<li>先确认逻辑正确</li>
-<li>再确认错误路径可靠</li>
-<li>最后才讨论性能表现</li>
-</ol>
+<blockquote>
+<p><strong>版本说明</strong>：Zig 0.16-dev 中 <code>std.time</code> 仅包含时间单位常量和 <code>epoch</code> 模块，不提供 <code>Timer</code> 或 <code>Instant</code> 等高层计时接口。
+进行性能测量时，建议使用 <code>zig build</code> 的 <code>-Doptimize=ReleaseFast</code> 选项，并结合外部工具（如 <code>hyperfine</code>、<code>perf</code>）获得更可靠的数据。</p>
+</blockquote>
+<p>粗略计时适合观察耗时量级、对比两个实现的大致差异、判断是否值得深入分析。但它<strong>不适合</strong>得出精确的、可复现的性能结论——性能受编译优化级别、输入规模、缓存状态、机器负载等众多因素影响，一次测量结果应始终被审慎对待。</p>
+<p>测试和基准关注的问题不同：测试回答“对不对“（输出：通过/失败），基准回答“快不快“（输出：时间、吞吐等）。更合理的顺序是：先确认逻辑正确，再确认错误路径可靠，最后才讨论性能表现。</p>
 <hr>
 <h2 id="版本敏感说明哪些内容值得小心"><a class="header" href="#版本敏感说明哪些内容值得小心">版本敏感说明：哪些内容值得小心？</a></h2>
 <p>这一章里，真正稳定、应优先掌握的主线是：</p>
@@ -790,7 +702,7 @@ test "simple timing example" {
 <li>某些基准脚手架或命令行习惯</li>
 <li>标准库内部辅助工具的具体接口形式</li>
 </ul>
-<p>因此，本章刻意不把重点放在“记很多构建细节”上。<br>你更应该先掌握的是：</p>
+<p>因此，本章刻意不把重点放在“记很多构建细节”上。<br>更值得掌握的是：</p>
 <blockquote>
 <p><strong>如何把一个 Zig 接口拆成可验证的行为，并为这些行为写出清楚的小测试。</strong></p>
 </blockquote>
@@ -806,10 +718,10 @@ test "simple timing example" {
 <h3 id="4-测试名太模糊"><a class="header" href="#4-测试名太模糊">4. 测试名太模糊</a></h3>
 <p>模糊的测试名会让失败日志失去价值。</p>
 <h3 id="5-把一次简单计时当成最终性能结论"><a class="header" href="#5-把一次简单计时当成最终性能结论">5. 把一次简单计时当成最终性能结论</a></h3>
-<p>基准测量应该帮助你提出更好的问题，而不是让你过早下结论。</p>
+<p>基准测量应该帮助提出更好的问题，而不是导致过早下结论。</p>
 <hr>
 <h2 id="推荐的写测试顺序"><a class="header" href="#推荐的写测试顺序">推荐的写测试顺序</a></h2>
-<p>当你写一个新模块时，可以参考下面这个顺序：</p>
+<p>编写新模块时，可以参考下面这个顺序：</p>
 <ol>
 <li>先写一个最小成功案例</li>
 <li>再写一个最小失败案例</li>
@@ -834,7 +746,7 @@ test "simple timing example" {
 <li>用 <code>std.testing.allocator</code> 帮助检查资源释放责任</li>
 <li>把基准测试当成“测量与比较工具”，而不是装饰性的性能数字</li>
 </ul>
-<p>如果你在读完本章后，已经能自然地问自己：</p>
+<p>如果在读完本章后，已经能自然地问自己：</p>
 <ul>
 <li>这个函数最重要的行为是什么？</li>
 <li>它失败时应该怎么表现？</li>
@@ -844,7 +756,7 @@ test "simple timing example" {
 <p>那么这一章就达到目的了。</p>
 <hr>
 <blockquote>
-<p>💡 <strong>下一章预告</strong></p>
+<p><strong>相关阅读</strong>：</p>
 <p>下一章我们将进入 <a href="chapter-package-management.html">构建系统与包管理</a>，继续把“代码能写对”推进到“项目能组织、能构建、能复用”。</p>
 </blockquote>
 

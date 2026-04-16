@@ -1,151 +1,48 @@
 # 编译期计算与元编程
 
-这一章的目标，不是把 `comptime` 讲成一套“高级技巧大全”，而是帮助你先建立一个更稳定的理解框架：
+Zig 的 `comptime` 让一部分代码在编译阶段执行，从而把类型生成、约束检查、代码选择和预计算提前完成。本章聚焦于 **`comptime` 的机制**——语法、内建函数、能力边界。泛型设计模式将在[泛型编程](chapter-generics.md)中展开。
 
-> **`comptime` 的本质，是让一部分 Zig 代码在编译阶段执行，从而把类型生成、约束检查、代码选择和部分预计算提前完成。**
-
-如果第一部分解决的是“把程序写出来”，那么这一章解决的是另一个问题：
-
-- 哪些抽象适合放到编译期？
-- 哪些决定应该留到运行时？
-- 为什么 Zig 的泛型、类型反射和很多“元编程能力”都围绕 `comptime` 展开？
-- 怎样使用 `comptime` 才能让代码更清楚，而不是更难读？
-
-> ⚠️ **阅读提醒**
+> **进阶**：读完后应该能回答——
 >
-> `comptime` 很强，但也很容易被误用。  
-> 这一章会优先强调：
->
-> - 心智模型
-> - 典型用法
-> - 编译期与运行时的边界
-> - 什么时候值得用，什么时候不该急着用
->
-> 而不是把它讲成一堆零散技巧的堆砌。
+> - `comptime` 参数、`comptime` 块、`comptime var` 分别用来做什么？
+> - `@typeInfo`、`@hasDecl`、`@hasField`、`@embedFile` 等内建函数在编译期能提供什么能力？
+> - `inline fn` 和 `comptime` 参数有什么区别？
+> - 编译期计算有哪些硬性限制？
 
-## 先建立一个最重要的心智模型
+---
 
-很多初学者第一次接触 `comptime` 时，会把它误解成：
-
-- “Zig 版宏系统”
-- “更厉害的模板”
-- “把任何东西都提前算出来的工具”
-
-这些理解都只触到一部分表面。
-
-更稳定的理解方式是：
-
-> **`comptime` 不是一种脱离语言主体的外挂机制。它是 Zig 语言本身的一部分，让你用普通 Zig 代码参与编译阶段的计算与决策。**
-
-也就是说，Zig 的很多高级能力并不是靠一套额外 DSL 来完成，而是直接复用同一门语言。
-
-这会带来几个非常重要的效果：
-
-1. **泛型和普通函数风格更接近**
-2. **编译期检查和运行时逻辑可以共享表达方式**
-3. **元编程不必先绕进“宏展开式思维”**
-4. **很多抽象在保留可读性的同时，仍然可以做到零成本**
-
-## 编译期和运行时：到底有什么区别？
-
-理解 `comptime`，首先要分清两种执行时机。
+## 编译期和运行时：核心区分
 
 | 维度 | 编译期（compile time） | 运行时（runtime） |
 | ---- | ---------------------- | ----------------- |
 | 执行时机 | 编译器生成程序时 | 程序真正运行时 |
 | 能处理的数据 | 编译期已知的值、类型、结构信息 | 用户输入、文件内容、网络数据等动态值 |
 | 典型用途 | 类型生成、约束检查、分支裁剪、预计算 | 真正处理业务数据 |
-| 错误暴露时机 | 编译时报错 | 运行时报错或返回错误 |
+| 错误暴露时机 | 编译期报错 | 运行时报错或返回错误 |
 
-最关键的不是背这个表，而是理解一句话：
+> **只有那些在编译阶段已经确定的信息，才能参与 `comptime` 计算。**
 
-> **只有那些在编译阶段已经确定的信息，才适合参与 `comptime` 计算。**
+例如类型参数、固定常量、结构体字段的类型信息都属于编译期已知；而用户输入、文件读取结果、网络请求内容则属于运行时。
 
-例如：
+---
 
-- 一个类型参数
-- 一个固定常量
-- 一个写死的配置值
-- 一个结构体字段的类型信息
+## `comptime` 不是宏
 
-而下面这些东西通常不是编译期就知道的：
+很多初学者把 `comptime` 误解成"Zig 版宏系统"或"更厉害的模板"。更准确的理解是：
 
-- 用户在命令行输入的参数
-- 文件读取结果
-- 网络请求内容
-- 数据库查询结果
+> `comptime` 是 Zig 语言本身的一部分，允许用**普通 Zig 代码**参与编译阶段的计算与决策。
 
-所以 `comptime` 的第一条边界其实非常朴素：
+它复用同一门语言的语法和类型系统，不需要额外的 DSL。这带来几个效果：
 
-> **它不是替代运行时逻辑的工具，而是处理“编译时已经知道”的那部分问题。**
+1. 编译期检查和运行时逻辑共享同一套表达方式
+2. 泛型和普通函数风格一致
+3. 元编程不必绕进"宏展开式思维"
 
-## 为什么 Zig 如此重视 `comptime`？
+---
 
-Zig 很重视 `comptime`，不是为了“炫技”，而是因为它能直接支撑几类非常核心的能力。
+## 机制一：`comptime` 参数
 
-### 1. 更早发现错误
-
-这是最直接的价值之一。
-
-如果某个约束本来就能在编译期知道，那么与其把它拖到运行时，不如尽早报错。
-
-例如：
-
-- 泛型函数只允许某类类型
-- 配置值必须满足某些静态约束
-- 某段接口实现缺少必要方法
-- 某个类型根本不适合某种操作
-
-这和 Zig 一贯强调的风格一致：
-
-> **编译期错误，通常优于运行时崩溃。**
-
-### 2. 支撑零成本抽象
-
-Zig 的很多抽象之所以“高级但不重”，是因为它们不是依赖重量级运行时，而是大量借助编译期能力完成特化。
-
-这意味着你可以获得：
-
-- 泛型代码复用
-- 编译期分支裁剪
-- 针对类型生成专门实现
-- 更强的静态检查
-
-同时又不必天然付出动态分发、额外装箱或运行时解释的成本。
-
-### 3. 让类型本身成为输入
-
-在 Zig 里，类型不是只能被“声明”的东西，它也可以成为编译期输入参与计算。
-
-这就是为什么很多 Zig 泛型长这样：
-
-```zig
-const std = @import("std");
-
-fn max(comptime T: type, a: T, b: T) T {
-    return if (a > b) a else b;
-}
-```
-
-这里的 `T` 不是运行时值，而是编译期参数。
-
-也正因此，很多“看起来像模板”的能力，本质上都落在了：
-
-- 编译期类型参数
-- 编译期条件判断
-- 编译期反射
-- 编译期生成类型
-
-这几件事上。
-
-## `comptime` 最常见的几种用法
-
-从学习角度看，你不需要一开始就掌握全部花样。  
-先把最常见的几类用途建立起来，已经足够覆盖大多数理解场景。
-
-### 1. 编译期参数
-
-这是最基础，也最重要的一类用法。
+这是最基础也最常用的机制——函数参数标记为 `comptime`，调用者必须在编译期提供值。
 
 ```zig
 const std = @import("std");
@@ -158,53 +55,111 @@ pub fn main() void {
     const a = max(i32, 10, 20);
     const b = max(f64, 3.14, 2.71);
 
-    std.debug.print("{}\n", .{a});
-    std.debug.print("{d}\n", .{b});
+    std.debug.print("int max: {}\n", .{a});
+    std.debug.print("float max: {d}\n", .{b});
 }
 ```
 
-这里最重要的点是：
+要点：
 
-- `T` 必须在编译期已知
-- 函数体会针对具体类型进行检查和特化
-- 这不是运行时“传一个类型对象”，而是编译阶段决定行为
+- `T` 必须在编译期已知，不能由运行时值决定
+- 编译器会为每个不同的 `T` 生成一份特化实现
+- 这就是 Zig 泛型的底层机制——详见[泛型编程](chapter-generics.md)
 
-这类用法支撑了 Zig 泛型的核心体验。
-
-### 2. 编译期生成类型
-
-这是 `comptime` 的另一个高频主线。
+`comptime` 参数不限于 `type`，也可以是整数、枚举等编译期值：
 
 ```zig
 const std = @import("std");
 
-fn Pair(comptime T: type) type {
-    return struct {
-        left: T,
-        right: T,
-    };
+fn repeat(comptime n: u32, value: u8) [n]u8 {
+    return [_]u8{value} ** n;
 }
 
 pub fn main() void {
-    const IntPair = Pair(i32);
-    const p = IntPair{
-        .left = 1,
-        .right = 2,
-    };
-
-    std.debug.print("{any}\n", .{p});
+    const buf = repeat(5, 'A');
+    std.debug.print("{s}\n", .{&buf}); // AAAAA
 }
 ```
 
-这里你可以把 `Pair(i32)` 理解成：
+---
 
-> **在编译期生成一个“字段类型为 `i32` 的专用结构体类型”。**
+## 机制二：`comptime` 块
 
-这类能力是 Zig 中很多泛型容器、配置结构、协议封装的基础。
+`comptime { }` 块强制其中的代码在编译期执行。最常见的用法是配合标签块计算编译期常量：
 
-### 3. 编译期条件选择
+```zig
+const std = @import("std");
 
-有时你希望根据类型或配置，在编译期决定走哪条路径。
+const factorial_10 = comptime blk: {
+    var result: u32 = 1;
+    for (1..11) |i| {
+        result *= @as(u32, @intCast(i));
+    }
+    break :blk result;
+};
+
+pub fn main() void {
+    // factorial_10 == 3628800 (10!), 在编译期已经算好
+    std.debug.print("10! = {}\n", .{factorial_10});
+}
+```
+
+`comptime` 块也可以用于编译期断言，确保静态约束成立：
+
+```zig
+const std = @import("std");
+
+const Block = struct {
+    data: [block_size]u8 = undefined,
+
+    const block_size = 4096;
+
+    comptime {
+        // 编译期断言：block_size 必须是 2 的幂
+        std.debug.assert(block_size > 0 and (block_size & (block_size - 1)) == 0);
+    }
+};
+
+pub fn main() void {
+    var b: Block = .{};
+    b.data[0] = 42;
+    std.debug.print("first byte: {}\n", .{b.data[0]});
+}
+```
+
+---
+
+## 机制三：`comptime var`
+
+`comptime var` 声明一个只存在于编译期的可变变量，可以在编译期循环中累积状态：
+
+```zig
+const std = @import("std");
+
+fn fibonacci(comptime n: u32) u32 {
+    comptime var a: u32 = 0;
+    comptime var b: u32 = 1;
+    inline for (0..n) |_| {
+        const tmp = a + b;
+        a = b;
+        b = tmp;
+    }
+    return a;
+}
+
+test "fibonacci at comptime" {
+    // fibonacci(10) == 55，编译期计算完毕
+    try std.testing.expectEqual(55, comptime fibonacci(10));
+}
+```
+
+> **注意**：`comptime var` 只能在编译期上下文中被修改。配合 `inline for` 使用时，循环本身在编译期展开，每次迭代都能读写 `comptime var`。
+
+---
+
+## 机制四：编译期条件选择与 `@typeInfo`
+
+`@typeInfo` 返回一个类型的结构化描述，可以在编译期根据类型信息做分支决策：
 
 ```zig
 const std = @import("std");
@@ -214,111 +169,18 @@ fn zeroValue(comptime T: type) T {
         .int => 0,
         .float => 0.0,
         .bool => false,
-        else => @compileError("unsupported type"),
+        else => @compileError("unsupported type for zeroValue"),
     };
 }
-```
 
-这里的重点不是 `@typeInfo` 本身，而是：
-
-- 根据类型信息做决策
-- 某些分支在编译期就被确定
-- 不支持的类型会直接触发编译错误
-
-这正体现了 `comptime` 的“提前验证”能力。
-
-### 4. 编译期循环展开
-
-你也会经常看到 `inline for` 配合编译期数据使用。
-
-```zig
-const std = @import("std");
-
-fn printFieldNames(comptime fields: anytype) void {
-    inline for (fields) |field| {
-        std.debug.print("{s}\n", .{field.name});
-    }
+test "zeroValue" {
+    try std.testing.expectEqual(@as(i32, 0), zeroValue(i32));
+    try std.testing.expectEqual(@as(f64, 0.0), zeroValue(f64));
+    try std.testing.expectEqual(false, zeroValue(bool));
 }
 ```
 
-这里的核心不是“循环更快”，而是：
-
-> **循环本身在编译期展开，从而让每一项都能参与编译期推导和检查。**
-
-这在：
-
-- 字段驱动代码
-- 生成重复样板
-- 根据字段列表生成接口
-- 编译期元信息遍历
-
-这些场景里都很常见。
-
-## `comptime` 与泛型：真正的关系是什么？
-
-很多 Zig 学习者会把“泛型”单独看成一个主题，把 `comptime` 又单独看成另一个主题。  
-但在 Zig 里，这两者其实高度相关。
-
-更准确地说：
-
-> **Zig 的泛型，本质上就是建立在编译期参数和编译期特化之上的。**
-
-例如下面这个最简单的栈：
-
-```zig
-const std = @import("std");
-
-fn Stack(comptime T: type) type {
-    return struct {
-        const Self = @This();
-
-        items: []T,
-        len: usize,
-
-        pub fn top(self: Self) ?T {
-            if (self.len == 0) return null;
-            return self.items[self.len - 1];
-        }
-    };
-}
-```
-
-这里：
-
-- `T` 在编译期传入
-- `Stack(i32)` 和 `Stack([]const u8)` 是两个不同的具体类型
-- 每个实例化结果都带着明确的静态类型
-
-这和“运行时容器里放一个通用 boxed value”是完全不同的路线。
-
-也正因为如此，你在理解 Zig 泛型时，应该一直把下面这个问题放在脑子里：
-
-> **这个抽象是发生在编译期，还是发生在运行时？**
-
-这是第二部分非常重要的一条主线。
-
-## `@typeInfo`、反射与元编程：应该怎么理解？
-
-很多人一看到 `@typeInfo` 就会立刻觉得：
-
-- “这就是元编程核心”
-- “我是不是该马上学复杂反射”
-- “Zig 的高级玩法是不是都在这里”
-
-其实更稳妥的理解是：
-
-> **类型反射是 `comptime` 的一个重要工具，但不是起点。**
-
-真正的学习顺序更适合是：
-
-1. 先理解编译期参数
-2. 再理解编译期生成类型
-3. 再理解编译期条件判断
-4. 最后再进入类型反射与字段驱动代码
-
-因为如果你没有前面的基础，类型反射很容易沦为“技巧收集”，而不是清晰设计。
-
-### 一个最小反射示意
+更完整的类型描述示例——读取结构体字段数量：
 
 ```zig
 const std = @import("std");
@@ -333,185 +195,334 @@ fn fieldCount(comptime T: type) usize {
 const User = struct {
     id: u32,
     name: []const u8,
+    active: bool,
 };
 
-pub fn main() void {
-    std.debug.print("{}\n", .{fieldCount(User)});
+test "fieldCount" {
+    try std.testing.expectEqual(3, fieldCount(User));
 }
 ```
 
-这里最重要的收获不是“我会反射了”，而是：
+---
 
-- 类型信息可以在编译期被读取
-- 编译器可以基于类型结构做检查和生成
-- 反射应服务于更清楚的抽象，而不是炫技
+## 机制五：`inline for` 与编译期循环展开
 
-## `comptime` 最有价值的几个实际场景
+`inline for` 在编译期展开循环，每次迭代的捕获值都是编译期已知的。这使得在循环体内可以做编译期类型推导：
 
-理论理解之后，最重要的是知道它到底适合什么场景。
+```zig
+const std = @import("std");
 
-### 场景 1：泛型数据结构
+fn printFieldNames(comptime T: type) void {
+    const fields = @typeInfo(T).@"struct".fields;
+    inline for (fields) |field| {
+        std.debug.print("{s}\n", .{field.name});
+    }
+}
 
-这是最自然的入口。
+const Config = struct {
+    host: []const u8,
+    port: u16,
+    debug: bool,
+};
 
-例如：
+pub fn main() void {
+    printFieldNames(Config);
+}
+```
 
-- `Stack(T)`
-- `Queue(T)`
-- `FixedBuffer(T, N)`
-- `OptionalMap(K, V)`
+输出：
 
-这类场景的共同点是：
+```
+host
+port
+debug
+```
 
-- 类型在编译期已知
-- 结构会随类型不同而特化
-- 抽象希望保持零运行时开销
+---
 
-### 场景 2：编译期约束检查
+## 机制六：`@compileError` —— 把约束写进编译阶段
 
-有些错误完全没必要拖到运行时。
+当某段抽象只允许某些条件成立时，`@compileError` 可以在编译期阻止错误用法：
 
-例如：
+```zig
+const std = @import("std");
 
-- 某个类型不支持你要求的操作
-- 某个配置常量超出范围
-- 某个结构体缺失必要字段
-- 某个接口契约不满足
+fn safeDiv(comptime T: type, a: T, b: T) T {
+    switch (@typeInfo(T)) {
+        .int => {},
+        .float => {},
+        else => @compileError("safeDiv only supports integer and float types"),
+    }
+    if (b == 0) return 0;
+    return a / b;
+}
 
-这时可以直接：
+test "safeDiv" {
+    try std.testing.expectEqual(@as(i32, 3), safeDiv(i32, 10, 3));
+    try std.testing.expectEqual(@as(f64, 2.5), safeDiv(f64, 5.0, 2.0));
+    try std.testing.expectEqual(@as(i32, 0), safeDiv(i32, 10, 0));
+}
+```
 
-- 在编译期判断
-- 不满足就 `@compileError`
+编译期错误信息直接出现在编译输出中，比运行时 panic 更早、更明确。
 
-这样得到的不是“更花哨的代码”，而是**更早失败的系统**。
+---
 
-### 场景 3：根据类型或配置生成代码路径
+## 机制七：`@hasDecl` 与 `@hasField` —— 编译期鸭子类型
 
-有些逻辑天然依赖类型差异。
+这两个内建函数可以在编译期检查一个类型是否具备某个声明或字段：
 
-例如：
+```zig
+const std = @import("std");
 
-- 对整数和浮点采用不同实现
-- 对不同结构体布局生成不同序列化逻辑
-- 根据编译期开关决定是否包含调试功能
+fn canSerialize(comptime T: type) bool {
+    return @hasDecl(T, "serialize");
+}
 
-这类场景都很适合 `comptime`。
+fn hasNameField(comptime T: type) bool {
+    return @hasField(T, "name");
+}
 
-### 场景 4：预计算静态数据
+const Serializable = struct {
+    data: u32,
 
-如果某个结果在编译期就完全可知，而且运行时会频繁用到，那么预计算是有意义的。
+    pub fn serialize(self: @This()) []const u8 {
+        _ = self;
+        return "serialized";
+    }
+};
 
-例如：
+const Plain = struct {
+    name: []const u8,
+    value: u32,
+};
 
-- 查找表
-- 固定配置映射
-- 某些数学常量派生值
-- 编译期生成的静态描述表
+test "@hasDecl and @hasField" {
+    try std.testing.expect(canSerialize(Serializable));
+    try std.testing.expect(!canSerialize(Plain));
 
-但这里也要注意边界：
+    try std.testing.expect(hasNameField(Plain));
+    try std.testing.expect(!hasNameField(Serializable));
+}
+```
 
-> **不是所有能提前算的东西，都值得提前算。**
+> **注意**：`@hasDecl` 检查的是类型的**命名空间声明**（函数、常量等），`@hasField` 检查的是**数据字段**。两者用途不同。
 
-如果编译代价巨大、代码可读性下降，或者收益很小，就需要重新评估。
+这种能力是编译期约束检查的基础——泛型中如何用它实现接口约束，详见[泛型编程](chapter-generics.md)。
 
-## `comptime` 的边界：什么时候不该用？
+---
 
-这是最重要的部分之一。
+## 机制八：`@embedFile` —— 编译期嵌入文件
 
-如果只讲 `comptime` 的强大，而不讲边界，读者就很容易掉进“能编译期做的都扔到编译期”的误区。
+`@embedFile` 在编译期读取文件内容，将其作为字节数组常量嵌入到二进制中：
 
-### 1. 当问题本质上是运行时问题时
+```zig
+const std = @import("std");
 
-如果值来自：
+// 假设项目中存在 src/data/version.txt，内容为 "1.0.0"
+// const version = @embedFile("data/version.txt");
+// version 的类型是 *const [N:0]u8
 
-- 用户输入
-- 文件
-- 网络
-- 数据库
-- 动态环境
+// 以下示例使用一个编译期已知的字符串来演示相同的效果：
+const fallback_version = "1.0.0-dev";
 
-那么它天然属于运行时。
+pub fn main() void {
+    std.debug.print("version: {s}\n", .{fallback_version});
+}
+```
 
-不要为了“看起来高级”而试图强行编译期化。
+`@embedFile` 的典型使用场景：
 
-### 2. 当代码因此更难读时
+- 嵌入配置文件、模板、shader 源码
+- 嵌入静态资源（图标、证书等）
+- 嵌入版本号或构建信息
 
-很多 `comptime` 写法并不是“错”，但会让代码理解成本大幅上升。
+返回类型是 `*const [N:0]u8`——一个编译期已知长度的、以 0 结尾的字节数组指针。
 
-例如：
+---
 
-- 层层嵌套的反射逻辑
-- 过度抽象的字段驱动生成
-- 明明可以普通写，却非要绕一圈编译期拼装
+## 机制九：类型构造内建函数
 
-此时你应该问自己：
+在 0.16-dev 中，从 `@typeInfo` 结果构造类型的能力由一组专用内建函数提供，而非单一的 `@Type`：
 
-> **这段 `comptime` 真的让设计更清楚了吗，还是只是让实现更炫？**
+| 内建函数 | 用途 |
+| --------- | ---- |
+| `@Int(signedness, bits)` | 构造整数类型，如 `@Int(.unsigned, 18)` → `u18` |
+| `@Struct(...)` | 构造结构体类型 |
+| `@Union(...)` | 构造联合体类型 |
+| `@Enum(...)` | 构造枚举类型 |
+| `@Pointer(...)` | 构造指针类型 |
+| `@Fn(...)` | 构造函数类型 |
+| `@Tuple(field_types)` | 构造元组类型 |
 
-### 3. 当收益远小于复杂度时
+一个使用 `@Int` 的示例——根据需求选择最小整数类型：
 
-有些编译期技巧理论上更“零成本”，但实际上：
+```zig
+const std = @import("std");
 
-- 编译更慢
-- 错误更难理解
-- 维护难度更高
-- 团队更难接手
+fn SmallestUint(comptime max_val: comptime_int) type {
+    if (max_val < (1 << 8)) return u8;
+    if (max_val < (1 << 16)) return u16;
+    if (max_val < (1 << 32)) return u32;
+    return u64;
+}
 
-如果只是为了省下一点微不足道的运行时代价，这通常不值得。
+test "SmallestUint" {
+    try std.testing.expect(SmallestUint(100) == u8);
+    try std.testing.expect(SmallestUint(1000) == u16);
+    try std.testing.expect(SmallestUint(100_000) == u32);
+}
+```
 
-### 4. 当你本来该用运行时抽象时
+使用 `@Int` 构造精确位宽类型的示例：
 
-如果问题本质上需要：
+```zig
+const std = @import("std");
 
-- 运行时切换实现
-- 动态加载
-- 类型擦除
-- VTable
-- 插件机制
+fn DoubleWidth(comptime T: type) type {
+    const info = @typeInfo(T).int;
+    return @Int(info.signedness, info.bits * 2);
+}
 
-那么它更接近运行时抽象，而不是编译期抽象。
+test "DoubleWidth" {
+    try std.testing.expect(DoubleWidth(u16) == u32);
+    try std.testing.expect(DoubleWidth(i8) == i16);
+}
+```
 
-这也是为什么 `comptime` 和接口设计需要一起看，而不能混成一件事。
+---
 
-## 一个非常重要的问题：编译期抽象 vs 运行时抽象
+## `inline fn` vs `comptime` 参数
 
-第二部分里最值得反复问自己的问题之一，就是：
+这两个概念经常被混淆，但它们解决不同的问题：
 
-> **这个抽象应该放在编译期，还是运行时？**
+```zig
+const std = @import("std");
 
-### 编译期抽象更适合：
+// comptime 参数：调用者必须在编译期提供值
+fn comptimeAdd(comptime a: u32, b: u32) u32 {
+    // a 在编译期已知，b 可以是运行时值
+    return a + b;
+}
 
-- 类型已知
-- 零成本特化有明显收益
-- 逻辑能靠静态信息完整确定
-- 希望更强的静态检查
+// inline fn：建议编译器内联整个函数体（不强制参数为编译期值）
+inline fn inlineAdd(a: u32, b: u32) u32 {
+    return a + b;
+}
 
-### 运行时抽象更适合：
+test "comptime param vs inline fn" {
+    const x = comptimeAdd(10, 20);
+    try std.testing.expectEqual(30, x);
 
-- 类型在运行时才知道
-- 需要动态切换实现
-- 需要稳定 ABI 或插件式边界
-- 需要擦除具体类型细节
+    const y = inlineAdd(10, 20);
+    try std.testing.expectEqual(30, y);
+}
+```
 
-很多 Zig 设计选择，最后都落在这一条判断上。
+区别总结：
 
-例如：
+| | `comptime` 参数 | `inline fn` |
+| --- | --- | --- |
+| 参数是否必须编译期已知 | 是 | 否 |
+| 是否生成多份特化代码 | 是（按参数值特化） | 否（只是内联展开） |
+| 主要用途 | 泛型、编译期计算 | 性能优化、避免函数调用开销 |
+| 类型参数化能力 | 有（`comptime T: type`） | 无 |
 
-- 用 `anytype` 还是用 VTable？
-- 用 `comptime` 生成类型，还是用 tagged union？
-- 用编译期字段展开，还是用运行时配置表？
+> **注意**：`inline fn` 不等于 `comptime`。把函数标记为 `inline` 不会让它的参数变成编译期值，只是建议编译器在调用处展开函数体。
 
-所以学习 `comptime` 的真正目标，不只是“会写”，而是：
+---
 
-> **会判断什么时候该写。**
+## 编译期的硬性限制
 
-## 一个最小但完整的示例：按类型选择描述信息
+`comptime` 能力强大，但有明确的边界：
 
-下面这个例子没有追求炫技，但很好地体现了 `comptime` 的三件关键事情：
+```zig
+const std = @import("std");
 
-- 接收编译期类型参数
-- 读取类型信息
-- 在编译期决定行为
+// 演示：编译期不能做 I/O
+fn attemptCompileTimeWork() void {
+    // 以下如果在 comptime 块中调用，都会产生编译错误：
+    // - std.fs.cwd()         → 编译期不能访问文件系统
+    // - std.net.tcpConnect() → 编译期不能进行网络操作
+    // - std.heap.page_allocator.alloc() → 编译期不能使用运行时分配器
+}
+
+comptime {
+    // 编译期可以做的：
+    var x: u32 = 0;
+    for (0..10) |i| {
+        x += @as(u32, @intCast(i));
+    }
+    std.debug.assert(x == 45);
+
+    // 编译期不能做的（取消注释会产生编译错误）：
+    // _ = std.heap.page_allocator;  // 运行时分配器
+}
+
+test "comptime limits are clear" {
+    // 编译期计算结果可以在运行时使用
+    const sum = comptime blk: {
+        var s: u32 = 0;
+        for (0..100) |i| {
+            s += @as(u32, @intCast(i));
+        }
+        break :blk s;
+    };
+    try std.testing.expectEqual(4950, sum);
+}
+```
+
+完整的限制清单：
+
+| 限制 | 说明 |
+| ---- | ---- |
+| **无 I/O** | 不能读写文件、网络、标准输入输出（`@embedFile` 是例外——由编译器特殊处理） |
+| **无运行时指针** | 不能解引用指向运行时内存的指针 |
+| **有限内存** | 编译期求值器有内存上限，过大的数据结构会触发"eval branch quota exceeded"或内存不足 |
+| **递归深度限制** | 默认分支配额 1000，可用 `@setEvalBranchQuota` 提高，但不能无限 |
+| **无内联汇编** | `asm` 在编译期不可用 |
+| **无运行时副作用** | 不能修改全局可变状态、不能调用外部函数 |
+
+如果遇到 `"unable to evaluate comptime expression"` 或 `"eval branch quota exceeded"`，通常意味着编译期计算触碰了这些限制。
+
+---
+
+## 预计算静态数据
+
+当某个结果在编译期完全可知且运行时会频繁使用时，预计算是 `comptime` 的经典应用：
+
+```zig
+const std = @import("std");
+
+/// 编译期生成 ASCII 查找表：标记哪些字符是十六进制数字
+const hex_table: [256]bool = comptime blk: {
+    var table = [_]bool{false} ** 256;
+    for ("0123456789abcdefABCDEF") |c| {
+        table[c] = true;
+    }
+    break :blk table;
+};
+
+fn isHexDigit(c: u8) bool {
+    return hex_table[c];
+}
+
+test "hex lookup table" {
+    try std.testing.expect(isHexDigit('a'));
+    try std.testing.expect(isHexDigit('F'));
+    try std.testing.expect(isHexDigit('0'));
+    try std.testing.expect(!isHexDigit('g'));
+    try std.testing.expect(!isHexDigit(' '));
+}
+```
+
+这个查找表在编译期构建完毕，运行时只需一次数组索引——O(1) 查找，零运行时构建成本。
+
+---
+
+## 一个完整示例：按类型选择描述信息
+
+综合运用多种机制——编译期类型参数、`@typeInfo` 分支、`@compileError`：
 
 ```zig
 const std = @import("std");
@@ -524,125 +535,80 @@ fn describeType(comptime T: type) []const u8 {
         .pointer => "pointer",
         .array => "array",
         .@"struct" => "struct",
+        .@"enum" => "enum",
         else => "other",
     };
 }
 
-pub fn main() void {
-    std.debug.print("{s}\n", .{describeType(i32)});
-    std.debug.print("{s}\n", .{describeType(f64)});
-    std.debug.print("{s}\n", .{describeType(bool)});
+test "describeType" {
+    try std.testing.expectEqualStrings("integer", describeType(i32));
+    try std.testing.expectEqualStrings("float", describeType(f64));
+    try std.testing.expectEqualStrings("boolean", describeType(bool));
+    try std.testing.expectEqualStrings("pointer", describeType(*u8));
+    try std.testing.expectEqualStrings("struct", describeType(struct { x: u32 }));
 }
 ```
-
-这里的价值在于：
-
-- 逻辑本身很普通
-- 但它已经体现了 `comptime` 如何让“类型”参与普通 Zig 代码的决策
-- 同时仍保持可读性
-
-这类写法通常比一上来追求复杂反射模板更适合作为起点。
-
-## `@compileError`：把约束写进编译阶段
-
-当某段抽象只允许某些条件成立时，`@compileError` 是非常重要的工具。
-
-```zig
-const std = @import("std");
-
-fn onlyIntegers(comptime T: type) void {
-    switch (@typeInfo(T)) {
-        .int => {},
-        else => @compileError("only integer types are supported"),
-    }
-}
-```
-
-它的意义不只是“报错”，而是：
-
-- 把抽象边界写清楚
-- 让错误更早暴露
-- 让使用者更快理解约束
-
-这往往比把问题拖到运行时再 `panic` 更符合 Zig 的风格。
-
-## 学 `comptime` 时最容易踩的坑
-
-### 1. 把它当“更厉害的宏”
-这是最常见的误区。
-
-Zig 的 `comptime` 不是单纯文本替换，不是脱离类型系统的宏技巧，而是语言本身在编译阶段执行的能力。
-
-### 2. 一上来就沉迷复杂反射
-很多人刚接触就开始写：
-
-- 字段遍历
-- 自动生成一切
-- 复杂结构体转换
-- 高度动态的编译期拼接
-
-结果往往是：
-
-- 自己也看不清
-- 错误难读
-- 收益不明显
-
-更好的顺序是先把编译期参数、泛型和边界学稳。
-
-### 3. 过度追求“全编译期化”
-不是所有东西都应该在编译期解决。
-
-如果一个问题本质上是运行时的，就不应该被强行塞进 `comptime`。
-
-### 4. 用 `comptime` 掩盖设计不清
-有时问题不是“需要更强的元编程”，而是：
-
-- 数据结构没想清楚
-- 接口边界没想清楚
-- 运行时和编译期职责没分清
-
-这时继续堆 `comptime` 只会放大混乱。
-
-### 5. 把“能写出来”和“值得这样写”混为一谈
-这也是高级主题里非常重要的一条经验。
-
-Zig 往往允许你做很多强大的事，但真正重要的是判断：
-
-> **这是不是当前最清楚、最合适的设计。**
-
-## 一个推荐的学习顺序
-
-如果你想把这一章读得更稳，我建议按下面顺序建立理解：
-
-1. **先理解编译期和运行时的区别**
-2. **再掌握 `comptime` 参数**
-3. **再掌握编译期生成类型**
-4. **再掌握基于类型信息的条件分支**
-5. **最后再进入类型反射与更复杂的字段驱动代码**
-
-这样你会更容易把 `comptime` 当作设计工具，而不是技巧收藏夹。
-
-## 本章小结
-
-这一章最重要的，不是学会多少“元编程花样”，而是建立下面这些判断：
-
-- `comptime` 是 Zig 语言本身在编译阶段执行代码的能力
-- 它最核心的用途包括：泛型、类型生成、约束检查、编译期分支和部分预计算
-- 它特别适合处理“编译时已知的信息”
-- 它不该被用来替代本来就属于运行时的问题
-- 真正重要的不是“能不能用 `comptime`”，而是“这里是否应该用 `comptime`”
-
-如果你读完这一章后，已经能更清楚地区分：
-
-- 编译期抽象
-- 运行时抽象
-- 类型驱动设计
-- 技巧式炫技
-
-那么这一章就已经达成目标。
 
 ---
 
-> 💡 **下一章预告**
->
-> 下一章我们将继续进入 [泛型编程](chapter-generics.md)，把这一章里建立的编译期抽象直觉，进一步落实到更具体的可复用接口与类型设计中。
+## `comptime` 适用场景速览
+
+| 场景 | 说明 |
+| ---- | ---- |
+| 泛型数据结构与函数 | 类型参数化，编译期特化——详见[泛型编程](chapter-generics.md) |
+| 编译期约束检查 | 用 `@compileError` 在编译期拒绝不合法的类型或配置 |
+| 根据类型生成代码路径 | `@typeInfo` + `switch`，按类型选择不同实现 |
+| 预计算静态数据 | 查找表、常量派生值、编译期生成的静态数据 |
+| 嵌入外部资源 | `@embedFile` 将文件内容嵌入二进制 |
+| 编译期断言 | `comptime { }` 块中做静态检查 |
+
+---
+
+## 边界与常见陷阱
+
+以下问题在实践中最容易遇到，合并为一节。
+
+### 1. 别把运行时问题硬塞进编译期
+
+如果值来自用户输入、文件、网络、数据库——它天然属于运行时。不要为了"看起来高级"而强行 `comptime` 化。
+
+### 2. 别让编译期代码比运行时更难读
+
+层层嵌套的 `@typeInfo` 反射、过度抽象的字段驱动生成——如果明明可以普通写，却非要绕一圈编译期拼装，问自己：
+
+> 这段 `comptime` 真的让设计更清楚了吗？
+
+### 3. 编译期 ≠ 免费
+
+编译期计算会增加编译时间。如果只是为了省下微不足道的运行时开销而大幅拖慢编译，通常不值得。
+
+### 4. 先学稳基础再玩反射
+
+推荐顺序：`comptime` 参数 → 编译期生成类型 → 编译期条件分支 → 类型反射。跳过前面直接沉迷复杂反射，往往导致代码自己也看不清。
+
+### 5. 别用 `comptime` 掩盖设计不清
+
+有时问题不是"需要更强的元编程"，而是数据结构没想清楚、接口边界没想清楚。继续堆 `comptime` 只会放大混乱。
+
+> **注意**：编译期抽象和运行时抽象的选择是第二部分的核心主线之一。如果需要运行时切换实现、动态加载、类型擦除、VTable，那更适合运行时抽象，而不是 `comptime`。
+
+---
+
+## 本章小结
+
+本章覆盖的 `comptime` 核心机制：
+
+| 机制 | 关键语法/内建函数 |
+| ---- | ----------------- |
+| 编译期参数 | `fn f(comptime T: type, ...)` |
+| 编译期块 | `comptime { }`, `comptime blk: { break :blk val; }` |
+| 编译期变量 | `comptime var x = ...` |
+| 类型反射 | `@typeInfo(T)` |
+| 类型构造 | `@Int`, `@Struct`, `@Enum`, `@Union`, `@Pointer`, `@Fn`, `@Tuple` |
+| 声明/字段检查 | `@hasDecl(T, name)`, `@hasField(T, name)` |
+| 编译期错误 | `@compileError("message")` |
+| 文件嵌入 | `@embedFile("path")` |
+| 循环展开 | `inline for` |
+| 性能配额 | `@setEvalBranchQuota(N)` |
+
+这些机制是 Zig 泛型、零成本抽象和元编程的底层基础。掌握它们之后，下一章[泛型编程](chapter-generics.md)将展示如何把这些机制组合成可复用的设计模式。

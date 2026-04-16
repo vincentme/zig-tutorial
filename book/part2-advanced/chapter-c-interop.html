@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-dab0b333.js";
+            window.path_to_searchindex_js = "../searchindex-5349b6ee.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-84df0a14.js"></script>
@@ -182,26 +182,26 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="与-c-语言的互操作性"><a class="header" href="#与-c-语言的互操作性">与 C 语言的互操作性</a></h1>
-<p>这一章不把重点放在“罗列尽可能多的 C 互操作语法”，而是把重点放在几个真正决定成败的边界上：</p>
+<p>这一章不把重点放在“罗列尽可能多的 C 互操作语法“，而是把重点放在几个真正决定成败的边界上：</p>
 <blockquote>
-<p><strong>ABI 边界、字符串表示、所有权责任、以及构建与链接的版本敏感性。</strong></p>
+<p><strong>ABI 边界、字符串表示、所有权责任、以及构建与链接。</strong></p>
 </blockquote>
-<p>Zig 从设计一开始就非常重视与 C 的互操作。这让你可以：</p>
+<p>Zig 从设计一开始就非常重视与 C 的互操作。这让开发者可以：</p>
 <ul>
 <li>直接调用现有的 C 库</li>
 <li>导出 C ABI 兼容的函数给其他语言使用</li>
 <li>逐步把现有 C 项目迁移到 Zig</li>
 <li>在需要时仍然复用大量成熟的 C 生态</li>
 </ul>
-<p>但“能互操作”不等于“可以无脑混用”。<br>真实项目里最容易踩坑的，通常不是 <code>@cImport</code> 这类入口本身，而是下面这些问题：</p>
+<p>但“能互操作“不等于“可以无脑混用“。
+真实项目里最容易踩坑的，通常不是 <code>@cImport</code> 这类入口本身，而是下面这些问题：</p>
 <ul>
 <li>这段数据在 ABI 上是否真的兼容？</li>
 <li>这是不是一个合法的 C 字符串？</li>
 <li>这块内存到底该由谁释放？</li>
 <li>我是在导入 Zig 模块，还是在链接系统库？</li>
-<li>这段构建脚本写法是不是受 Zig 当前版本影响很大？</li>
 </ul>
-<p>所以，本章最重要的目标不是让你记住所有 API 名字，而是帮助你建立一套更稳定的判断方法。</p>
+<p>所以，本章最重要的目标不是让读者记住所有 API 名字，而是建立一套更稳定的判断方法。</p>
 <hr>
 <h2 id="先明确c-互操作真正发生在什么边界上"><a class="header" href="#先明确c-互操作真正发生在什么边界上">先明确：C 互操作真正发生在什么边界上？</a></h2>
 <p>从工程角度看，Zig 与 C 的互操作主要发生在四类边界上：</p>
@@ -234,15 +234,14 @@
 <ul>
 <li>头文件如何导入</li>
 <li>库如何链接</li>
-<li>哪些写法容易受 Zig 版本影响</li>
 </ul>
 </li>
 </ol>
-<p>你可以把本章理解成：<strong>不是教你“怎么写几行 FFI 代码”，而是教你“如何不在边界上犯错”。</strong></p>
+<p>可以把本章理解成：<strong>不是教“怎么写几行 FFI 代码“，而是教“如何不在边界上犯错“。</strong></p>
 <hr>
 <h2 id="为什么-zig-的-c-互操作值得重视"><a class="header" href="#为什么-zig-的-c-互操作值得重视">为什么 Zig 的 C 互操作值得重视？</a></h2>
-<p>Zig 对 C 互操作的重视，不只是“方便调用旧库”，而是因为它本身就是 Zig 工程实践的一部分。</p>
-<h3 id="1-你可以直接接入成熟生态"><a class="header" href="#1-你可以直接接入成熟生态">1. 你可以直接接入成熟生态</a></h3>
+<p>Zig 对 C 互操作的重视，不只是“方便调用旧库“，而是因为它本身就是 Zig 工程实践的一部分。</p>
+<h3 id="1-直接接入成熟生态"><a class="header" href="#1-直接接入成熟生态">1. 直接接入成熟生态</a></h3>
 <p>现实世界里，很多底层能力仍然来自 C：</p>
 <ul>
 <li>操作系统接口</li>
@@ -254,7 +253,7 @@
 </ul>
 <p>如果 Zig 不能很好地和这些生态协作，它就很难成为实用语言。</p>
 <h3 id="2-适合渐进式迁移"><a class="header" href="#2-适合渐进式迁移">2. 适合渐进式迁移</a></h3>
-<p>很多现有项目不是“推倒重写”的，而是：</p>
+<p>很多现有项目不是“推倒重写“的，而是：</p>
 <ul>
 <li>保留现有 C 模块</li>
 <li>用 Zig 写新模块</li>
@@ -262,7 +261,8 @@
 </ul>
 <p>这种迁移方式的前提，就是互操作边界足够清楚。</p>
 <h3 id="3-c-abi-仍然是事实标准"><a class="header" href="#3-c-abi-仍然是事实标准">3. C ABI 仍然是事实标准</a></h3>
-<p>即使你最终不是和纯 C 程序交互，很多语言和运行时在底层也把 C ABI 当作通用边界。<br>因此，理解 C ABI，本质上也是在理解一种更普遍的系统接口边界。</p>
+<p>即使最终不是和纯 C 程序交互，很多语言和运行时在底层也把 C ABI 当作通用边界。
+因此，理解 C ABI，本质上也是在理解一种更普遍的系统接口边界。</p>
 <hr>
 <h2 id="这章最重要的主线先理解-abi而不是先记语法"><a class="header" href="#这章最重要的主线先理解-abi而不是先记语法">这章最重要的主线：先理解 ABI，而不是先记语法</a></h2>
 <p>很多初学者一开始会把 C 互操作理解成：</p>
@@ -276,7 +276,7 @@
 <p><strong>双方看到的函数签名、参数布局、返回值表示、结构体布局，是否真的一致？</strong></p>
 </blockquote>
 <p>这就是 ABI（Application Binary Interface）层面的兼容性问题。</p>
-<p>你可以简单把 ABI 理解为：</p>
+<p>可以简单把 ABI 理解为：</p>
 <ul>
 <li>函数参数如何传递</li>
 <li>返回值如何传递</li>
@@ -284,16 +284,16 @@
 <li>调用约定是什么</li>
 <li>哪些类型在边界上是安全的</li>
 </ul>
-<p>如果 ABI 不一致，那么代码即使“看起来能编译”，也可能在运行时出问题。</p>
+<p>如果 ABI 不一致，那么代码即使“看起来能编译“，也可能在运行时出问题。</p>
 <hr>
 <h2 id="zig-与-c-在数据模型上的一个关键差异"><a class="header" href="#zig-与-c-在数据模型上的一个关键差异">Zig 与 C 在数据模型上的一个关键差异</a></h2>
-<h3 id="zig-的很多类型更强调语义清楚"><a class="header" href="#zig-的很多类型更强调语义清楚">Zig 的很多类型更强调“语义清楚”</a></h3>
+<h3 id="zig-的很多类型更强调语义清楚"><a class="header" href="#zig-的很多类型更强调语义清楚">Zig 的很多类型更强调“语义清楚“</a></h3>
 <p>例如：</p>
 <ul>
 <li>切片 <code>[]T</code> 包含指针和长度</li>
 <li>可选类型 <code>?T</code> 有显式的空值语义</li>
 <li>错误联合 <code>!T</code> 表达可能失败</li>
-<li>更丰富的类型系统帮助你在 Zig 内部写出更安全的代码</li>
+<li>更丰富的类型系统帮助在 Zig 内部写出更安全的代码</li>
 </ul>
 <h3 id="c-更强调-abi-简单和历史兼容"><a class="header" href="#c-更强调-abi-简单和历史兼容">C 更强调 ABI 简单和历史兼容</a></h3>
 <p>例如：</p>
@@ -303,8 +303,8 @@
 <li>很多 API 通过整数返回码表达错误</li>
 <li>结构体布局更直接但也更脆弱</li>
 </ul>
-<p>因此，<strong>不要把“Zig 内部最舒服的类型”直接假设成“边界上也自然兼容的类型”。</strong></p>
-<p>这正是为什么跨边界时，你经常需要主动问：</p>
+<p>因此，<strong>不要把“Zig 内部最舒服的类型“直接假设成“边界上也自然兼容的类型“。</strong></p>
+<p>跨边界时，经常需要主动问：</p>
 <ul>
 <li>这里要传的是切片，还是裸指针？</li>
 <li>这里要传的是长度，还是 NUL 结尾？</li>
@@ -325,14 +325,14 @@
 <li>直接接标准库或简单头文件</li>
 <li>教学和快速验证</li>
 </ul>
-<h3 id="2-先把-c-头视为项目边界的一部分"><a class="header" href="#2-先把-c-头视为项目边界的一部分">2. 先把 C 头视为项目边界的一部分</a></h3>
-<p>在更真实的项目里，你更应该把导入 C 头文件理解成：</p>
+<h3 id="2-把-c-头视为项目边界的一部分"><a class="header" href="#2-把-c-头视为项目边界的一部分">2. 把 C 头视为项目边界的一部分</a></h3>
+<p>在更真实的项目里，导入 C 头文件应被理解成：</p>
 <ul>
 <li>项目依赖的一部分</li>
 <li>构建与链接的一部分</li>
 <li>版本与平台条件的一部分</li>
 </ul>
-<p>换句话说，真正复杂的地方往往不在 <code>@cImport</code> 这几行，而在：</p>
+<p>真正复杂的地方往往不在 <code>@cImport</code> 这几行，而在：</p>
 <ul>
 <li>头文件搜索路径</li>
 <li>平台条件宏</li>
@@ -340,6 +340,37 @@
 <li>构建脚本如何链接</li>
 </ul>
 <p>所以阅读和写作 C 互操作代码时，不要只盯着 Zig 源文件本身。</p>
+<hr>
+<h2 id="zig-translate-c理解-c-到-zig-的映射"><a class="header" href="#zig-translate-c理解-c-到-zig-的映射"><code>zig translate-c</code>：理解 C 到 Zig 的映射</a></h2>
+<p>在实际互操作中，经常需要知道某个 C 类型或函数签名在 Zig 里会变成什么样。<code>zig translate-c</code> 正是用来做这件事的工具——它把 C 头文件翻译成等价的 Zig 代码。</p>
+<p>基本用法：</p>
+<pre><code class="language-sh">zig translate-c /usr/include/errno.h
+</code></pre>
+<p>例如，对于这样一段 C 头文件：</p>
+<pre><code class="language-c">// point.h
+typedef struct {
+    float x;
+    float y;
+} Point;
+
+Point make_point(float x, float y);
+</code></pre>
+<p><code>zig translate-c point.h</code> 会产生类似这样的输出：</p>
+<pre><code class="language-zig">pub const Point = extern struct {
+    x: f32,
+    y: f32,
+};
+pub extern fn make_point(x: f32, y: f32) Point;
+</code></pre>
+<p>这个工具在以下场景特别有用：</p>
+<ul>
+<li>不确定某个 C 类型对应 Zig 的什么类型时，直接翻译看结果</li>
+<li>遇到复杂的 C 宏或 <code>typedef</code>，用它来辅助理解</li>
+<li>验证手写的 <code>extern</code> 声明是否和 C 头一致</li>
+</ul>
+<blockquote>
+<p><strong>注意</strong>：<code>zig translate-c</code> 的输出是机器生成的，可读性有时不高。它更适合作为参考，而不是直接复制到项目里。</p>
+</blockquote>
 <hr>
 <h2 id="调用-c-函数先看最小模式"><a class="header" href="#调用-c-函数先看最小模式">调用 C 函数：先看最小模式</a></h2>
 <p>一个最小例子通常会长这样：</p>
@@ -359,89 +390,35 @@ pub fn main() void {
 <li>Zig 可以直接调用它</li>
 <li>字符串字面量可以很自然地传给某些 C API</li>
 </ul>
-<p>但这只是最容易的一种情况。<br>真正容易出错的，通常不是字面量，而是<strong>你自己构造的数据</strong>。</p>
+<p>但这只是最容易的一种情况。
+真正容易出错的，通常不是字面量，而是<strong>自己构造的数据</strong>。</p>
 <hr>
-<h2 id="本章最关键的坑字符串不是一回事"><a class="header" href="#本章最关键的坑字符串不是一回事">本章最关键的坑：字符串不是一回事</a></h2>
-<p>这是 C 互操作里最值得反复强调的问题。</p>
-<h3 id="c-字符串通常意味着什么"><a class="header" href="#c-字符串通常意味着什么">C 字符串通常意味着什么？</a></h3>
-<p>通常是：</p>
-<ul>
-<li>一段以 <code>'\0'</code> 结尾的字节序列</li>
-<li>通过指针传递</li>
-<li>调用方和被调用方靠约定理解其结束位置</li>
-</ul>
-<h3 id="zig-的常见字符串表示是什么"><a class="header" href="#zig-的常见字符串表示是什么">Zig 的常见字符串表示是什么？</a></h3>
-<p>最常见的是：</p>
-<ul>
-<li><code>[]const u8</code></li>
-<li>它是一个切片：<strong>指针 + 长度</strong></li>
-<li>它不自动保证以 <code>0</code> 结尾</li>
-</ul>
-<p>所以，下面这件事必须牢牢记住：</p>
+<h2 id="字符串c-互操作里最高频的坑"><a class="header" href="#字符串c-互操作里最高频的坑">字符串：C 互操作里最高频的坑</a></h2>
+<p>C 和 Zig 对字符串的表示方式有本质区别。下面这张表是所有后续讨论的基础：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th></th><th>C 字符串 (<code>char*</code>)</th><th>Zig <code>[]const u8</code></th><th>Zig <code>[:0]const u8</code></th></tr>
+</thead>
+<tbody>
+<tr><td>结构</td><td>裸指针，以 <code>'\0'</code> 结尾</td><td>指针 + 长度</td><td>指针 + 长度 + 保证 NUL 结尾</td></tr>
+<tr><td>获取长度</td><td>运行时扫描 <code>'\0'</code></td><td>直接读 <code>.len</code></td><td>直接读 <code>.len</code></td></tr>
+<tr><td>NUL 终止</td><td><strong>必须</strong></td><td><strong>不保证</strong></td><td><strong>保证</strong></td></tr>
+<tr><td>直接传给 C</td><td>✓</td><td>✗</td><td>✓（通过 <code>.ptr</code>）</td></tr>
+</tbody>
+</table>
+</div>
+<p>核心规则只有一条：</p>
 <blockquote>
-<p><strong><code>[]const u8</code> 不是天然合法的 C 字符串。</strong></p>
+<p><strong><code>[]const u8</code> 不是天然合法的 C 字符串。即使通过 <code>.ptr</code> 拿到指针，也不保证 NUL 终止。</strong></p>
 </blockquote>
-<p>即使你能拿到它的 <code>.ptr</code>，也不代表它满足 C API 对字符串的要求。</p>
-<hr>
-<h2 id="什么时候传字面量通常没问题"><a class="header" href="#什么时候传字面量通常没问题">什么时候传字面量通常没问题？</a></h2>
-<p>例如：</p>
-<pre><code class="language-zig">const file = c.fopen("config.txt", "rb");
+<h3 id="字面量为什么通常没问题"><a class="header" href="#字面量为什么通常没问题">字面量为什么通常没问题？</a></h3>
+<p>Zig 字符串字面量的类型是 <code>*const [N:0]u8</code>——指向定长、NUL 终止数组的指针。它可以自动强转为 <code>[:0]const u8</code>，因此直接传给 C 函数是安全的：</p>
+<pre><code class="language-zig">// 字面量自动强转为 [:0]const u8，天然 NUL 终止
+const file = c.fopen("config.txt", "rb");
 </code></pre>
-<p>这类写法通常比较自然，因为字符串字面量本身更容易满足边界要求。</p>
-<p>但这不意味着你可以把这个经验直接推广到任意 <code>[]const u8</code>。</p>
-<hr>
-<h2 id="为什么-ptr-不是万能安全转换"><a class="header" href="#为什么-ptr-不是万能安全转换">为什么 <code>.ptr</code> 不是“万能安全转换”？</a></h2>
-<p>你可能会看到类似写法：</p>
-<pre><code class="language-zig">const path: []const u8 = "foo.txt";
-const file = c.fopen(path.ptr, "rb");
-</code></pre>
-<p>这类写法最大的问题不是“能不能编译”，而是：</p>
-<blockquote>
-<p><strong><code>path.ptr</code> 只给了你一个指针，没有帮你证明它是 NUL 结尾的 C 字符串。</strong></p>
-</blockquote>
-<p>如果某个切片：</p>
-<ul>
-<li>不是以 <code>0</code> 结尾</li>
-<li>中间包含额外 <code>0</code></li>
-<li>生命周期太短</li>
-<li>来自会被立即释放的缓冲区</li>
-</ul>
-<p>那么把 <code>.ptr</code> 交给 C API 就可能出问题。</p>
-<h3 id="更稳妥的理解方式"><a class="header" href="#更稳妥的理解方式">更稳妥的理解方式</a></h3>
-<p><code>.ptr</code> 不是“把 Zig 字符串变成 C 字符串”的魔法。<br>它只是在说：</p>
-<ul>
-<li>“这里有底层指针”</li>
-</ul>
-<p>至于这个指针能不能安全传给 C，取决于：</p>
-<ul>
-<li>数据是否 NUL 终止</li>
-<li>生命周期是否足够长</li>
-<li>C API 是否真的接受这种表示</li>
-</ul>
-<hr>
-<h2 id="更稳妥的字符串策略"><a class="header" href="#更稳妥的字符串策略">更稳妥的字符串策略</a></h2>
-<p>在 Zig 调 C 时，字符串处理通常有几种更稳妥的策略。</p>
-<h3 id="策略-1能用字面量就先用字面量"><a class="header" href="#策略-1能用字面量就先用字面量">策略 1：能用字面量就先用字面量</a></h3>
-<p>对于简单固定参数，这是最省心的方式。</p>
-<p>适用场景：</p>
-<ul>
-<li>固定文件模式 <code>"rb"</code></li>
-<li>固定格式字符串</li>
-<li>简单常量路径示例</li>
-</ul>
-<h3 id="策略-2显式构造-nul-终止数据"><a class="header" href="#策略-2显式构造-nul-终止数据">策略 2：显式构造 NUL 终止数据</a></h3>
-<p>如果字符串来自运行时数据，更好的做法通常是：</p>
-<ul>
-<li>分配一段新缓冲区</li>
-<li>复制原始内容</li>
-<li>在尾部补 <code>0</code></li>
-<li>明确控制生命周期</li>
-</ul>
-<p>这比“拿着切片 <code>.ptr</code> 直接传”更诚实。</p>
-<h3 id="策略-3在类型层面明确使用带哨兵表示"><a class="header" href="#策略-3在类型层面明确使用带哨兵表示">策略 3：在类型层面明确使用带哨兵表示</a></h3>
-<p>当你的设计本身就是要面对 C 字符串边界时，更好的建模方式通常是让“结尾语义”更明确，而不是一直假设普通切片就够了。</p>
-<hr>
-<h2 id="一个更稳妥的-c-字符串构造示例"><a class="header" href="#一个更稳妥的-c-字符串构造示例">一个更稳妥的 C 字符串构造示例</a></h2>
+<h3 id="运行时字符串怎么处理"><a class="header" href="#运行时字符串怎么处理">运行时字符串怎么处理？</a></h3>
+<p>运行时得到的 <code>[]const u8</code> 不能直接传给 C。推荐使用 <code>allocator.dupeZ</code> 一步完成“复制 + NUL 终止“：</p>
 <pre><code class="language-zig">const std = @import("std");
 
 const c = @cImport({
@@ -453,13 +430,11 @@ pub fn main() !void {
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
-    const zig_path = "example.txt";
+    const zig_path: []const u8 = "example.txt";
 
-    const c_path = try allocator.alloc(u8, zig_path.len + 1);
+    // dupeZ：复制切片并追加 NUL 终止符，返回 [:0]u8
+    const c_path = try allocator.dupeZ(u8, zig_path);
     defer allocator.free(c_path);
-
-    @memcpy(c_path[0..zig_path.len], zig_path);
-    c_path[zig_path.len] = 0;
 
     const file = c.fopen(c_path.ptr, "rb");
     if (file == null) {
@@ -469,17 +444,19 @@ pub fn main() !void {
     defer _ = c.fclose(file);
 }
 </code></pre>
-<p>这段代码的重点不在于“有点繁琐”，而在于它把三件事写清楚了：</p>
+<p><code>dupeZ</code> 的优势：</p>
 <ol>
-<li>你知道自己在构造 C 字符串</li>
-<li>你明确加了终止符</li>
-<li>你清楚这段内存由谁管理、活多久</li>
+<li><strong>类型明确</strong>——返回 <code>[:0]u8</code>，编译器层面保证 NUL 终止</li>
+<li><strong>意图清晰</strong>——名字直接表达“复制并加零“</li>
+<li><strong>所有权清楚</strong>——<code>allocator</code> 分配，<code>defer allocator.free</code> 释放</li>
 </ol>
-<p>这正是边界代码应有的风格。</p>
+<blockquote>
+<p><strong>注意</strong>：<code>dupeZ</code> 是 <code>dupeSentinel</code> 的快捷方式。如需非零的哨兵值，可用 <code>allocator.dupeSentinel(u8, slice, sentinel_value)</code>。</p>
+</blockquote>
 <hr>
 <h2 id="所有权谁分配谁释放"><a class="header" href="#所有权谁分配谁释放">所有权：谁分配，谁释放？</a></h2>
 <p>这是 C 互操作里第二个核心主题。</p>
-<p>如果你只记一句话，那就是：</p>
+<p>如果只记一句话，那就是：</p>
 <blockquote>
 <p><strong>跨语言边界时，资源责任必须写得比平时更清楚。</strong></p>
 </blockquote>
@@ -504,7 +481,7 @@ pub fn main() !void {
 <li>如果内存来自 <code>malloc</code>，通常就应由 <code>free</code> 释放</li>
 <li>如果内存来自 Zig 分配器，通常就应由对应 Zig 分配器释放</li>
 </ul>
-<p>不要因为“它们最终都向系统申请内存”就想当然地混用。</p>
+<p>不要因为“它们最终都向系统申请内存“就想当然地混用。</p>
 <hr>
 <h2 id="不要轻易混用-zig-分配器和-c-分配器"><a class="header" href="#不要轻易混用-zig-分配器和-c-分配器">不要轻易混用 Zig 分配器和 C 分配器</a></h2>
 <p>这是一个非常常见的误区。</p>
@@ -513,20 +490,14 @@ pub fn main() !void {
 <p>或者：</p>
 <p>“C 那边 malloc 的，我在 Zig 里 allocator.free 一下应该也差不多吧？”</p>
 <h3 id="更稳妥的结论"><a class="header" href="#更稳妥的结论">更稳妥的结论</a></h3>
-<p>通常不要这样做。</p>
-<p>原因包括：</p>
+<p>通常不要这样做。原因包括：</p>
 <ul>
 <li>分配器实现可能不同</li>
 <li>元数据布局可能不同</li>
 <li>调试分配器会记录额外状态</li>
 <li>释放路径必须和分配路径匹配</li>
 </ul>
-<p>因此，跨边界时应尽量坚持：</p>
-<ul>
-<li>Zig 分配 → Zig 释放</li>
-<li>C 分配 → C 释放</li>
-</ul>
-<p>除非某个库文档明确规定了不同的规则。</p>
+<p>跨边界时应尽量坚持：Zig 分配 → Zig 释放，C 分配 → C 释放。除非某个库文档明确规定了不同的规则。</p>
 <hr>
 <h2 id="使用-c-构造函数通常比手工拼对象更稳妥"><a class="header" href="#使用-c-构造函数通常比手工拼对象更稳妥">使用 C 构造函数通常比手工拼对象更稳妥</a></h2>
 <p>很多 C 库会提供自己的对象创建 / 销毁函数，例如：</p>
@@ -545,63 +516,134 @@ pub fn main() !void {
 <li>平台相关设置</li>
 <li>未来版本兼容策略</li>
 </ul>
-<p>手工填结构体字段看起来“更底层”，但也更容易踩 ABI 和库内部约定的坑。</p>
+<p>手工填结构体字段看起来“更底层“，但也更容易踩 ABI 和库内部约定的坑。</p>
 <hr>
-<h2 id="extern-struct什么时候需要它"><a class="header" href="#extern-struct什么时候需要它"><code>extern struct</code>：什么时候需要它？</a></h2>
-<p>如果某个结构体要跨 Zig/C 边界直接传递或共享布局，就应考虑使用 <code>extern struct</code>。</p>
-<p>它的核心意义是：</p>
-<ul>
-<li>明确告诉编译器，这个结构体要按 C ABI 兼容的布局来处理</li>
-</ul>
-<p>例如：</p>
-<pre><code class="language-zig">const Point = extern struct {
-    x: f32,
-    y: f32,
+<h2 id="extern-struct保证-c-abi-布局"><a class="header" href="#extern-struct保证-c-abi-布局"><code>extern struct</code>：保证 C ABI 布局</a></h2>
+<p>如果某个结构体要跨 Zig/C 边界直接传递或共享布局，就应使用 <code>extern struct</code>。</p>
+<p>它的核心意义是：明确告诉编译器，这个结构体要按 C ABI 兼容的布局来处理——字段顺序不会被重排，对齐规则与 C 一致。</p>
+<p>下面是一个完整的例子，包含定义和验证：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+/// 匹配 C 端的 struct Pixel { uint8_t r, g, b, a; }
+const Pixel = extern struct {
+    r: u8,
+    g: u8,
+    b: u8,
+    a: u8,
+
+    fn isOpaque(self: Pixel) bool {
+        return self.a == 0xFF;
+    }
 };
-</code></pre>
-<p>这类类型更适合：</p>
-<ul>
-<li>传给 C 函数</li>
-<li>从 C 函数返回</li>
-<li>与 C 头文件里的同名结构体保持一致语义</li>
-</ul>
-<h3 id="一个重要提醒"><a class="header" href="#一个重要提醒">一个重要提醒</a></h3>
-<p><code>extern struct</code> 不是“所有结构体都该默认使用”的标记。<br>它只适合那些确实要跨 ABI 边界的类型。</p>
-<p>在纯 Zig 内部，普通 <code>struct</code> 往往更自然。</p>
-<hr>
-<h2 id="导出给-cexport-的含义是什么"><a class="header" href="#导出给-cexport-的含义是什么">导出给 C：<code>export</code> 的含义是什么？</a></h2>
-<p>当你希望 C 代码调用 Zig 函数时，常见方式是导出 C ABI 兼容函数。</p>
-<p>例如：</p>
-<pre><code class="language-zig">export fn add(a: i32, b: i32) i32 {
-    return a + b;
+
+test "Pixel layout matches C expectations" {
+    // extern struct 保证按声明顺序排列，无填充
+    try std.testing.expectEqual(4, @sizeOf(Pixel));
+    try std.testing.expectEqual(0, @offsetOf(Pixel, "r"));
+    try std.testing.expectEqual(1, @offsetOf(Pixel, "g"));
+    try std.testing.expectEqual(2, @offsetOf(Pixel, "b"));
+    try std.testing.expectEqual(3, @offsetOf(Pixel, "a"));
+
+    const px = Pixel{ .r = 255, .g = 128, .b = 0, .a = 255 };
+    try std.testing.expect(px.isOpaque());
 }
 </code></pre>
-<p>它表达的是：</p>
+<h3 id="一个重要提醒"><a class="header" href="#一个重要提醒">一个重要提醒</a></h3>
+<p><code>extern struct</code> 不是“所有结构体都该默认使用“的标记。
+它只适合那些确实要跨 ABI 边界的类型。</p>
+<p>在纯 Zig 内部，普通 <code>struct</code> 更自然——编译器可以自由优化字段布局和对齐。</p>
+<hr>
+<h2 id="导出给-cexport-fn-与对应的-c-头文件"><a class="header" href="#导出给-cexport-fn-与对应的-c-头文件">导出给 C：<code>export fn</code> 与对应的 C 头文件</a></h2>
+<p>当希望 C 代码调用 Zig 函数时，使用 <code>export fn</code> 导出 C ABI 兼容函数。</p>
+<h3 id="zig-侧导出函数"><a class="header" href="#zig-侧导出函数">Zig 侧：导出函数</a></h3>
+<pre><code class="language-zig">// mathlib.zig
+const std = @import("std");
+
+/// 两个整数相加，导出为 C ABI 函数
+export fn add(a: c_int, b: c_int) c_int {
+    return a + b;
+}
+
+/// 计算整数数组的总和
+export fn sum_array(ptr: [*]const c_int, len: usize) c_int {
+    const items = ptr[0..len];
+    var total: c_int = 0;
+    for (items) |v| {
+        total += v;
+    }
+    return total;
+}
+</code></pre>
+<h3 id="c-侧对应的头文件"><a class="header" href="#c-侧对应的头文件">C 侧：对应的头文件</a></h3>
+<pre><code class="language-c">/* mathlib.h — 手写或由工具生成 */
+#ifndef MATHLIB_H
+#define MATHLIB_H
+
+#include &lt;stddef.h&gt;
+
+int add(int a, int b);
+int sum_array(const int *ptr, size_t len);
+
+#endif
+</code></pre>
+<h3 id="c-侧调用示例"><a class="header" href="#c-侧调用示例">C 侧：调用示例</a></h3>
+<pre><code class="language-c">#include &lt;stdio.h&gt;
+#include "mathlib.h"
+
+int main(void) {
+    printf("add: %d\n", add(3, 4));
+
+    int nums[] = {10, 20, 30};
+    printf("sum: %d\n", sum_array(nums, 3));
+    return 0;
+}
+</code></pre>
+<p>关键注意事项：</p>
 <ul>
-<li>这个函数将以适合外部链接和调用的方式暴露出去</li>
-</ul>
-<p>但真正需要你注意的，不只是“会不会导出”，而是：</p>
-<ul>
-<li>参数类型是否适合 C ABI</li>
-<li>返回值类型是否适合 C ABI</li>
-<li>是否混入了 Zig 特有语义</li>
-</ul>
-<p>例如，在导出边界上，你应特别谨慎处理：</p>
-<ul>
-<li><code>[]T</code></li>
-<li><code>?T</code></li>
-<li><code>!T</code></li>
-<li>复杂 Zig 专用类型</li>
-</ul>
-<p>更稳妥的边界设计通常是：</p>
-<ul>
-<li>使用 C 能理解的基本整数 / 浮点 / 指针 / extern struct</li>
-<li>显式传长度</li>
-<li>显式传错误码或状态值</li>
+<li>参数和返回值类型必须是 C 能理解的——基本整数、浮点、指针、<code>extern struct</code></li>
+<li>不要在导出边界上使用 <code>[]T</code>、<code>?T</code>、<code>!T</code> 等 Zig 特有类型</li>
+<li>显式传长度（如 <code>ptr</code> + <code>len</code>）是跨 ABI 传递数组的标准模式</li>
+<li>更稳妥的导出 API 往往比 Zig 内部 API 更朴素——这不是退步，而是边界设计本来就应该更保守</li>
 </ul>
 <hr>
+<h2 id="回调函数把-zig-函数指针传给-c"><a class="header" href="#回调函数把-zig-函数指针传给-c">回调函数：把 Zig 函数指针传给 C</a></h2>
+<p>很多 C 库通过函数指针接受回调，例如排序、事件处理、线程入口等。在 Zig 中，只要函数声明了 <code>callconv(.c)</code>，就可以作为 C 回调使用。</p>
+<h3 id="经典例子qsort-比较函数"><a class="header" href="#经典例子qsort-比较函数">经典例子：qsort 比较函数</a></h3>
+<pre><code class="language-zig">const std = @import("std");
+
+const c = @cImport({
+    @cInclude("stdlib.h");
+});
+
+/// qsort 要求的比较函数签名：int (*)(const void*, const void*)
+fn compareInts(a: ?*const anyopaque, b: ?*const anyopaque) callconv(.c) c_int {
+    const val_a: *const i32 = @ptrCast(@alignCast(a));
+    const val_b: *const i32 = @ptrCast(@alignCast(b));
+    if (val_a.* &lt; val_b.*) return -1;
+    if (val_a.* &gt; val_b.*) return 1;
+    return 0;
+}
+
+test "qsort callback" {
+    var data = [_]i32{ 42, 7, -3, 100, 0 };
+    c.qsort(
+        @ptrCast(&amp;data),       // 数组基地址
+        data.len,              // 元素个数
+        @sizeOf(i32),          // 每个元素大小
+        &amp;compareInts,          // 比较函数
+    );
+    try std.testing.expectEqualSlices(i32, &amp;.{ -3, 0, 7, 42, 100 }, &amp;data);
+}
+</code></pre>
+<p>关键要素：</p>
+<ol>
+<li><strong><code>callconv(.c)</code></strong>——告诉编译器这个函数使用 C 调用约定，这样 C 库才能正确调用它</li>
+<li><strong>参数类型是 <code>?*const anyopaque</code></strong>——对应 C 的 <code>const void*</code>，需要 <code>@ptrCast</code> + <code>@alignCast</code> 转换为具体类型</li>
+<li><strong>返回 <code>c_int</code></strong>——匹配 C 的 <code>int</code> 返回类型</li>
+</ol>
+<p>这个模式适用于所有 C 回调场景：信号处理器、线程函数（<code>pthread_create</code>）、自定义分配器钩子等。</p>
+<hr>
 <h2 id="不要把-zig-特有语义直接暴露给-c"><a class="header" href="#不要把-zig-特有语义直接暴露给-c">不要把 Zig 特有语义直接暴露给 C</a></h2>
-<p>这也是非常重要的一条经验。</p>
 <h3 id="在-zig-内部很好用的类型"><a class="header" href="#在-zig-内部很好用的类型">在 Zig 内部很好用的类型</a></h3>
 <p>例如：</p>
 <ul>
@@ -619,79 +661,49 @@ pub fn main() !void {
 <li>输出参数写回结果</li>
 <li>使用 <code>extern struct</code></li>
 </ul>
-<p>也就是说：</p>
 <blockquote>
-<p><strong>对外 ABI 设计通常比 Zig 内部 API 设计更朴素。</strong></p>
+<p><strong>对外 ABI 设计通常比 Zig 内部 API 设计更朴素。这不是退步，而是边界设计本来就应该更保守。</strong></p>
 </blockquote>
-<p>这不是退步，而是边界设计本来就应该更保守。</p>
 <hr>
-<h2 id="链接真正容易版本敏感的区域之一"><a class="header" href="#链接真正容易版本敏感的区域之一">链接：真正容易版本敏感的区域之一</a></h2>
-<p>调用 C 并不只是在 Zig 源文件里写几行导入，还包括构建和链接。</p>
-<p>这部分恰好也是 Zig 较容易受版本影响的区域之一。</p>
-<h3 id="你真正该记住的不是某个字段名"><a class="header" href="#你真正该记住的不是某个字段名">你真正该记住的不是某个字段名</a></h3>
-<p>而是下面这些构建层面的事实：</p>
-<ul>
-<li>你可能需要链接系统库</li>
-<li>你可能需要显式启用 <code>libc</code></li>
-<li>你可能需要处理头文件路径和库搜索路径</li>
-<li>构建 API 写法会随着 Zig 版本演进调整</li>
-</ul>
-<p>所以，遇到构建示例时，更稳妥的阅读方式是：</p>
-<ol>
-<li>先理解目标：到底是在链接什么</li>
-<li>再根据你本地 Zig 版本核对具体写法</li>
-</ol>
-<hr>
-<h2 id="构建脚本里你真正要表达什么"><a class="header" href="#构建脚本里你真正要表达什么">构建脚本里你真正要表达什么？</a></h2>
-<p>无论具体 API 名字如何变化，构建脚本里常见的意图通常有这几类：</p>
-<ul>
-<li>链接系统库</li>
-<li>启用 libc</li>
-<li>添加头文件搜索路径</li>
-<li>添加 C 源文件</li>
-<li>把某个 Zig 目标和 C 依赖关联起来</li>
-</ul>
-<h3 id="所以阅读构建示例时先别急着背"><a class="header" href="#所以阅读构建示例时先别急着背">所以阅读构建示例时，先别急着背</a></h3>
-<p>你更应该先问：</p>
-<ul>
-<li>这是在链接系统装好的库，还是项目自带源码？</li>
-<li>这是只需要头文件，还是还要额外链接 <code>.a</code> / <code>.so</code> / <code>.dll</code>？</li>
-<li>这段写法是不是当前版本特有风格？</li>
-</ul>
-<hr>
-<h2 id="一个最小的链接示意"><a class="header" href="#一个最小的链接示意">一个最小的链接示意</a></h2>
-<p>下面这类写法更适合作为“意图示意”来理解：</p>
-<pre><code class="language-zig">exe.root_module.linkSystemLibrary("z", .{});
-exe.root_module.link_libc = true;
+<h2 id="构建与链接"><a class="header" href="#构建与链接">构建与链接</a></h2>
+<p>调用 C 不只是在 Zig 源文件里写几行导入，还包括构建和链接。</p>
+<h3 id="最小链接示例"><a class="header" href="#最小链接示例">最小链接示例</a></h3>
+<p>在 <code>build.zig</code> 中，链接 C 库的核心意图通常只有几行：</p>
+<pre><code class="language-zig">// build.zig 片段
+const exe = b.addExecutable(.{
+    .name = "my_app",
+    .root_module = b.createModule(.{
+        .root_source_file = b.path("src/main.zig"),
+        .link_libc = true,  // 启用 libc
+    }),
+});
+
+// 链接系统已安装的库（如 zlib）
+exe.root_module.linkSystemLibrary("z", .{});
+
+// 如果需要额外的头文件搜索路径
+exe.root_module.addIncludePath(b.path("vendor/include"));
+
+b.installArtifact(exe);
 </code></pre>
-<p>它表达的是：</p>
+<h3 id="阅读构建示例时的思路"><a class="header" href="#阅读构建示例时的思路">阅读构建示例时的思路</a></h3>
+<p>无论具体 API 名字如何随版本演进，构建脚本里的意图通常只有这几类：</p>
 <ul>
-<li>需要链接某个系统库</li>
-<li>当前目标还需要 libc</li>
+<li><strong>链接系统库</strong>——<code>linkSystemLibrary</code></li>
+<li><strong>启用 libc</strong>——<code>link_libc = true</code></li>
+<li><strong>添加头文件路径</strong>——<code>addIncludePath</code></li>
+<li><strong>添加 C 源文件</strong>——<code>addCSourceFiles</code></li>
+<li><strong>关联 Zig 目标和 C 依赖</strong></li>
 </ul>
-<p>但请注意：</p>
-<blockquote>
-<p><strong>这类构建 API 写法属于版本敏感区。真正项目里，应以你本地 Zig 版本的标准库和构建文档为准。</strong></p>
-</blockquote>
-<p>也就是说，这一章更想让你理解“链接这个动作本身在表达什么”，而不是保证每个字段名在未来都完全不变。</p>
+<p>遇到不确定的构建写法时，先理解目标（到底在链接什么），再根据本地 Zig 版本核对具体 API。</p>
 <hr>
 <h2 id="c-互操作里最常见的几个坑"><a class="header" href="#c-互操作里最常见的几个坑">C 互操作里最常见的几个坑</a></h2>
 <h3 id="1-把普通切片当成-c-字符串"><a class="header" href="#1-把普通切片当成-c-字符串">1. 把普通切片当成 C 字符串</a></h3>
-<p>这是最高频的问题之一。</p>
-<p>错误直觉是：</p>
-<ul>
-<li>“反正都是字节数组”</li>
-<li>“拿 <code>.ptr</code> 不就行了”</li>
-</ul>
-<p>但真正的问题在于：</p>
-<ul>
-<li>C 还要求 NUL 终止</li>
-<li>Zig 切片只保证长度，不保证结尾语义</li>
-</ul>
+<p>错误直觉是“反正都是字节数组，拿 <code>.ptr</code> 不就行了“。但 C 还要求 NUL 终止，Zig 切片只保证长度，不保证结尾语义。</p>
 <h3 id="2-不清楚谁负责释放内存"><a class="header" href="#2-不清楚谁负责释放内存">2. 不清楚谁负责释放内存</a></h3>
 <p>一旦责任不清楚，就很容易出现泄漏或双重释放。</p>
 <h3 id="3-手工拼-c-对象时忽略库约定"><a class="header" href="#3-手工拼-c-对象时忽略库约定">3. 手工拼 C 对象时忽略库约定</a></h3>
-<p>有些库对象不能只靠“字段看起来对”就算正确初始化。</p>
+<p>有些库对象不能只靠“字段看起来对“就算正确初始化。</p>
 <h3 id="4-把-zig-内部舒服的类型直接暴露给-c"><a class="header" href="#4-把-zig-内部舒服的类型直接暴露给-c">4. 把 Zig 内部舒服的类型直接暴露给 C</a></h3>
 <p>边界上应尽量使用更朴素、更稳定的 ABI 表示。</p>
 <h3 id="5-把构建失败误判为语法问题"><a class="header" href="#5-把构建失败误判为语法问题">5. 把构建失败误判为语法问题</a></h3>
@@ -700,13 +712,13 @@ exe.root_module.link_libc = true;
 <li>头文件找不到</li>
 <li>系统库没装</li>
 <li>链接顺序或路径不对</li>
-<li>当前 Zig 版本构建 API 不匹配</li>
 </ul>
 <h3 id="6-以为-c_intc_long-永远等于固定宽度整数"><a class="header" href="#6-以为-c_intc_long-永远等于固定宽度整数">6. 以为 <code>c_int</code>、<code>c_long</code> 永远等于固定宽度整数</a></h3>
-<p>这些类型是 ABI 类型，大小可能依平台变化。<br>跨边界时，平台相关性必须被认真对待。</p>
+<p>这些类型是 ABI 类型，大小可能依平台变化。
+跨边界时，平台相关性必须被认真对待。</p>
 <hr>
 <h2 id="当-c-互操作出问题时先怎么排查"><a class="header" href="#当-c-互操作出问题时先怎么排查">当 C 互操作出问题时，先怎么排查？</a></h2>
-<p>建议按下面顺序看，而不是一上来就怀疑“语言坏了”。</p>
+<p>建议按下面顺序看，而不是一上来就怀疑“语言坏了“。</p>
 <h3 id="1-先看边界类型"><a class="header" href="#1-先看边界类型">1. 先看边界类型</a></h3>
 <ul>
 <li>这里传的是切片还是裸指针？</li>
@@ -728,34 +740,36 @@ exe.root_module.link_libc = true;
 <h3 id="4-最后再看-api-细节"><a class="header" href="#4-最后再看-api-细节">4. 最后再看 API 细节</a></h3>
 <ul>
 <li>当前 Zig 版本是否调整了构建风格？</li>
-<li>你参考的示例是不是旧版本资料？</li>
+<li>参考的示例是不是旧版本资料？</li>
 </ul>
-<p>这个顺序很重要，因为很多问题根本不在“函数声明”那一层。</p>
+<p>这个顺序很重要，因为很多问题根本不在“函数声明“那一层。</p>
 <hr>
 <h2 id="一条更实用的经验法则"><a class="header" href="#一条更实用的经验法则">一条更实用的经验法则</a></h2>
-<p>如果你写完一段 C 互操作代码后，能明确回答下面四个问题，通常就已经比大多数“能跑但不稳”的代码强很多：</p>
+<p>写完一段 C 互操作代码后，如果能明确回答下面四个问题，通常就已经比大多数“能跑但不稳“的代码强很多：</p>
 <ol>
 <li><strong>这段边界上的数据表示是什么？</strong></li>
 <li><strong>这里是不是合法的 C ABI / C 字符串？</strong></li>
 <li><strong>这块内存到底由谁释放？</strong></li>
 <li><strong>这段构建与链接写法是否已针对本地版本核对？</strong></li>
 </ol>
-<p>如果你答不出来，就说明这段边界还不够稳。</p>
+<p>如果答不出来，就说明这段边界还不够稳。</p>
 <hr>
 <h2 id="本章小结"><a class="header" href="#本章小结">本章小结</a></h2>
-<p>这一章最重要的目标，不是让你背下多少互操作语法，而是建立一套更可靠的边界意识：</p>
+<p>这一章最重要的目标，不是让读者背下多少互操作语法，而是建立一套更可靠的边界意识：</p>
 <ul>
 <li><strong>C 互操作首先是 ABI 问题，不只是语法问题</strong></li>
-<li><strong>字符串是最高频坑点：<code>[]const u8</code> 不是天然 C 字符串</strong></li>
-<li><strong><code>.ptr</code> 只给你指针，不替你保证 NUL 终止和生命周期</strong></li>
+<li><strong>字符串是最高频坑点：<code>[]const u8</code> ≠ C 字符串，<code>[:0]const u8</code> 才是桥梁</strong></li>
+<li><strong><code>zig translate-c</code> 可以帮助理解 C 类型在 Zig 中的对应</strong></li>
+<li><strong>回调函数需要 <code>callconv(.c)</code> 和正确的类型转换</strong></li>
+<li><strong><code>extern struct</code> 保证 C ABI 布局，<code>export fn</code> 导出 C 可调用函数</strong></li>
 <li><strong>跨边界时必须把所有权写清楚：谁分配，谁释放</strong></li>
 <li><strong>不要轻易混用 Zig 分配器和 C 分配器</strong></li>
-<li><strong>构建与链接是版本敏感区，应优先理解意图，再核对本地写法</strong></li>
+<li><strong>构建与链接应优先理解意图，再核对本地写法</strong></li>
 </ul>
-<p>如果你带着这些判断去读标准库源码、第三方库示例，或者去做 C 项目的渐进迁移，就会更容易分辨：</p>
+<p>带着这些判断去读标准库源码、第三方库示例，或者去做 C 项目的渐进迁移，就更容易分辨：</p>
 <ul>
 <li>哪些写法是真正安全稳妥的</li>
-<li>哪些写法只是“碰巧能跑”</li>
+<li>哪些写法只是“碰巧能跑“</li>
 <li>哪些问题属于 ABI 边界，哪些只是构建细节</li>
 </ul>
 <p>这正是 Zig 做 C 互操作时最重要的工程能力。</p>

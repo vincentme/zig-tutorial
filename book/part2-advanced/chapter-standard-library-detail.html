@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-dab0b333.js";
+            window.path_to_searchindex_js = "../searchindex-5349b6ee.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-84df0a14.js"></script>
@@ -182,7 +182,7 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="常用标准库模块详解"><a class="header" href="#常用标准库模块详解">常用标准库模块详解</a></h1>
-<p>这一章不是标准库 API 手册，也不打算把所有函数逐条列出来。<br>它的目标更实际一些：帮助你建立一组<strong>第一次独立写 Zig 程序时最值得先掌握的标准库模块直觉</strong>。</p>
+<p>这一章不是标准库 API 手册，也不打算把所有函数逐条列出来。<br>它的目标更实际一些：建立一组<strong>独立写 Zig 程序时最值得先掌握的标准库模块直觉</strong>。</p>
 <p>如果上一章《标准库导航与阅读指南》主要回答的是：</p>
 <ul>
 <li>某类能力大致分布在哪些模块里</li>
@@ -198,12 +198,12 @@
 </ul>
 <p>阅读这一章时，建议始终记住一个原则：</p>
 <blockquote>
-<p><strong>先建立“模块职责 → 高频入口 → 最小示例 → 去哪里深入”的直觉，不要试图一次记住所有 API。</strong></p>
+<p><strong>建立“模块职责 → 高频入口 → 最小示例 → 去哪里深入“的直觉，不要试图一次记住所有 API。</strong></p>
 </blockquote>
 <hr>
 <h2 id="为什么要单独学常用标准库模块"><a class="header" href="#为什么要单独学常用标准库模块">为什么要单独学“常用标准库模块”？</a></h2>
 <p>学 Zig 时，语法和标准库几乎总是交织在一起出现。</p>
-<p>你刚学会变量、函数、切片和错误处理之后，很快就会遇到下面这些问题：</p>
+<p>刚学会变量、函数、切片和错误处理之后，很快就会遇到下面这些问题：</p>
 <ul>
 <li>怎么比较两个字符串？</li>
 <li>怎么把值格式化到缓冲区里？</li>
@@ -223,10 +223,10 @@
 <hr>
 <h2 id="stdmem"><a class="header" href="#stdmem"><code>std.mem</code></a></h2>
 <p><code>std.mem</code> 是 Zig 中最基础、也最高频的标准库模块之一。</p>
-<p>很多初学者一开始会把“字符串处理”理解成某种单独的大主题，但在 Zig 里，更常见的现实是：<br>你手上的往往不是“神秘字符串对象”，而是 <code>[]const u8</code> 这样的<strong>字节切片</strong>。</p>
+<p>很多初学者一开始会把“字符串处理”理解成某种单独的大主题，但在 Zig 里，更常见的现实是：<br>手上的往往不是“神秘字符串对象“，而是 <code>[]const u8</code> 这样的<strong>字节切片</strong>。</p>
 <p>这也是为什么很多看起来像“字符串问题”的操作，最终都会落到 <code>std.mem</code> 上。</p>
 <h3 id="这一节最值得先认识的入口"><a class="header" href="#这一节最值得先认识的入口">这一节最值得先认识的入口</a></h3>
-<p>第一次学习时，最值得优先熟悉这些函数：</p>
+<p>最值得优先熟悉这些函数：</p>
 <ul>
 <li><code>eql</code></li>
 <li><code>startsWith</code></li>
@@ -256,6 +256,10 @@ pub fn main() void {
     std.debug.print("a == c: {}\n", .{std.mem.eql(u8, a, c)});
 }
 </code></pre>
+<p><strong>预期输出：</strong></p>
+<pre><code class="language-shell">a == b: true
+a == c: false
+</code></pre>
 <p>这里的 <code>u8</code> 表示比较的是 <code>u8</code> 元素切片。<br>对字符串字面量来说，最常见的就是 <code>u8</code>。</p>
 <h3 id="startswith--endswith"><a class="header" href="#startswith--endswith"><code>startsWith</code> / <code>endsWith</code></a></h3>
 <p>判断前缀和后缀时，<code>std.mem</code> 也提供了直接入口：</p>
@@ -273,6 +277,10 @@ pub fn main() void {
     });
 }
 </code></pre>
+<p><strong>预期输出：</strong></p>
+<pre><code class="language-shell">starts with chapter: true
+ends with .md: true
+</code></pre>
 <p>这类函数在处理：</p>
 <ul>
 <li>文件名</li>
@@ -282,7 +290,7 @@ pub fn main() void {
 </ul>
 <p>时非常常见。</p>
 <h3 id="indexof"><a class="header" href="#indexof"><code>indexOf</code></a></h3>
-<p>如果你想在切片中查找子串，可以先想到 <code>indexOf</code>：</p>
+<p>在切片中查找子串时，可以用 <code>indexOf</code>：</p>
 <pre><code class="language-zig">const std = @import("std");
 
 pub fn main() void {
@@ -313,7 +321,7 @@ pub fn main() void {
 </code></pre>
 <p>注意这里第三个参数是“要去掉的字符集合”。<br>最常见的例子是空格、制表符、换行符等。</p>
 <h3 id="copyforwards"><a class="header" href="#copyforwards"><code>copyForwards</code></a></h3>
-<p>当你已经有一个目标缓冲区，想把内容复制进去时，可以用 <code>copyForwards</code>：</p>
+<p>已经有一个目标缓冲区，想把内容复制进去时，可以用 <code>copyForwards</code>：</p>
 <pre><code class="language-zig">const std = @import("std");
 
 pub fn main() void {
@@ -333,27 +341,27 @@ pub fn main() void {
 <li>在已有内存区域中构造结果</li>
 </ul>
 <h3 id="使用-stdmem-时要建立的直觉"><a class="header" href="#使用-stdmem-时要建立的直觉">使用 <code>std.mem</code> 时要建立的直觉</a></h3>
-<p>第一次学习 <code>std.mem</code>，最重要的不是“记住十几个函数名”，而是建立下面这些直觉：</p>
+<p>使用 <code>std.mem</code> 时，核心直觉是：</p>
 <ol>
-<li>你处理的往往是切片，而不是“高级字符串对象”</li>
+<li>处理的往往是切片，而不是“高级字符串对象“</li>
 <li>切片比较通常要比较内容，而不是依赖某种隐式相等语义</li>
 <li>很多文本问题，在 Zig 里首先是“字节序列问题”</li>
-<li>当你已经有一块缓冲区时，复制、查找、裁剪等操作往往都可以用 <code>std.mem</code> 完成</li>
+<li>已经有一块缓冲区时，复制、查找、裁剪等操作往往都可以用 <code>std.mem</code> 完成</li>
 </ol>
 <blockquote>
-<p><strong>相关阅读</strong>：如果你想进一步理解切片、数组和底层数据视图的关系，可以回看<a href="../part1-basics/chapter-compound-types.html">复合类型</a>。</p>
+<p><strong>相关阅读</strong>：关于切片、数组和底层数据视图的关系，可以回看<a href="../part1-basics/chapter-compound-types.html">复合类型</a>。</p>
 </blockquote>
 <hr>
 <h2 id="stdfmt"><a class="header" href="#stdfmt"><code>std.fmt</code></a></h2>
 <p><code>std.fmt</code> 主要负责<strong>格式化</strong>。</p>
 <p>它经常出现在两类场景中：</p>
 <ol>
-<li>你想把值格式化到某个输出目标</li>
-<li>你想在内存中构造一段格式化后的文本</li>
+<li>把值格式化到某个输出目标</li>
+<li>在内存中构造一段格式化后的文本</li>
 </ol>
-<p>很多初学者最先接触格式化，是通过 <code>std.debug.print</code>。<br>但当你想把文本写进缓冲区、或分配出一个新的字符串时，就会更明显地接触到 <code>std.fmt</code>。</p>
+<p>很多初学者最先接触格式化，是通过 <code>std.debug.print</code>。<br>但当需要把文本写进缓冲区、或分配出一个新的字符串时，就会更明显地接触到 <code>std.fmt</code>。</p>
 <h3 id="这一节最值得先认识的入口-1"><a class="header" href="#这一节最值得先认识的入口-1">这一节最值得先认识的入口</a></h3>
-<p>第一次学习时，建议优先理解：</p>
+<p>建议优先理解：</p>
 <ul>
 <li><code>bufPrint</code></li>
 <li><code>allocPrint</code></li>
@@ -364,7 +372,7 @@ pub fn main() void {
 <li>用<strong>allocator 分配新字符串</strong>并格式化文本</li>
 </ul>
 <h3 id="bufprint把格式化结果写入缓冲区"><a class="header" href="#bufprint把格式化结果写入缓冲区"><code>bufPrint</code>：把格式化结果写入缓冲区</a></h3>
-<p>如果你已经有一块固定大小的缓冲区，可以用 <code>bufPrint</code>：</p>
+<p>已经有一块固定大小的缓冲区时，可以用 <code>bufPrint</code>：</p>
 <pre><code class="language-zig">const std = @import("std");
 
 pub fn main() !void {
@@ -392,7 +400,7 @@ pub fn main() !void {
 </li>
 </ul>
 <h3 id="allocprint分配并返回格式化结果"><a class="header" href="#allocprint分配并返回格式化结果"><code>allocPrint</code>：分配并返回格式化结果</a></h3>
-<p>如果你不想自己先准备缓冲区，而是希望直接得到一段新分配的文本，可以用 <code>allocPrint</code>：</p>
+<p>不想自己先准备缓冲区，而是希望直接得到一段新分配的文本时，可以用 <code>allocPrint</code>：</p>
 <pre><code class="language-zig">const std = @import("std");
 
 pub fn main() !void {
@@ -411,7 +419,7 @@ pub fn main() !void {
 <p>这里的关键语义是：</p>
 <ul>
 <li><code>allocPrint</code> 会分配内存</li>
-<li>所以你要显式传入 allocator</li>
+<li>所以要显式传入 allocator</li>
 <li>返回的字符串需要由调用者负责释放</li>
 </ul>
 <p>这也说明 <code>std.fmt</code> 很容易和 allocator 联系起来。</p>
@@ -423,11 +431,11 @@ pub fn main() !void {
 </ul>
 <p>在实际代码中，它们经常一起出现：</p>
 <ul>
-<li>你可能先用 <code>std.fmt</code> 把文本构造好</li>
+<li>可能先用 <code>std.fmt</code> 把文本构造好</li>
 <li>再用别的方式写到文件、网络、缓冲区或调试输出中</li>
 </ul>
 <h3 id="使用-stdfmt-时要建立的直觉"><a class="header" href="#使用-stdfmt-时要建立的直觉">使用 <code>std.fmt</code> 时要建立的直觉</a></h3>
-<p>第一次学习 <code>std.fmt</code>，建议先抓住这几点：</p>
+<p>使用 <code>std.fmt</code> 时，核心要点是：</p>
 <ol>
 <li>先区分“输出到哪里”和“如何格式化”</li>
 <li>有固定缓冲区时，优先考虑 <code>bufPrint</code></li>
@@ -437,14 +445,14 @@ pub fn main() !void {
 <blockquote>
 <p><strong>相关阅读</strong>：</p>
 <ul>
-<li>如果你想更系统地理解 allocator 与释放责任，请继续阅读<a href="chapter-memory-management.html">内存管理模型</a>。</li>
-<li>如果你只是想快速打印调试信息，可以继续看下一节 <code>std.debug</code>。</li>
+<li>关于 allocator 与释放责任的系统理解，请继续阅读<a href="chapter-memory-management.html">内存管理模型</a>。</li>
+<li>只是想快速打印调试信息的话，可以继续看下一节 <code>std.debug</code>。</li>
 </ul>
 </blockquote>
 <hr>
 <h2 id="stddebug"><a class="header" href="#stddebug"><code>std.debug</code></a></h2>
 <p><code>std.debug</code> 是学习和调试阶段最常用的标准库入口之一。</p>
-<p>它的重要性并不在于“复杂”或“高级”，而在于：<br><strong>它能让你更快看清程序状态。</strong></p>
+<p>它的重要性并不在于“复杂”或“高级”，而在于：<br><strong>它能更快看清程序状态。</strong></p>
 <p>对初学者来说，最常见的用途通常就是：</p>
 <ul>
 <li><code>std.debug.print</code></li>
@@ -469,7 +477,7 @@ pub fn main() void {
 </ul>
 <p>但也要注意：<br>它更适合“调试与学习阶段”，而不是把它理解成完整日志系统的替代品。</p>
 <h3 id="stddebugassert"><a class="header" href="#stddebugassert"><code>std.debug.assert</code></a></h3>
-<p>当你想表达“这里必须满足某个条件，否则程序逻辑就不成立”时，可以用 <code>assert</code>：</p>
+<p>想表达“这里必须满足某个条件，否则程序逻辑就不成立“时，可以用 <code>assert</code>：</p>
 <pre><code class="language-zig">const std = @import("std");
 
 fn divide(a: i32, b: i32) i32 {
@@ -492,94 +500,38 @@ pub fn main() void {
 <ol>
 <li><code>print</code> 很适合调试阶段快速观察状态</li>
 <li><code>assert</code> 适合表达“不应该被破坏的假设”</li>
-<li>调试输出能帮你更快定位问题，但不能替代清晰的设计</li>
+<li>调试输出能更快定位问题，但不能替代清晰的设计</li>
 <li>调试期工具越早介入，越容易发现问题的真实来源</li>
 </ol>
 <blockquote>
 <p><strong>相关阅读</strong>：</p>
 <ul>
-<li>如果你想系统理解错误路径和失败处理，请阅读<a href="../part1-basics/chapter-error-handling.html">错误处理：!T、try 与 errdefer</a>。</li>
-<li>如果你想学习如何在测试中验证行为，请继续阅读后面的 <code>std.testing</code> 小节与<a href="chapter-testing.html">测试与验证：从单元测试到基准测量</a>。</li>
+<li>关于错误路径和失败处理的系统理解，请阅读<a href="../part1-basics/chapter-error-handling.html">错误处理：!T、try 与 errdefer</a>。</li>
+<li>关于如何在测试中验证行为，请继续阅读后面的 <code>std.testing</code> 小节与<a href="chapter-testing.html">测试与验证：从单元测试到基准测量</a>。</li>
 </ul>
 </blockquote>
 <hr>
 <h2 id="stdtesting"><a class="header" href="#stdtesting"><code>std.testing</code></a></h2>
-<p><code>std.testing</code> 是 Zig 标准库中最核心的测试辅助入口。<br>但这一节的目标不是替代测试章节，而只是先帮你建立模块入口直觉。</p>
-<h3 id="这一节最值得先认识的入口-2"><a class="header" href="#这一节最值得先认识的入口-2">这一节最值得先认识的入口</a></h3>
-<p>第一次学习时，最值得优先认识：</p>
+<p><code>std.testing</code> 是 Zig 标准库中最核心的测试辅助入口。它提供了一组断言函数和测试专用设施，用于在 <code>test</code> 块中验证代码行为。最常用的 API 包括：</p>
 <ul>
-<li><code>expect</code></li>
-<li><code>expectEqual</code></li>
-<li><code>expectError</code></li>
-<li><code>std.testing.allocator</code></li>
+<li><strong><code>expect</code></strong> — 验证布尔表达式为真，适合简单条件判断。</li>
+<li><strong><code>expectEqual</code></strong> — 比较两个值是否相等，失败时能清晰显示期望值与实际值的差异。</li>
+<li><strong><code>expectError</code></strong> — 验证函数是否返回了预期的错误，用于测试错误路径。</li>
+<li><strong><code>std.testing.allocator</code></strong> — 测试专用分配器，能自动检测内存泄漏和重复释放。</li>
 </ul>
-<h3 id="expect"><a class="header" href="#expect"><code>expect</code></a></h3>
-<p>最基本的断言函数之一，用于验证某个布尔表达式为真：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-test "basic boolean expectation" {
-    try std.testing.expect(1 + 1 == 2);
-}
-</code></pre>
-<p>它适合：</p>
-<ul>
-<li>简单条件判断</li>
-<li>不需要特别强调“期望值”和“实际值”的场景</li>
-</ul>
-<h3 id="expectequal"><a class="header" href="#expectequal"><code>expectEqual</code></a></h3>
-<p>当你更想明确比较两个值时，通常可以用 <code>expectEqual</code>：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-test "expectEqual compares values" {
-    try std.testing.expectEqual(@as(i32, 42), @as(i32, 42));
-}
-</code></pre>
-<p>比起直接写 <code>expect(a == b)</code>，它通常在失败时更容易定位问题。</p>
-<h3 id="expecterror"><a class="header" href="#expecterror"><code>expectError</code></a></h3>
-<p>如果一个函数会返回错误，你也可以直接验证错误路径：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-fn divide(a: i32, b: i32) !i32 {
-    if (b == 0) return error.DivisionByZero;
-    return @divTrunc(a, b);
-}
-
-test "divide reports DivisionByZero" {
-    try std.testing.expectError(error.DivisionByZero, divide(10, 0));
-}
-</code></pre>
-<p>这一点在 Zig 中尤其重要，因为错误路径本来就是接口语义的一部分。</p>
-<h3 id="stdtestingallocator"><a class="header" href="#stdtestingallocator"><code>std.testing.allocator</code></a></h3>
-<p>在测试里，<code>std.testing.allocator</code> 很常见。<br>你可以先把它理解成：</p>
-<ul>
-<li>一个特别适合测试场景的 allocator</li>
-<li>它能帮助你更容易发现资源释放上的问题</li>
-</ul>
-<p>例如：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-test "allocate with testing allocator" {
-    const allocator = std.testing.allocator;
-
-    const buffer = try allocator.alloc(u8, 16);
-    defer allocator.free(buffer);
-
-    try std.testing.expectEqual(@as(usize, 16), buffer.len);
-}
-</code></pre>
+<blockquote>
+<p><strong>相关阅读</strong>：断言函数的完整示例和测试方法论见<a href="chapter-testing.html">《测试与验证》（chapter-testing.md）</a>。</p>
+</blockquote>
 <h3 id="使用-stdtesting-时要建立的直觉"><a class="header" href="#使用-stdtesting-时要建立的直觉">使用 <code>std.testing</code> 时要建立的直觉</a></h3>
 <ol>
 <li>测试不是额外装饰，而是接口设计的一部分</li>
-<li><code>std.testing</code> 是标准库中最常见的测试入口</li>
 <li>错误路径、资源释放、边界条件都值得测试</li>
-<li>测试 allocator 的价值，不只是“能分配”，而是“更容易暴露问题”</li>
+<li><code>std.testing.allocator</code> 的价值不只是“能分配“，而是“更容易暴露泄漏和生命周期问题“</li>
 </ol>
-<blockquote>
-<p><strong>相关阅读</strong>：如果你想系统学习 Zig 的测试写法、断言方式、错误路径验证和简单测量方法，请继续阅读<a href="chapter-testing.html">测试与验证：从单元测试到基准测量</a>。本节只负责建立模块入口直觉。</p>
-</blockquote>
 <hr>
 <h2 id="stdfs"><a class="header" href="#stdfs"><code>std.fs</code></a></h2>
-<p>只要你开始写真实程序，文件和目录几乎一定会出现。<br>这时，<code>std.fs</code> 往往就是你最该先想到的模块。</p>
+<p>只要开始写真实程序，文件和目录几乎一定会出现。
+这时，<code>std.fs</code> 往往就是最该先想到的模块。</p>
 <p>它负责的典型问题包括：</p>
 <ul>
 <li>打开文件</li>
@@ -588,8 +540,8 @@ test "allocate with testing allocator" {
 <li>遍历目录</li>
 <li>读取文件元信息</li>
 </ul>
-<h3 id="这一节要先建立的心智模型"><a class="header" href="#这一节要先建立的心智模型">这一节要先建立的心智模型</a></h3>
-<p>第一次学习 <code>std.fs</code> 时，不必急着记很多 API 名字。<br>更重要的是先建立下面这个直觉：</p>
+<h3 id="心智模型"><a class="header" href="#心智模型">心智模型</a></h3>
+<p>初次接触 <code>std.fs</code> 时，不必急着记很多 API 名字。<br>更重要的是建立下面这个直觉：</p>
 <ul>
 <li><strong>文件和目录相关问题，优先想到 <code>std.fs</code></strong></li>
 <li><strong>很多操作都围绕“某个目录视角”或“某个文件句柄”展开</strong></li>
@@ -608,7 +560,7 @@ pub fn main() !void {
     try file.writeAll("hello from zig\n");
 }
 </code></pre>
-<p>这里可以先抓住几个关键点：</p>
+<p>这里有几个关键点：</p>
 <ul>
 <li><code>std.fs.cwd()</code> 表示当前工作目录</li>
 <li>通过目录对象去创建文件</li>
@@ -629,7 +581,7 @@ pub fn main() !void {
     }
 }
 </code></pre>
-<p>对初学者来说，这个例子最重要的不是记住每个细节，而是理解：</p>
+<p>这个例子的核心在于理解：</p>
 <ul>
 <li>目录遍历通常需要显式打开目录</li>
 <li>遍历器逐项产出条目</li>
@@ -643,169 +595,93 @@ pub fn main() !void {
 <li><code>std.fs</code> 往往是 CLI 工具、配置读取、代码生成等场景的核心模块</li>
 </ol>
 <blockquote>
-<p><strong>相关阅读</strong>：如果你想看 <code>std.fs</code> 在更真实工具中的使用方式，可以继续阅读<a href="../part3-practice/chapter-cli-tool.html">实战案例 - CLI 工具开发</a>。</p>
+<p><strong>相关阅读</strong>：关于 <code>std.fs</code> 在更真实工具中的使用方式，可以继续阅读<a href="../part3-practice/chapter-cli-tool.html">实战案例 - CLI 工具开发</a>。</p>
 </blockquote>
 <hr>
 <h2 id="stdprocess"><a class="header" href="#stdprocess"><code>std.process</code></a></h2>
 <p><code>std.process</code> 主要和“程序作为一个进程运行时能接触到的上下文”有关。</p>
-<p>你可以先把它和下面几类需求联系起来：</p>
+<p>可以把它和下面几类需求联系起来：</p>
 <ul>
 <li>读取命令行参数</li>
 <li>读取环境变量</li>
 <li>处理退出状态</li>
 <li>理解程序运行时的外部上下文</li>
 </ul>
-<h3 id="这一节要先建立的心智模型-1"><a class="header" href="#这一节要先建立的心智模型-1">这一节要先建立的心智模型</a></h3>
-<p>第一次学习时，最重要的不是记住所有细节，而是先知道：</p>
+<h3 id="心智模型-1"><a class="header" href="#心智模型-1">心智模型</a></h3>
+<p>核心要点是：</p>
 <ul>
 <li><strong>只要问题和参数、环境变量、进程上下文有关，就先想到 <code>std.process</code></strong></li>
 <li>这类能力天然更接近“程序入口”与“操作系统环境”</li>
 </ul>
 <h3 id="一个最小示例读取参数"><a class="header" href="#一个最小示例读取参数">一个最小示例：读取参数</a></h3>
-<p>不同版本的 Zig 在程序入口与参数接口上可能会有细节变化，因此更建议你先抓住思路：</p>
+<p>在 Zig 0.16-dev 中，程序入口通过 <code>std.process.Init</code> 参数显式传递进程上下文，命令行参数就是其中的一部分。核心思路是：</p>
 <ul>
-<li>参数来自进程启动时传入的上下文</li>
-<li>读取它们通常需要和 allocator 配合</li>
-<li>相关 API 在开发版中可能发生调整</li>
+<li>参数来自进程启动时传入的上下文，通过 <code>init.minimal.args</code> 获取</li>
+<li>使用 <code>.iterate()</code> 或 <code>.iterateAllocator()</code> 创建迭代器，逐个读取参数</li>
+<li>不再需要手动分配和释放内存来收集参数</li>
 </ul>
-<p>下面给出一个常见思路示例：</p>
+<p>下面给出一个示例：</p>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main() !void {
-    const allocator = std.heap.page_allocator;
-    const args = try std.process.argsAlloc(allocator);
-    defer std.process.argsFree(allocator, args);
-
-    for (args) |arg| {
+pub fn main(init: std.process.Init) void {
+    var args = init.minimal.args.iterate();
+    while (args.next()) |arg| {
         std.debug.print("{s}\n", .{arg});
     }
 }
 </code></pre>
 <p>这个例子最重要的重点是：</p>
 <ul>
-<li>参数往往需要通过 allocator 收集</li>
-<li>参数资源通常也要对应释放</li>
+<li>参数通过程序入口的 <code>Init</code> 参数显式传入，而非调用全局函数获取</li>
+<li><code>.iterate()</code> 返回一个迭代器，用 <code>while</code> + <code>.next()</code> 逐个遍历</li>
 <li>进程相关 API 比 <code>std.mem</code>、<code>std.debug</code> 这类模块更容易受版本变化影响</li>
 </ul>
 <h3 id="一个最小示例读取环境变量"><a class="header" href="#一个最小示例读取环境变量">一个最小示例：读取环境变量</a></h3>
-<p>环境变量也是常见入口之一：</p>
+<p>环境变量也是常见入口之一。在 0.16-dev 中，<code>Init</code> 参数提供了预初始化的 <code>environ_map</code>，可以直接按名称查找：</p>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main() !void {
-    if (std.process.getEnvVarOwned(std.heap.page_allocator, "HOME")) |home| {
-        defer std.heap.page_allocator.free(home);
+pub fn main(init: std.process.Init) void {
+    if (init.environ_map.get("HOME")) |home| {
         std.debug.print("HOME={s}\n", .{home});
-    } else |err| switch (err) {
-        error.EnvironmentVariableNotFound =&gt; {
-            std.debug.print("HOME is not set\n", .{});
-        },
-        else =&gt; return err,
+    } else {
+        std.debug.print("HOME is not set\n", .{});
     }
 }
 </code></pre>
-<p>这里再次体现了一个重要特点：</p>
+<p>这里体现了 0.16-dev 的一个重要设计特点：</p>
 <ul>
-<li>进程环境相关能力常常和 allocator、错误处理一起出现</li>
+<li>环境变量已经由运行时预先解析到 <code>environ_map</code> 中，直接用 <code>.get()</code> 查询即可</li>
+<li>不再需要手动分配内存或处理 <code>EnvironmentVariableNotFound</code> 错误——找不到时返回 <code>null</code></li>
 </ul>
 <h3 id="使用-stdprocess-时要建立的直觉"><a class="header" href="#使用-stdprocess-时要建立的直觉">使用 <code>std.process</code> 时要建立的直觉</a></h3>
 <ol>
-<li>参数与环境变量都属于“进程上下文”的一部分</li>
-<li>这类 API 常和 allocator、错误处理一起出现</li>
-<li>在开发版 Zig 中，这一块比 <code>std.mem</code> 之类更容易发生接口演进</li>
-<li>遇到版本差异时，优先抓“程序上下文由谁提供、资源由谁释放”这一层稳定思路</li>
+<li>参数与环境变量都属于“进程上下文“的一部分</li>
+<li>在 0.16-dev 中，这些上下文通过 <code>std.process.Init</code> 参数在程序入口<strong>显式传入</strong>，而非通过全局函数获取</li>
+<li>这种设计让依赖关系更清晰：函数签名本身就说明了“我需要进程上下文“</li>
+<li>遇到版本差异时，优先抓住“程序上下文由谁提供、怎样访问“这一层稳定思路</li>
 </ol>
 <blockquote>
-<p><strong>相关阅读</strong>：如果你想在更真实的工具程序中理解参数处理与进程上下文，可以继续阅读<a href="../part3-practice/chapter-cli-tool.html">实战案例 - CLI 工具开发</a>。</p>
+<p><strong>相关阅读</strong>：关于参数处理与进程上下文在更真实工具程序中的使用方式，可以继续阅读<a href="../part3-practice/chapter-cli-tool.html">实战案例 - CLI 工具开发</a>。</p>
 </blockquote>
 <hr>
 <h2 id="stdheap"><a class="header" href="#stdheap"><code>std.heap</code></a></h2>
-<p><code>std.heap</code> 是你第一次系统接触 allocator 分类时最常见的标准库入口之一。</p>
-<p>但这一节只打算帮你建立<strong>第一轮 allocator 直觉</strong>，而不在这里系统讲完内存管理模型。</p>
-<h3 id="这一节最值得先认识的内容"><a class="header" href="#这一节最值得先认识的内容">这一节最值得先认识的内容</a></h3>
-<p>第一次学习时，可以先对下面这些名字有印象：</p>
+<p><code>std.heap</code> 是系统接触 allocator 分类时最常见的标准库入口之一。这一节只建立<strong>第一轮 allocator 直觉</strong>，认识几个常见名字即可。</p>
+<p>常见的分配器：</p>
 <ul>
-<li><code>page_allocator</code></li>
-<li><code>ArenaAllocator</code></li>
-<li><code>FixedBufferAllocator</code></li>
-<li><code>std.testing.allocator</code>（测试场景中常见）</li>
-<li>一些调试期 allocator 的存在意义</li>
+<li><strong><code>page_allocator</code></strong> — 直接向操作系统申请整页内存。随手可用，适合入门示例，但不是所有工程场景的最佳默认选择。</li>
+<li><strong><code>ArenaAllocator</code></strong> — 适合“集中分配、集中释放“的场景，减少逐个释放的负担，所有对象共享同一个释放时机。</li>
+<li><strong><code>FixedBufferAllocator</code></strong> — 在一块已有的固定内存上做分配，不需要向操作系统再要内存。</li>
+<li><strong><code>std.testing.allocator</code></strong> — 测试专用分配器，能自动检测泄漏（详见 <code>std.testing</code> 一节）。</li>
 </ul>
-<h3 id="page_allocator"><a class="header" href="#page_allocator"><code>page_allocator</code></a></h3>
-<p>这是最容易先认识的 allocator 之一：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn main() !void {
-    const allocator = std.heap.page_allocator;
-
-    const buffer = try allocator.alloc(u8, 32);
-    defer allocator.free(buffer);
-
-    @memset(buffer, 'a');
-    std.debug.print("len={d}\n", .{buffer.len});
-}
-</code></pre>
-<p>你可以先把它理解成：</p>
-<ul>
-<li>一个随手可用的 allocator</li>
-<li>适合小例子和入门示例</li>
-<li>但它不是“所有工程场景下的默认最佳答案”</li>
-</ul>
-<h3 id="arenaallocator"><a class="header" href="#arenaallocator"><code>ArenaAllocator</code></a></h3>
-<p>如果你有一批对象会在某个阶段统一释放，arena 风格通常会更自然：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn main() !void {
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    defer arena.deinit();
-
-    const allocator = arena.allocator();
-
-    const a = try allocator.alloc(u8, 16);
-    const b = try allocator.alloc(u8, 32);
-
-    std.debug.print("a={d}, b={d}\n", .{ a.len, b.len });
-}
-</code></pre>
-<p>第一次学习时，你只需要抓住这个直觉：</p>
-<ul>
-<li>arena 适合“集中分配，集中释放”的场景</li>
-<li>它能减少逐个释放的负担</li>
-<li>但也意味着对象通常共享同一个释放时机</li>
-</ul>
-<h3 id="fixedbufferallocator"><a class="header" href="#fixedbufferallocator"><code>FixedBufferAllocator</code></a></h3>
-<p>如果你已经有一块固定内存，想在其中做分配，可以使用固定缓冲区 allocator：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn main() !void {
-    var storage: [128]u8 = undefined;
-    var fba = std.heap.FixedBufferAllocator.init(&amp;storage);
-    const allocator = fba.allocator();
-
-    const slice = try allocator.alloc(u8, 32);
-    std.debug.print("allocated={d}\n", .{slice.len});
-}
-</code></pre>
-<p>它很适合帮助你建立一个重要直觉：</p>
-<ul>
-<li>allocator 不一定非得向操作系统再要内存</li>
-<li>有时只是“在已有内存里组织分配”</li>
-</ul>
+<blockquote>
+<p><strong>相关阅读</strong>：完整的分配器示例和使用指南见<a href="chapter-memory-management.html">《内存管理模型》（chapter-memory-management.md）</a>。</p>
+</blockquote>
 <h3 id="使用-stdheap-时要建立的直觉"><a class="header" href="#使用-stdheap-时要建立的直觉">使用 <code>std.heap</code> 时要建立的直觉</a></h3>
 <ol>
 <li>Zig 的 allocator 不是背景设施，而是显式接口的一部分</li>
 <li>不同 allocator 解决的是不同资源组织问题</li>
-<li><code>page_allocator</code>、arena、fixed buffer allocator 各有适用场景</li>
-<li>一旦发生分配，就要立即想到：
-<ul>
-<li>谁负责释放？</li>
-<li>什么时候释放？</li>
-<li>释放方式是什么？</li>
-</ul>
-</li>
+<li>一旦发生分配，就要立即想到：谁负责释放？什么时候释放？</li>
 </ol>
-<blockquote>
-<p><strong>相关阅读</strong>：如果你想系统理解 allocator、所有权、生命周期与释放责任，请继续阅读<a href="chapter-memory-management.html">内存管理模型</a>。本节只负责建立 <code>std.heap</code> 的基础入口直觉。</p>
-</blockquote>
 <hr>
 <h2 id="模块如何组合使用"><a class="header" href="#模块如何组合使用">模块如何组合使用？</a></h2>
 <p>真正的 Zig 代码，很少只使用单独一个标准库模块。<br>更常见的情况是：几个模块以很小的颗粒度频繁组合。</p>
@@ -829,8 +705,8 @@ pub fn main() !void {
 </ul>
 <p>也就是说：</p>
 <ul>
-<li><code>std.debug</code> 帮你快速“看见”</li>
-<li><code>std.testing</code> 帮你长期“验证”</li>
+<li><code>std.debug</code> 用于快速“看见”</li>
+<li><code>std.testing</code> 用于长期“验证”</li>
 </ul>
 <h3 id="stdfs--stdprocess"><a class="header" href="#stdfs--stdprocess"><code>std.fs</code> + <code>std.process</code></a></h3>
 <p>这是 CLI、小工具和工程脚本里非常常见的组合：</p>
@@ -850,7 +726,7 @@ pub fn main() !void {
 <p>所以在真实代码里，<code>std.heap</code> 往往不是单独使用，而是以“allocator 提供者”的身份参与其他模块。</p>
 <hr>
 <h2 id="本章小结"><a class="header" href="#本章小结">本章小结</a></h2>
-<p>这一章最重要的，不是让你记住多少函数名，而是建立下面这些第一轮直觉：</p>
+<p>这一章的核心目标是建立下面这些第一轮直觉：</p>
 <ol>
 <li>处理切片、字节和很多“字符串问题”时，优先想到 <code>std.mem</code></li>
 <li>处理格式化时，优先想到 <code>std.fmt</code></li>
@@ -860,7 +736,7 @@ pub fn main() !void {
 <li>参数、环境变量、进程上下文相关需求，优先想到 <code>std.process</code></li>
 <li>动态分配和 allocator 相关入口，优先想到 <code>std.heap</code></li>
 </ol>
-<p>如果你已经建立了这张“高频模块入口地图”，这一章的目标就达成了。<br>接下来的深入学习中，你不需要背完整 API，而是可以按下面的思路继续推进：</p>
+<p>如果已经建立了这张“高频模块入口地图”，这一章的目标就达成了。<br>接下来的深入学习中，无需背完整 API，可以按下面的思路继续推进：</p>
 <ul>
 <li>想系统理解 allocator 和资源责任 → 读<a href="chapter-memory-management.html">内存管理模型</a></li>
 <li>想系统学习测试方法 → 读<a href="chapter-testing.html">测试与验证：从单元测试到基准测量</a></li>
