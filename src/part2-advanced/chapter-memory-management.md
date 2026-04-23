@@ -58,16 +58,7 @@ Zig 没有垃圾回收器，也没有 Rust 那样的借用检查器自动兜底�
 
 ## Zig 与其他语言在内存管理上的差异
 
-可以把几种常见路线做一个粗略对比：
-
-| 语言/模型 | 主要机制 | 优点 | 代价 |
-| --- | --- | --- | --- |
-| GC 语言 | 垃圾回收 | 使用方便，心智负担小 | 回收时机与性能开销较难精确控制 |
-| Rust | 所有权 + 借用检查 | 编译期约束强，很多错误能提前发现 | 学习曲线较陡，某些场景表达较绕 |
-| Zig | 显式分配器 + 手动管理 + 调试期检查 | 资源边界清楚，控制力强，接口灵活 | 需要开发者主动维护资源纪律 |
-
-这也是为什么 Zig 的教程里，“内存管理”不能只讲语法。  
-因为它本质上是**设计问题**，不是“几个 API 的记忆题”。
+与依赖 GC 的语言不同，Zig 没有自动回收。与 Rust 不同，Zig 没有借用检查器。Zig 依赖显式传递分配器和开发者自律来管理内存。这也意味着"内存管理"本质上是**设计问题**，不是"几个 API 的记忆题"。
 
 ---
 
@@ -248,25 +239,9 @@ fn buildSomething(allocator: std.mem.Allocator) !Result
 
 ### `Allocator` 的接口结构：`ptr` + `vtable`
 
-理解 `std.mem.Allocator` 的内部结构有助于回答"allocator 为什么可以随意替换"。
+`std.mem.Allocator` 使用显式接口模式：内部持有一个类型擦除指针 `ptr` 和一张函数表 `vtable`，通过运行时分发实现多态。任何实现了所需方法的类型都可以生成 `Allocator` 值，调用方只和统一接口打交道。
 
-Zig 标准库中，`Allocator` 本身是一个**胖指针**（fat pointer），只包含两个字段：
-
-```zig
-// 来自 std/mem/Allocator.zig
-ptr: *anyopaque,       // 指向具体分配器实例的类型擦除指针
-vtable: *const VTable, // 指向方法表的指针
-```
-
-其中 `VTable` 定义了四个函数指针：`alloc`、`resize`、`remap`、`free`。
-
-这意味着：
-
-- 任何实现了这四个方法的类型，都可以通过 `.allocator()` 方法生成一个 `Allocator` 值
-- 调用方只和 `Allocator` 这个统一接口打交道，不关心背后是 `DebugAllocator`、`ArenaAllocator` 还是 `page_allocator`
-- 这本质上是运行时多态：通过 `vtable` 做方法分派，通过 `ptr` 传递实例状态
-
-正因如此，函数签名里写 `allocator: std.mem.Allocator` 就够了——调用者可以传入任何分配器实现，被调用者不需要知道细节。这就是 Zig 中"分配器是接口"的实际含义。
+Allocator 接口的内部结构（`ptr` + `vtable` 模式）在[接口与设计模式](../part2-advanced/chapter-interfaces.md)章节有完整解析。
 
 ---
 

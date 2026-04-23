@@ -1,153 +1,155 @@
 # 常用标准库模块详解
 
-这一章不是标准库 API 手册，也不打算把所有函数逐条列出来。  
-它的目标更实际一些：建立一组**独立写 Zig 程序时最值得先掌握的标准库模块直觉**。
+这一章讲解标准库中最常用、也最容易在真实程序里一起出现的几个模块：
 
-如果上一章《标准库导航与阅读指南》主要回答的是：
-
-- 某类能力大致分布在哪些模块里
-- 遇到问题时应该先去哪里找
-- 面对版本差异时应该如何核对
-
-那么这一章主要回答的是：
-
-- 哪些模块最值得先掌握
-- 它们最常见的入口是什么
-- 最小用法通常长什么样
-- 什么时候应该转去别的章节继续深入
-
-阅读这一章时，建议始终记住一个原则：
-
-> **建立"模块职责 → 高频入口 → 最小示例 → 去哪里深入"的直觉，不要试图一次记住所有 API。**
-
----
-
-## 为什么要单独学“常用标准库模块”？
-
-学 Zig 时，语法和标准库几乎总是交织在一起出现。
-
-刚学会变量、函数、切片和错误处理之后，很快就会遇到下面这些问题：
-
-- 怎么比较两个字符串？
-- 怎么把值格式化到缓冲区里？
-- 怎么快速打印调试信息？
-- 怎么写测试断言？
-- 怎么读文件、遍历目录？
-- 怎么拿到命令行参数？
-- 怎么选择合适的 allocator？
-
-这些问题都不是“高级专题”，却几乎一定会出现在真实代码里。  
-如果没有一组稳定的标准库入口直觉，后续很多章节都会显得零散。
-
-因此，本章的重点不是“知识覆盖率”，而是：
-
-- **优先掌握最常见的入口**
-- **优先理解它们解决什么问题**
-- **优先知道什么时候该想到哪个模块**
+- `std.mem`
+- `std.fmt`
+- `std.debug`
+- `std.testing`
+- `std.fs`
+- `std.process`
+- `std.heap`
 
 ---
 
 ## `std.mem`
 
-`std.mem` 是 Zig 中最基础、也最高频的标准库模块之一。
+`std.mem` 是最基础、也最常用的标准库模块之一。
 
-很多初学者一开始会把“字符串处理”理解成某种单独的大主题，但在 Zig 里，更常见的现实是：  
-手上的往往不是"神秘字符串对象"，而是 `[]const u8` 这样的**字节切片**。
+在 Zig 里，很多看起来像“字符串处理”的问题，本质上其实是：
 
-这也是为什么很多看起来像“字符串问题”的操作，最终都会落到 `std.mem` 上。
+- 处理 `[]const u8`
+- 处理 `[]u8`
+- 处理一段连续内存
+- 在已有缓冲区上做查找、比较、裁剪、复制
 
-### 这一节最值得先认识的入口
+所以 `std.mem` 的核心不是“高级文本功能”，而是：
 
-最值得优先熟悉这些函数：
+> **把切片和内存当作程序中的基础数据视图来处理。**
 
-- `eql`
-- `startsWith`
-- `endsWith`
-- `indexOf`
-- `trim`
-- `copyForwards`
+常见入口包括：
 
-它们覆盖了最常见的几类需求：
+- `std.mem.eql`
+- `std.mem.startsWith`
+- `std.mem.endsWith`
+- `std.mem.indexOf`
+- `std.mem.trim`
+- `std.mem.splitScalar`
+- `std.mem.copyForwards`
 
-- 比较两个切片是否相等
-- 判断前缀和后缀
-- 查找子串或字节
-- 去掉前后空白
-- 在缓冲区之间复制数据
-
-### `eql`：比较切片内容
-
-在 Zig 里，两个切片是否“相等”，通常不是直接用 `==`，而是显式比较内容：
+下面这个例子模拟一个很常见的任务：读取一行配置文本，判断格式、拆分键值、去掉空白，并把结果复制到固定缓冲区中。
 
 ```zig
 const std = @import("std");
 
-pub fn main() void {
+pub fn main(_: std.process.Init) !void {
+    const line = "  mode = release-fast  ";
+
+    // 先把首尾空白去掉，后续判断和拆分都基于规范化后的切片。
+    const trimmed = std.mem.trim(u8, line, " \t\r\n");
+    std.debug.print("trimmed = [{s}]\n", .{trimmed});
+
+    // 先做一个最基本的格式检查，确认这一行至少像 key=value。
+    if (!std.mem.containsAtLeast(u8, trimmed, 1, "=")) {
+        std.debug.print("invalid config line\n", .{});
+        return;
+    }
+
+    // 按分隔符拆开，再分别清理 key 和 value 两侧的空白。
+    var parts = std.mem.splitScalar(u8, trimmed, '=');
+    const raw_key = parts.next() orelse return;
+    const raw_value = parts.next() orelse return;
+
+    const key = std.mem.trim(u8, raw_key, " \t\r\n");
+    const value = std.mem.trim(u8, raw_value, " \t\r\n");
+
+    if (std.mem.eql(u8, key, "mode")) {
+        std.debug.print("recognized key: {s}\n", .{key});
+    }
+
+    if (std.mem.startsWith(u8, value, "release")) {
+        std.debug.print("release mode detected: {s}\n", .{value});
+    }
+
+    if (std.mem.endsWith(u8, value, "fast")) {
+        std.debug.print("fast suffix detected\n", .{});
+    }
+
+    if (std.mem.indexOf(u8, value, "-")) |pos| {
+        std.debug.print("separator '-' at index {}\n", .{pos});
+    }
+
+    // 已经有目标缓冲区时，可以把结果复制进去，供后续继续处理。
+    var buffer: [32]u8 = undefined;
+    @memset(&buffer, 0);
+    std.mem.copyForwards(u8, buffer[0..value.len], value);
+
+    std.debug.print("copied value = {s}\n", .{buffer[0..value.len]});
+}
+```
+
+### `eql`：比较切片内容
+
+切片比较最常见的需求是“内容是否相同”，这时通常用 `std.mem.eql`。
+
+```zig-tutorial/src/part2-advanced/chapter-standard-library-detail.md#L82-93
+const std = @import("std");
+
+pub fn main(_: std.process.Init) void {
     const a = "zig";
     const b = "zig";
     const c = "zag";
 
+    // `eql` 比较的是切片内容，而不是“是不是同一个对象”。
     std.debug.print("a == b: {}\n", .{std.mem.eql(u8, a, b)});
     std.debug.print("a == c: {}\n", .{std.mem.eql(u8, a, c)});
 }
 ```
 
-**预期输出：**
-
-```shell
-a == b: true
-a == c: false
-```
-
-这里的 `u8` 表示比较的是 `u8` 元素切片。  
-对字符串字面量来说，最常见的就是 `u8`。
+这里的 `u8` 表示比较的是 `u8` 元素切片。对字符串字面量来说，这通常就是最常见的写法。
 
 ### `startsWith` / `endsWith`
 
-判断前缀和后缀时，`std.mem` 也提供了直接入口：
+判断前缀和后缀时，直接使用 `std.mem.startsWith` 和 `std.mem.endsWith`。
 
 ```zig
 const std = @import("std");
 
-pub fn main() void {
+pub fn main(_: std.process.Init) void {
     const name = "chapter-standard-library-detail.md";
 
+    // 前缀和后缀判断常用于文件名、参数和协议头处理。
     std.debug.print("starts with chapter: {}\n", .{
         std.mem.startsWith(u8, name, "chapter"),
     });
-
     std.debug.print("ends with .md: {}\n", .{
         std.mem.endsWith(u8, name, ".md"),
     });
 }
 ```
 
-**预期输出：**
-```shell
-starts with chapter: true
-ends with .md: true
-```
+这类判断在下面这些场景里都很常见：
 
-这类函数在处理：
+- 文件扩展名判断
+- 命令行参数前缀判断
+- 协议头判断
+- 配置项前缀判断
 
-- 文件名
-- 扩展名
-- 协议前缀
-- 命令行参数前缀
+### `find`
 
-时非常常见。
+查找子串时，使用`std.mem.find`，它返回 `?usize`：
 
-### `indexOf`
-
-在切片中查找子串时，可以用 `indexOf`：
+- 找到时返回位置
+- 找不到时返回 `null`
 
 ```zig
 const std = @import("std");
 
-pub fn main() void {
+pub fn main(_: std.process.Init) void {
     const text = "hello zig world";
 
-    if (std.mem.indexOf(u8, text, "zig")) |pos| {
+    // `find` 返回可选值：找到时是位置，找不到时是 `null`。
+    if (std.mem.find(u8, text, "zig")) |pos| {
         std.debug.print("found at: {}\n", .{pos});
     } else {
         std.debug.print("not found\n", .{});
@@ -155,19 +157,14 @@ pub fn main() void {
 }
 ```
 
-这个返回值是可选值 `?usize`：
-
-- 找到时返回位置
-- 找不到时返回 `null`
-
 ### `trim`
 
-处理用户输入、文件内容或配置项时，经常需要先去掉首尾空白：
+处理用户输入、配置文件、文本行时，`trim` 几乎是高频操作。
 
 ```zig
 const std = @import("std");
 
-pub fn main() void {
+pub fn main(_: std.process.Init) void {
     const raw = "  zig  ";
     const trimmed = std.mem.trim(u8, raw, " ");
 
@@ -175,20 +172,23 @@ pub fn main() void {
 }
 ```
 
-注意这里第三个参数是“要去掉的字符集合”。  
-最常见的例子是空格、制表符、换行符等。
+第三个参数不是“某一种空白模式”，而是“要裁掉的字符集合”。因此你经常会看到：
+
+- `" "`
+- `" \t\r\n"`
 
 ### `copyForwards`
 
-已经有一个目标缓冲区，想把内容复制进去时，可以用 `copyForwards`：
+当你已经有目标缓冲区时，`copyForwards` 是最直接的复制方式之一。
 
-```zig
+```zig-tutorial/src/part2-advanced/chapter-standard-library-detail.md#L153-164
 const std = @import("std");
 
-pub fn main() void {
+pub fn main(_: std.process.Init) void {
     var buffer: [8]u8 = undefined;
     const source = "zig";
 
+    // 先把缓冲区清零，便于观察复制后的结果。
     @memset(&buffer, 0);
     std.mem.copyForwards(u8, buffer[0..source.len], source);
 
@@ -196,59 +196,121 @@ pub fn main() void {
 }
 ```
 
-它常用于：
-
-- 手动管理缓冲区
-- 处理字节数组
-- 在已有内存区域中构造结果
-
 ### 使用 `std.mem` 时要建立的直觉
 
-使用 `std.mem` 时，核心直觉是：
+1. 很多“字符串问题”在 Zig 里首先是“字节切片问题”
+2. 先想清楚你手里的是数组、切片，还是固定缓冲区
+3. `std.mem` 经常出现在输入处理、协议解析、配置解析、路径判断的第一步
+4. 它通常不负责“拥有数据”，而是负责“处理已有数据视图”
 
-1. 处理的往往是切片，而不是"高级字符串对象"
-2. 切片比较通常要比较内容，而不是依赖某种隐式相等语义
-3. 很多文本问题，在 Zig 里首先是“字节序列问题”
-4. 已经有一块缓冲区时，复制、查找、裁剪等操作往往都可以用 `std.mem` 完成
-
-> **相关阅读**：关于切片、数组和底层数据视图的关系，可以回看[复合类型](../part1-basics/chapter-compound-types.md)。
+> **相关阅读**：关于数组、切片和底层视图的关系，可以回看[复合类型](../part1-basics/chapter-compound-types.md)。
 
 ---
 
 ## `std.fmt`
 
-`std.fmt` 主要负责**格式化**。
+`std.fmt` 负责格式化。
 
-它经常出现在两类场景中：
+它解决的问题不是“打印到哪里”，而是：
 
-1. 把值格式化到某个输出目标
-2. 在内存中构造一段格式化后的文本
+- 如何把值格式化成文本
+- 如何把格式化结果写入缓冲区
+- 如何在需要时分配一段新的格式化结果
 
-很多初学者最先接触格式化，是通过 `std.debug.print`。  
-但当需要把文本写进缓冲区、或分配出一个新的字符串时，就会更明显地接触到 `std.fmt`。
+所以 `std.fmt` 的核心职责可以概括为：
 
-### 这一节最值得先认识的入口
+> **把结构化数据变成文本表示。**
 
-建议优先理解：
+### 常见格式化占位符
 
-- `bufPrint`
-- `allocPrint`
+最常用的四个：
 
-它们分别对应两类非常常见的需求：
+- `{}`：默认格式
+- `{d}`：十进制整数
+- `{s}`：字符串切片
+- `{any}`：调试输出任意值
 
-- 用**已有缓冲区**格式化文本
-- 用**allocator 分配新字符串**并格式化文本
+这几个占位符的区别可以先这样理解：
 
-### `bufPrint`：把格式化结果写入缓冲区
+- `{}` 表示“使用默认格式”，适合布尔值这类简单值的直接输出
+- `{d}` 明确表示“按十进制输出整数”，比 `{}` 更适合计数、长度、端口号这类数值
+- `{s}` 用于字符串切片，最常见的是 `[]const u8`
+- `{any}` 更偏向调试用途，适合快速查看数组、元组、结构体等复合值
 
-已经有一块固定大小的缓冲区时，可以用 `bufPrint`：
+可以用一个很简单的顺序来判断：
+
+1. 字符串切片优先用 `{s}`
+2. 整数优先用 `{d}`
+3. 简单值快速输出时可以用 `{}`
+4. 复合值调试时优先想到 `{any}`
 
 ```zig
 const std = @import("std");
 
-pub fn main() !void {
+pub fn main(_: std.process.Init) void {
+    const name = "zig";
+    const count: u32 = 3;
+    const enabled = true;
+    const pair = .{ name, count };
+
+    std.debug.print("name={s}, count={d}\n", .{ name, count });
+    std.debug.print("enabled={}\n", .{enabled});
+    std.debug.print("pair={any}\n", .{pair});
+}
+```
+
+### 构造一条完整消息
+
+下面这个例子模拟一个常见任务：程序先在固定缓冲区里构造一条消息，再在需要长期保存时分配一份完整文本。
+
+```zig
+const std = @import("std");
+
+pub fn main(_: std.process.Init) !void {
+    var stack_buffer: [128]u8 = undefined;
+
+    // 已有固定缓冲区时，直接把格式化结果写进去。
+    const short_message = try std.fmt.bufPrint(
+        &stack_buffer,
+        "user={s} id={} active={}",
+        .{ "alice", 42, true },
+    );
+
+    std.debug.print("short message: {s}\n", .{short_message});
+
+    // 需要独立拥有一段新文本时，再使用会分配内存的 `allocPrint`。
+    const allocator = std.heap.page_allocator;
+    const long_message = try std.fmt.allocPrint(
+        allocator,
+        "report: user={s}, score={d}, tags={any}",
+        .{ "alice", 98, [_][]const u8{ "zig", "std", "fmt" } },
+    );
+    defer allocator.free(long_message);
+
+    std.debug.print("long message: {s}\n", .{long_message});
+}
+```
+
+这个例子体现了 `std.fmt` 最常见的两条主线：
+
+- **短生命周期、固定大小**：优先 `bufPrint`
+- **结果长度不方便预估，或者需要独立拥有结果**：使用 `allocPrint`
+
+### `bufPrint`：把格式化结果写入缓冲区
+
+`bufPrint` 的典型场景是：
+
+- 你已经有一块栈上数组
+- 你不想做堆分配
+- 你只需要一段临时结果
+
+```zig
+const std = @import("std");
+
+pub fn main(_: std.process.Init) !void {
     var buffer: [64]u8 = undefined;
 
+    // 返回值是“实际写入的那一段切片”，而不是整个数组。
     const result = try std.fmt.bufPrint(
         &buffer,
         "name={s}, version={d}",
@@ -259,25 +321,23 @@ pub fn main() !void {
 }
 ```
 
-这里要注意几点：
+这里要注意：
 
-- `result` 是一个切片，表示**实际写入的那部分内容**
-- 如果缓冲区不够大，`bufPrint` 会返回错误
-- 这种方式特别适合：
-  - 固定格式的小文本
-  - 避免额外堆分配
-  - 临时拼装日志或消息
+- 返回值是切片，不是整个数组
+- 它表示“实际写入的那一段”
+- 如果缓冲区不够大，会返回错误
 
 ### `allocPrint`：分配并返回格式化结果
 
-不想自己先准备缓冲区，而是希望直接得到一段新分配的文本时，可以用 `allocPrint`：
+当你不想自己准备缓冲区，或者结果长度不容易预估时，`allocPrint` 更方便。
 
 ```zig
 const std = @import("std");
 
-pub fn main() !void {
+pub fn main(_: std.process.Init) !void {
     const allocator = std.heap.page_allocator;
 
+    // 这里会发生分配，因此结果的释放责任也落在调用者身上。
     const text = try std.fmt.allocPrint(
         allocator,
         "hello, {s}!",
@@ -289,190 +349,325 @@ pub fn main() !void {
 }
 ```
 
-这里的关键语义是：
+这里最重要的不是“会格式化”，而是：
 
-- `allocPrint` 会分配内存
-- 所以要显式传入 allocator
-- 返回的字符串需要由调用者负责释放
-
-这也说明 `std.fmt` 很容易和 allocator 联系起来。
-
-### `std.fmt` 和 `std.debug.print` 的关系
-
-可以这样理解：
-
-- `std.debug.print` 更像“直接输出”
-- `std.fmt` 更像“负责格式化能力本身”
-
-在实际代码中，它们经常一起出现：
-
-- 可能先用 `std.fmt` 把文本构造好
-- 再用别的方式写到文件、网络、缓冲区或调试输出中
+- 它发生了分配
+- 所以必须传入 allocator
+- 返回结果由调用者负责释放
 
 ### 使用 `std.fmt` 时要建立的直觉
 
-使用 `std.fmt` 时，核心要点是：
+1. 先区分“格式化”与“输出”
+2. 字符串切片优先想到 `{s}`，整数优先想到 `{d}`
+3. 复合值调试时可以先用 `{any}`
+4. 有固定缓冲区时，优先考虑 `bufPrint`
+5. 需要独立拥有结果时，再考虑 `allocPrint`
+6. 一旦用了 `allocPrint`，就要立刻想到 allocator 和释放责任
 
-1. 先区分“输出到哪里”和“如何格式化”
-2. 有固定缓冲区时，优先考虑 `bufPrint`
-3. 需要动态分配文本时，再考虑 `allocPrint`
-4. 一旦发生分配，就要立刻想到释放责任
-
-> **相关阅读**：
-> - 关于 allocator 与释放责任的系统理解，请继续阅读[内存管理模型](chapter-memory-management.md)。
-> - 只是想快速打印调试信息的话，可以继续看下一节 `std.debug`。
+> **相关阅读**：allocator 的系统理解见[内存管理模型](chapter-memory-management.md)。
 
 ---
 
 ## `std.debug`
 
-`std.debug` 是学习和调试阶段最常用的标准库入口之一。
+`std.debug` 是学习阶段和开发阶段都非常高频的模块。
 
-它的重要性并不在于“复杂”或“高级”，而在于：  
-**它能更快看清程序状态。**
+它最重要的价值不是“功能多”，而是：
 
-对初学者来说，最常见的用途通常就是：
+> **让你更快看见程序当前的状态，并尽早暴露不应该发生的逻辑错误。**
+
+最常用的入口通常就是两个：
 
 - `std.debug.print`
 - `std.debug.assert`
 
-### `std.debug.print`
-
-这是最常见的调试输出方式之一：
+下面这个例子模拟一个简单的解析流程：先打印中间状态，再用 `assert` 验证关键不变量。
 
 ```zig
 const std = @import("std");
 
-pub fn main() void {
+fn parsePort(text: []const u8) !u16 {
+    std.debug.print("raw input = [{s}]\n", .{text});
+
+    const trimmed = std.mem.trim(u8, text, " \t\r\n");
+    std.debug.print("trimmed input = [{s}]\n", .{trimmed});
+
+    // `assert` 用来表达内部假设：这里不应该再出现空输入。
+    std.debug.assert(trimmed.len > 0);
+
+    const port = try std.fmt.parseInt(u16, trimmed, 10);
+    std.debug.assert(port > 0);
+
+    std.debug.print("parsed port = {}\n", .{port});
+    return port;
+}
+
+pub fn main(_: std.process.Init) !void {
+    const port = try parsePort(" 8080 ");
+    std.debug.print("final port = {}\n", .{port});
+}
+```
+
+### `std.debug.print`
+
+这是最常见的调试输出方式之一。
+
+```zig
+const std = @import("std");
+
+pub fn main(_: std.process.Init) void {
     const count = 3;
     const name = "zig";
 
-    std.debug.print("count={d}, name={s}\n", .{ count, name });
+    // 调试阶段最常见的用法就是直接把关键状态打印出来。
+    std.debug.print("count={}, name={s}\n", .{ count, name });
 }
 ```
 
 它特别适合：
 
-- 临时观察变量状态
-- 学习阶段验证程序行为
-- 快速确认某条路径是否执行到
+- 临时观察变量值
+- 确认某条分支是否执行
+- 学习阶段理解程序行为
 
-但也要注意：  
-它更适合“调试与学习阶段”，而不是把它理解成完整日志系统的替代品。
+但它不是完整日志系统的替代品。它更适合“开发时快速看状态”。
 
 ### `std.debug.assert`
 
-想表达"这里必须满足某个条件，否则程序逻辑就不成立"时，可以用 `assert`：
+`assert` 用来表达：
+
+- 这里必须成立
+- 如果不成立，说明程序内部逻辑已经出问题
 
 ```zig
 const std = @import("std");
 
 fn divide(a: i32, b: i32) i32 {
+    // 这里不是处理用户错误，而是声明“调用者不应传入 0”。
     std.debug.assert(b != 0);
     return @divTrunc(a, b);
 }
 
-pub fn main() void {
+pub fn main(_: std.process.Init) void {
     const result = divide(10, 2);
-    std.debug.print("result={d}\n", .{result});
+    std.debug.print("result={}\n", .{result});
 }
 ```
 
-`assert` 的使用重点不是“处理用户输入错误”，而是：
-
-- 验证程序内部不变量
-- 捕捉不应该发生的逻辑状态
-- 在调试期尽早暴露问题
+这里的重点不是“处理用户输入错误”，而是“验证内部不变量”。
 
 ### 使用 `std.debug` 时要建立的直觉
 
-1. `print` 很适合调试阶段快速观察状态
-2. `assert` 适合表达“不应该被破坏的假设”
-3. 调试输出能更快定位问题，但不能替代清晰的设计
-4. 调试期工具越早介入，越容易发现问题的真实来源
+1. `print` 用来快速观察状态
+2. `assert` 用来表达内部逻辑假设
+3. 用户输入错误通常应该走正常错误处理，而不是只靠 `assert`
+4. 调试输出越靠近问题发生点，越容易定位根因
 
-> **相关阅读**：
-> - 关于错误路径和失败处理的系统理解，请阅读[错误处理：!T、try 与 errdefer](../part1-basics/chapter-error-handling.md)。
-> - 关于如何在测试中验证行为，请继续阅读后面的 `std.testing` 小节与[测试与验证：从单元测试到基准测量](chapter-testing.md)。
+> **相关阅读**：错误路径的系统处理见[错误处理](../part1-basics/chapter-error-handling.md)。
 
 ---
 
 ## `std.testing`
 
-`std.testing` 是 Zig 标准库中最核心的测试辅助入口。它提供了一组断言函数和测试专用设施，用于在 `test` 块中验证代码行为。最常用的 API 包括：
+`std.testing` 是 Zig 测试代码最核心的入口。
 
-- **`expect`** — 验证布尔表达式为真，适合简单条件判断。
-- **`expectEqual`** — 比较两个值是否相等，失败时能清晰显示期望值与实际值的差异。
-- **`expectError`** — 验证函数是否返回了预期的错误，用于测试错误路径。
-- **`std.testing.allocator`** — 测试专用分配器，能自动检测内存泄漏和重复释放。
+它的重点不是“把测试写得很花”，而是：
 
-> **相关阅读**：断言函数的完整示例和测试方法论见[《测试与验证》（chapter-testing.md）](chapter-testing.md)。
+> **把程序行为、边界条件和错误路径固定下来。**
+
+最常用的入口包括：
+
+- `std.testing.expect`
+- `std.testing.expectEqual`
+- `std.testing.expectError`
+- `std.testing.allocator`
+
+下面这个例子延续前面 `std.mem` 的思路，写一个简单解析函数，并用测试验证正常路径和错误路径。
+
+```zig
+const std = @import("std");
+
+const ParseError = error{
+    MissingSeparator,
+    EmptyKey,
+    EmptyValue,
+};
+
+fn parseAssignment(line: []const u8) ParseError!struct { key: []const u8, value: []const u8 } {
+    // 先规范化输入，再做结构拆分和字段校验。
+    const trimmed = std.mem.trim(u8, line, " \t\r\n");
+    var parts = std.mem.splitScalar(u8, trimmed, '=');
+
+    const raw_key = parts.next() orelse return error.MissingSeparator;
+    const raw_value = parts.next() orelse return error.MissingSeparator;
+
+    const key = std.mem.trim(u8, raw_key, " \t\r\n");
+    const value = std.mem.trim(u8, raw_value, " \t\r\n");
+
+    if (key.len == 0) return error.EmptyKey;
+    if (value.len == 0) return error.EmptyValue;
+
+    return .{ .key = key, .value = value };
+}
+
+test "parseAssignment parses key and value" {
+    const result = try parseAssignment(" mode = debug ");
+
+    // 正常路径测试：确认解析后的 key 和 value 都符合预期。
+    try std.testing.expectEqualStrings("mode", result.key);
+    try std.testing.expectEqualStrings("debug", result.value);
+}
+
+test "parseAssignment rejects missing separator" {
+    // 错误路径测试：输入不合法时，应返回明确的错误。
+    try std.testing.expectError(
+        error.MissingSeparator,
+        parseAssignment("mode debug"),
+    );
+}
+
+test "parseAssignment rejects empty value" {
+    try std.testing.expectError(
+        error.EmptyValue,
+        parseAssignment("mode = "),
+    );
+}
+```
+
+这个例子里，测试的主线很清楚：
+
+1. 先写一个小而明确的函数
+2. 测正常输入
+3. 测错误输入
+4. 把边界条件固定下来
+
+这比只在 `main` 里手动打印结果更可靠。
+
+### 断言函数速查
+
+| 函数 | 用途 |
+| ---- | ---- |
+| `expect` | 验证布尔条件为真 |
+| `expectEqual` | 比较两个值是否相等（类型推导，失败信息更清楚） |
+| `expectEqualStrings` | 比较两个字符串内容 |
+| `expectEqualSlices` | 比较两个切片的逐元素内容 |
+| `expectError` | 验证错误联合体返回的特定错误 |
+
+> 各断言函数的详细用法和示例，见[测试章节](chapter-testing.md)。
+
+### `std.testing.allocator`
+
+当测试代码里需要分配内存时，优先考虑 `std.testing.allocator`。它的价值不只是“能分配”，更重要的是更容易暴露：
+
+- 泄漏
+- 重复释放
+- 生命周期错误
 
 ### 使用 `std.testing` 时要建立的直觉
 
-1. 测试不是额外装饰，而是接口设计的一部分
-2. 错误路径、资源释放、边界条件都值得测试
-3. `std.testing.allocator` 的价值不只是"能分配"，而是"更容易暴露泄漏和生命周期问题"
+1. 测试应该覆盖正常路径、错误路径和边界条件
+2. 小函数更容易写出清晰测试
+3. 测试不是额外装饰，而是接口行为的一部分
+4. 只靠手动运行和打印，通常不够稳定
+
+> **相关阅读**：更完整的测试方法见[测试与验证：从单元测试到基准测量](chapter-testing.md)。
 
 ---
 
 ## `std.fs`
 
-只要开始写真实程序，文件和目录几乎一定会出现。
-这时，`std.fs` 往往就是最该先想到的模块。
+只要开始写真实程序，文件和目录几乎一定会出现。  
+这时 `std.fs` 往往就是最该先想到的模块。
 
 它负责的典型问题包括：
 
 - 打开文件
 - 创建文件
 - 读取文件内容
+- 写入文件内容
 - 遍历目录
-- 读取文件元信息
+- 处理路径对应的文件系统对象
 
-### 心智模型
+更常见的入口是：
 
-初次接触 `std.fs` 时，不必急着记很多 API 名字。  
-更重要的是建立下面这个直觉：
+- `std.fs.cwd()`
+- 目录对象上的 `openFile`、`createFile`、`openDir`
+- 文件对象上的 `readToEndAlloc`、`writeAll`、`close`
+- 目录遍历的 `iterate`
 
-- **文件和目录相关问题，优先想到 `std.fs`**
-- **很多操作都围绕“某个目录视角”或“某个文件句柄”展开**
-- **真实工程里，`std.fs` 往往会和 `std.process`、`std.mem`、`std.fmt` 一起出现**
+下面这个例子模拟一个很常见的小工具流程：
 
-### 一个最小示例：创建并写入文件
-
-下面这个例子展示一个最小文件写入过程：
+1. 从当前目录打开输入文件
+2. 读取全部内容
+3. 做一点简单处理
+4. 创建输出文件并写入结果
 
 ```zig
 const std = @import("std");
 
-pub fn main() !void {
+pub fn main(init: std.process.Init) !void {
+    const cwd = std.fs.cwd();
+
+    const input_file = try cwd.openFile("input.txt", .{});
+    defer input_file.close();
+
+    // 把整个文件读入动态内存，后面就可以按普通切片继续处理。
+    const content = try input_file.readToEndAlloc(init.gpa, 1024 * 1024);
+    defer init.gpa.free(content);
+
+    const trimmed = std.mem.trim(u8, content, " \t\r\n");
+
+    const output_file = try cwd.createFile("output.txt", .{ .truncate = true });
+    defer output_file.close();
+
+    try output_file.writeAll("processed: ");
+    try output_file.writeAll(trimmed);
+    try output_file.writeAll("\n");
+
+    std.debug.print("wrote output.txt\n", .{});
+}
+```
+
+这个例子里，`std.fs` 的主线非常清楚：
+
+- 目录对象负责“从哪里操作”
+- 文件对象负责“读写什么”
+- 打开后的资源要关闭
+- 读取到动态内存后要释放
+
+这也是为什么 `std.fs` 经常和 `std.mem`、`std.process`、`std.heap` 一起出现。
+
+### 创建并写入文件
+
+最小写文件示例如下：
+
+```zig
+const std = @import("std");
+
+pub fn main(_: std.process.Init) !void {
     const cwd = std.fs.cwd();
 
     const file = try cwd.createFile("example.txt", .{});
     defer file.close();
 
+    // 文件句柄打开后要记得关闭，写入则通过 `writeAll` 完成。
     try file.writeAll("hello from zig\n");
 }
 ```
 
-这里有几个关键点：
+### 遍历目录项
 
-- `std.fs.cwd()` 表示当前工作目录
-- 通过目录对象去创建文件
-- 文件句柄用完后要关闭
-
-### 一个最小示例：遍历目录项
-
-目录遍历也是很常见的需求：
+目录遍历也是高频需求。
 
 ```zig
 const std = @import("std");
 
-pub fn main() !void {
+pub fn main(_: std.process.Init) !void {
     const cwd = std.fs.cwd();
     var dir = try cwd.openDir(".", .{ .iterate = true });
     defer dir.close();
 
+    // 目录遍历通过迭代器逐项产出目录项。
     var it = dir.iterate();
     while (try it.next()) |entry| {
         std.debug.print("{s}\n", .{entry.name});
@@ -480,76 +675,116 @@ pub fn main() !void {
 }
 ```
 
-这个例子的核心在于理解：
-
-- 目录遍历通常需要显式打开目录
-- 遍历器逐项产出条目
-- 文件系统操作天然更接近“资源操作”，所以常伴随错误处理和关闭逻辑
-
 ### 使用 `std.fs` 时要建立的直觉
 
-1. 文件系统操作通常会失败，所以错误处理是常态
-2. 打开文件和目录往往意味着资源管理责任
-3. 很多能力都从某个目录对象出发，而不是全局“神奇函数”
-4. `std.fs` 往往是 CLI 工具、配置读取、代码生成等场景的核心模块
+1. 文件系统操作天然可能失败，所以错误处理是常态
+2. 打开文件和目录意味着资源管理责任
+3. 很多操作都从某个目录对象出发，而不是全局函数
+4. `std.fs` 经常是 CLI 工具、配置系统、代码生成工具的核心模块
 
-> **相关阅读**：关于 `std.fs` 在更真实工具中的使用方式，可以继续阅读[实战案例 - CLI 工具开发](../part3-practice/chapter-cli-tool.md)。
+> **相关阅读**：更完整的工具型程序见[实战案例 - CLI 工具开发](../part3-practice/chapter-cli-tool.md)。
 
 ---
 
 ## `std.process`
 
-`std.process` 主要和“程序作为一个进程运行时能接触到的上下文”有关。
+`std.process` 负责处理程序作为一个进程运行时的上下文。
 
-可以把它和下面几类需求联系起来：
+在 Zig 0.16-dev 中，这一点尤其重要，因为程序入口通常直接接收 `std.process.Init`，很多进程相关能力都从这里进入。
+
+它最常解决的问题包括：
 
 - 读取命令行参数
 - 读取环境变量
-- 处理退出状态
-- 理解程序运行时的外部上下文
+- 使用进程级 allocator 和 I/O 上下文
+- 在需要时启动子进程
 
-### 心智模型
+最常先接触到的名字包括：
 
-核心要点是：
+- `std.process.Init`
+- `init.minimal.args`
+- `init.environ_map`
+- `init.gpa`
 
-- **只要问题和参数、环境变量、进程上下文有关，就先想到 `std.process`**
-- 这类能力天然更接近“程序入口”与“操作系统环境”
+其中：
 
-### 一个最小示例：读取参数
+- `args` 负责命令行参数
+- `environ_map` 负责环境变量
+- `gpa` 提供一个默认可用的通用分配器
 
-在 Zig 0.16-dev 中，程序入口通过 `std.process.Init` 参数显式传递进程上下文，命令行参数就是其中的一部分。核心思路是：
+下面这个例子模拟一个很典型的 CLI 主线：
 
-- 参数来自进程启动时传入的上下文，通过 `init.minimal.args` 获取
-- 使用 `.iterate()` 或 `.iterateAllocator()` 创建迭代器，逐个读取参数
-- 不再需要手动分配和释放内存来收集参数
+1. 从参数中读取输入文件名
+2. 读取环境变量决定模式
+3. 打开文件并输出处理结果
 
-下面给出一个示例：
+```zig
+const std = @import("std");
+
+pub fn main(init: std.process.Init) !void {
+    var args = init.minimal.args.iterate();
+
+    // 第一个参数通常是程序自身路径，这里先跳过。
+    _ = args.next();
+
+    const input_path = args.next() orelse {
+        std.debug.print("usage: app <input-file>\n", .{});
+        return;
+    };
+
+    // 进程上下文里的环境变量和 allocator，常常会直接参与后续处理流程。
+    const mode = init.environ_map.get("APP_MODE") orelse "default";
+    std.debug.print("mode = {s}\n", .{mode});
+    std.debug.print("input = {s}\n", .{input_path});
+
+    const cwd = std.fs.cwd();
+    const file = try cwd.openFile(input_path, .{});
+    defer file.close();
+
+    const content = try file.readToEndAlloc(init.gpa, 1024 * 1024);
+    defer init.gpa.free(content);
+
+    const trimmed = std.mem.trim(u8, content, " \t\r\n");
+    std.debug.print("content = [{s}]\n", .{trimmed});
+}
+```
+
+这个例子体现了 `std.process` 在真实程序里的位置：
+
+- 它经常站在 `main` 的最前面
+- 负责把“程序外部世界”带进来
+- 然后再交给 `std.fs`、`std.mem`、`std.fmt` 去继续处理
+
+### 读取命令行参数
+
+在 0.16-dev 中，参数通过 `init.minimal.args` 获取。
 
 ```zig
 const std = @import("std");
 
 pub fn main(init: std.process.Init) void {
     var args = init.minimal.args.iterate();
+    // 参数通过迭代器逐个读取，而不是一次性隐式拿到。
     while (args.next()) |arg| {
         std.debug.print("{s}\n", .{arg});
     }
 }
 ```
 
-这个例子最重要的重点是：
+这里最重要的是理解：
 
-- 参数通过程序入口的 `Init` 参数显式传入，而非调用全局函数获取
-- `.iterate()` 返回一个迭代器，用 `while` + `.next()` 逐个遍历
-- 进程相关 API 比 `std.mem`、`std.debug` 这类模块更容易受版本变化影响
+- 参数不是通过某个全局函数隐式拿到
+- 而是通过程序入口显式传入的上下文访问
 
-### 一个最小示例：读取环境变量
+### 读取环境变量
 
-环境变量也是常见入口之一。在 0.16-dev 中，`Init` 参数提供了预初始化的 `environ_map`，可以直接按名称查找：
+环境变量通过 `init.environ_map` 访问。
 
 ```zig
 const std = @import("std");
 
 pub fn main(init: std.process.Init) void {
+    // 环境变量查找返回可选值，因此自然适合用 `if` 解包。
     if (init.environ_map.get("HOME")) |home| {
         std.debug.print("HOME={s}\n", .{home});
     } else {
@@ -558,115 +793,247 @@ pub fn main(init: std.process.Init) void {
 }
 ```
 
-这里体现了 0.16-dev 的一个重要设计特点：
+这里返回的是可选值：
 
-- 环境变量已经由运行时预先解析到 `environ_map` 中，直接用 `.get()` 查询即可
-- 不再需要手动分配内存或处理 `EnvironmentVariableNotFound` 错误——找不到时返回 `null`
+- 找到时得到值
+- 找不到时得到 `null`
 
 ### 使用 `std.process` 时要建立的直觉
 
-1. 参数与环境变量都属于"进程上下文"的一部分
-2. 在 0.16-dev 中，这些上下文通过 `std.process.Init` 参数在程序入口**显式传入**，而非通过全局函数获取
-3. 这种设计让依赖关系更清晰：函数签名本身就说明了"我需要进程上下文"
-4. 遇到版本差异时，优先抓住"程序上下文由谁提供、怎样访问"这一层稳定思路
+1. 参数、环境变量、默认 allocator 都属于进程上下文的一部分
+2. 在 0.16-dev 中，这些上下文通过 `std.process.Init` 显式传入
+3. `std.process` 经常位于程序入口层，而不是业务逻辑深处
+4. CLI 工具通常会把 `std.process`、`std.fs`、`std.mem`、`std.fmt` 串成一条主线
 
-> **相关阅读**：关于参数处理与进程上下文在更真实工具程序中的使用方式，可以继续阅读[实战案例 - CLI 工具开发](../part3-practice/chapter-cli-tool.md)。
+> **相关阅读**：更完整的命令行工具设计见[实战案例 - CLI 工具开发](../part3-practice/chapter-cli-tool.md)。
 
 ---
 
 ## `std.heap`
 
-`std.heap` 是系统接触 allocator 分类时最常见的标准库入口之一。这一节只建立**第一轮 allocator 直觉**，认识几个常见名字即可。
+`std.heap` 是理解 allocator 的第一入口。
 
-常见的分配器：
+它的重要性不在于“会分配内存”这么简单，而在于：
 
-- **`page_allocator`** — 直接向操作系统申请整页内存。随手可用，适合入门示例，但不是所有工程场景的最佳默认选择。
-- **`ArenaAllocator`** — 适合"集中分配、集中释放"的场景，减少逐个释放的负担，所有对象共享同一个释放时机。
-- **`FixedBufferAllocator`** — 在一块已有的固定内存上做分配，不需要向操作系统再要内存。
-- **`std.testing.allocator`** — 测试专用分配器，能自动检测泄漏（详见 `std.testing` 一节）。
+> **Zig 把内存分配策略显式放进接口里。**
 
-> **相关阅读**：完整的分配器示例和使用指南见[《内存管理模型》（chapter-memory-management.md）](chapter-memory-management.md)。
+所以 `std.heap` 的核心不是某一个函数，而是几种常见 allocator 的角色差异。
+
+最值得先认识的几个名字包括：
+
+- `std.heap.page_allocator`
+- `std.heap.ArenaAllocator`
+- `std.heap.FixedBufferAllocator`
+
+下面这个例子展示两种很常见的资源组织方式：
+
+- 小而固定的临时分配：`FixedBufferAllocator`
+- 一批对象一起释放：`ArenaAllocator`
+
+```zig
+const std = @import("std");
+
+pub fn main(_: std.process.Init) !void {
+    var backing_buffer: [256]u8 = undefined;
+    var fba = std.heap.FixedBufferAllocator.init(&backing_buffer);
+    const fixed_allocator = fba.allocator();
+
+    // 固定缓冲区分配器只在这块已有内存上工作，不再向系统申请新内存。
+    const a = try fixed_allocator.dupe(u8, "alpha");
+    const b = try fixed_allocator.dupe(u8, "beta");
+
+    std.debug.print("fixed: {s}, {s}\n", .{ a, b });
+
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+
+    const arena_allocator = arena.allocator();
+
+    // arena 适合一批对象一起创建、最后统一释放。
+    const first = try arena_allocator.dupe(u8, "first item");
+    const second = try arena_allocator.dupe(u8, "second item");
+    const combined = try std.fmt.allocPrint(
+        arena_allocator,
+        "{s} + {s}",
+        .{ first, second },
+    );
+
+    std.debug.print("arena combined: {s}\n", .{combined});
+}
+```
+
+这个例子里最重要的不是记住所有细节，而是理解两种 allocator 的使用场景：
+
+- `FixedBufferAllocator`：在一块已有内存上分配，不再向系统申请新内存
+- `ArenaAllocator`：适合“分配很多对象，最后一起释放”
+
+### `page_allocator`
+
+`page_allocator` 是最容易直接拿来用的 allocator 之一。
+
+```zig
+const std = @import("std");
+
+pub fn main(_: std.process.Init) !void {
+    const allocator = std.heap.page_allocator;
+
+    // 即使是最直接的 allocator，用完后也仍然要显式释放。
+    const text = try allocator.dupe(u8, "hello");
+    defer allocator.free(text);
+
+    std.debug.print("{s}\n", .{text});
+}
+```
+
+它适合示例和简单程序，但在工程里不一定总是最佳默认选择。
+
+### `ArenaAllocator`
+
+适合"集中分配、集中释放"的场景（如解析配置、构造语法树、请求级临时对象）。详见[内存管理模型](chapter-memory-management.md)。
+
+### `FixedBufferAllocator`
+
+在固定内存块上分配，不向系统申请新内存，适合已知上限、嵌入式或临时工作区。详见[内存管理模型](chapter-memory-management.md)。
 
 ### 使用 `std.heap` 时要建立的直觉
 
-1. Zig 的 allocator 不是背景设施，而是显式接口的一部分
-2. 不同 allocator 解决的是不同资源组织问题
-3. 一旦发生分配，就要立即想到：谁负责释放？什么时候释放？
+1. allocator 是接口的一部分，不是隐藏背景设施
+2. 选择 allocator，本质上是在选择资源组织方式
+3. 一旦发生分配，就要立刻想到释放责任
+4. `std.heap` 往往不是单独使用，而是作为其他模块的基础设施出现
+
+> **相关阅读**：allocator 的完整模型见[内存管理模型](chapter-memory-management.md)。
 
 ---
 
-## 模块如何组合使用？
+## 一个稍完整的组合示例
 
-真正的 Zig 代码，很少只使用单独一个标准库模块。  
-更常见的情况是：几个模块以很小的颗粒度频繁组合。
+前面每个模块都单独看过了。下面把它们串起来，写一个更接近真实程序的小例子。
 
-### `std.mem` + `std.fmt`
+这个程序做的事情是：
 
-很常见于：
+1. 从命令行参数读取输入文件名
+2. 从环境变量读取模式
+3. 读取文件内容
+4. 按行查找 `name = value` 形式的配置
+5. 生成一份格式化报告
+6. 输出到终端并写入文件
 
-- 先处理输入切片
-- 再把结果格式化输出
+这个例子会同时用到：
 
-例如：
+- `std.process`
+- `std.fs`
+- `std.mem`
+- `std.fmt`
+- `std.heap`
+- `std.debug`
 
-- 先 `trim`
-- 再 `startsWith`
-- 然后 `bufPrint` 拼装消息
+```zig
+const std = @import("std");
 
-### `std.debug` + `std.testing`
+const ParseError = error{
+    InvalidLine,
+};
 
-很常见于：
+fn parseLine(line: []const u8) ParseError!?struct { key: []const u8, value: []const u8 } {
+    const trimmed = std.mem.trim(u8, line, " \t\r\n");
+    // 空行和注释行不算错误，直接跳过即可。
+    if (trimmed.len == 0) return null;
+    if (std.mem.startsWith(u8, trimmed, "#")) return null;
 
-- 调试阶段快速观察状态
-- 再写测试把行为固定下来
+    var parts = std.mem.splitScalar(u8, trimmed, '=');
+    const raw_key = parts.next() orelse return error.InvalidLine;
+    const raw_value = parts.next() orelse return error.InvalidLine;
 
-也就是说：
+    const key = std.mem.trim(u8, raw_key, " \t\r\n");
+    const value = std.mem.trim(u8, raw_value, " \t\r\n");
 
-- `std.debug` 用于快速“看见”
-- `std.testing` 用于长期“验证”
+    if (key.len == 0 or value.len == 0) return error.InvalidLine;
+    return .{ .key = key, .value = value };
+}
 
-### `std.fs` + `std.process`
+pub fn main(init: std.process.Init) !void {
+    var args = init.minimal.args.iterate();
+    _ = args.next();
 
-这是 CLI、小工具和工程脚本里非常常见的组合：
+    const input_path = args.next() orelse {
+        std.debug.print("usage: app <config-file>\n", .{});
+        return;
+    };
 
-- 从 `std.process` 读取参数
-- 用 `std.fs` 处理文件和目录
-- 再结合 `std.mem`、`std.fmt` 组织输出
+    const mode = init.environ_map.get("APP_MODE") orelse "default";
 
-### `std.heap` + 其他模块
+    const cwd = std.fs.cwd();
+    const input_file = try cwd.openFile(input_path, .{});
+    defer input_file.close();
 
-只要问题进入“动态内存”领域，`std.heap` 很快就会参与进来：
+    const content = try input_file.readToEndAlloc(init.gpa, 1024 * 1024);
+    defer init.gpa.free(content);
 
-- `std.fmt.allocPrint`
-- 参数收集
-- 文件读取到动态缓冲区
-- 更复杂的数据结构构造
+    // 先按行拆分输入，再逐行做配置解析。
+    var lines = std.mem.splitScalar(u8, content, '\n');
 
-所以在真实代码里，`std.heap` 往往不是单独使用，而是以“allocator 提供者”的身份参与其他模块。
+    // `ArrayList` 适合逐步构造一段最终输出文本。
+    var report = std.ArrayList(u8).init(init.gpa);
+    defer report.deinit();
+
+    try report.writer().print("mode: {s}\n", .{mode});
+    try report.writer().writeAll("parsed entries:\n");
+
+    while (lines.next()) |line| {
+        const parsed = try parseLine(line) orelse continue;
+        try report.writer().print("  {s} = {s}\n", .{ parsed.key, parsed.value });
+    }
+
+    const output_file = try cwd.createFile("report.txt", .{ .truncate = true });
+    defer output_file.close();
+
+    try output_file.writeAll(report.items);
+    std.debug.print("{s}", .{report.items});
+}
+```
+
+这个例子最值得观察的不是某一个 API，而是模块之间的职责分工：
+
+- `std.process`：拿到参数和环境变量
+- `std.fs`：读文件、写文件
+- `std.mem`：按行拆分、裁剪、解析键值
+- `std.heap`：通过 `init.gpa` 支持动态内存
+- `std.fmt`：通过 writer 的 `print` 生成格式化文本
+- `std.debug`：把结果输出到终端
+
+这就是 Zig 标准库在真实程序里的常见样子：  
+**不是单个模块孤立使用，而是围绕一条清晰的程序主线协作。**
 
 ---
 
 ## 本章小结
 
-这一章的核心目标是建立下面这些第一轮直觉：
+这一章的重点不是覆盖尽可能多的 API，而是建立面向实战的第一轮标准库直觉：
 
-1. 处理切片、字节和很多“字符串问题”时，优先想到 `std.mem`
-2. 处理格式化时，优先想到 `std.fmt`
-3. 观察程序状态和验证不变量时，优先想到 `std.debug`
-4. 写测试与断言时，优先想到 `std.testing`
-5. 文件和目录相关需求，优先想到 `std.fs`
-6. 参数、环境变量、进程上下文相关需求，优先想到 `std.process`
-7. 动态分配和 allocator 相关入口，优先想到 `std.heap`
+- `std.mem`：处理切片、字节和已有缓冲区
+- `std.fmt`：把值格式化成文本
+- `std.debug`：观察状态、验证不变量
+- `std.testing`：固定行为、覆盖边界和错误路径
+- `std.fs`：处理文件和目录
+- `std.process`：处理参数、环境变量和进程上下文
+- `std.heap`：显式选择 allocator 和资源组织方式
 
-如果已经建立了这张“高频模块入口地图”，这一章的目标就达成了。  
-接下来的深入学习中，无需背完整 API，可以按下面的思路继续推进：
+如果把真实程序看成一条主线，那么很常见的组合就是：
 
-- 想系统理解 allocator 和资源责任 → 读[内存管理模型](chapter-memory-management.md)
-- 想系统学习测试方法 → 读[测试与验证：从单元测试到基准测量](chapter-testing.md)
-- 想看文件系统与参数处理在真实工具中的组合 → 读[实战案例 - CLI 工具开发](../part3-practice/chapter-cli-tool.md)
+1. `std.process` 从程序入口拿到上下文
+2. `std.fs` 读取外部数据
+3. `std.mem` 解析和整理输入
+4. `std.fmt` 组织输出文本
+5. `std.heap` 提供动态内存支持
+6. `std.debug` 和 `std.testing` 分别负责开发期观察与验证
 
-回到 Zig 标准库本身，最稳定、也最值得反复建立的能力始终是：
+接下来继续学习时，可以按下面的方向深入：
 
-- 知道遇到问题时先想到哪个模块
-- 知道自己要找的是“模块职责”还是“具体 API”
-- 知道什么时候该继续读源码和当前版本文档确认细节
+- 想系统理解 allocator 与资源责任：读[内存管理模型](chapter-memory-management.md)
+- 想系统学习测试：读[测试与验证：从单元测试到基准测量](chapter-testing.md)
+- 想看这些模块在真实工具中的组合：读[实战案例 - CLI 工具开发](../part3-practice/chapter-cli-tool.md)
+
+回到标准库本身，最重要的能力始终是：
+
+> **看到一个实际问题时，能迅速判断这条程序主线应该由哪些标准库模块来承担。**

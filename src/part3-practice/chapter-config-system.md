@@ -290,113 +290,24 @@ fn Config(comptime fields: []const ConfigField) type {
 
 ## 使用这个原型
 
-下面给出一个最小使用例子：
+完整的 `Config` 实现见前文，这里只展示差异部分和用法。
+
+### 差异：`printConfig` 增加了描述信息
+
+前文版本的 `printConfig` 只打印字段名。使用时可以改进为同时打印描述：
 
 ```zig
-const std = @import("std");
-
-const ConfigField = struct {
-    name: []const u8,
-    type: type,
-    description: []const u8,
-};
-
-fn Config(comptime fields: []const ConfigField) type {
-    return struct {
-        const Self = @This();
-
-        values: [fields.len]?u64,
-
-        pub fn init() Self {
-            var self: Self = undefined;
-            @memset(&self.values, null);
-            return self;
-        }
-
-        pub fn set(self: *Self, comptime field_name: []const u8, value: anytype) void {
-            inline for (fields, 0..) |field, i| {
-                if (std.mem.eql(u8, field.name, field_name)) {
-                    if (@TypeOf(value) != field.type) {
-                        @compileError("字段 " ++ field_name ++ " 的类型不匹配");
-                    }
-
-                    self.values[i] = switch (@typeInfo(field.type)) {
-                        .int => switch (@typeInfo(field.type).int.signedness) {
-                            .signed => @bitCast(@as(i64, @intCast(value))),
-                            .unsigned => @as(u64, @intCast(value)),
-                        },
-                        .float => @as(u64, @bitCast(@as(f64, @floatCast(value)))),
-                        .bool => if (value) 1 else 0,
-                        else => @compileError("当前原型只支持 int / float / bool"),
-                    };
-                    return;
-                }
-            }
-
-            @compileError("未知字段: " ++ field_name);
-        }
-
-        pub fn get(self: *const Self, comptime field_name: []const u8, comptime T: type) ?T {
-            inline for (fields, 0..) |field, i| {
-                if (std.mem.eql(u8, field.name, field_name)) {
-                    if (T != field.type) {
-                        @compileError("字段 " ++ field_name ++ " 的读取类型不匹配");
-                    }
-
-                    if (self.values[i]) |raw| {
-                        return switch (@typeInfo(T)) {
-                            .int => switch (@typeInfo(T).int.signedness) {
-                                .signed => @as(T, @intCast(@as(i64, @bitCast(raw)))),
-                                .unsigned => @as(T, @intCast(raw)),
-                            },
-                            .float => @as(T, @floatCast(@as(f64, @bitCast(raw)))),
-                            .bool => raw != 0,
-                            else => @compileError("当前原型只支持 int / float / bool"),
-                        };
-                    }
-
-                    return null;
-                }
-            }
-
-            @compileError("未知字段: " ++ field_name);
-        }
-
-        pub fn printConfig(self: *const Self) void {
-            inline for (fields) |field| {
-                std.debug.print("{s} ({s}): ", .{ field.name, field.description });
-
-                switch (@typeInfo(field.type)) {
-                    .int => {
-                        if (self.get(field.name, field.type)) |value| {
-                            std.debug.print("{}\n", .{value});
-                        } else {
-                            std.debug.print("（未设置）\n", .{});
-                        }
-                    },
-                    .float => {
-                        if (self.get(field.name, field.type)) |value| {
-                            std.debug.print("{d}\n", .{value});
-                        } else {
-                            std.debug.print("（未设置）\n", .{});
-                        }
-                    },
-                    .bool => {
-                        if (self.get(field.name, field.type)) |value| {
-                            std.debug.print("{}\n", .{value});
-                        } else {
-                            std.debug.print("（未设置）\n", .{});
-                        }
-                    },
-                    else => {
-                        std.debug.print("（当前原型不支持该类型）\n", .{});
-                    },
-                }
-            }
-        }
-    };
+pub fn printConfig(self: *const Self) void {
+    inline for (fields) |field| {
+        std.debug.print("{s} ({s}): ", .{ field.name, field.description });
+        // ... 其余分支逻辑与前文 printConfig 相同
+    }
 }
+```
 
+### 测试代码
+
+```zig
 test "configuration prototype" {
     const fields = [_]ConfigField{
         .{ .name = "port", .type = u16, .description = "服务器端口" },

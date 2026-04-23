@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-5349b6ee.js";
+            window.path_to_searchindex_js = "../searchindex-d724f321.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-84df0a14.js"></script>
+        <script src="../toc-4c2eaf17.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -183,168 +183,70 @@
                     <main>
                         <h1 id="异步-io现状历史与未来方向"><a class="header" href="#异步-io现状历史与未来方向">异步 I/O：现状、历史与未来方向</a></h1>
 <blockquote>
-<p><strong>章节定位</strong>：这一章更适合作为第三部分中的<strong>方向性专题</strong>，而不是一个可以直接照抄实现的“实战模板”。<br>在当前 Zig 0.16.0-dev 的语境下，异步 I/O 是一个<strong>非常值得理解、但不适合死记具体 API 细节</strong>的话题。</p>
-<p>阅读这一章时，请先明确区分三件事：</p>
+<p><strong>章节定位</strong>：这一章是第三部分中的<strong>方向性专题</strong>，聚焦于 Zig 异步 I/O 的<strong>历史演进和决策框架</strong>。</p>
+<p>如果你想学习 <code>std.Io</code> 的具体 API 用法（文件读写、Reader/Writer、async/cancel/Future、Queue/Group/Select 等），请直接阅读第二部分的 <a href="../part2-advanced/chapter-io.html">std.Io 接口详解</a>。</p>
+<p>本章要回答的问题是：</p>
 <ol>
-<li><strong>今天写可靠程序时，什么是更稳妥的实践主线</strong></li>
-<li><strong>旧的语言级 <code>async</code> / <code>await</code> 为什么不再是当前主线</strong></li>
-<li><strong><code>std.Io</code> 所代表的新方向到底意味着什么</strong></li>
+<li>Zig 的异步模型经历过怎样的演进？旧的 <code>async</code>/<code>await</code> 为什么不再是主线？</li>
+<li>如果你遇到旧代码，应该如何理解和迁移？</li>
+<li>在标准库之外，第三方异步库应该怎么评估？</li>
+<li>在不同场景下，应该选择什么并发策略？</li>
 </ol>
-<p>如果你带着“我现在就要做一个稳定项目”的目标阅读，那么这章最重要的收获并不是某个异步接口名字，而是：</p>
-<blockquote>
-<p><strong>当前更稳妥的做法，通常仍然是线程 + 阻塞 I/O + 清楚的同步边界。</strong></p>
-</blockquote>
 <p><strong>相关阅读与衔接建议</strong>：</p>
 <ul>
-<li>如果你还没有系统梳理线程、锁、原子操作和共享状态边界，建议先回看第二部分的<a href="../part2-advanced/chapter-concurrency.html">并发编程概述</a>。</li>
-<li>如果你想先看一个更贴近网络程序的完整案例，可以结合本部分前面的<a href="chapter-http-server.html">实战案例 - HTTP 服务器设计与最小实现</a>一起读，帮助区分“网络 I/O 实战”与“异步模型专题”。</li>
-<li>读完本章后，建议继续阅读<a href="chapter-advanced-memory.html">高级内存管理技巧（专题）</a>，把注意力从“任务如何推进”转向“资源如何控制”，补齐另一条常见的系统编程主线。</li>
+<li><code>std.Io</code> 的具体 API 教程见 <a href="../part2-advanced/chapter-io.html">std.Io 接口详解</a></li>
+<li>线程、锁、原子操作等并发基础见 <a href="../part2-advanced/chapter-concurrency.html">并发编程概述</a></li>
+<li>网络程序实战见 <a href="chapter-http-server.html">实战案例 - HTTP 服务器设计与最小实现</a></li>
 </ul>
 </blockquote>
 <hr>
 <h2 id="先给结论今天应该怎么理解-zig-的异步问题"><a class="header" href="#先给结论今天应该怎么理解-zig-的异步问题">先给结论：今天应该怎么理解 Zig 的异步问题？</a></h2>
 <p>在当前教程语境下，更合理的判断是：</p>
 <ul>
-<li><strong>旧的语言级 <code>async</code> / <code>await</code> 已经不是当前主线</strong></li>
-<li><strong>围绕 <code>std.Io</code> 的新式统一 I/O 方向值得持续关注</strong></li>
-<li><strong>但如果你现在要写能调试、能维护、能解释的程序，线程模型通常仍是更稳妥的主线</strong></li>
+<li><strong><code>std.Io</code> 已经提供了可用的异步和并发接口</strong>（<code>Future</code>、<code>Queue</code>、<code>Group</code>、<code>Select</code> 等），具体用法见 <a href="../part2-advanced/chapter-io.html">std.Io 接口详解</a></li>
+<li><strong>旧的语言级 <code>async</code> / <code>await</code> 已经不是当前主线</strong>，本章会解释其历史背景</li>
+<li><strong>线程模型仍然是最底层、最稳定的基础</strong>，见 <a href="../part2-advanced/chapter-concurrency.html">并发编程概述</a></li>
+<li><strong><code>std.Io</code> 接口仍在演进中</strong>，适合学习和使用，但要注意 API 可能在未来版本中调整</li>
 </ul>
 <p>也就是说，不要把问题理解成：</p>
 <ul>
-<li>“Zig 有没有异步能力？”</li>
+<li>“Zig 有没有异步能力？”——有，在 <code>std.Io</code> 中</li>
 </ul>
 <p>而应该理解成：</p>
 <ul>
-<li>“Zig 当前把哪些并发/I/O 能力视为稳定实践？”</li>
-<li>“哪些能力还在发展中？”</li>
-<li>“我应该把哪些内容当作生产经验，哪些内容当作方向理解？”</li>
+<li>“Zig 的异步能力是怎么演进到今天的？”</li>
+<li>“旧的 <code>async</code>/<code>await</code> 为什么被替换了？”</li>
+<li>“如果遇到旧代码或第三方库，应该怎么判断？”</li>
 </ul>
 <hr>
-<h2 id="第一部分稳定实践主线"><a class="header" href="#第一部分稳定实践主线">第一部分：稳定实践主线</a></h2>
-<h2 id="为什么线程仍然是当前更稳妥的入口"><a class="header" href="#为什么线程仍然是当前更稳妥的入口">为什么线程仍然是当前更稳妥的入口？</a></h2>
-<p>对于今天的大多数 Zig 用户来说，线程仍然具备几个明显优势：</p>
-<ol>
-<li>
-<p><strong>模型直观</strong></p>
-<ul>
-<li>一个线程就是一个操作系统调度单元</li>
-<li>创建、等待、同步的语义都更容易解释</li>
-</ul>
-</li>
-<li>
-<p><strong>调试路径清楚</strong></p>
-<ul>
-<li>比起尚在演进的 I/O 抽象，线程问题更容易被定位和复现</li>
-</ul>
-</li>
-<li>
-<p><strong>生态认知更稳定</strong></p>
-<ul>
-<li>即使标准库某些高层接口继续变化，线程与同步原语的基本思路仍然更稳定</li>
-</ul>
-</li>
-<li>
-<p><strong>适合先学会“并发责任边界”</strong></p>
-<ul>
-<li>共享数据</li>
-<li>锁</li>
-<li>原子操作</li>
-<li>生命周期和资源释放</li>
-<li>这些能力本来就必须掌握</li>
-</ul>
-</li>
-</ol>
-<p>所以，在教程里更好的建议通常不是：</p>
-<blockquote>
-<p>“先学未来可能更高级的异步接口。”</p>
-</blockquote>
-<p>而是：</p>
-<blockquote>
-<p><strong>先把线程、阻塞 I/O、错误处理和资源清理这些稳定主线学扎实。</strong></p>
-</blockquote>
-<hr>
-<h2 id="当前更稳妥的实践建议"><a class="header" href="#当前更稳妥的实践建议">当前更稳妥的实践建议</a></h2>
-<p>可以先用下面这张表建立整体判断：</p>
+<h2 id="稳定实践主线"><a class="header" href="#稳定实践主线">稳定实践主线</a></h2>
+<p>在深入历史背景之前，先建立一个整体判断：</p>
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th>场景</th><th>当前更稳妥的方案</th><th>说明</th></tr>
+<tr><th>场景</th><th>当前推荐的方案</th><th>说明</th></tr>
 </thead>
 <tbody>
-<tr><td>CPU 密集型任务</td><td><code>std.Thread</code></td><td>直接利用操作系统线程</td></tr>
-<tr><td>一般 I/O 任务</td><td>阻塞 I/O + 清晰线程模型</td><td>更容易验证正确性</td></tr>
-<tr><td>后台任务处理</td><td>固定工作线程 + 任务队列</td><td>比“抽象异步”更容易维护</td></tr>
-<tr><td>高并发网络服务</td><td>根据版本与生态谨慎评估</td><td>需要额外关注库与标准库演进</td></tr>
-<tr><td>研究未来方向</td><td>阅读 <code>std.Io</code> 设计思路</td><td>更适合学模型而不是背接口</td></tr>
+<tr><td>一般 I/O 任务</td><td><code>std.Io</code> + <code>io.async</code></td><td>统一接口，支持异步，见 <a href="../part2-advanced/chapter-io.html">std.Io 接口详解</a></td></tr>
+<tr><td>CPU 密集型任务</td><td><code>std.Thread</code></td><td>直接利用操作系统线程，见 <a href="../part2-advanced/chapter-concurrency.html">并发编程概述</a></td></tr>
+<tr><td>后台任务处理</td><td><code>std.Io.concurrent</code> + <code>Queue</code></td><td>保证并发，见 <a href="../part2-advanced/chapter-io.html">std.Io 接口详解</a></td></tr>
+<tr><td>高并发网络服务</td><td>根据版本与生态谨慎评估</td><td>可关注 <code>std.Io.Evented</code>（概念验证阶段）或第三方库</td></tr>
+<tr><td>简单多线程程序</td><td><code>std.Thread</code> + <code>Mutex</code></td><td>最直接的方案，见 <a href="../part2-advanced/chapter-concurrency.html">并发编程概述</a></td></tr>
 </tbody>
 </table>
 </div>
-<p>这张表最想提醒你的不是“线程永远最好”，而是：</p>
+<p>这张表最想提醒你的不是“某个方案永远最好“，而是：</p>
 <blockquote>
-<p><strong>当稳定性、可维护性和可验证性更重要时，线程常常是当前 Zig 中更现实的起点。</strong></p>
+<p><strong>在稳定性和可维护性更重要的场景里，选择你能理解、能验证、能解释的方案。</strong></p>
 </blockquote>
-<hr>
-<h2 id="一个最小线程示例"><a class="header" href="#一个最小线程示例">一个最小线程示例</a></h2>
-<pre><code class="language-zig">const std = @import("std");
-
-fn worker(id: usize) void {
-    for (0..3) |i| {
-        std.debug.print("worker {}: iteration {}\n", .{ id, i });
-        std.time.sleep(10 * std.time.ns_per_ms);
-    }
-}
-
-pub fn main() !void {
-    const t1 = try std.Thread.spawn(.{}, worker, .{1});
-    const t2 = try std.Thread.spawn(.{}, worker, .{2});
-
-    t1.join();
-    t2.join();
-
-    std.debug.print("all workers finished\n", .{});
-}
-</code></pre>
-<p>这个例子虽然简单，但它很好地体现了当前更稳定的实践路线：</p>
-<ul>
-<li>创建线程</li>
-<li>让线程执行明确工作</li>
-<li>用 <code>join()</code> 等待完成</li>
-<li>不引入额外事件循环模型</li>
-<li>调试路径清楚</li>
-</ul>
-<p>第一次学习时，这种例子比“看起来更高级但接口仍在变化”的异步示例更适合作为主线。</p>
-<hr>
-<h2 id="固定工作线程不等于真正的线程池"><a class="header" href="#固定工作线程不等于真正的线程池">固定工作线程，不等于真正的线程池</a></h2>
-<p>很多教程里会把“开几个线程分别做事”直接叫线程池。<br>这在概念上并不准确。</p>
-<p>真正更接近“线程池”的结构通常至少包括：</p>
-<ul>
-<li>固定数量的工作线程</li>
-<li>一个共享任务队列</li>
-<li>提交任务的接口</li>
-<li>等待/关闭机制</li>
-<li>明确的同步策略</li>
-</ul>
-<p>如果只是像下面这样：</p>
-<ul>
-<li>启动 4 个线程</li>
-<li>每个线程各自处理一段固定工作</li>
-</ul>
-<p>那它更像是：</p>
-<blockquote>
-<p><strong>多线程并行执行</strong>，而不是完整的线程池设计。</p>
-</blockquote>
-<p>这一点看似是术语问题，但其实和工程理解高度相关：<br><strong>名称越准确，责任边界就越容易被讲清楚。</strong></p>
-<hr>
-<h2 id="稳定实践中真正该优先掌握什么"><a class="header" href="#稳定实践中真正该优先掌握什么">稳定实践中真正该优先掌握什么？</a></h2>
-<p>如果你现在准备写真实程序，优先掌握这些能力会更有价值：</p>
+<p>在此基础上，下面几项能力无论选择哪种方案都值得掌握：</p>
 <ol>
-<li><strong>如何安全地创建和等待线程</strong></li>
 <li><strong>如何避免无意义共享</strong></li>
-<li><strong>如何用锁或原子操作保护共享状态</strong></li>
+<li><strong>如何用同步原语保护共享状态</strong></li>
 <li><strong>如何让错误路径和资源清理保持清楚</strong></li>
-<li><strong>如何把阻塞 I/O 组织进一个可维护的结构里</strong></li>
+<li><strong>如何把 I/O 组织进一个可维护的结构里</strong></li>
 </ol>
-<p>你会发现，这些能力并不会因为未来异步接口变化而失效。<br>相反，它们是你之后理解任何更高级并发模型的基础。</p>
+<p>这些能力不会因为 <code>std.Io</code> 接口变化而失效——它们是任何并发模型的基础。</p>
 <hr>
 <h2 id="第二部分历史背景"><a class="header" href="#第二部分历史背景">第二部分：历史背景</a></h2>
 <h2 id="为什么旧的-async--await-不再是当前主线"><a class="header" href="#为什么旧的-async--await-不再是当前主线">为什么旧的 <code>async</code> / <code>await</code> 不再是当前主线？</a></h2>
@@ -462,45 +364,36 @@ pub fn main() !void {
 <p><strong>把问题重新映射到今天更稳定的并发模型上。</strong></p>
 </blockquote>
 <hr>
-<h2 id="第三部分未来方向"><a class="header" href="#第三部分未来方向">第三部分：未来方向</a></h2>
-<h2 id="为什么-stdio-值得关注"><a class="header" href="#为什么-stdio-值得关注">为什么 <code>std.Io</code> 值得关注？</a></h2>
-<p>虽然当前不适合把 <code>std.Io</code> 的具体 API 当成稳定教材接口死记，<br>但它依然非常值得关注，因为它代表了一条重要设计方向：</p>
-<blockquote>
-<p><strong>让 I/O 能力以更统一、更显式、由调用者提供上下文的方式组织起来。</strong></p>
-</blockquote>
-<p>这条方向之所以重要，是因为它可能帮助 Zig 在未来更好地处理：</p>
+<h2 id="stdio-的现状与演进"><a class="header" href="#stdio-的现状与演进"><code>std.Io</code> 的现状与演进</a></h2>
+<h3 id="stdio-已经可用"><a class="header" href="#stdio-已经可用"><code>std.Io</code> 已经可用</a></h3>
+<p><code>std.Io</code> 在 0.16 中已经提供了可用的接口，覆盖：</p>
 <ul>
-<li>文件 I/O</li>
-<li>网络 I/O</li>
-<li>标准输入输出</li>
-<li>并发 I/O 驱动</li>
-<li>阻塞与非阻塞模型之间的统一表达</li>
+<li>文件 I/O（<code>Io.Dir</code>、<code>Io.File</code>）</li>
+<li>流式读写（<code>Reader</code>、<code>Writer</code>）</li>
+<li>异步任务（<code>io.async</code>、<code>Future</code>、<code>await</code>/<code>cancel</code>）</li>
+<li>并发保证（<code>io.concurrent</code>）</li>
+<li>任务协调（<code>Queue</code>、<code>Group</code>、<code>Select</code>）</li>
+<li>时间操作（<code>Timestamp</code>、<code>Duration</code>、<code>sleep</code>）</li>
+<li>同步原语（<code>RwLock</code>、<code>Semaphore</code>、<code>futexWait</code>/<code>futexWake</code>）</li>
 </ul>
-<p>换句话说，<code>std.Io</code> 的价值，不只是“多了一套 API”，而是它在尝试回答：</p>
+<p>具体用法已经在 <a href="../part2-advanced/chapter-io.html">std.Io 接口详解</a> 中详细讲解。</p>
+<h3 id="但接口仍在演进"><a class="header" href="#但接口仍在演进">但接口仍在演进</a></h3>
+<p><code>std.Io</code> 目前处于“可用于大多数场景并收集反馈“的阶段。这意味着：</p>
 <ul>
-<li>Zig 应该怎样组织统一 I/O 模型？</li>
-<li>I/O 能力与运行模型之间的边界应该如何表达？</li>
-<li>库代码如何描述“我需要做 I/O”，而不是直接绑定某一种固定运行时？</li>
+<li>方法名和类型形状可能继续调整</li>
+<li>某些平台上的实现还不完整</li>
+<li><code>Evented</code> 实现（基于 <code>io_uring</code>、<code>kqueue</code>、<code>dispatch</code>）仍处于概念验证阶段</li>
+<li>一些已知的设计不足正在被收集和讨论</li>
 </ul>
-<hr>
-<h2 id="stdio-更应该怎么读"><a class="header" href="#stdio-更应该怎么读"><code>std.Io</code> 更应该怎么读？</a></h2>
-<p>如果你在当前开发版语境下阅读 <code>std.Io</code> 相关内容，更好的阅读姿势不是：</p>
-<ul>
-<li>看到一个接口就立刻背下来</li>
-<li>把示例当作长期稳定模板</li>
-<li>试图立刻据此设计大型项目架构</li>
-</ul>
-<p>而是优先关注这些问题：</p>
+<p>因此，更好的阅读姿态是：</p>
 <ol>
-<li><strong>它在试图统一什么问题？</strong></li>
-<li><strong>它如何把 I/O 上下文显式暴露给调用者？</strong></li>
-<li><strong>它试图避免哪些旧式隐式运行时模型的缺点？</strong></li>
-<li><strong>哪些部分是设计方向，哪些部分已经足够稳定？</strong></li>
+<li><strong>积极学习和使用</strong>——接口已经足够用于大多数真实项目</li>
+<li><strong>关注设计意图</strong>——理解它为什么这样设计，而不只是记住接口</li>
+<li><strong>做好重构准备</strong>——如果你在大型项目中使用，预留未来 API 变化的应对空间</li>
+<li><strong>结合源码确认</strong>——遇到问题时查阅 <code>std.Io</code> 源码，获取最准确的信息</li>
 </ol>
-<p>在当前阶段，这种“读设计意图”的价值通常高于“背接口名字”。</p>
-<hr>
-<h2 id="异步并发并行不要混为一谈"><a class="header" href="#异步并发并行不要混为一谈">异步、并发、并行不要混为一谈</a></h2>
-<p>这是理解 Zig 当前方向时最重要的概念区分之一。</p>
+<h3 id="异步并发并行不要混为一谈"><a class="header" href="#异步并发并行不要混为一谈">异步、并发、并行不要混为一谈</a></h3>
+<p>这三个概念在 <a href="../part2-advanced/chapter-concurrency.html">并发编程概述</a> 和 <a href="../part2-advanced/chapter-io.html">std.Io 接口详解</a> 中都有涉及。这里再次强调，因为它们是理解异步演进时最容易混淆的：</p>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -513,35 +406,11 @@ pub fn main() !void {
 </tbody>
 </table>
 </div>
-<p>很多讨论一旦混乱，根源都在于把这三个词混成了一个“高级性能功能”。</p>
-<p>更稳妥的理解是：</p>
+<p>在 Zig 当前语境里，<code>std.Io</code> 同时提供了异步（<code>io.async</code>）和并发（<code>io.concurrent</code>）能力，但它们不是同一回事：</p>
 <ul>
-<li><strong>异步不等于多线程</strong></li>
-<li><strong>并发不等于并行</strong></li>
-<li><strong>有异步表达能力，不代表一定要强制事件循环</strong></li>
-<li><strong>有并行能力，也不代表接口设计就自动合理</strong></li>
+<li>异步不保证真正的同时执行，只提供“可以被并发推进“的潜力</li>
+<li>并发保证同时推进，但可能失败（<code>error.ConcurrencyUnavailable</code>）</li>
 </ul>
-<p>这也是为什么在 Zig 当前语境里，讨论未来 I/O 方向时，比起“有没有 async 关键字”，更重要的是：</p>
-<blockquote>
-<p><strong>这个模型如何表达任务推进、I/O 驱动和调用者责任。</strong></p>
-</blockquote>
-<hr>
-<h2 id="为什么这一方向仍然不适合当作稳定教程-api-来教"><a class="header" href="#为什么这一方向仍然不适合当作稳定教程-api-来教">为什么这一方向仍然不适合当作稳定教程 API 来教？</a></h2>
-<p>因为开发版标准库在这些区域仍可能继续演进。<br>这意味着：</p>
-<ul>
-<li>方法名可能变化</li>
-<li>类型形状可能变化</li>
-<li>示例写法可能变化</li>
-<li>某些调用模式可能继续重构</li>
-</ul>
-<p>所以，在教程里更负责的写法应该是：</p>
-<ul>
-<li>讲清楚方向</li>
-<li>标注版本敏感</li>
-<li>提醒读者结合本地标准库源码确认</li>
-<li>不把实验性或快速演进接口包装成“稳定范式”</li>
-</ul>
-<p>也正因为如此，本章不把 <code>std.Io</code> 的具体开发版调用形式当成主教学示例。</p>
 <hr>
 <h2 id="第四部分第三方库应该怎么理解"><a class="header" href="#第四部分第三方库应该怎么理解">第四部分：第三方库应该怎么理解？</a></h2>
 <p>当标准库的高层异步 I/O 方向仍在演进时，很多实际项目会考虑第三方库。<br>这是现实情况，但阅读时也需要保持清醒：</p>
@@ -606,10 +475,10 @@ pub fn main() !void {
 <p>这时再去评估更前沿的 I/O 模型，通常才更合理。</p>
 <hr>
 <h2 id="本章最容易产生的误解"><a class="header" href="#本章最容易产生的误解">本章最容易产生的误解</a></h2>
-<h2 id="误解-1没有语言级-asyncawait-就等于-zig-没有并发能力"><a class="header" href="#误解-1没有语言级-asyncawait-就等于-zig-没有并发能力">误解 1：没有语言级 <code>async/await</code> 就等于 Zig 没有并发能力</a></h2>
-<p>错误。<br>Zig 当然有并发能力，而且线程仍然是非常现实的主线能力。</p>
-<h2 id="误解-2未来方向已经足够稳定可以直接按开发版示例建项目"><a class="header" href="#误解-2未来方向已经足够稳定可以直接按开发版示例建项目">误解 2：未来方向已经足够稳定，可以直接按开发版示例建项目</a></h2>
-<p>这通常过于乐观。<br>在快速演进区域，理解方向比背接口更重要。</p>
+<h2 id="误解-1zig-没有异步能力"><a class="header" href="#误解-1zig-没有异步能力">误解 1：Zig 没有异步能力</a></h2>
+<p>错误。<code>std.Io</code> 提供了完整的异步和并发接口，包括 <code>Future</code>、<code>Queue</code>、<code>Group</code>、<code>Select</code> 等。详见 <a href="../part2-advanced/chapter-io.html">std.Io 接口详解</a>。</p>
+<h2 id="误解-2旧的语言级-asyncawait-只是被改名了"><a class="header" href="#误解-2旧的语言级-asyncawait-只是被改名了">误解 2：旧的语言级 <code>async</code>/<code>await</code> 只是被改名了</a></h2>
+<p>错误。旧的 <code>async</code>/<code>suspend</code>/<code>resume</code> 是语言级关键字，而 <code>std.Io</code> 的异步是通过库层接口实现的，设计理念和调用模式完全不同。本章的“历史背景“部分详细解释了这一转变。</p>
 <h2 id="误解-3线程只是落后方案"><a class="header" href="#误解-3线程只是落后方案">误解 3：线程只是“落后方案”</a></h2>
 <p>也不对。<br>对于今天的大多数 Zig 项目，线程并不是退而求其次，而是更容易解释和验证的现实路径。</p>
 <h2 id="误解-4只要听起来像异步就一定更高级更高性能"><a class="header" href="#误解-4只要听起来像异步就一定更高级更高性能">误解 4：只要听起来像异步，就一定更高级、更高性能</a></h2>
@@ -618,35 +487,29 @@ pub fn main() !void {
 <p>也不一定。<br>第三方库往往同样面临版本漂移和接口变化问题。</p>
 <hr>
 <h2 id="如果你是第一次学这一章应该带走什么"><a class="header" href="#如果你是第一次学这一章应该带走什么">如果你是第一次学这一章，应该带走什么？</a></h2>
-<p>第一次阅读时，建议优先带走下面这组结论：</p>
 <ol>
-<li><strong>今天写可靠 Zig 程序时，线程通常仍是更稳妥的并发主线</strong></li>
-<li><strong>旧的语言级 <code>async</code> / <code>await</code> 已经不再是当前主线</strong></li>
-<li><strong><code>std.Io</code> 值得关注，但更适合当作方向理解，而不是稳定 API 背诵对象</strong></li>
+<li><strong><code>std.Io</code> 已经提供了可用的异步和并发接口</strong>，具体用法见 <a href="../part2-advanced/chapter-io.html">std.Io 接口详解</a></li>
+<li><strong>旧的语言级 <code>async</code> / <code>await</code> 已经退出主线</strong>，本章解释了为什么</li>
+<li><strong>线程模型仍然是最底层的基础</strong>，见 <a href="../part2-advanced/chapter-concurrency.html">并发编程概述</a></li>
 <li><strong>异步、并发、并行是三件不同的事</strong></li>
-<li><strong>真正重要的不是追逐某个“更高级”的模型，而是选一个你能验证、能维护、能解释的模型</strong></li>
+<li><strong>第三方库和标准库方向各有适用场景</strong>，选择时需要结合版本、维护状态和项目需求</li>
 </ol>
 <hr>
 <h2 id="小结"><a class="header" href="#小结">小结</a></h2>
-<p>这一章最重要的，不是让你立刻掌握一套“异步框架写法”，而是帮助你建立对 Zig 当前现状的正确预期。</p>
-<p>你可以把本章总结成三句话：</p>
+<p>这一章不是 API 教程——那是 <a href="../part2-advanced/chapter-io.html">std.Io 接口详解</a> 的任务。</p>
+<p>本章的核心是帮你理解：</p>
 <ol>
-<li><strong>稳定实践上，线程仍然是当前更现实的主线。</strong></li>
-<li><strong>历史上，旧的语言级 <code>async</code> / <code>await</code> 已经退出主线。</strong></li>
-<li><strong>未来方向上，<code>std.Io</code> 很重要，但目前更适合理解设计思路，而不是死记具体接口。</strong></li>
+<li><strong>历史脉络</strong>：旧的语言级 <code>async</code>/<code>await</code>/<code>suspend</code>/<code>resume</code> 为什么退出了主线</li>
+<li><strong>现状判断</strong>：<code>std.Io</code> 已经可用但仍在演进，线程模型是最稳定的基础</li>
+<li><strong>决策框架</strong>：遇到旧代码、第三方库或选型问题时，如何做出合理判断</li>
 </ol>
 <p>如果你读完之后，已经能更清楚地区分：</p>
 <ul>
-<li>什么是今天可依赖的实践</li>
-<li>什么是历史遗留认知</li>
-<li>什么是值得持续关注的未来方向</li>
+<li>什么是今天可使用的 <code>std.Io</code> 接口</li>
+<li>什么是已经退出的旧语言级方案</li>
+<li>什么时候该选线程、什么时候该用 <code>std.Io</code> 的异步能力</li>
 </ul>
 <p>那么这一章就达到目的了。</p>
-<hr>
-<blockquote>
-<p>💡 <strong>下一章预告</strong></p>
-<p>下一章我们将学习<a href="chapter-advanced-memory.html">高级内存管理技巧</a>，把注意力从“任务如何推进”转回“资源如何控制”，继续讨论调试期观测、对象复用和更底层的性能/正确性权衡。</p>
-</blockquote>
 
                     </main>
 

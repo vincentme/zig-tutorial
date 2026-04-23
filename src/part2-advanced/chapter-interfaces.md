@@ -260,7 +260,7 @@ end: usize = 0,
 
 ### `@ptrCast(@alignCast(...))` — VTable 实现的标准写法
 
-标准库中所有 VTable 具体实现都使用这一模式恢复类型：
+VTable 实现函数中，通过 `@ptrCast(@alignCast(ptr))` 将 `*anyopaque` 恢复为具体类型：
 
 ```zig
 // lib/std/heap/FixedBufferAllocator.zig
@@ -270,7 +270,7 @@ fn alloc(ctx: *anyopaque, n: usize, alignment: mem.Alignment, ra: usize) ?[*]u8 
 }
 ```
 
-> **注意**：`@ptrCast(@alignCast(...))` 不是装饰品——如果对象类型和假设的不一致，会导致未定义行为。务必确保类型擦除和恢复两端一致。
+关于 `@ptrCast` 和 `@alignCast` 的安全前提和完整说明，见[指针类型](../part2-advanced/chapter-pointers.md)章节。
 
 ---
 

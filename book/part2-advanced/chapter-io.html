@@ -1,0 +1,1018 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>std.Io 接口详解 - Zig 编程语言入门教程</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-2459343d.css">
+        <link rel="stylesheet" href="../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../theme/css/auto-numbering-66d94143.css">
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-d724f321.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-4c2eaf17.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Zig 编程语言入门教程</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/vincentme/zig-tutorial" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/vincentme/zig-tutorial/edit/main/src/part2-advanced/chapter-io.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="stdio-接口详解"><a class="header" href="#stdio-接口详解">std.Io 接口详解</a></h1>
+<blockquote>
+<p><strong>版本说明</strong>：</p>
+<p><code>std.Io</code> 是 Zig 0.16 引入的重大接口变更。它将文件系统、网络、定时器、同步等几乎所有可能阻塞的操作统一到一个接口之下。这一接口目前处于“可用于大多数场景并收集反馈“的阶段，未来可能会根据实际使用继续演进。本章代码以 0.16-dev 源码为准。</p>
+</blockquote>
+<h2 id="为什么需要-stdio"><a class="header" href="#为什么需要-stdio">为什么需要 <code>std.Io</code>？</a></h2>
+<p>在 0.16 之前，文件操作散布在 <code>std.fs</code> 和 <code>std.posix</code> 中。0.16 做了一件与 Allocator 模型对齐的事情：</p>
+<blockquote>
+<p><strong>所有执行 I/O 的代码都需要访问一个 <code>Io</code> 实例，就像所有分配内存的代码都需要访问一个 <code>Allocator</code> 实例一样。</strong></p>
+</blockquote>
+<p>这意味着：</p>
+<ul>
+<li><code>std.fs</code> 的 API 已迁移到 <code>std.Io.File</code> 和 <code>std.Io.Dir</code> 下</li>
+<li><code>std.posix</code> 的大部分 API 已被 <code>std.Io</code> 取代</li>
+<li>大多数 I/O API 现在都需要一个 <code>std.Io</code> 参数</li>
+<li>底层平台特定 API 仍然可用（<code>std.c</code> 也在需要时可以 使用）</li>
+</ul>
+<p>这种设计带来的核心好处是：<strong>通过切换你实例化的 <code>Io</code> 实现，就能选择同步、异步（协程、线程等）不同的 I/O 模型</strong>，而业务代码不需要改动。</p>
+<hr>
+<h2 id="获取-io-实例"><a class="header" href="#获取-io-实例">获取 <code>Io</code> 实例</a></h2>
+<p>使用 <code>std.Io</code> 的第一步是拿到一个 <code>Io</code> 实例。常见场景有三种：</p>
+<h3 id="在测试中"><a class="header" href="#在测试中">在测试中</a></h3>
+<pre><code class="language-zig">const std = @import("std");
+
+test "使用 testing.io" {
+    const io = std.testing.io;
+    // 接下来所有 I/O 操作都可以使用 io
+}
+</code></pre>
+<p><code>std.testing.io</code> 是标准库为测试预先准备好的 <code>Io</code> 实例。</p>
+<h3 id="在-juicy-main-中"><a class="header" href="#在-juicy-main-中">在 juicy main 中</a></h3>
+<p>0.16 引入了“juicy main“入口，标准库可以提供预选的 <code>Io</code> 和 <code>Allocator</code> 实例：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+    const gpa = init.gpa;
+    // ...
+}
+</code></pre>
+<p><code>init.io</code> 会根据平台能力自动选择合适的实现。</p>
+<h3 id="手动创建"><a class="header" href="#手动创建">手动创建</a></h3>
+<p>如果需要明确控制 I/O 模型，可以自己创建：</p>
+<pre><code class="language-zig">const std = @import("std");
+const Io = std.Io;
+
+pub fn main() !void {
+    // 单线程版本——不使用并发
+    var threaded: Io.Threaded = .init_single_threaded;
+    const io = threaded.io();
+
+    // 多线程版本——支持异步和并发
+    // var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    // var threaded = Io.Threaded.init(gpa.allocator(), .{});
+    // const io = threaded.io();
+}
+</code></pre>
+<p>目前唯一完整可用的实现是 <code>std.Io.Threaded</code>。其他实现包括：</p>
+<ul>
+<li><code>failing</code>：用于测试，所有操作直接失败</li>
+<li><code>Evented</code>：基于 <code>Uring</code>（Linux）、<code>Kqueue</code>（BSD）或 <code>Dispatch</code>（macOS），目前为概念验证阶段</li>
+</ul>
+<hr>
+<h2 id="文件操作基础"><a class="header" href="#文件操作基础">文件操作基础</a></h2>
+<h3 id="打开与关闭文件"><a class="header" href="#打开与关闭文件">打开与关闭文件</a></h3>
+<p>文件操作从 <code>std.Io.Dir</code> 开始。<code>Dir.cwd()</code> 返回当前工作目录的句柄：</p>
+<pre><code class="language-zig">const std = @import("std");
+const Io = std.Io;
+
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+
+    // 打开文件用于读取
+    if (Io.Dir.cwd().openFile(io, "input.txt", .{})) |file| {
+        defer file.close(io);
+
+        // 使用 file 进行读写...
+    } else |err| switch (err) {
+        error.FileNotFound =&gt; {
+            std.debug.print("文件未找到\n", .{});
+        },
+        error.AccessDenied =&gt; {
+            std.debug.print("访问被拒绝\n", .{});
+        },
+        else =&gt; |e| return e,
+    }
+}
+</code></pre>
+<p>注意关键变化：</p>
+<ul>
+<li>旧版：<code>std.fs.cwd().openFile(path, .{})</code></li>
+<li>新版：<code>std.Io.Dir.cwd().openFile(io, path, .{})</code></li>
+</ul>
+<p><code>io</code> 作为第一个参数传入每个 I/O 函数。</p>
+<h3 id="创建文件"><a class="header" href="#创建文件">创建文件</a></h3>
+<pre><code class="language-zig">const std = @import("std");
+const Io = std.Io;
+
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+
+    const file = try Io.Dir.cwd().createFile(io, "output.txt", .{});
+    defer file.close(io);
+
+    // 写入数据
+    try file.writeStreamingAll(io, "hello from zig\n");
+}
+</code></pre>
+<h3 id="简单写入"><a class="header" href="#简单写入">简单写入</a></h3>
+<p><code>File.writeStreamingAll</code> 是最直接的写入方式，适合写入整块数据：</p>
+<pre><code class="language-zig">try file.writeStreamingAll(io, "some content");
+</code></pre>
+<p>对于更精细的控制（缓冲写入、格式化输出），需要使用 Writer 接口，后面会详细介绍。</p>
+<hr>
+<h2 id="读取文件内容"><a class="header" href="#读取文件内容">读取文件内容</a></h2>
+<h3 id="读取整个文件"><a class="header" href="#读取整个文件">读取整个文件</a></h3>
+<p><code>Dir.readFile</code> 将整个文件读入已有缓冲区：</p>
+<pre><code class="language-zig">const std = @import("std");
+const Io = std.Io;
+
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+
+    // 缓冲区必须足够大以容纳整个文件
+    var buf: [10240]u8 = undefined;
+    const contents = Io.Dir.readFile(Io.Dir.cwd(), io, "input.txt", &amp;buf) catch |err| switch (err) {
+        error.FileNotFound =&gt; {
+            std.debug.print("文件未找到\n", .{});
+            return;
+        },
+        else =&gt; |e| return e,
+    };
+
+    // contents 是 buf 上的一个切片，不是新分配的内存
+    std.debug.print("读取了 {d} 字节\n", .{contents.len});
+
+    // 按行遍历
+    var tok = std.mem.tokenizeSequence(u8, contents, "\n");
+    while (tok.next()) |line| {
+        std.debug.print("行: {s}\n", .{line});
+    }
+}
+</code></pre>
+<p>几点注意：</p>
+<ul>
+<li><code>contents</code> 只是 <code>buf</code> 上的一个切片，不会凭空产生内存</li>
+<li>应该使用 <code>contents</code> 而不是 <code>buf</code>，因为 <code>contents.len</code> 对应实际读取的数据量</li>
+<li>如果文件比 <code>buf</code> 大，只会读取 <code>buf.len</code> 字节，剩余内容留在文件中</li>
+<li>生产代码应检查 <code>contents.len &lt; buf.len</code> 来判断是否读取了全部内容</li>
+</ul>
+<p>如果文件大小未知，可以先 <code>statFile</code> 获取大小，再用 allocator 分配足够的空间：</p>
+<pre><code class="language-zig">const stat = try Io.Dir.cwd().statFile(io, "input.txt", .{});
+var buf = try init.gpa.alloc(u8, stat.size);
+defer init.gpa.free(buf);
+const contents = try Io.Dir.readFile(Io.Dir.cwd(), io, "input.txt", buf);
+</code></pre>
+<h3 id="使用-reader-按行读取"><a class="header" href="#使用-reader-按行读取">使用 Reader 按行读取</a></h3>
+<p>对于大文件或行式处理，使用 <code>File.Reader</code> 更合适：</p>
+<pre><code class="language-zig">const std = @import("std");
+const Io = std.Io;
+
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+
+    const file = try Io.Dir.cwd().openFile(io, "input.txt", .{});
+    defer file.close(io);
+
+    // 创建带缓冲的 Reader
+    var buf: [1024]u8 = undefined;
+    var file_reader: Io.File.Reader = file.reader(io, &amp;buf);
+
+    // takeDelimiter 返回到分隔符为止的数据（可选结果）
+    while (file_reader.interface.takeDelimiter('\n')) |result| {
+        if (result) |line| {
+            std.debug.print("行: {s}\n", .{line});
+        } else {
+            // null 表示流结束
+            break;
+        }
+    } else |err| switch (err) {
+        error.ReadFailed =&gt; {
+            std.debug.print("读取失败\n", .{});
+            return file_reader.err.?;
+        },
+        error.StreamTooLong =&gt; {
+            std.debug.print("单行超过缓冲区大小\n", .{});
+            return err;
+        },
+    }
+}
+</code></pre>
+<h3 id="理解-reader-的-interface-字段"><a class="header" href="#理解-reader-的-interface-字段">理解 Reader 的 interface 字段</a></h3>
+<p><code>File.Reader</code> 是一个具体实现，它包含一个 <code>interface</code> 字段（类型为 <code>Io.Reader</code>）来提供通用读取接口：</p>
+<pre><code class="language-zig">var file_reader: Io.File.Reader = file.reader(io, &amp;buf);
+
+// 通过 interface 访问通用方法
+while (file_reader.interface.takeDelimiter('\n')) |result| {
+    // ...
+}
+</code></pre>
+<p><strong>常见陷阱</strong>：不要复制 <code>interface</code>，必须通过引用访问：</p>
+<pre><code class="language-zig">// 正确：直接使用
+file_reader.interface.takeDelimiter('\n');
+
+// 正确：取地址赋值
+const reader = &amp;file_reader.interface;
+
+// 错误！复制会断开与父 Reader 的连接
+// const reader = file_reader.interface;
+</code></pre>
+<h3 id="takedelimiter-的三种变体"><a class="header" href="#takedelimiter-的三种变体">takeDelimiter 的三种变体</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>方法</th><th>返回内容</th><th>遇到流结束时的行为</th></tr>
+</thead>
+<tbody>
+<tr><td><code>takeDelimiter(delim)</code></td><td>不含分隔符的数据</td><td>返回 <code>null</code>（可选结果）</td></tr>
+<tr><td><code>takeDelimiterInclusive(delim)</code></td><td>含分隔符的数据</td><td>返回 <code>error.EndOfStream</code></td></tr>
+<tr><td><code>takeDelimiterExclusive(delim)</code></td><td>不含分隔符的数据</td><td>返回尾数据或 <code>error.EndOfStream</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>使用 <code>takeDelimiterInclusive</code> 时，如果文件最后一行没有以 <code>\n</code> 结尾，会有“尾部“数据需要处理：</p>
+<pre><code class="language-zig">while (file_reader.interface.takeDelimiterInclusive('\n')) |line| {
+    std.debug.print("{s}", .{line}); // 注意：line 已包含 \n
+} else |err| switch (err) {
+    error.ReadFailed =&gt; return file_reader.err.?,
+    error.EndOfStream =&gt; {
+        // 处理尾部数据（没有 \n 结尾的最后一行）
+        const remaining = file_reader.interface.buffer[file_reader.interface.seek..file_reader.interface.end];
+        if (remaining.len &gt; 0) {
+            std.debug.print("尾部: {s}\n", .{remaining});
+        }
+    },
+    error.StreamTooLong =&gt; return err,
+}
+</code></pre>
+<h3 id="使用流式读取处理任意长度行"><a class="header" href="#使用流式读取处理任意长度行">使用流式读取处理任意长度行</a></h3>
+<p>如果行长度不可预知，可以使用 <code>Writer.Allocating</code> 进行动态分配的流式读取：</p>
+<pre><code class="language-zig">const std = @import("std");
+const Io = std.Io;
+
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+
+    const file = try Io.Dir.cwd().openFile(io, "input.txt", .{});
+    defer file.close(io);
+
+    var line = Io.Writer.Allocating.init(init.gpa);
+    defer line.deinit();
+
+    var buf: [64]u8 = undefined; // 较小的缓冲区也能工作
+    var file_reader: Io.File.Reader = file.reader(io, &amp;buf);
+
+    while (file_reader.interface.streamDelimiter(&amp;line.writer, '\n')) |written_count| {
+        _ = written_count;
+        // 跳过分隔符本身
+        file_reader.interface.toss(1);
+
+        std.debug.print("行: {s}\n", .{line.written()});
+        line.clearRetainingCapacity();
+    } else |err| switch (err) {
+        error.ReadFailed, error.WriteFailed =&gt; return file_reader.err.?,
+        error.EndOfStream =&gt; {
+            // 处理尾部
+            if (line.written().len &gt; 0) {
+                std.debug.print("尾部: {s}\n", .{line.written()});
+            }
+        },
+        else =&gt; return err,
+    }
+}
+</code></pre>
+<h3 id="字节级读取"><a class="header" href="#字节级读取">字节级读取</a></h3>
+<p>Reader 也支持更细粒度的读取操作：</p>
+<pre><code class="language-zig">// 读取单个字节
+const byte = try reader.interface.takeByte();
+
+// 读取整数（指定字节序）
+const int = try reader.interface.takeInt(u32, .little);
+
+// 读取固定数量的字节
+const chunk = try reader.interface.take(16);
+</code></pre>
+<p>还有 <code>takeStruct</code>、<code>takeEnum</code>、<code>peekByte</code>、<code>peek</code> 等方法值得探索。</p>
+<hr>
+<h2 id="写入文件内容"><a class="header" href="#写入文件内容">写入文件内容</a></h2>
+<h3 id="使用-filewriter"><a class="header" href="#使用-filewriter">使用 File.Writer</a></h3>
+<p>对于需要缓冲、格式化等功能的写入，使用 <code>File.Writer</code>：</p>
+<pre><code class="language-zig">const std = @import("std");
+const Io = std.Io;
+
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+
+    const file = try Io.Dir.cwd().createFile(io, "output.txt", .{});
+    defer file.close(io);
+
+    var buf: [1024]u8 = undefined;
+    var file_writer: Io.File.Writer = file.writer(io, &amp;buf);
+
+    // 写入数据
+    try file_writer.interface.writeAll("hello\n");
+    try file_writer.interface.print("count = {d}\n", .{42});
+    try file_writer.interface.writeByte(0x0A);
+    try file_writer.interface.writeInt(u32, 1234, .little);
+
+    // 写完后刷新缓冲
+    try file_writer.interface.flush();
+}
+</code></pre>
+<p><strong>重要</strong>：写入操作后务必调用 <code>flush()</code>，确保缓冲区中的数据写入底层文件。</p>
+<h3 id="固定缓冲区-writer用于测试或内存写入"><a class="header" href="#固定缓冲区-writer用于测试或内存写入">固定缓冲区 Writer（用于测试或内存写入）</a></h3>
+<p><code>Io.Writer.fixed</code> 创建一个写入到已有缓冲区的 Writer：</p>
+<pre><code class="language-zig">var buf: [1024]u8 = undefined;
+var writer: std.Io.Writer = .fixed(&amp;buf);
+
+try writer.writeAll("hello");
+try writer.writeByte('\n');
+try writer.print("value = {d}\n", .{42});
+
+// 获取已写入的内容
+const written = writer.buffered();
+std.debug.print("{s}", .{written});
+</code></pre>
+<p>对于 <code>.fixed()</code> Writer，<code>flush()</code> 是空操作（no-op），但仍建议养成调用习惯。</p>
+<hr>
+<h2 id="错误处理的特殊之处"><a class="header" href="#错误处理的特殊之处">错误处理的特殊之处</a></h2>
+<p><code>std.Io</code> 的错误处理有几个需要特别注意的地方。</p>
+<h3 id="readfailed-和-writefailed"><a class="header" href="#readfailed-和-writefailed">ReadFailed 和 WriteFailed</a></h3>
+<p>Reader 和 Writer 的通用接口只暴露 <code>ReadFailed</code> 和 <code>WriteFailed</code> 这样的高层错误。具体错误信息保存在具体实现的 <code>.err</code> 字段中：</p>
+<pre><code class="language-zig">var file_reader: Io.File.Reader = file.reader(io, &amp;buf);
+
+// 在读取循环中
+while (file_reader.interface.takeDelimiter('\n')) |result| {
+    if (result) |line| {
+        // 处理行
+    } else break;
+} else |err| switch (err) {
+    error.ReadFailed =&gt; {
+        // 必须通过 file_reader.err 获取具体错误
+        return file_reader.err.?;
+    },
+    error.StreamTooLong =&gt; return err,
+}
+</code></pre>
+<h3 id="errorcanceled-的重要性"><a class="header" href="#errorcanceled-的重要性">error.Canceled 的重要性</a></h3>
+<p>在异步/并发上下文中，<code>error.Canceled</code> 是一个特殊错误，用于任务取消机制。<strong>它必须被正确传播</strong>，取消才能工作：</p>
+<pre><code class="language-zig">fn processFile(io: Io, file: Io.File) !void {
+    var buf: [1024]u8 = undefined;
+    var file_reader = file.reader(io, &amp;buf);
+
+    while (file_reader.interface.takeDelimiter('\n')) |result| {
+        if (result) |line| {
+            try handleLine(io, line);
+        } else break;
+    } else |err| switch (err) {
+        error.ReadFailed =&gt; {
+            // 关键：传播 Canceled 错误
+            // file_reader.err 可能是 error.Canceled
+            return file_reader.err.?;
+        },
+        error.StreamTooLong =&gt; return err,
+    }
+}
+</code></pre>
+<h3 id="上层与下层的错误处理策略"><a class="header" href="#上层与下层的错误处理策略">上层与下层的错误处理策略</a></h3>
+<p>一个常见的模式是：</p>
+<ul>
+<li><strong>上层代码</strong>（创建 Reader/Writer 的地方）负责检查 <code>.err</code> 字段</li>
+<li><strong>下层代码</strong>（只接收 <code>Io.Reader</code> 或 <code>Io.Writer</code> 接口的函数）直接用 <code>try</code> 传播</li>
+</ul>
+<pre><code class="language-zig">// 下层函数只看到接口
+fn handleLine(reader: *Io.Reader, line: []const u8) !void {
+    // 出错时直接 try，让 ReadFailed 传播上去
+    _ = try reader.take(10);
+}
+
+// 上层代码知道具体实现
+fn process(io: Io) !void {
+    var file_reader = file.reader(io, &amp;buf);
+    handleLine(&amp;file_reader.interface, "some line") catch |err| switch (err) {
+        error.ReadFailed =&gt; return file_reader.err.?, // 在这里获取具体错误
+        else =&gt; |e| return e,
+    };
+}
+</code></pre>
+<hr>
+<h2 id="时间相关-api"><a class="header" href="#时间相关-api">时间相关 API</a></h2>
+<p><code>std.Io</code> 引入了 <code>Timestamp</code>、<code>Duration</code> 和 <code>Clock</code> 类型，比之前的 API 有很大改进。</p>
+<h3 id="clock时钟类型"><a class="header" href="#clock时钟类型">Clock：时钟类型</a></h3>
+<pre><code class="language-zig">pub const Clock = enum {
+    real,         // 系统墙上时钟（受 NTP 和手动调整影响）
+    awake,        // 单调时钟（不含系统休眠时间）
+    boot,         // 单调时钟（含系统休眠时间）
+    cpu_process,  // 进程使用的 CPU 时间
+    cpu_thread,   // 线程使用的 CPU 时间
+};
+</code></pre>
+<h3 id="duration时间长度"><a class="header" href="#duration时间长度">Duration：时间长度</a></h3>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+
+    // 从不同单位创建 Duration
+    const d1 = std.Io.Duration.fromNanoseconds(100);
+    const d2 = std.Io.Duration.fromMicroseconds(500);
+    const d3 = std.Io.Duration.fromMilliseconds(200);
+    const d4 = std.Io.Duration.fromSeconds(3);
+
+    // 转换为不同单位
+    std.debug.print("毫秒: {d}\n", .{d3.toMilliseconds()});
+    std.debug.print("秒: {d}\n", .{d4.toSeconds()});
+}
+</code></pre>
+<h3 id="timestamp时间点"><a class="header" href="#timestamp时间点">Timestamp：时间点</a></h3>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+
+    // 获取当前时间
+    const now = std.Io.Timestamp.now(io, .real);
+
+    // 计算时间差
+    const start = std.Io.Timestamp.now(io, .awake);
+    // ... 执行一些操作 ...
+    const end = std.Io.Timestamp.now(io, .awake);
+    const elapsed = start.durationTo(end);
+    std.debug.print("耗时: {}\n", .{elapsed});
+}
+</code></pre>
+<h3 id="sleep休眠"><a class="header" href="#sleep休眠">sleep：休眠</a></h3>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+
+    // 休眠 2 秒（使用 real 时钟）
+    try io.sleep(.fromSeconds(2), .real);
+
+    // sleep 也可能返回 error.Canceled（在异步上下文中）
+}
+</code></pre>
+<hr>
+<h2 id="异步基础"><a class="header" href="#异步基础">异步基础</a></h2>
+<p><code>std.Io</code> 不只是 I/O 接口，它还是一个管理异步和并发任务的运行时。</p>
+<h3 id="三个核心概念"><a class="header" href="#三个核心概念">三个核心概念</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>概念</th><th>含义</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>异步（asynchrony）</strong></td><td>操作可以不按严格顺序执行，具有被并发推进的潜力</td></tr>
+<tr><td><strong>并发（concurrency）</strong></td><td>多个任务同时被推进（不一定同时执行）</td></tr>
+<tr><td><strong>并行（parallelism）</strong></td><td>多个任务真正在同一物理时刻执行</td></tr>
+</tbody>
+</table>
+</div>
+<p><code>std.Io</code> 提供异步和并发能力，其中并发是可选的。</p>
+<h3 id="ioasync-和-future"><a class="header" href="#ioasync-和-future">io.async 和 Future</a></h3>
+<p><code>io.async</code> 启动一个异步任务，返回一个 <code>Future</code>：</p>
+<pre><code class="language-zig">const std = @import("std");
+const Io = std.Io;
+
+fn saveData(io: Io, file_name: []const u8, data: []const u8) !Io.File {
+    const fd = try Io.Dir.cwd().createFile(io, file_name, .{});
+    errdefer fd.close(io);
+    try fd.writeStreamingAll(io, data);
+    return fd;
+}
+
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+
+    // 同时启动两个异步保存任务
+    var future_foo = io.async(saveData, .{ io, "foo.txt", "foo\n" });
+    var future_bar = io.async(saveData, .{ io, "bar.txt", "bar\n" });
+
+    // 等待两个任务完成
+    const foo = try future_foo.await(io);
+    defer foo.close(io);
+    const bar = try future_bar.await(io);
+    defer bar.close(io);
+}
+</code></pre>
+<p>两个保存操作互不依赖，可以受益于异步执行。</p>
+<h3 id="await-和-cancel"><a class="header" href="#await-和-cancel">await 和 cancel</a></h3>
+<ul>
+<li><strong><code>await</code></strong>：等待任务完成，返回结果</li>
+<li><strong><code>cancel</code></strong>：请求取消任务，然后等待完成，返回结果</li>
+<li>两者在任务已完成时行为相同，直接返回结果</li>
+<li>取消通过 <code>error.Canceled</code> 被任务检测到</li>
+</ul>
+<h3 id="资源泄漏问题"><a class="header" href="#资源泄漏问题">资源泄漏问题</a></h3>
+<p>上面的代码有一个隐患：如果 <code>future_foo.await</code> 失败，<code>future_bar</code> 永远不会被 await，导致 Future 和文件句柄泄漏。</p>
+<p>解决方案是用 <code>defer</code> 加 <code>cancel</code>：</p>
+<pre><code class="language-zig">pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+
+    var future_foo = io.async(saveData, .{ io, "foo.txt", "foo\n" });
+    defer if (future_foo.cancel(io)) |file| file.close(io) else |_| {};
+
+    var future_bar = io.async(saveData, .{ io, "bar.txt", "bar\n" });
+    defer if (future_bar.cancel(io)) |file| file.close(io) else |_| {};
+
+    // cancel 在已完成的任务上等同于 await，返回结果
+    // 在未完成的任务上则请求取消
+    // 无论哪种情况，都确保资源被清理
+    _ = try future_foo.await(io);
+    _ = try future_bar.await(io);
+}
+</code></pre>
+<p><code>cancel</code> 的返回类型和原函数相同。使用 <code>if (future.cancel(io))</code> 模式：</p>
+<ul>
+<li>成功时拿到返回值（如文件句柄），进行清理</li>
+<li>失败时（包括 <code>error.Canceled</code>）用 <code>else |_| {}</code> 忽略</li>
+</ul>
+<p>这是 <code>std.Io</code> 异步编程中最重要的模式之一。</p>
+<h3 id="异步打开文件"><a class="header" href="#异步打开文件">异步打开文件</a></h3>
+<pre><code class="language-zig">const std = @import("std");
+const Io = std.Io;
+
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+
+    // 异步打开文件
+    var open_task = io.async(Io.Dir.openFile, .{ Io.Dir.cwd(), io, "data.txt", .{} });
+    defer if (open_task.cancel(io)) |file| file.close(io) else |_| {};
+
+    // 等待文件打开
+    const file = try open_task.await(io);
+    // 现在可以读取...
+}
+</code></pre>
+<hr>
+<h2 id="并发"><a class="header" href="#并发">并发</a></h2>
+<h3 id="ioconcurrent"><a class="header" href="#ioconcurrent">io.concurrent</a></h3>
+<p><code>io.concurrent</code> 保证真正的并发。如果不可用则返回 <code>error.ConcurrencyUnavailable</code>：</p>
+<pre><code class="language-zig">var future = try io.concurrent(someTask, .{io, arg1, arg2});
+defer _ = future.cancel(io) catch {};
+</code></pre>
+<p>juicy main 提供的 <code>io</code> 实例在可能的情况下会支持并发。</p>
+<h3 id="队列生产者-消费者模式"><a class="header" href="#队列生产者-消费者模式">队列：生产者-消费者模式</a></h3>
+<p><code>std.Io.Queue</code> 是多生产者、多消费者的 FIFO 队列，操作在队列满/空时会阻塞：</p>
+<pre><code class="language-zig">const std = @import("std");
+const Io = std.Io;
+
+const Task = struct {
+    id: Id,
+    status: enum { started, pending, finished },
+    const Id = enum(u8) { a, b, c };
+};
+
+fn logger(io: Io, queue: *Io.Queue(Task)) !void {
+    // getOne 在队列为空时阻塞
+    while (queue.getOne(io)) |t| {
+        std.debug.print("{s}: {s}\n", .{ @tagName(t.status), @tagName(t.id) });
+    } else |e| return e;
+}
+
+fn doWork(io: Io, task_id: Task.Id, queue: *Io.Queue(Task)) !void {
+    try queue.putOne(io, .{ .id = task_id, .status = .started });
+    try io.sleep(.fromSeconds(2), .real);
+    try queue.putOne(io, .{ .id = task_id, .status = .finished });
+}
+
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+
+    var buf: [10]Task = undefined;
+    var queue: Io.Queue(Task) = .init(&amp;buf);
+
+    // 日志任务需要并发运行
+    var future_logger = try io.concurrent(logger, .{ io, &amp;queue });
+    defer future_logger.cancel(io) catch {};
+
+    var future_a = io.async(doWork, .{ io, .a, &amp;queue });
+    defer future_a.cancel(io) catch {};
+
+    var future_b = io.async(doWork, .{ io, .b, &amp;queue });
+    defer future_b.cancel(io) catch {};
+
+    try future_a.await(io);
+    try future_b.await(io);
+
+    // 关闭队列，让 logger 能正常退出
+    queue.close(io);
+    try future_logger.await(io);
+}
+</code></pre>
+<p><strong>重要</strong>：<code>queue.close(io)</code> 会让 <code>getOne</code> 在处理完剩余元素后返回 <code>error.Closed</code>，而不是永远阻塞。这是让消费者任务正常退出的关键。</p>
+<h3 id="group管理多个-future"><a class="header" href="#group管理多个-future">Group：管理多个 Future</a></h3>
+<p><code>Io.Group</code> 高效管理任意数量的 Future，可以一起 await 或 cancel：</p>
+<pre><code class="language-zig">const std = @import("std");
+const Io = std.Io;
+
+fn worker(io: Io, id: usize) !void {
+    try io.sleep(.fromSeconds(@intCast(id)), .real);
+    std.debug.print("worker {} done\n", .{id});
+}
+
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+
+    var group: Io.Group = .init;
+
+    // 添加多个异步任务到组
+    for (0..5) |i| {
+        group.async(io, worker, .{ io, i });
+    }
+
+    // 等待所有任务完成
+    try group.await(io);
+}
+</code></pre>
+<p>Group 的限制是：</p>
+<ul>
+<li>只能整体 await 或 cancel，不能单独操作</li>
+<li>返回类型限制为 <code>void</code>、<code>error{Canceled}</code> 或 <code>error{Canceled}!void</code></li>
+</ul>
+<h3 id="select更灵活的多任务管理"><a class="header" href="#select更灵活的多任务管理">Select：更灵活的多任务管理</a></h3>
+<p><code>Io.Select</code> 结合了 Group 和 Queue 的能力，支持不同的返回类型：</p>
+<pre><code class="language-zig">const std = @import("std");
+const Io = std.Io;
+
+// 定义结果类型为 tagged union
+const Result = union(enum) {
+    file_content: []const u8,
+    network_data: []const u8,
+    timeout: void,
+};
+
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+
+    var select: Io.Select(Result) = .{ .io = io };
+    defer select.cancelDiscard(io);
+
+    // 添加不同类型的任务
+    select.async(.file_content, readFile, .{io, "data.txt"});
+    select.async(.network_data, fetchNetwork, .{io, "example.com"});
+
+    // 等待下一个完成的任务
+    while (select.next(io)) |result| {
+        switch (result) {
+            .file_content =&gt; |data| std.debug.print("文件: {s}\n", .{data}),
+            .network_data =&gt; |data| std.debug.print("网络: {s}\n", .{data}),
+            .timeout =&gt; std.debug.print("超时\n", .{}),
+        }
+    } else |err| switch (err) {
+        error.Canceled =&gt; return,
+        else =&gt; return err,
+    }
+}
+</code></pre>
+<p><code>cancelDiscard</code> 取消并丢弃所有结果（不需要缓冲空间），但如果任务返回需要清理的资源，必须使用 <code>cancel</code>。</p>
+<hr>
+<h2 id="同步原语"><a class="header" href="#同步原语">同步原语</a></h2>
+<p><code>std.Io</code> 提供了与任务管理集成的同步原语，应优先使用这些而不是操作系统原语：</p>
+<ul>
+<li><code>Io.RwLock</code>：读写锁</li>
+<li><code>Io.Semaphore</code>：信号量</li>
+<li><code>Io.futexWait</code> / <code>Io.futexWake</code>：底层等待/唤醒</li>
+</ul>
+<p>这些原语与 <code>Io</code> 实现的任务调度集成，在不同 <code>Io</code> 后端下行为一致。操作系统的同步原语在某些 <code>Io</code> 实现下可能无法按预期工作。</p>
+<hr>
+<h2 id="完整示例文件处理工具"><a class="header" href="#完整示例文件处理工具">完整示例：文件处理工具</a></h2>
+<p>下面是一个综合运用本章知识的例子——一个简单的文件处理工具：</p>
+<pre><code class="language-zig">const std = @import("std");
+const Io = std.Io;
+
+fn processFile(io: Io, input_path: []const u8, output_path: []const u8) !void {
+    // 打开输入文件
+    const input = Io.Dir.cwd().openFile(io, input_path, .{}) catch |err| switch (err) {
+        error.FileNotFound =&gt; {
+            std.debug.print("输入文件不存在: {s}\n", .{input_path});
+            return err;
+        },
+        else =&gt; |e| return e,
+    };
+    defer input.close(io);
+
+    // 创建输出文件
+    const output = try Io.Dir.cwd().createFile(io, output_path, .{});
+    defer output.close(io);
+
+    // 创建读写器
+    var read_buf: [1024]u8 = undefined;
+    var file_reader: Io.File.Reader = input.reader(io, &amp;read_buf);
+
+    var write_buf: [1024]u8 = undefined;
+    var file_writer: Io.File.Writer = output.writer(io, &amp;write_buf);
+
+    var line_num: usize = 0;
+
+    // 按行处理
+    while (file_reader.interface.takeDelimiter('\n')) |result| {
+        if (result) |line| {
+            line_num += 1;
+            try file_writer.interface.print("{d}: {s}\n", .{ line_num, line });
+        } else break;
+    } else |err| switch (err) {
+        error.ReadFailed =&gt; return file_reader.err.?,
+        error.StreamTooLong =&gt; {
+            std.debug.print("行过长，超过缓冲区\n", .{});
+            return err;
+        },
+    }
+
+    // 确保所有数据写入
+    try file_writer.interface.flush();
+    std.debug.print("处理完成，共 {d} 行\n", .{line_num});
+}
+
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+    try processFile(io, "input.txt", "output.txt");
+}
+</code></pre>
+<hr>
+<h2 id="从旧-api-迁移"><a class="header" href="#从旧-api-迁移">从旧 API 迁移</a></h2>
+<p>如果你有使用旧版 <code>std.fs</code> 的代码，迁移的核心变化是：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>旧版</th><th>新版</th></tr>
+</thead>
+<tbody>
+<tr><td><code>std.fs.cwd()</code></td><td><code>std.Io.Dir.cwd()</code></td></tr>
+<tr><td><code>cwd.openFile(path, .{})</code></td><td><code>cwd.openFile(io, path, .{})</code></td></tr>
+<tr><td><code>cwd.createFile(path, .{})</code></td><td><code>cwd.createFile(io, path, .{})</code></td></tr>
+<tr><td><code>file.readToEndAlloc(gpa, max)</code></td><td>使用 <code>Dir.readFile</code> 或 <code>File.Reader</code></td></tr>
+<tr><td><code>file.writeAll(data)</code></td><td><code>file.writeStreamingAll(io, data)</code> 或使用 <code>File.Writer</code></td></tr>
+<tr><td><code>file.close()</code></td><td><code>file.close(io)</code></td></tr>
+<tr><td><code>std.posix</code> 相关操作</td><td><code>std.Io</code> 中的对应方法</td></tr>
+</tbody>
+</table>
+</div>
+<p>每个 I/O 操作现在都需要传入 <code>io</code> 参数，这是最大的变化。</p>
+<hr>
+<h2 id="本章小结"><a class="header" href="#本章小结">本章小结</a></h2>
+<p><code>std.Io</code> 是 Zig I/O 模型的核心抽象，它的设计遵循与 Allocator 相同的理念：</p>
+<ol>
+<li><strong>显式传递</strong>：所有 I/O 操作需要 <code>Io</code> 实例，就像内存分配需要 <code>Allocator</code></li>
+<li><strong>实现可切换</strong>：通过选择不同的 <code>Io</code> 实现（Threaded、Evented 等），改变 I/O 模型</li>
+<li><strong>异步与并发一体化</strong>：Future、Group、Select 提供从简单到复杂的多任务管理</li>
+<li><strong>错误处理要注意</strong>：<code>ReadFailed</code>/<code>WriteFailed</code> 下有具体错误；<code>error.Canceled</code> 必须正确传播</li>
+<li><strong>资源管理要严谨</strong>：使用 <code>defer</code> + <code>cancel</code> 模式确保异步任务的资源不泄漏</li>
+</ol>
+<p>使用 <code>std.Io</code> 时要建立的直觉：</p>
+<ul>
+<li>文件操作从 <code>Io.Dir.cwd()</code> 出发，所有方法第一个参数是 <code>io</code></li>
+<li>读取用 <code>File.Reader</code>（通过 <code>file.reader(io, &amp;buf)</code> 创建）</li>
+<li>写入用 <code>File.Writer</code>（通过 <code>file.writer(io, &amp;buf)</code> 创建），别忘了 <code>flush()</code></li>
+<li>简单场景用 <code>Dir.readFile</code> / <code>File.writeStreamingAll</code></li>
+<li>异步场景用 <code>io.async</code> + <code>defer cancel</code> 模式</li>
+<li>需要真正并发时用 <code>io.concurrent</code></li>
+</ul>
+<blockquote>
+<p><strong>相关阅读</strong>：</p>
+<ul>
+<li>并发编程的线程、锁、原子操作基础见<a href="chapter-concurrency.html">并发编程概述</a></li>
+<li>更完整的异步 I/O 方向讨论见<a href="../part3-practice/chapter-async.html">异步 I/O：现状与未来方向</a></li>
+<li>内存分配策略见<a href="chapter-memory-management.html">内存管理模型</a></li>
+</ul>
+</blockquote>
+<h2 id="参考"><a class="header" href="#参考">参考</a></h2>
+<ul>
+<li><a href="https://ziggit.dev/t/std-io-overview/14994">std.Io overview</a></li>
+<li><a href="https://ziggit.dev/t/file-i-o-basics-0-16/14968">File I/O basics (0.16)</a></li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../part2-advanced/chapter-interfaces.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../part2-advanced/chapter-c-interop.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../part2-advanced/chapter-interfaces.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../part2-advanced/chapter-c-interop.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-c2a407aa.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-362d1e8a.js"></script>
+        <script src="../book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../mermaid-eefea253.min.js"></script>
+        <script src="../mermaid-init-ccf746f1.js"></script>
+
+
+
+    </div>
+    </body>
+</html>

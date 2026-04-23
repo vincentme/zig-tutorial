@@ -22,6 +22,7 @@
 - [指针、切片与对齐](part2-advanced/chapter-pointers.md)
 - [内存管理模型](part2-advanced/chapter-memory-management.md)
 - [接口、组合与设计模式](part2-advanced/chapter-interfaces.md)
+- [std.Io 接口详解](part2-advanced/chapter-io.md)
 - [与 C 语言的互操作性](part2-advanced/chapter-c-interop.md)
 - [并发编程概述](part2-advanced/chapter-concurrency.md)
 - [测试与验证：从单元测试到基准测量](part2-advanced/chapter-testing.md)

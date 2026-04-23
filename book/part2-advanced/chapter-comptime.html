@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-5349b6ee.js";
+            window.path_to_searchindex_js = "../searchindex-d724f321.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-84df0a14.js"></script>
+        <script src="../toc-4c2eaf17.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -234,7 +234,7 @@ fn max(comptime T: type, a: T, b: T) T {
 
 pub fn main() void {
     const a = max(i32, 10, 20);
-    const b = max(f64, 3.14, 2.71);
+    const b = max(f64, 3.14, 2.72);
 
     std.debug.print("int max: {}\n", .{a});
     std.debug.print("float max: {d}\n", .{b});
@@ -260,23 +260,8 @@ pub fn main() void {
 </code></pre>
 <hr>
 <h2 id="机制二comptime-块"><a class="header" href="#机制二comptime-块">机制二：<code>comptime</code> 块</a></h2>
-<p><code>comptime { }</code> 块强制其中的代码在编译期执行。最常见的用法是配合标签块计算编译期常量：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-const factorial_10 = comptime blk: {
-    var result: u32 = 1;
-    for (1..11) |i| {
-        result *= @as(u32, @intCast(i));
-    }
-    break :blk result;
-};
-
-pub fn main() void {
-    // factorial_10 == 3628800 (10!), 在编译期已经算好
-    std.debug.print("10! = {}\n", .{factorial_10});
-}
-</code></pre>
-<p><code>comptime</code> 块也可以用于编译期断言，确保静态约束成立：</p>
+<p><code>comptime { }</code> 块用于显式写出“一段代码必须在编译期执行”。</p>
+<p>如果只是初始化一个顶层 <code>const</code>常量对象，通常不需要额外写 <code>comptime</code>，因为顶层常量初始化本来就在编译期求值。<br>显式 <code>comptime</code> 更典型的用法，是在类型定义或普通代码附近写编译期检查：</p>
 <pre><code class="language-zig">const std = @import("std");
 
 const Block = struct {
@@ -296,6 +281,7 @@ pub fn main() void {
     std.debug.print("first byte: {}\n", .{b.data[0]});
 }
 </code></pre>
+<p>这个例子里，<code>comptime</code> 的作用不是“计算一个常量”，而是把静态约束放到编译期检查。<br>如果断言不成立，错误会在编译阶段直接暴露出来。</p>
 <hr>
 <h2 id="机制三comptime-var"><a class="header" href="#机制三comptime-var">机制三：<code>comptime var</code></a></h2>
 <p><code>comptime var</code> 声明一个只存在于编译期的可变变量，可以在编译期循环中累积状态：</p>

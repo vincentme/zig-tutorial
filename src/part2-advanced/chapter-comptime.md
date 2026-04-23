@@ -53,7 +53,7 @@ fn max(comptime T: type, a: T, b: T) T {
 
 pub fn main() void {
     const a = max(i32, 10, 20);
-    const b = max(f64, 3.14, 2.71);
+    const b = max(f64, 3.14, 2.72);
 
     std.debug.print("int max: {}\n", .{a});
     std.debug.print("float max: {d}\n", .{b});
@@ -85,26 +85,10 @@ pub fn main() void {
 
 ## 机制二：`comptime` 块
 
-`comptime { }` 块强制其中的代码在编译期执行。最常见的用法是配合标签块计算编译期常量：
+`comptime { }` 块用于显式写出“一段代码必须在编译期执行”。
 
-```zig
-const std = @import("std");
-
-const factorial_10 = comptime blk: {
-    var result: u32 = 1;
-    for (1..11) |i| {
-        result *= @as(u32, @intCast(i));
-    }
-    break :blk result;
-};
-
-pub fn main() void {
-    // factorial_10 == 3628800 (10!), 在编译期已经算好
-    std.debug.print("10! = {}\n", .{factorial_10});
-}
-```
-
-`comptime` 块也可以用于编译期断言，确保静态约束成立：
+如果只是初始化一个顶层 `const`常量对象，通常不需要额外写 `comptime`，因为顶层常量初始化本来就在编译期求值。  
+显式 `comptime` 更典型的用法，是在类型定义或普通代码附近写编译期检查：
 
 ```zig
 const std = @import("std");
@@ -126,6 +110,9 @@ pub fn main() void {
     std.debug.print("first byte: {}\n", .{b.data[0]});
 }
 ```
+
+这个例子里，`comptime` 的作用不是“计算一个常量”，而是把静态约束放到编译期检查。  
+如果断言不成立，错误会在编译阶段直接暴露出来。
 
 ---
 
@@ -551,16 +538,20 @@ test "describeType" {
 
 ---
 
-## `comptime` 适用场景速览
+## 本章小结：核心机制与适用场景
 
-| 场景 | 说明 |
-| ---- | ---- |
-| 泛型数据结构与函数 | 类型参数化，编译期特化——详见[泛型编程](chapter-generics.md) |
-| 编译期约束检查 | 用 `@compileError` 在编译期拒绝不合法的类型或配置 |
-| 根据类型生成代码路径 | `@typeInfo` + `switch`，按类型选择不同实现 |
-| 预计算静态数据 | 查找表、常量派生值、编译期生成的静态数据 |
-| 嵌入外部资源 | `@embedFile` 将文件内容嵌入二进制 |
-| 编译期断言 | `comptime { }` 块中做静态检查 |
+| 机制 | 关键语法 | 适用场景 |
+| ---- | -------- | -------- |
+| 编译期参数 | `fn f(comptime T: type, ...)` | 泛型数据结构与函数，类型参数化——详见[泛型编程](chapter-generics.md) |
+| 编译期块 | `comptime { }`, `comptime blk: { ... }` | 编译期断言与静态检查 |
+| 编译期变量 | `comptime var x = ...` | 预计算静态数据 |
+| 类型反射 | `@typeInfo(T)` | 根据类型生成代码路径 |
+| 类型构造 | `@Int`, `@Struct`, `@Enum` 等 | 编译期生成自定义类型 |
+| 声明/字段检查 | `@hasDecl`, `@hasField` | 编译期鸭子类型检查 |
+| 编译期错误 | `@compileError("msg")` | 编译期约束检查 |
+| 文件嵌入 | `@embedFile("path")` | 嵌入外部资源 |
+| 循环展开 | `inline for` | 编译期遍历与展开 |
+| 性能配额 | `@setEvalBranchQuota(N)` | 调整编译期计算上限 |
 
 ---
 
@@ -590,25 +581,8 @@ test "describeType" {
 
 有时问题不是"需要更强的元编程"，而是数据结构没想清楚、接口边界没想清楚。继续堆 `comptime` 只会放大混乱。
 
-> **注意**：编译期抽象和运行时抽象的选择是第二部分的核心主线之一。如果需要运行时切换实现、动态加载、类型擦除、VTable，那更适合运行时抽象，而不是 `comptime`。
+> **注意**：如果需要运行时切换实现、类型擦除或 VTable，那更适合运行时抽象而非 `comptime`。完整对比见[接口与设计模式](../part2-advanced/chapter-interfaces.md)章节。
 
 ---
 
-## 本章小结
-
-本章覆盖的 `comptime` 核心机制：
-
-| 机制 | 关键语法/内建函数 |
-| ---- | ----------------- |
-| 编译期参数 | `fn f(comptime T: type, ...)` |
-| 编译期块 | `comptime { }`, `comptime blk: { break :blk val; }` |
-| 编译期变量 | `comptime var x = ...` |
-| 类型反射 | `@typeInfo(T)` |
-| 类型构造 | `@Int`, `@Struct`, `@Enum`, `@Union`, `@Pointer`, `@Fn`, `@Tuple` |
-| 声明/字段检查 | `@hasDecl(T, name)`, `@hasField(T, name)` |
-| 编译期错误 | `@compileError("message")` |
-| 文件嵌入 | `@embedFile("path")` |
-| 循环展开 | `inline for` |
-| 性能配额 | `@setEvalBranchQuota(N)` |
-
-这些机制是 Zig 泛型、零成本抽象和元编程的底层基础。掌握它们之后，下一章[泛型编程](chapter-generics.md)将展示如何把这些机制组合成可复用的设计模式。
+上述机制是 Zig 泛型、零成本抽象和元编程的底层基础。掌握它们之后，下一章[泛型编程](chapter-generics.md)将展示如何把这些机制组合成可复用的设计模式。

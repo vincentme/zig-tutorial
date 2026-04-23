@@ -37,10 +37,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-5349b6ee.js";
+            window.path_to_searchindex_js = "searchindex-d724f321.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-84df0a14.js"></script>
+        <script src="toc-4c2eaf17.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -181,93 +181,114 @@
                     <main>
                         <h1 id="zig-编程语言全面入门教程"><a class="header" href="#zig-编程语言全面入门教程">Zig 编程语言全面入门教程</a></h1>
 <h2 id="写给有编程经验想系统理解-zig-的开发者"><a class="header" href="#写给有编程经验想系统理解-zig-的开发者">——写给有编程经验、想系统理解 Zig 的开发者</a></h2>
-<p>这是一份以<strong>理解语言设计、建立正确心智模型、逐步进入工程实践</strong>为目标的 Zig 入门教程。
-如果你已经写过 C、C++、Rust、Go、Java、Python 或其他主流语言，这本书希望帮助你理解：</p>
+<p>这是一份面向<strong>已有编程经验</strong>读者的 Zig 教程，目标不是只带着跑通示例，而是逐步建立一条清晰的学习主线：</p>
+<ul>
+<li>先理解 Zig 的设计取向和基本语法</li>
+<li>再进入 <code>comptime</code>、泛型、指针、内存管理等核心机制</li>
+<li>最后把这些知识放回真实工程场景中，理解它们为什么这样组合</li>
+</ul>
+<p>如果已经写过 C、C++、Rust、Go、Java、Python 或其他主流语言，这本书主要帮助建立下面几类认识：</p>
 <ul>
 <li>Zig 为什么这样设计</li>
-<li>Zig 和你熟悉的语言到底差在哪里</li>
+<li>Zig 和常见语言在抽象方式上的差别</li>
 <li>哪些地方需要更明确地表达意图</li>
-<li>如何用 Zig 写出清晰、可控、可维护的代码</li>
+<li>如何写出清晰、可控、可维护的 Zig 代码</li>
 </ul>
 <hr>
 <h2 id="这本书适合谁"><a class="header" href="#这本书适合谁">这本书适合谁？</a></h2>
+<p>这本书更适合下面几类读者：</p>
 <ul>
 <li>已具备至少一门编程语言经验的开发者</li>
 <li>对系统编程、底层控制、性能、可预测性有兴趣的读者</li>
-<li>想从 C/C++/Rust/Go 迁移或横向了解 Zig 的工程师</li>
-<li>不仅想“照抄示例“，还想理解语言设计理念的人</li>
+<li>想从 C/C++/Rust/Go 迁移，或横向了解 Zig 的工程师</li>
+<li>希望理解语言设计，而不只停留在语法层面的读者</li>
 </ul>
-<p>本书<strong>不是</strong>完全零基础编程入门教材。
+<p>本书不是完全零基础的编程入门教材。
 如果还不熟悉函数、变量、循环、数组、错误处理等基础概念，阅读时会更吃力一些。</p>
 <hr>
+<h2 id="这本书的主线是什么"><a class="header" href="#这本书的主线是什么">这本书的主线是什么？</a></h2>
+<p>全书围绕一条主线展开：<strong>用一门强调显式表达的语言，逐步理解控制流、失败路径和资源生命周期。</strong></p>
+<p>对应到 Zig，阅读时可以持续关注几件事：</p>
+<ul>
+<li>代码是否把意图写清楚了</li>
+<li>失败路径是否被当作主流程的一部分</li>
+<li>资源由谁持有、由谁释放、生命周期到哪里结束</li>
+<li>编译期机制和运行时机制分别解决什么问题</li>
+</ul>
+<p>这条主线会贯穿基础语法、标准库、<code>comptime</code>、泛型、指针、内存管理、接口设计、测试和实战章节。</p>
+<hr>
 <h2 id="全书结构"><a class="header" href="#全书结构">全书结构</a></h2>
-<p>整本书分为三个部分：</p>
+<p>整本书分为三个部分。</p>
 <h3 id="第一部分基础"><a class="header" href="#第一部分基础">第一部分：基础</a></h3>
-<p>建立 Zig 的基本语法与思维方式：类型、函数、复合类型、控制流、错误处理、构建系统。
-完成后应能独立编写并运行简单 Zig 程序，为后续高级主题打好基础。</p>
-<p>建议按顺序阅读，从语言介绍开始，经过环境搭建、基础语法，到错误处理和构建系统。</p>
+<p>第一部分建立 Zig 的基本语法和阅读方式，包括语言定位、开发环境、类型、函数、复合类型、控制流、错误处理和构建系统。</p>
+<p>这一部分的目标是：能够独立读懂、编写并运行简单的 Zig 程序，为后续章节建立共同语境。</p>
 <h3 id="第二部分高级特性"><a class="header" href="#第二部分高级特性">第二部分：高级特性</a></h3>
-<p>深入标准库、<code>comptime</code>、泛型、指针与内存管理、接口设计、C 互操作、测试与构建系统。
-内容分三层：标准库导航 → 语言机制（comptime / 泛型 / 指针 / 内存）→ 工程实践（接口 / C 互操作 / 测试 / 构建）。</p>
-<p>核心主线是区分编译期抽象与运行时抽象、理解指针与所有权语义、掌握显式资源管理。</p>
+<p>第二部分进入 Zig 的核心机制和工程主题，包括标准库、<code>comptime</code>、泛型、指针、内存管理、接口设计、C 互操作、并发、测试，以及构建系统与包管理。</p>
+<p>这一部分的重点不是把每个 API 都记下来，而是逐步看清：</p>
+<ul>
+<li>哪些能力属于编译期</li>
+<li>哪些能力属于运行时</li>
+<li>哪些抽象是零成本的，哪些抽象需要付出额外代价</li>
+<li>工程代码中如何组织资源、边界与依赖关系</li>
+</ul>
 <h3 id="第三部分实战与专题"><a class="header" href="#第三部分实战与专题">第三部分：实战与专题</a></h3>
-<p>通过完整案例（CLI 工具、HTTP 服务器、内存池、配置系统）和专题章节（SIMD、异步 I/O、高级内存管理、性能优化）将语言知识转化为项目能力。</p>
-<p>建议先完成完整案例，再按需进入专题。</p>
+<p>第三部分把前两部分的内容放回完整案例和专题中，包括 CLI 工具、HTTP 服务器、内存池、配置系统，以及 SIMD、异步 I/O、高级内存管理、性能优化等主题。</p>
+<p>这一部分更接近真实项目：重点不再是单个语法点，而是如何把语言机制和标准库能力组合起来解决问题。</p>
 <hr>
 <h2 id="建议怎么阅读"><a class="header" href="#建议怎么阅读">建议怎么阅读？</a></h2>
-<p>推荐<strong>按顺序阅读</strong>，尤其是第一次接触 Zig 时。边读边写，尽量亲手运行示例。</p>
-<p>一个比较自然的节奏是：</p>
+<p>第一次接触 Zig 时，比较适合按目录顺序阅读。</p>
+<p>一个自然的阅读路径通常是：</p>
 <ol>
-<li>先读语言介绍，建立整体认识</li>
-<li>搭建环境并跑通第一个程序</li>
-<li>学习基础类型、函数、复合类型与控制流</li>
-<li>在熟悉基本语法后，系统理解错误处理</li>
-<li>进入构建系统与后续高级主题</li>
+<li>从《认识 Zig》开始，先建立整体认识</li>
+<li>完成环境搭建，并跑通第一个程序</li>
+<li>学习基础语法、控制流和错误处理</li>
+<li>进入标准库与高级机制，理解显式资源管理和编译期能力</li>
+<li>在实战章节里回看这些机制如何落到项目中</li>
 </ol>
-<p>对于有较强系统编程背景的开发者，也可以把本书当作“教程 + 参考读物“结合使用——第一次顺读建立主线理解，之后按需回看特定章节。</p>
+<p>如果已经有较强的系统编程背景，也可以把这本书当作“教程 + 参考读物”结合使用：先顺读建立主线，再按需回看具体章节。</p>
 <hr>
-<h2 id="阅读时建议关注的几个核心问题"><a class="header" href="#阅读时建议关注的几个核心问题">阅读时建议关注的几个核心问题</a></h2>
+<h2 id="阅读时值得持续关注的问题"><a class="header" href="#阅读时值得持续关注的问题">阅读时值得持续关注的问题</a></h2>
 <h3 id="意图是否足够明确"><a class="header" href="#意图是否足够明确">意图是否足够明确？</a></h3>
-<p>Zig 强调显式表达。很多在其他语言里可以“默认推断“或“习惯省略“的地方，Zig 更鼓励写清楚。</p>
+<p>Zig 强调显式表达。很多在其他语言里可以默认推断或习惯省略的地方，在 Zig 里通常会被写得更直接。</p>
 <h3 id="失败路径在哪里"><a class="header" href="#失败路径在哪里">失败路径在哪里？</a></h3>
-<p>错误处理不是附属品，而是主流程设计的一部分。需要习惯思考：这一步会失败吗？失败时由谁处理？失败后资源能否正确清理？</p>
+<p>错误处理不是附属品，而是主流程设计的一部分。写 Zig 时，经常需要同时看成功路径、失败路径，以及它们各自的清理逻辑。</p>
 <h3 id="资源的生命周期是否清楚"><a class="header" href="#资源的生命周期是否清楚">资源的生命周期是否清楚？</a></h3>
-<p>内存、文件句柄、网络连接、锁等都属于资源。Zig 要求明确知道：资源在哪里获取、由谁持有、在什么时候释放。</p>
-<h3 id="代码是否容易读懂"><a class="header" href="#代码是否容易读懂">代码是否容易读懂？</a></h3>
-<p>Zig 的设计偏向“让代码更容易被读懂、被验证、被维护“。不要只追求“能写出来“，也要注意“是否表达清楚“。</p>
+<p>内存、文件句柄、网络连接、锁等都属于资源。理解 Zig 时，资源在哪里获取、由谁持有、在什么时候释放，是非常核心的一层。</p>
+<h3 id="这段逻辑发生在编译期还是运行时"><a class="header" href="#这段逻辑发生在编译期还是运行时">这段逻辑发生在编译期还是运行时？</a></h3>
+<p>进入第二部分后，这会变成一个高频问题。很多看起来相似的写法，落在编译期和运行时，含义会很不一样。</p>
 <hr>
 <h2 id="版本说明"><a class="header" href="#版本说明">版本说明</a></h2>
 <blockquote>
 <p><strong>版本说明</strong>：本教程面向 <strong>Zig 0.16.0-dev</strong> 这一代 API 风格编写。
-Zig 仍在积极演进中，开发版与稳定版之间可能存在语法和标准库差异。</p>
+Zig 仍在持续演进中，开发版与稳定版之间可能存在语法和标准库差异。</p>
 </blockquote>
-<p>阅读时请注意：</p>
+<p>阅读时可以特别留意下面几类差异：</p>
 <ul>
 <li>本书示例优先采用 <strong>0.16 风格</strong> 的标准库接口和项目组织方式</li>
-<li>旧文章、旧博客、旧仓库中的写法可能基于 <code>0.11</code>–<code>0.15</code></li>
-<li>如果本地使用其他版本，示例代码可能需要少量调整</li>
+<li>旧文章、旧博客、旧仓库中的写法，很多仍基于 <code>0.11</code>–<code>0.15</code></li>
+<li>如果本地使用其他版本，部分示例可能需要做少量调整</li>
 </ul>
-<h3 id="本书中最值得留意的版本差异"><a class="header" href="#本书中最值得留意的版本差异">本书中最值得留意的版本差异</a></h3>
+<h3 id="本书中较常见的版本差异"><a class="header" href="#本书中较常见的版本差异">本书中较常见的版本差异</a></h3>
 <h4 id="stdio-与-stdio"><a class="header" href="#stdio-与-stdio"><code>std.io</code> 与 <code>std.Io</code></a></h4>
 <p>在较新的 0.16 开发版中，I/O 相关 API 已明显向 <code>std.Io</code> 接口演进。旧资料中常见 <code>std.io</code> 风格的写法。</p>
-<h4 id="main-函数写法更灵活"><a class="header" href="#main-函数写法更灵活"><code>main</code> 函数写法更灵活</a></h4>
-<p>在 0.16 语境下，<code>std.process.Init</code> 相关写法是常见的新风格之一，但<strong>不是唯一合法写法</strong>。无参数的 <code>main</code> 依然完全合理。本书会根据示例目的选用最易解释的写法。</p>
-<h4 id="分配器相关-api-在持续演进"><a class="header" href="#分配器相关-api-在持续演进">分配器相关 API 在持续演进</a></h4>
-<p>旧资料中可能出现与当前版本不完全一致的分配器名称或用法。对照外部资料时，需留意版本差异。</p>
+<h4 id="main-的组织方式"><a class="header" href="#main-的组织方式"><code>main</code> 的组织方式</a></h4>
+<p>在 0.16 语境下，<code>std.process.Init</code> 是教程中会频繁出现的一种新风格，但不是唯一合法写法。不同示例会根据教学目标选用更合适的入口形式。</p>
+<h4 id="分配器相关-api"><a class="header" href="#分配器相关-api">分配器相关 API</a></h4>
+<p>分配器名称、初始化方式和部分容器 API 在开发版中仍可能演进。对照外部资料时，适合优先确认版本。</p>
 <h4 id="异步能力的现状"><a class="header" href="#异步能力的现状">异步能力的现状</a></h4>
-<p>Zig 早期曾提供语言内置的 <code>async</code> / <code>await</code> 机制，后来已被移除。当前异步方向更偏向库层实现。本书不会把“语言级 async/await“作为基础主线内容。</p>
+<p>Zig 早期曾提供语言内置的 <code>async</code> / <code>await</code>，后续已移除。当前异步方向更偏向库层与 I/O 基础设施演进，因此本书不会把语言级 <code>async/await</code> 作为基础主线内容。</p>
 <hr>
 <h2 id="关于代码示例"><a class="header" href="#关于代码示例">关于代码示例</a></h2>
-<p>本书中的代码示例遵循几个原则：</p>
+<p>本书中的代码示例遵循几条基本原则：</p>
 <ul>
-<li><strong>优先讲清楚</strong>：示例选择容易读懂、便于解释、能体现语言设计意图的写法，而非最“高级“的写法</li>
-<li><strong>使用当前版本语境下可理解的写法</strong>：对版本敏感的 API 会提醒版本易变区域，避免新旧写法混淆</li>
-<li><strong>错误示例只用于教学对比</strong>：帮助理解编译器在阻止什么问题，不应当作可复制到生产代码中的做法</li>
+<li>优先选择容易读懂、便于解释、能体现设计意图的写法</li>
+<li>对版本敏感的 API，会标出需要额外留意的地方</li>
+<li>错误示例只用于教学对比，不作为推荐写法</li>
 </ul>
 <hr>
-<h2 id="最后的建议"><a class="header" href="#最后的建议">最后的建议</a></h2>
-<p>按顺序阅读，每章示例亲手运行。遇到版本差异时先确认本地 Zig 版本。
-重点放在理解设计意图，而不是记忆写法。</p>
+<h2 id="最后说明"><a class="header" href="#最后说明">最后说明</a></h2>
+<p>如果阅读过程中遇到版本差异，优先先确认本地 Zig 版本，再对照标准库文档和源码。</p>
+<p>这本书更关心的是理解设计意图、边界和组织方式，而不只是记住某个版本快照下的函数名。</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="认识-zig设计目标与学习路线"><a class="header" href="#认识-zig设计目标与学习路线">认识 Zig：设计目标与学习路线</a></h1>
 <p>Zig 是一门现代、底层、通用的编程语言，由 Andrew Kelley 设计。它常被描述为一门“面向系统编程的语言“，但如果只停留在这个标签上，很容易忽略它真正吸引开发者的地方：<strong>它试图在可控性、可读性、可移植性和工程体验之间重新做一次平衡。</strong></p>
@@ -4560,202 +4581,281 @@ zig build --help
 <p>下一步建议继续阅读《常用标准库模块详解》，建立各高频模块的实际使用直觉。</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="常用标准库模块详解"><a class="header" href="#常用标准库模块详解">常用标准库模块详解</a></h1>
-<p>这一章不是标准库 API 手册，也不打算把所有函数逐条列出来。<br>它的目标更实际一些：建立一组<strong>独立写 Zig 程序时最值得先掌握的标准库模块直觉</strong>。</p>
-<p>如果上一章《标准库导航与阅读指南》主要回答的是：</p>
+<p><strong>这一章需要优化，有过时的API</strong></p>
+<p>这一章讲解标准库中最常用、也最容易在真实程序里一起出现的几个模块：</p>
 <ul>
-<li>某类能力大致分布在哪些模块里</li>
-<li>遇到问题时应该先去哪里找</li>
-<li>面对版本差异时应该如何核对</li>
-</ul>
-<p>那么这一章主要回答的是：</p>
-<ul>
-<li>哪些模块最值得先掌握</li>
-<li>它们最常见的入口是什么</li>
-<li>最小用法通常长什么样</li>
-<li>什么时候应该转去别的章节继续深入</li>
-</ul>
-<p>阅读这一章时，建议始终记住一个原则：</p>
-<blockquote>
-<p><strong>建立“模块职责 → 高频入口 → 最小示例 → 去哪里深入“的直觉，不要试图一次记住所有 API。</strong></p>
-</blockquote>
-<hr>
-<h2 id="为什么要单独学常用标准库模块"><a class="header" href="#为什么要单独学常用标准库模块">为什么要单独学“常用标准库模块”？</a></h2>
-<p>学 Zig 时，语法和标准库几乎总是交织在一起出现。</p>
-<p>刚学会变量、函数、切片和错误处理之后，很快就会遇到下面这些问题：</p>
-<ul>
-<li>怎么比较两个字符串？</li>
-<li>怎么把值格式化到缓冲区里？</li>
-<li>怎么快速打印调试信息？</li>
-<li>怎么写测试断言？</li>
-<li>怎么读文件、遍历目录？</li>
-<li>怎么拿到命令行参数？</li>
-<li>怎么选择合适的 allocator？</li>
-</ul>
-<p>这些问题都不是“高级专题”，却几乎一定会出现在真实代码里。<br>如果没有一组稳定的标准库入口直觉，后续很多章节都会显得零散。</p>
-<p>因此，本章的重点不是“知识覆盖率”，而是：</p>
-<ul>
-<li><strong>优先掌握最常见的入口</strong></li>
-<li><strong>优先理解它们解决什么问题</strong></li>
-<li><strong>优先知道什么时候该想到哪个模块</strong></li>
+<li><code>std.mem</code></li>
+<li><code>std.fmt</code></li>
+<li><code>std.debug</code></li>
+<li><code>std.testing</code></li>
+<li><code>std.fs</code></li>
+<li><code>std.process</code></li>
+<li><code>std.heap</code></li>
 </ul>
 <hr>
 <h2 id="stdmem"><a class="header" href="#stdmem"><code>std.mem</code></a></h2>
-<p><code>std.mem</code> 是 Zig 中最基础、也最高频的标准库模块之一。</p>
-<p>很多初学者一开始会把“字符串处理”理解成某种单独的大主题，但在 Zig 里，更常见的现实是：<br>手上的往往不是“神秘字符串对象“，而是 <code>[]const u8</code> 这样的<strong>字节切片</strong>。</p>
-<p>这也是为什么很多看起来像“字符串问题”的操作，最终都会落到 <code>std.mem</code> 上。</p>
-<h3 id="这一节最值得先认识的入口"><a class="header" href="#这一节最值得先认识的入口">这一节最值得先认识的入口</a></h3>
-<p>最值得优先熟悉这些函数：</p>
+<p><code>std.mem</code> 是最基础、也最常用的标准库模块之一。</p>
+<p>在 Zig 里，很多看起来像“字符串处理”的问题，本质上其实是：</p>
 <ul>
-<li><code>eql</code></li>
-<li><code>startsWith</code></li>
-<li><code>endsWith</code></li>
-<li><code>indexOf</code></li>
-<li><code>trim</code></li>
-<li><code>copyForwards</code></li>
+<li>处理 <code>[]const u8</code></li>
+<li>处理 <code>[]u8</code></li>
+<li>处理一段连续内存</li>
+<li>在已有缓冲区上做查找、比较、裁剪、复制</li>
 </ul>
-<p>它们覆盖了最常见的几类需求：</p>
+<p>所以 <code>std.mem</code> 的核心不是“高级文本功能”，而是：</p>
+<blockquote>
+<p><strong>把切片和内存当作程序中的基础数据视图来处理。</strong></p>
+</blockquote>
+<p>常见入口包括：</p>
 <ul>
-<li>比较两个切片是否相等</li>
-<li>判断前缀和后缀</li>
-<li>查找子串或字节</li>
-<li>去掉前后空白</li>
-<li>在缓冲区之间复制数据</li>
+<li><code>std.mem.eql</code></li>
+<li><code>std.mem.startsWith</code></li>
+<li><code>std.mem.endsWith</code></li>
+<li><code>std.mem.indexOf</code></li>
+<li><code>std.mem.trim</code></li>
+<li><code>std.mem.splitScalar</code></li>
+<li><code>std.mem.copyForwards</code></li>
 </ul>
-<h3 id="eql比较切片内容"><a class="header" href="#eql比较切片内容"><code>eql</code>：比较切片内容</a></h3>
-<p>在 Zig 里，两个切片是否“相等”，通常不是直接用 <code>==</code>，而是显式比较内容：</p>
+<p>下面这个例子模拟一个很常见的任务：读取一行配置文本，判断格式、拆分键值、去掉空白，并把结果复制到固定缓冲区中。</p>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main() void {
+pub fn main(_: std.process.Init) !void {
+    const line = "  mode = release-fast  ";
+
+    // 先把首尾空白去掉，后续判断和拆分都基于规范化后的切片。
+    const trimmed = std.mem.trim(u8, line, " \t\r\n");
+    std.debug.print("trimmed = [{s}]\n", .{trimmed});
+
+    // 先做一个最基本的格式检查，确认这一行至少像 key=value。
+    if (!std.mem.containsAtLeast(u8, trimmed, 1, "=")) {
+        std.debug.print("invalid config line\n", .{});
+        return;
+    }
+
+    // 按分隔符拆开，再分别清理 key 和 value 两侧的空白。
+    var parts = std.mem.splitScalar(u8, trimmed, '=');
+    const raw_key = parts.next() orelse return;
+    const raw_value = parts.next() orelse return;
+
+    const key = std.mem.trim(u8, raw_key, " \t\r\n");
+    const value = std.mem.trim(u8, raw_value, " \t\r\n");
+
+    if (std.mem.eql(u8, key, "mode")) {
+        std.debug.print("recognized key: {s}\n", .{key});
+    }
+
+    if (std.mem.startsWith(u8, value, "release")) {
+        std.debug.print("release mode detected: {s}\n", .{value});
+    }
+
+    if (std.mem.endsWith(u8, value, "fast")) {
+        std.debug.print("fast suffix detected\n", .{});
+    }
+
+    if (std.mem.indexOf(u8, value, "-")) |pos| {
+        std.debug.print("separator '-' at index {}\n", .{pos});
+    }
+
+    // 已经有目标缓冲区时，可以把结果复制进去，供后续继续处理。
+    var buffer: [32]u8 = undefined;
+    @memset(&amp;buffer, 0);
+    std.mem.copyForwards(u8, buffer[0..value.len], value);
+
+    std.debug.print("copied value = {s}\n", .{buffer[0..value.len]});
+}
+</code></pre>
+<h3 id="eql比较切片内容"><a class="header" href="#eql比较切片内容"><code>eql</code>：比较切片内容</a></h3>
+<p>切片比较最常见的需求是“内容是否相同”，这时通常用 <code>std.mem.eql</code>。</p>
+<pre><code class="language-zig-tutorial/src/part2-advanced/chapter-standard-library-detail.md#L82-93">const std = @import("std");
+
+pub fn main(_: std.process.Init) void {
     const a = "zig";
     const b = "zig";
     const c = "zag";
 
+    // `eql` 比较的是切片内容，而不是“是不是同一个对象”。
     std.debug.print("a == b: {}\n", .{std.mem.eql(u8, a, b)});
     std.debug.print("a == c: {}\n", .{std.mem.eql(u8, a, c)});
 }
 </code></pre>
-<p><strong>预期输出：</strong></p>
-<pre><code class="language-shell">a == b: true
-a == c: false
-</code></pre>
-<p>这里的 <code>u8</code> 表示比较的是 <code>u8</code> 元素切片。<br>对字符串字面量来说，最常见的就是 <code>u8</code>。</p>
+<p>这里的 <code>u8</code> 表示比较的是 <code>u8</code> 元素切片。对字符串字面量来说，这通常就是最常见的写法。</p>
 <h3 id="startswith--endswith"><a class="header" href="#startswith--endswith"><code>startsWith</code> / <code>endsWith</code></a></h3>
-<p>判断前缀和后缀时，<code>std.mem</code> 也提供了直接入口：</p>
+<p>判断前缀和后缀时，直接使用 <code>std.mem.startsWith</code> 和 <code>std.mem.endsWith</code>。</p>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main() void {
+pub fn main(_: std.process.Init) void {
     const name = "chapter-standard-library-detail.md";
 
+    // 前缀和后缀判断常用于文件名、参数和协议头处理。
     std.debug.print("starts with chapter: {}\n", .{
         std.mem.startsWith(u8, name, "chapter"),
     });
-
     std.debug.print("ends with .md: {}\n", .{
         std.mem.endsWith(u8, name, ".md"),
     });
 }
 </code></pre>
-<p><strong>预期输出：</strong></p>
-<pre><code class="language-shell">starts with chapter: true
-ends with .md: true
-</code></pre>
-<p>这类函数在处理：</p>
+<p>这类判断在下面这些场景里都很常见：</p>
 <ul>
-<li>文件名</li>
-<li>扩展名</li>
-<li>协议前缀</li>
-<li>命令行参数前缀</li>
+<li>文件扩展名判断</li>
+<li>命令行参数前缀判断</li>
+<li>协议头判断</li>
+<li>配置项前缀判断</li>
 </ul>
-<p>时非常常见。</p>
-<h3 id="indexof"><a class="header" href="#indexof"><code>indexOf</code></a></h3>
-<p>在切片中查找子串时，可以用 <code>indexOf</code>：</p>
+<h3 id="find"><a class="header" href="#find"><code>find</code></a></h3>
+<p>查找子串时，使用<code>std.mem.find</code>，它返回 <code>?usize</code>：</p>
+<ul>
+<li>找到时返回位置</li>
+<li>找不到时返回 <code>null</code></li>
+</ul>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main() void {
+pub fn main(_: std.process.Init) void {
     const text = "hello zig world";
 
-    if (std.mem.indexOf(u8, text, "zig")) |pos| {
+    // `find` 返回可选值：找到时是位置，找不到时是 `null`。
+    if (std.mem.find(u8, text, "zig")) |pos| {
         std.debug.print("found at: {}\n", .{pos});
     } else {
         std.debug.print("not found\n", .{});
     }
 }
 </code></pre>
-<p>这个返回值是可选值 <code>?usize</code>：</p>
-<ul>
-<li>找到时返回位置</li>
-<li>找不到时返回 <code>null</code></li>
-</ul>
 <h3 id="trim"><a class="header" href="#trim"><code>trim</code></a></h3>
-<p>处理用户输入、文件内容或配置项时，经常需要先去掉首尾空白：</p>
+<p>处理用户输入、配置文件、文本行时，<code>trim</code> 几乎是高频操作。</p>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main() void {
+pub fn main(_: std.process.Init) void {
     const raw = "  zig  ";
     const trimmed = std.mem.trim(u8, raw, " ");
 
     std.debug.print("trimmed: [{s}]\n", .{trimmed});
 }
 </code></pre>
-<p>注意这里第三个参数是“要去掉的字符集合”。<br>最常见的例子是空格、制表符、换行符等。</p>
+<p>第三个参数不是“某一种空白模式”，而是“要裁掉的字符集合”。因此你经常会看到：</p>
+<ul>
+<li><code>" "</code></li>
+<li><code>" \t\r\n"</code></li>
+</ul>
 <h3 id="copyforwards"><a class="header" href="#copyforwards"><code>copyForwards</code></a></h3>
-<p>已经有一个目标缓冲区，想把内容复制进去时，可以用 <code>copyForwards</code>：</p>
-<pre><code class="language-zig">const std = @import("std");
+<p>当你已经有目标缓冲区时，<code>copyForwards</code> 是最直接的复制方式之一。</p>
+<pre><code class="language-zig-tutorial/src/part2-advanced/chapter-standard-library-detail.md#L153-164">const std = @import("std");
 
-pub fn main() void {
+pub fn main(_: std.process.Init) void {
     var buffer: [8]u8 = undefined;
     const source = "zig";
 
+    // 先把缓冲区清零，便于观察复制后的结果。
     @memset(&amp;buffer, 0);
     std.mem.copyForwards(u8, buffer[0..source.len], source);
 
     std.debug.print("{s}\n", .{buffer[0..source.len]});
 }
 </code></pre>
-<p>它常用于：</p>
-<ul>
-<li>手动管理缓冲区</li>
-<li>处理字节数组</li>
-<li>在已有内存区域中构造结果</li>
-</ul>
 <h3 id="使用-stdmem-时要建立的直觉"><a class="header" href="#使用-stdmem-时要建立的直觉">使用 <code>std.mem</code> 时要建立的直觉</a></h3>
-<p>使用 <code>std.mem</code> 时，核心直觉是：</p>
 <ol>
-<li>处理的往往是切片，而不是“高级字符串对象“</li>
-<li>切片比较通常要比较内容，而不是依赖某种隐式相等语义</li>
-<li>很多文本问题，在 Zig 里首先是“字节序列问题”</li>
-<li>已经有一块缓冲区时，复制、查找、裁剪等操作往往都可以用 <code>std.mem</code> 完成</li>
+<li>很多“字符串问题”在 Zig 里首先是“字节切片问题”</li>
+<li>先想清楚你手里的是数组、切片，还是固定缓冲区</li>
+<li><code>std.mem</code> 经常出现在输入处理、协议解析、配置解析、路径判断的第一步</li>
+<li>它通常不负责“拥有数据”，而是负责“处理已有数据视图”</li>
 </ol>
 <blockquote>
-<p><strong>相关阅读</strong>：关于切片、数组和底层数据视图的关系，可以回看<a href="#复合类型">复合类型</a>。</p>
+<p><strong>相关阅读</strong>：关于数组、切片和底层视图的关系，可以回看<a href="#复合类型">复合类型</a>。</p>
 </blockquote>
 <hr>
 <h2 id="stdfmt"><a class="header" href="#stdfmt"><code>std.fmt</code></a></h2>
-<p><code>std.fmt</code> 主要负责<strong>格式化</strong>。</p>
-<p>它经常出现在两类场景中：</p>
+<p><code>std.fmt</code> 负责格式化。</p>
+<p>它解决的问题不是“打印到哪里”，而是：</p>
+<ul>
+<li>如何把值格式化成文本</li>
+<li>如何把格式化结果写入缓冲区</li>
+<li>如何在需要时分配一段新的格式化结果</li>
+</ul>
+<p>所以 <code>std.fmt</code> 的核心职责可以概括为：</p>
+<blockquote>
+<p><strong>把结构化数据变成文本表示。</strong></p>
+</blockquote>
+<h3 id="常见格式化占位符"><a class="header" href="#常见格式化占位符">常见格式化占位符</a></h3>
+<p>最常用的四个：</p>
+<ul>
+<li><code>{}</code>：默认格式</li>
+<li><code>{d}</code>：十进制整数</li>
+<li><code>{s}</code>：字符串切片</li>
+<li><code>{any}</code>：调试输出任意值</li>
+</ul>
+<p>这几个占位符的区别可以先这样理解：</p>
+<ul>
+<li><code>{}</code> 表示“使用默认格式”，适合布尔值这类简单值的直接输出</li>
+<li><code>{d}</code> 明确表示“按十进制输出整数”，比 <code>{}</code> 更适合计数、长度、端口号这类数值</li>
+<li><code>{s}</code> 用于字符串切片，最常见的是 <code>[]const u8</code></li>
+<li><code>{any}</code> 更偏向调试用途，适合快速查看数组、元组、结构体等复合值</li>
+</ul>
+<p>可以用一个很简单的顺序来判断：</p>
 <ol>
-<li>把值格式化到某个输出目标</li>
-<li>在内存中构造一段格式化后的文本</li>
+<li>字符串切片优先用 <code>{s}</code></li>
+<li>整数优先用 <code>{d}</code></li>
+<li>简单值快速输出时可以用 <code>{}</code></li>
+<li>复合值调试时优先想到 <code>{any}</code></li>
 </ol>
-<p>很多初学者最先接触格式化，是通过 <code>std.debug.print</code>。<br>但当需要把文本写进缓冲区、或分配出一个新的字符串时，就会更明显地接触到 <code>std.fmt</code>。</p>
-<h3 id="这一节最值得先认识的入口-1"><a class="header" href="#这一节最值得先认识的入口-1">这一节最值得先认识的入口</a></h3>
-<p>建议优先理解：</p>
-<ul>
-<li><code>bufPrint</code></li>
-<li><code>allocPrint</code></li>
-</ul>
-<p>它们分别对应两类非常常见的需求：</p>
-<ul>
-<li>用<strong>已有缓冲区</strong>格式化文本</li>
-<li>用<strong>allocator 分配新字符串</strong>并格式化文本</li>
-</ul>
-<h3 id="bufprint把格式化结果写入缓冲区"><a class="header" href="#bufprint把格式化结果写入缓冲区"><code>bufPrint</code>：把格式化结果写入缓冲区</a></h3>
-<p>已经有一块固定大小的缓冲区时，可以用 <code>bufPrint</code>：</p>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main() !void {
+pub fn main(_: std.process.Init) void {
+    const name = "zig";
+    const count: u32 = 3;
+    const enabled = true;
+    const pair = .{ name, count };
+
+    std.debug.print("name={s}, count={d}\n", .{ name, count });
+    std.debug.print("enabled={}\n", .{enabled});
+    std.debug.print("pair={any}\n", .{pair});
+}
+</code></pre>
+<h3 id="构造一条完整消息"><a class="header" href="#构造一条完整消息">构造一条完整消息</a></h3>
+<p>下面这个例子模拟一个常见任务：程序先在固定缓冲区里构造一条消息，再在需要长期保存时分配一份完整文本。</p>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(_: std.process.Init) !void {
+    var stack_buffer: [128]u8 = undefined;
+
+    // 已有固定缓冲区时，直接把格式化结果写进去。
+    const short_message = try std.fmt.bufPrint(
+        &amp;stack_buffer,
+        "user={s} id={} active={}",
+        .{ "alice", 42, true },
+    );
+
+    std.debug.print("short message: {s}\n", .{short_message});
+
+    // 需要独立拥有一段新文本时，再使用会分配内存的 `allocPrint`。
+    const allocator = std.heap.page_allocator;
+    const long_message = try std.fmt.allocPrint(
+        allocator,
+        "report: user={s}, score={d}, tags={any}",
+        .{ "alice", 98, [_][]const u8{ "zig", "std", "fmt" } },
+    );
+    defer allocator.free(long_message);
+
+    std.debug.print("long message: {s}\n", .{long_message});
+}
+</code></pre>
+<p>这个例子体现了 <code>std.fmt</code> 最常见的两条主线：</p>
+<ul>
+<li><strong>短生命周期、固定大小</strong>：优先 <code>bufPrint</code></li>
+<li><strong>结果长度不方便预估，或者需要独立拥有结果</strong>：使用 <code>allocPrint</code></li>
+</ul>
+<h3 id="bufprint把格式化结果写入缓冲区"><a class="header" href="#bufprint把格式化结果写入缓冲区"><code>bufPrint</code>：把格式化结果写入缓冲区</a></h3>
+<p><code>bufPrint</code> 的典型场景是：</p>
+<ul>
+<li>你已经有一块栈上数组</li>
+<li>你不想做堆分配</li>
+<li>你只需要一段临时结果</li>
+</ul>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(_: std.process.Init) !void {
     var buffer: [64]u8 = undefined;
 
+    // 返回值是“实际写入的那一段切片”，而不是整个数组。
     const result = try std.fmt.bufPrint(
         &amp;buffer,
         "name={s}, version={d}",
@@ -4765,25 +4865,20 @@ pub fn main() !void {
     std.debug.print("{s}\n", .{result});
 }
 </code></pre>
-<p>这里要注意几点：</p>
+<p>这里要注意：</p>
 <ul>
-<li><code>result</code> 是一个切片，表示<strong>实际写入的那部分内容</strong></li>
-<li>如果缓冲区不够大，<code>bufPrint</code> 会返回错误</li>
-<li>这种方式特别适合：
-<ul>
-<li>固定格式的小文本</li>
-<li>避免额外堆分配</li>
-<li>临时拼装日志或消息</li>
-</ul>
-</li>
+<li>返回值是切片，不是整个数组</li>
+<li>它表示“实际写入的那一段”</li>
+<li>如果缓冲区不够大，会返回错误</li>
 </ul>
 <h3 id="allocprint分配并返回格式化结果"><a class="header" href="#allocprint分配并返回格式化结果"><code>allocPrint</code>：分配并返回格式化结果</a></h3>
-<p>不想自己先准备缓冲区，而是希望直接得到一段新分配的文本时，可以用 <code>allocPrint</code>：</p>
+<p>当你不想自己准备缓冲区，或者结果长度不容易预估时，<code>allocPrint</code> 更方便。</p>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main() !void {
+pub fn main(_: std.process.Init) !void {
     const allocator = std.heap.page_allocator;
 
+    // 这里会发生分配，因此结果的释放责任也落在调用者身上。
     const text = try std.fmt.allocPrint(
         allocator,
         "hello, {s}!",
@@ -4794,231 +4889,416 @@ pub fn main() !void {
     std.debug.print("{s}\n", .{text});
 }
 </code></pre>
-<p>这里的关键语义是：</p>
+<p>这里最重要的不是“会格式化”，而是：</p>
 <ul>
-<li><code>allocPrint</code> 会分配内存</li>
-<li>所以要显式传入 allocator</li>
-<li>返回的字符串需要由调用者负责释放</li>
-</ul>
-<p>这也说明 <code>std.fmt</code> 很容易和 allocator 联系起来。</p>
-<h3 id="stdfmt-和-stddebugprint-的关系"><a class="header" href="#stdfmt-和-stddebugprint-的关系"><code>std.fmt</code> 和 <code>std.debug.print</code> 的关系</a></h3>
-<p>可以这样理解：</p>
-<ul>
-<li><code>std.debug.print</code> 更像“直接输出”</li>
-<li><code>std.fmt</code> 更像“负责格式化能力本身”</li>
-</ul>
-<p>在实际代码中，它们经常一起出现：</p>
-<ul>
-<li>可能先用 <code>std.fmt</code> 把文本构造好</li>
-<li>再用别的方式写到文件、网络、缓冲区或调试输出中</li>
+<li>它发生了分配</li>
+<li>所以必须传入 allocator</li>
+<li>返回结果由调用者负责释放</li>
 </ul>
 <h3 id="使用-stdfmt-时要建立的直觉"><a class="header" href="#使用-stdfmt-时要建立的直觉">使用 <code>std.fmt</code> 时要建立的直觉</a></h3>
-<p>使用 <code>std.fmt</code> 时，核心要点是：</p>
 <ol>
-<li>先区分“输出到哪里”和“如何格式化”</li>
+<li>先区分“格式化”与“输出”</li>
+<li>字符串切片优先想到 <code>{s}</code>，整数优先想到 <code>{d}</code></li>
+<li>复合值调试时可以先用 <code>{any}</code></li>
 <li>有固定缓冲区时，优先考虑 <code>bufPrint</code></li>
-<li>需要动态分配文本时，再考虑 <code>allocPrint</code></li>
-<li>一旦发生分配，就要立刻想到释放责任</li>
+<li>需要独立拥有结果时，再考虑 <code>allocPrint</code></li>
+<li>一旦用了 <code>allocPrint</code>，就要立刻想到 allocator 和释放责任</li>
 </ol>
 <blockquote>
-<p><strong>相关阅读</strong>：</p>
-<ul>
-<li>关于 allocator 与释放责任的系统理解，请继续阅读<a href="#内存管理模型">内存管理模型</a>。</li>
-<li>只是想快速打印调试信息的话，可以继续看下一节 <code>std.debug</code>。</li>
-</ul>
+<p><strong>相关阅读</strong>：allocator 的系统理解见<a href="#内存管理模型">内存管理模型</a>。</p>
 </blockquote>
 <hr>
 <h2 id="stddebug"><a class="header" href="#stddebug"><code>std.debug</code></a></h2>
-<p><code>std.debug</code> 是学习和调试阶段最常用的标准库入口之一。</p>
-<p>它的重要性并不在于“复杂”或“高级”，而在于：<br><strong>它能更快看清程序状态。</strong></p>
-<p>对初学者来说，最常见的用途通常就是：</p>
+<p><code>std.debug</code> 是学习阶段和开发阶段都非常高频的模块。</p>
+<p>它最重要的价值不是“功能多”，而是：</p>
+<blockquote>
+<p><strong>让你更快看见程序当前的状态，并尽早暴露不应该发生的逻辑错误。</strong></p>
+</blockquote>
+<p>最常用的入口通常就是两个：</p>
 <ul>
 <li><code>std.debug.print</code></li>
 <li><code>std.debug.assert</code></li>
 </ul>
-<h3 id="stddebugprint"><a class="header" href="#stddebugprint"><code>std.debug.print</code></a></h3>
-<p>这是最常见的调试输出方式之一：</p>
+<p>下面这个例子模拟一个简单的解析流程：先打印中间状态，再用 <code>assert</code> 验证关键不变量。</p>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main() void {
+fn parsePort(text: []const u8) !u16 {
+    std.debug.print("raw input = [{s}]\n", .{text});
+
+    const trimmed = std.mem.trim(u8, text, " \t\r\n");
+    std.debug.print("trimmed input = [{s}]\n", .{trimmed});
+
+    // `assert` 用来表达内部假设：这里不应该再出现空输入。
+    std.debug.assert(trimmed.len &gt; 0);
+
+    const port = try std.fmt.parseInt(u16, trimmed, 10);
+    std.debug.assert(port &gt; 0);
+
+    std.debug.print("parsed port = {}\n", .{port});
+    return port;
+}
+
+pub fn main(_: std.process.Init) !void {
+    const port = try parsePort(" 8080 ");
+    std.debug.print("final port = {}\n", .{port});
+}
+</code></pre>
+<h3 id="stddebugprint"><a class="header" href="#stddebugprint"><code>std.debug.print</code></a></h3>
+<p>这是最常见的调试输出方式之一。</p>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(_: std.process.Init) void {
     const count = 3;
     const name = "zig";
 
-    std.debug.print("count={d}, name={s}\n", .{ count, name });
+    // 调试阶段最常见的用法就是直接把关键状态打印出来。
+    std.debug.print("count={}, name={s}\n", .{ count, name });
 }
 </code></pre>
 <p>它特别适合：</p>
 <ul>
-<li>临时观察变量状态</li>
-<li>学习阶段验证程序行为</li>
-<li>快速确认某条路径是否执行到</li>
+<li>临时观察变量值</li>
+<li>确认某条分支是否执行</li>
+<li>学习阶段理解程序行为</li>
 </ul>
-<p>但也要注意：<br>它更适合“调试与学习阶段”，而不是把它理解成完整日志系统的替代品。</p>
+<p>但它不是完整日志系统的替代品。它更适合“开发时快速看状态”。</p>
 <h3 id="stddebugassert"><a class="header" href="#stddebugassert"><code>std.debug.assert</code></a></h3>
-<p>想表达“这里必须满足某个条件，否则程序逻辑就不成立“时，可以用 <code>assert</code>：</p>
+<p><code>assert</code> 用来表达：</p>
+<ul>
+<li>这里必须成立</li>
+<li>如果不成立，说明程序内部逻辑已经出问题</li>
+</ul>
 <pre><code class="language-zig">const std = @import("std");
 
 fn divide(a: i32, b: i32) i32 {
+    // 这里不是处理用户错误，而是声明“调用者不应传入 0”。
     std.debug.assert(b != 0);
     return @divTrunc(a, b);
 }
 
-pub fn main() void {
+pub fn main(_: std.process.Init) void {
     const result = divide(10, 2);
-    std.debug.print("result={d}\n", .{result});
+    std.debug.print("result={}\n", .{result});
 }
 </code></pre>
-<p><code>assert</code> 的使用重点不是“处理用户输入错误”，而是：</p>
-<ul>
-<li>验证程序内部不变量</li>
-<li>捕捉不应该发生的逻辑状态</li>
-<li>在调试期尽早暴露问题</li>
-</ul>
+<p>这里的重点不是“处理用户输入错误”，而是“验证内部不变量”。</p>
 <h3 id="使用-stddebug-时要建立的直觉"><a class="header" href="#使用-stddebug-时要建立的直觉">使用 <code>std.debug</code> 时要建立的直觉</a></h3>
 <ol>
-<li><code>print</code> 很适合调试阶段快速观察状态</li>
-<li><code>assert</code> 适合表达“不应该被破坏的假设”</li>
-<li>调试输出能更快定位问题，但不能替代清晰的设计</li>
-<li>调试期工具越早介入，越容易发现问题的真实来源</li>
+<li><code>print</code> 用来快速观察状态</li>
+<li><code>assert</code> 用来表达内部逻辑假设</li>
+<li>用户输入错误通常应该走正常错误处理，而不是只靠 <code>assert</code></li>
+<li>调试输出越靠近问题发生点，越容易定位根因</li>
 </ol>
 <blockquote>
-<p><strong>相关阅读</strong>：</p>
-<ul>
-<li>关于错误路径和失败处理的系统理解，请阅读<a href="#错误处理">错误处理：!T、try 与 errdefer</a>。</li>
-<li>关于如何在测试中验证行为，请继续阅读后面的 <code>std.testing</code> 小节与<a href="#测试与验证从单元测试到基准测量">测试与验证：从单元测试到基准测量</a>。</li>
-</ul>
+<p><strong>相关阅读</strong>：错误路径的系统处理见<a href="#错误处理">错误处理</a>。</p>
 </blockquote>
 <hr>
 <h2 id="stdtesting"><a class="header" href="#stdtesting"><code>std.testing</code></a></h2>
-<p><code>std.testing</code> 是 Zig 标准库中最核心的测试辅助入口。它提供了一组断言函数和测试专用设施，用于在 <code>test</code> 块中验证代码行为。最常用的 API 包括：</p>
-<ul>
-<li><strong><code>expect</code></strong> — 验证布尔表达式为真，适合简单条件判断。</li>
-<li><strong><code>expectEqual</code></strong> — 比较两个值是否相等，失败时能清晰显示期望值与实际值的差异。</li>
-<li><strong><code>expectError</code></strong> — 验证函数是否返回了预期的错误，用于测试错误路径。</li>
-<li><strong><code>std.testing.allocator</code></strong> — 测试专用分配器，能自动检测内存泄漏和重复释放。</li>
-</ul>
+<p><code>std.testing</code> 是 Zig 测试代码最核心的入口。</p>
+<p>它的重点不是“把测试写得很花”，而是：</p>
 <blockquote>
-<p><strong>相关阅读</strong>：断言函数的完整示例和测试方法论见<a href="#测试与验证从单元测试到基准测量">《测试与验证》（chapter-testing.md）</a>。</p>
+<p><strong>把程序行为、边界条件和错误路径固定下来。</strong></p>
 </blockquote>
+<p>最常用的入口包括：</p>
+<ul>
+<li><code>std.testing.expect</code></li>
+<li><code>std.testing.expectEqual</code></li>
+<li><code>std.testing.expectError</code></li>
+<li><code>std.testing.allocator</code></li>
+</ul>
+<p>下面这个例子延续前面 <code>std.mem</code> 的思路，写一个简单解析函数，并用测试验证正常路径和错误路径。</p>
+<pre><code class="language-zig">const std = @import("std");
+
+const ParseError = error{
+    MissingSeparator,
+    EmptyKey,
+    EmptyValue,
+};
+
+fn parseAssignment(line: []const u8) ParseError!struct { key: []const u8, value: []const u8 } {
+    // 先规范化输入，再做结构拆分和字段校验。
+    const trimmed = std.mem.trim(u8, line, " \t\r\n");
+    var parts = std.mem.splitScalar(u8, trimmed, '=');
+
+    const raw_key = parts.next() orelse return error.MissingSeparator;
+    const raw_value = parts.next() orelse return error.MissingSeparator;
+
+    const key = std.mem.trim(u8, raw_key, " \t\r\n");
+    const value = std.mem.trim(u8, raw_value, " \t\r\n");
+
+    if (key.len == 0) return error.EmptyKey;
+    if (value.len == 0) return error.EmptyValue;
+
+    return .{ .key = key, .value = value };
+}
+
+test "parseAssignment parses key and value" {
+    const result = try parseAssignment(" mode = debug ");
+
+    // 正常路径测试：确认解析后的 key 和 value 都符合预期。
+    try std.testing.expectEqualStrings("mode", result.key);
+    try std.testing.expectEqualStrings("debug", result.value);
+}
+
+test "parseAssignment rejects missing separator" {
+    // 错误路径测试：输入不合法时，应返回明确的错误。
+    try std.testing.expectError(
+        error.MissingSeparator,
+        parseAssignment("mode debug"),
+    );
+}
+
+test "parseAssignment rejects empty value" {
+    try std.testing.expectError(
+        error.EmptyValue,
+        parseAssignment("mode = "),
+    );
+}
+</code></pre>
+<p>这个例子里，测试的主线很清楚：</p>
+<ol>
+<li>先写一个小而明确的函数</li>
+<li>测正常输入</li>
+<li>测错误输入</li>
+<li>把边界条件固定下来</li>
+</ol>
+<p>这比只在 <code>main</code> 里手动打印结果更可靠。</p>
+<h3 id="expect"><a class="header" href="#expect"><code>expect</code></a></h3>
+<p><code>expect</code> 用于验证一个布尔条件为真。</p>
+<pre><code class="language-zig">const std = @import("std");
+
+test "expect example" {
+    const value = 2 + 2;
+    // `expect` 适合最直接的布尔条件断言。
+    try std.testing.expect(value == 4);
+}
+</code></pre>
+<h3 id="expectequal"><a class="header" href="#expectequal"><code>expectEqual</code></a></h3>
+<p><code>expectEqual</code> 用于比较两个值是否相等。对于字符串，常用 <code>expectEqualStrings</code>。</p>
+<pre><code class="language-zig">const std = @import("std");
+
+test "expectEqual example" {
+    const actual: u32 = 16;
+    // 比较具体值时，`expectEqual` 的失败信息通常更清楚。
+    try std.testing.expectEqual(@as(u32, 16), actual);
+}
+</code></pre>
+<h3 id="expecterror"><a class="header" href="#expecterror"><code>expectError</code></a></h3>
+<p>测试错误路径时，<code>expectError</code> 很重要。</p>
+<pre><code class="language-zig">const std = @import("std");
+
+fn fail() error{InvalidInput}!void {
+    return error.InvalidInput;
+}
+
+test "expectError example" {
+    // 用 `expectError` 把错误路径也固定成测试的一部分。
+    try std.testing.expectError(error.InvalidInput, fail());
+}
+</code></pre>
+<h3 id="stdtestingallocator"><a class="header" href="#stdtestingallocator"><code>std.testing.allocator</code></a></h3>
+<p>当测试代码里需要分配内存时，优先考虑 <code>std.testing.allocator</code>。它的价值不只是“能分配”，更重要的是更容易暴露：</p>
+<ul>
+<li>泄漏</li>
+<li>重复释放</li>
+<li>生命周期错误</li>
+</ul>
 <h3 id="使用-stdtesting-时要建立的直觉"><a class="header" href="#使用-stdtesting-时要建立的直觉">使用 <code>std.testing</code> 时要建立的直觉</a></h3>
 <ol>
-<li>测试不是额外装饰，而是接口设计的一部分</li>
-<li>错误路径、资源释放、边界条件都值得测试</li>
-<li><code>std.testing.allocator</code> 的价值不只是“能分配“，而是“更容易暴露泄漏和生命周期问题“</li>
+<li>测试应该覆盖正常路径、错误路径和边界条件</li>
+<li>小函数更容易写出清晰测试</li>
+<li>测试不是额外装饰，而是接口行为的一部分</li>
+<li>只靠手动运行和打印，通常不够稳定</li>
 </ol>
+<blockquote>
+<p><strong>相关阅读</strong>：更完整的测试方法见<a href="#测试与验证从单元测试到基准测量">测试与验证：从单元测试到基准测量</a>。</p>
+</blockquote>
 <hr>
 <h2 id="stdfs"><a class="header" href="#stdfs"><code>std.fs</code></a></h2>
-<p>只要开始写真实程序，文件和目录几乎一定会出现。
-这时，<code>std.fs</code> 往往就是最该先想到的模块。</p>
+<p>只要开始写真实程序，文件和目录几乎一定会出现。<br>这时 <code>std.fs</code> 往往就是最该先想到的模块。</p>
 <p>它负责的典型问题包括：</p>
 <ul>
 <li>打开文件</li>
 <li>创建文件</li>
 <li>读取文件内容</li>
+<li>写入文件内容</li>
 <li>遍历目录</li>
-<li>读取文件元信息</li>
+<li>处理路径对应的文件系统对象</li>
 </ul>
-<h3 id="心智模型"><a class="header" href="#心智模型">心智模型</a></h3>
-<p>初次接触 <code>std.fs</code> 时，不必急着记很多 API 名字。<br>更重要的是建立下面这个直觉：</p>
+<p>更常见的入口是：</p>
 <ul>
-<li><strong>文件和目录相关问题，优先想到 <code>std.fs</code></strong></li>
-<li><strong>很多操作都围绕“某个目录视角”或“某个文件句柄”展开</strong></li>
-<li><strong>真实工程里，<code>std.fs</code> 往往会和 <code>std.process</code>、<code>std.mem</code>、<code>std.fmt</code> 一起出现</strong></li>
+<li><code>std.fs.cwd()</code></li>
+<li>目录对象上的 <code>openFile</code>、<code>createFile</code>、<code>openDir</code></li>
+<li>文件对象上的 <code>readToEndAlloc</code>、<code>writeAll</code>、<code>close</code></li>
+<li>目录遍历的 <code>iterate</code></li>
 </ul>
-<h3 id="一个最小示例创建并写入文件"><a class="header" href="#一个最小示例创建并写入文件">一个最小示例：创建并写入文件</a></h3>
-<p>下面这个例子展示一个最小文件写入过程：</p>
+<p>下面这个例子模拟一个很常见的小工具流程：</p>
+<ol>
+<li>从当前目录打开输入文件</li>
+<li>读取全部内容</li>
+<li>做一点简单处理</li>
+<li>创建输出文件并写入结果</li>
+</ol>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main() !void {
+pub fn main(init: std.process.Init) !void {
+    const cwd = std.fs.cwd();
+
+    const input_file = try cwd.openFile("input.txt", .{});
+    defer input_file.close();
+
+    // 把整个文件读入动态内存，后面就可以按普通切片继续处理。
+    const content = try input_file.readToEndAlloc(init.gpa, 1024 * 1024);
+    defer init.gpa.free(content);
+
+    const trimmed = std.mem.trim(u8, content, " \t\r\n");
+
+    const output_file = try cwd.createFile("output.txt", .{ .truncate = true });
+    defer output_file.close();
+
+    try output_file.writeAll("processed: ");
+    try output_file.writeAll(trimmed);
+    try output_file.writeAll("\n");
+
+    std.debug.print("wrote output.txt\n", .{});
+}
+</code></pre>
+<p>这个例子里，<code>std.fs</code> 的主线非常清楚：</p>
+<ul>
+<li>目录对象负责“从哪里操作”</li>
+<li>文件对象负责“读写什么”</li>
+<li>打开后的资源要关闭</li>
+<li>读取到动态内存后要释放</li>
+</ul>
+<p>这也是为什么 <code>std.fs</code> 经常和 <code>std.mem</code>、<code>std.process</code>、<code>std.heap</code> 一起出现。</p>
+<h3 id="创建并写入文件"><a class="header" href="#创建并写入文件">创建并写入文件</a></h3>
+<p>最小写文件示例如下：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(_: std.process.Init) !void {
     const cwd = std.fs.cwd();
 
     const file = try cwd.createFile("example.txt", .{});
     defer file.close();
 
+    // 文件句柄打开后要记得关闭，写入则通过 `writeAll` 完成。
     try file.writeAll("hello from zig\n");
 }
 </code></pre>
-<p>这里有几个关键点：</p>
-<ul>
-<li><code>std.fs.cwd()</code> 表示当前工作目录</li>
-<li>通过目录对象去创建文件</li>
-<li>文件句柄用完后要关闭</li>
-</ul>
-<h3 id="一个最小示例遍历目录项"><a class="header" href="#一个最小示例遍历目录项">一个最小示例：遍历目录项</a></h3>
-<p>目录遍历也是很常见的需求：</p>
+<h3 id="遍历目录项"><a class="header" href="#遍历目录项">遍历目录项</a></h3>
+<p>目录遍历也是高频需求。</p>
 <pre><code class="language-zig">const std = @import("std");
 
-pub fn main() !void {
+pub fn main(_: std.process.Init) !void {
     const cwd = std.fs.cwd();
     var dir = try cwd.openDir(".", .{ .iterate = true });
     defer dir.close();
 
+    // 目录遍历通过迭代器逐项产出目录项。
     var it = dir.iterate();
     while (try it.next()) |entry| {
         std.debug.print("{s}\n", .{entry.name});
     }
 }
 </code></pre>
-<p>这个例子的核心在于理解：</p>
-<ul>
-<li>目录遍历通常需要显式打开目录</li>
-<li>遍历器逐项产出条目</li>
-<li>文件系统操作天然更接近“资源操作”，所以常伴随错误处理和关闭逻辑</li>
-</ul>
 <h3 id="使用-stdfs-时要建立的直觉"><a class="header" href="#使用-stdfs-时要建立的直觉">使用 <code>std.fs</code> 时要建立的直觉</a></h3>
 <ol>
-<li>文件系统操作通常会失败，所以错误处理是常态</li>
-<li>打开文件和目录往往意味着资源管理责任</li>
-<li>很多能力都从某个目录对象出发，而不是全局“神奇函数”</li>
-<li><code>std.fs</code> 往往是 CLI 工具、配置读取、代码生成等场景的核心模块</li>
+<li>文件系统操作天然可能失败，所以错误处理是常态</li>
+<li>打开文件和目录意味着资源管理责任</li>
+<li>很多操作都从某个目录对象出发，而不是全局函数</li>
+<li><code>std.fs</code> 经常是 CLI 工具、配置系统、代码生成工具的核心模块</li>
 </ol>
 <blockquote>
-<p><strong>相关阅读</strong>：关于 <code>std.fs</code> 在更真实工具中的使用方式，可以继续阅读<a href="#实战案例---cli-工具开发">实战案例 - CLI 工具开发</a>。</p>
+<p><strong>相关阅读</strong>：更完整的工具型程序见<a href="#实战案例---cli-工具开发">实战案例 - CLI 工具开发</a>。</p>
 </blockquote>
 <hr>
 <h2 id="stdprocess"><a class="header" href="#stdprocess"><code>std.process</code></a></h2>
-<p><code>std.process</code> 主要和“程序作为一个进程运行时能接触到的上下文”有关。</p>
-<p>可以把它和下面几类需求联系起来：</p>
+<p><code>std.process</code> 负责处理程序作为一个进程运行时的上下文。</p>
+<p>在 Zig 0.16-dev 中，这一点尤其重要，因为程序入口通常直接接收 <code>std.process.Init</code>，很多进程相关能力都从这里进入。</p>
+<p>它最常解决的问题包括：</p>
 <ul>
 <li>读取命令行参数</li>
 <li>读取环境变量</li>
-<li>处理退出状态</li>
-<li>理解程序运行时的外部上下文</li>
+<li>使用进程级 allocator 和 I/O 上下文</li>
+<li>在需要时启动子进程</li>
 </ul>
-<h3 id="心智模型-1"><a class="header" href="#心智模型-1">心智模型</a></h3>
-<p>核心要点是：</p>
+<p>最常先接触到的名字包括：</p>
 <ul>
-<li><strong>只要问题和参数、环境变量、进程上下文有关，就先想到 <code>std.process</code></strong></li>
-<li>这类能力天然更接近“程序入口”与“操作系统环境”</li>
+<li><code>std.process.Init</code></li>
+<li><code>init.minimal.args</code></li>
+<li><code>init.environ_map</code></li>
+<li><code>init.gpa</code></li>
 </ul>
-<h3 id="一个最小示例读取参数"><a class="header" href="#一个最小示例读取参数">一个最小示例：读取参数</a></h3>
-<p>在 Zig 0.16-dev 中，程序入口通过 <code>std.process.Init</code> 参数显式传递进程上下文，命令行参数就是其中的一部分。核心思路是：</p>
+<p>其中：</p>
 <ul>
-<li>参数来自进程启动时传入的上下文，通过 <code>init.minimal.args</code> 获取</li>
-<li>使用 <code>.iterate()</code> 或 <code>.iterateAllocator()</code> 创建迭代器，逐个读取参数</li>
-<li>不再需要手动分配和释放内存来收集参数</li>
+<li><code>args</code> 负责命令行参数</li>
+<li><code>environ_map</code> 负责环境变量</li>
+<li><code>gpa</code> 提供一个默认可用的通用分配器</li>
 </ul>
-<p>下面给出一个示例：</p>
+<p>下面这个例子模拟一个很典型的 CLI 主线：</p>
+<ol>
+<li>从参数中读取输入文件名</li>
+<li>读取环境变量决定模式</li>
+<li>打开文件并输出处理结果</li>
+</ol>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(init: std.process.Init) !void {
+    var args = init.minimal.args.iterate();
+
+    // 第一个参数通常是程序自身路径，这里先跳过。
+    _ = args.next();
+
+    const input_path = args.next() orelse {
+        std.debug.print("usage: app &lt;input-file&gt;\n", .{});
+        return;
+    };
+
+    // 进程上下文里的环境变量和 allocator，常常会直接参与后续处理流程。
+    const mode = init.environ_map.get("APP_MODE") orelse "default";
+    std.debug.print("mode = {s}\n", .{mode});
+    std.debug.print("input = {s}\n", .{input_path});
+
+    const cwd = std.fs.cwd();
+    const file = try cwd.openFile(input_path, .{});
+    defer file.close();
+
+    const content = try file.readToEndAlloc(init.gpa, 1024 * 1024);
+    defer init.gpa.free(content);
+
+    const trimmed = std.mem.trim(u8, content, " \t\r\n");
+    std.debug.print("content = [{s}]\n", .{trimmed});
+}
+</code></pre>
+<p>这个例子体现了 <code>std.process</code> 在真实程序里的位置：</p>
+<ul>
+<li>它经常站在 <code>main</code> 的最前面</li>
+<li>负责把“程序外部世界”带进来</li>
+<li>然后再交给 <code>std.fs</code>、<code>std.mem</code>、<code>std.fmt</code> 去继续处理</li>
+</ul>
+<h3 id="读取命令行参数"><a class="header" href="#读取命令行参数">读取命令行参数</a></h3>
+<p>在 0.16-dev 中，参数通过 <code>init.minimal.args</code> 获取。</p>
 <pre><code class="language-zig">const std = @import("std");
 
 pub fn main(init: std.process.Init) void {
     var args = init.minimal.args.iterate();
+    // 参数通过迭代器逐个读取，而不是一次性隐式拿到。
     while (args.next()) |arg| {
         std.debug.print("{s}\n", .{arg});
     }
 }
 </code></pre>
-<p>这个例子最重要的重点是：</p>
+<p>这里最重要的是理解：</p>
 <ul>
-<li>参数通过程序入口的 <code>Init</code> 参数显式传入，而非调用全局函数获取</li>
-<li><code>.iterate()</code> 返回一个迭代器，用 <code>while</code> + <code>.next()</code> 逐个遍历</li>
-<li>进程相关 API 比 <code>std.mem</code>、<code>std.debug</code> 这类模块更容易受版本变化影响</li>
+<li>参数不是通过某个全局函数隐式拿到</li>
+<li>而是通过程序入口显式传入的上下文访问</li>
 </ul>
-<h3 id="一个最小示例读取环境变量"><a class="header" href="#一个最小示例读取环境变量">一个最小示例：读取环境变量</a></h3>
-<p>环境变量也是常见入口之一。在 0.16-dev 中，<code>Init</code> 参数提供了预初始化的 <code>environ_map</code>，可以直接按名称查找：</p>
+<h3 id="读取环境变量"><a class="header" href="#读取环境变量">读取环境变量</a></h3>
+<p>环境变量通过 <code>init.environ_map</code> 访问。</p>
 <pre><code class="language-zig">const std = @import("std");
 
 pub fn main(init: std.process.Init) void {
+    // 环境变量查找返回可选值，因此自然适合用 `if` 解包。
     if (init.environ_map.get("HOME")) |home| {
         std.debug.print("HOME={s}\n", .{home});
     } else {
@@ -5026,106 +5306,241 @@ pub fn main(init: std.process.Init) void {
     }
 }
 </code></pre>
-<p>这里体现了 0.16-dev 的一个重要设计特点：</p>
+<p>这里返回的是可选值：</p>
 <ul>
-<li>环境变量已经由运行时预先解析到 <code>environ_map</code> 中，直接用 <code>.get()</code> 查询即可</li>
-<li>不再需要手动分配内存或处理 <code>EnvironmentVariableNotFound</code> 错误——找不到时返回 <code>null</code></li>
+<li>找到时得到值</li>
+<li>找不到时得到 <code>null</code></li>
 </ul>
 <h3 id="使用-stdprocess-时要建立的直觉"><a class="header" href="#使用-stdprocess-时要建立的直觉">使用 <code>std.process</code> 时要建立的直觉</a></h3>
 <ol>
-<li>参数与环境变量都属于“进程上下文“的一部分</li>
-<li>在 0.16-dev 中，这些上下文通过 <code>std.process.Init</code> 参数在程序入口<strong>显式传入</strong>，而非通过全局函数获取</li>
-<li>这种设计让依赖关系更清晰：函数签名本身就说明了“我需要进程上下文“</li>
-<li>遇到版本差异时，优先抓住“程序上下文由谁提供、怎样访问“这一层稳定思路</li>
+<li>参数、环境变量、默认 allocator 都属于进程上下文的一部分</li>
+<li>在 0.16-dev 中，这些上下文通过 <code>std.process.Init</code> 显式传入</li>
+<li><code>std.process</code> 经常位于程序入口层，而不是业务逻辑深处</li>
+<li>CLI 工具通常会把 <code>std.process</code>、<code>std.fs</code>、<code>std.mem</code>、<code>std.fmt</code> 串成一条主线</li>
 </ol>
 <blockquote>
-<p><strong>相关阅读</strong>：关于参数处理与进程上下文在更真实工具程序中的使用方式，可以继续阅读<a href="#实战案例---cli-工具开发">实战案例 - CLI 工具开发</a>。</p>
+<p><strong>相关阅读</strong>：更完整的命令行工具设计见<a href="#实战案例---cli-工具开发">实战案例 - CLI 工具开发</a>。</p>
 </blockquote>
 <hr>
 <h2 id="stdheap"><a class="header" href="#stdheap"><code>std.heap</code></a></h2>
-<p><code>std.heap</code> 是系统接触 allocator 分类时最常见的标准库入口之一。这一节只建立<strong>第一轮 allocator 直觉</strong>，认识几个常见名字即可。</p>
-<p>常见的分配器：</p>
-<ul>
-<li><strong><code>page_allocator</code></strong> — 直接向操作系统申请整页内存。随手可用，适合入门示例，但不是所有工程场景的最佳默认选择。</li>
-<li><strong><code>ArenaAllocator</code></strong> — 适合“集中分配、集中释放“的场景，减少逐个释放的负担，所有对象共享同一个释放时机。</li>
-<li><strong><code>FixedBufferAllocator</code></strong> — 在一块已有的固定内存上做分配，不需要向操作系统再要内存。</li>
-<li><strong><code>std.testing.allocator</code></strong> — 测试专用分配器，能自动检测泄漏（详见 <code>std.testing</code> 一节）。</li>
-</ul>
+<p><code>std.heap</code> 是理解 allocator 的第一入口。</p>
+<p>它的重要性不在于“会分配内存”这么简单，而在于：</p>
 <blockquote>
-<p><strong>相关阅读</strong>：完整的分配器示例和使用指南见<a href="#内存管理模型">《内存管理模型》（chapter-memory-management.md）</a>。</p>
+<p><strong>Zig 把内存分配策略显式放进接口里。</strong></p>
 </blockquote>
-<h3 id="使用-stdheap-时要建立的直觉"><a class="header" href="#使用-stdheap-时要建立的直觉">使用 <code>std.heap</code> 时要建立的直觉</a></h3>
-<ol>
-<li>Zig 的 allocator 不是背景设施，而是显式接口的一部分</li>
-<li>不同 allocator 解决的是不同资源组织问题</li>
-<li>一旦发生分配，就要立即想到：谁负责释放？什么时候释放？</li>
-</ol>
-<hr>
-<h2 id="模块如何组合使用"><a class="header" href="#模块如何组合使用">模块如何组合使用？</a></h2>
-<p>真正的 Zig 代码，很少只使用单独一个标准库模块。<br>更常见的情况是：几个模块以很小的颗粒度频繁组合。</p>
-<h3 id="stdmem--stdfmt"><a class="header" href="#stdmem--stdfmt"><code>std.mem</code> + <code>std.fmt</code></a></h3>
-<p>很常见于：</p>
+<p>所以 <code>std.heap</code> 的核心不是某一个函数，而是几种常见 allocator 的角色差异。</p>
+<p>最值得先认识的几个名字包括：</p>
 <ul>
-<li>先处理输入切片</li>
-<li>再把结果格式化输出</li>
+<li><code>std.heap.page_allocator</code></li>
+<li><code>std.heap.ArenaAllocator</code></li>
+<li><code>std.heap.FixedBufferAllocator</code></li>
 </ul>
+<p>下面这个例子展示两种很常见的资源组织方式：</p>
+<ul>
+<li>小而固定的临时分配：<code>FixedBufferAllocator</code></li>
+<li>一批对象一起释放：<code>ArenaAllocator</code></li>
+</ul>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(_: std.process.Init) !void {
+    var backing_buffer: [256]u8 = undefined;
+    var fba = std.heap.FixedBufferAllocator.init(&amp;backing_buffer);
+    const fixed_allocator = fba.allocator();
+
+    // 固定缓冲区分配器只在这块已有内存上工作，不再向系统申请新内存。
+    const a = try fixed_allocator.dupe(u8, "alpha");
+    const b = try fixed_allocator.dupe(u8, "beta");
+
+    std.debug.print("fixed: {s}, {s}\n", .{ a, b });
+
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+
+    const arena_allocator = arena.allocator();
+
+    // arena 适合一批对象一起创建、最后统一释放。
+    const first = try arena_allocator.dupe(u8, "first item");
+    const second = try arena_allocator.dupe(u8, "second item");
+    const combined = try std.fmt.allocPrint(
+        arena_allocator,
+        "{s} + {s}",
+        .{ first, second },
+    );
+
+    std.debug.print("arena combined: {s}\n", .{combined});
+}
+</code></pre>
+<p>这个例子里最重要的不是记住所有细节，而是理解两种 allocator 的使用场景：</p>
+<ul>
+<li><code>FixedBufferAllocator</code>：在一块已有内存上分配，不再向系统申请新内存</li>
+<li><code>ArenaAllocator</code>：适合“分配很多对象，最后一起释放”</li>
+</ul>
+<h3 id="page_allocator"><a class="header" href="#page_allocator"><code>page_allocator</code></a></h3>
+<p><code>page_allocator</code> 是最容易直接拿来用的 allocator 之一。</p>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(_: std.process.Init) !void {
+    const allocator = std.heap.page_allocator;
+
+    // 即使是最直接的 allocator，用完后也仍然要显式释放。
+    const text = try allocator.dupe(u8, "hello");
+    defer allocator.free(text);
+
+    std.debug.print("{s}\n", .{text});
+}
+</code></pre>
+<p>它适合示例和简单程序，但在工程里不一定总是最佳默认选择。</p>
+<h3 id="arenaallocator"><a class="header" href="#arenaallocator"><code>ArenaAllocator</code></a></h3>
+<p><code>ArenaAllocator</code> 适合“集中分配、集中释放”的场景。</p>
 <p>例如：</p>
 <ul>
-<li>先 <code>trim</code></li>
-<li>再 <code>startsWith</code></li>
-<li>然后 <code>bufPrint</code> 拼装消息</li>
+<li>解析一整个配置文件</li>
+<li>构造一棵语法树</li>
+<li>一次请求处理期间创建很多临时对象</li>
 </ul>
-<h3 id="stddebug--stdtesting"><a class="header" href="#stddebug--stdtesting"><code>std.debug</code> + <code>std.testing</code></a></h3>
-<p>很常见于：</p>
+<h3 id="fixedbufferallocator"><a class="header" href="#fixedbufferallocator"><code>FixedBufferAllocator</code></a></h3>
+<p><code>FixedBufferAllocator</code> 适合：</p>
 <ul>
-<li>调试阶段快速观察状态</li>
-<li>再写测试把行为固定下来</li>
+<li>已知内存上限</li>
+<li>不希望发生额外堆分配</li>
+<li>嵌入式或受限环境</li>
+<li>临时工作区</li>
 </ul>
-<p>也就是说：</p>
+<h3 id="使用-stdheap-时要建立的直觉"><a class="header" href="#使用-stdheap-时要建立的直觉">使用 <code>std.heap</code> 时要建立的直觉</a></h3>
+<ol>
+<li>allocator 是接口的一部分，不是隐藏背景设施</li>
+<li>选择 allocator，本质上是在选择资源组织方式</li>
+<li>一旦发生分配，就要立刻想到释放责任</li>
+<li><code>std.heap</code> 往往不是单独使用，而是作为其他模块的基础设施出现</li>
+</ol>
+<blockquote>
+<p><strong>相关阅读</strong>：allocator 的完整模型见<a href="#内存管理模型">内存管理模型</a>。</p>
+</blockquote>
+<hr>
+<h2 id="一个稍完整的组合示例"><a class="header" href="#一个稍完整的组合示例">一个稍完整的组合示例</a></h2>
+<p>前面每个模块都单独看过了。下面把它们串起来，写一个更接近真实程序的小例子。</p>
+<p>这个程序做的事情是：</p>
+<ol>
+<li>从命令行参数读取输入文件名</li>
+<li>从环境变量读取模式</li>
+<li>读取文件内容</li>
+<li>按行查找 <code>name = value</code> 形式的配置</li>
+<li>生成一份格式化报告</li>
+<li>输出到终端并写入文件</li>
+</ol>
+<p>这个例子会同时用到：</p>
 <ul>
-<li><code>std.debug</code> 用于快速“看见”</li>
-<li><code>std.testing</code> 用于长期“验证”</li>
+<li><code>std.process</code></li>
+<li><code>std.fs</code></li>
+<li><code>std.mem</code></li>
+<li><code>std.fmt</code></li>
+<li><code>std.heap</code></li>
+<li><code>std.debug</code></li>
 </ul>
-<h3 id="stdfs--stdprocess"><a class="header" href="#stdfs--stdprocess"><code>std.fs</code> + <code>std.process</code></a></h3>
-<p>这是 CLI、小工具和工程脚本里非常常见的组合：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+const ParseError = error{
+    InvalidLine,
+};
+
+fn parseLine(line: []const u8) ParseError!?struct { key: []const u8, value: []const u8 } {
+    const trimmed = std.mem.trim(u8, line, " \t\r\n");
+    // 空行和注释行不算错误，直接跳过即可。
+    if (trimmed.len == 0) return null;
+    if (std.mem.startsWith(u8, trimmed, "#")) return null;
+
+    var parts = std.mem.splitScalar(u8, trimmed, '=');
+    const raw_key = parts.next() orelse return error.InvalidLine;
+    const raw_value = parts.next() orelse return error.InvalidLine;
+
+    const key = std.mem.trim(u8, raw_key, " \t\r\n");
+    const value = std.mem.trim(u8, raw_value, " \t\r\n");
+
+    if (key.len == 0 or value.len == 0) return error.InvalidLine;
+    return .{ .key = key, .value = value };
+}
+
+pub fn main(init: std.process.Init) !void {
+    var args = init.minimal.args.iterate();
+    _ = args.next();
+
+    const input_path = args.next() orelse {
+        std.debug.print("usage: app &lt;config-file&gt;\n", .{});
+        return;
+    };
+
+    const mode = init.environ_map.get("APP_MODE") orelse "default";
+
+    const cwd = std.fs.cwd();
+    const input_file = try cwd.openFile(input_path, .{});
+    defer input_file.close();
+
+    const content = try input_file.readToEndAlloc(init.gpa, 1024 * 1024);
+    defer init.gpa.free(content);
+
+    // 先按行拆分输入，再逐行做配置解析。
+    var lines = std.mem.splitScalar(u8, content, '\n');
+
+    // `ArrayList` 适合逐步构造一段最终输出文本。
+    var report = std.ArrayList(u8).init(init.gpa);
+    defer report.deinit();
+
+    try report.writer().print("mode: {s}\n", .{mode});
+    try report.writer().writeAll("parsed entries:\n");
+
+    while (lines.next()) |line| {
+        const parsed = try parseLine(line) orelse continue;
+        try report.writer().print("  {s} = {s}\n", .{ parsed.key, parsed.value });
+    }
+
+    const output_file = try cwd.createFile("report.txt", .{ .truncate = true });
+    defer output_file.close();
+
+    try output_file.writeAll(report.items);
+    std.debug.print("{s}", .{report.items});
+}
+</code></pre>
+<p>这个例子最值得观察的不是某一个 API，而是模块之间的职责分工：</p>
 <ul>
-<li>从 <code>std.process</code> 读取参数</li>
-<li>用 <code>std.fs</code> 处理文件和目录</li>
-<li>再结合 <code>std.mem</code>、<code>std.fmt</code> 组织输出</li>
+<li><code>std.process</code>：拿到参数和环境变量</li>
+<li><code>std.fs</code>：读文件、写文件</li>
+<li><code>std.mem</code>：按行拆分、裁剪、解析键值</li>
+<li><code>std.heap</code>：通过 <code>init.gpa</code> 支持动态内存</li>
+<li><code>std.fmt</code>：通过 writer 的 <code>print</code> 生成格式化文本</li>
+<li><code>std.debug</code>：把结果输出到终端</li>
 </ul>
-<h3 id="stdheap--其他模块"><a class="header" href="#stdheap--其他模块"><code>std.heap</code> + 其他模块</a></h3>
-<p>只要问题进入“动态内存”领域，<code>std.heap</code> 很快就会参与进来：</p>
-<ul>
-<li><code>std.fmt.allocPrint</code></li>
-<li>参数收集</li>
-<li>文件读取到动态缓冲区</li>
-<li>更复杂的数据结构构造</li>
-</ul>
-<p>所以在真实代码里，<code>std.heap</code> 往往不是单独使用，而是以“allocator 提供者”的身份参与其他模块。</p>
+<p>这就是 Zig 标准库在真实程序里的常见样子：<br><strong>不是单个模块孤立使用，而是围绕一条清晰的程序主线协作。</strong></p>
 <hr>
 <h2 id="本章小结-3"><a class="header" href="#本章小结-3">本章小结</a></h2>
-<p>这一章的核心目标是建立下面这些第一轮直觉：</p>
+<p>这一章的重点不是覆盖尽可能多的 API，而是建立面向实战的第一轮标准库直觉：</p>
+<ul>
+<li><code>std.mem</code>：处理切片、字节和已有缓冲区</li>
+<li><code>std.fmt</code>：把值格式化成文本</li>
+<li><code>std.debug</code>：观察状态、验证不变量</li>
+<li><code>std.testing</code>：固定行为、覆盖边界和错误路径</li>
+<li><code>std.fs</code>：处理文件和目录</li>
+<li><code>std.process</code>：处理参数、环境变量和进程上下文</li>
+<li><code>std.heap</code>：显式选择 allocator 和资源组织方式</li>
+</ul>
+<p>如果把真实程序看成一条主线，那么很常见的组合就是：</p>
 <ol>
-<li>处理切片、字节和很多“字符串问题”时，优先想到 <code>std.mem</code></li>
-<li>处理格式化时，优先想到 <code>std.fmt</code></li>
-<li>观察程序状态和验证不变量时，优先想到 <code>std.debug</code></li>
-<li>写测试与断言时，优先想到 <code>std.testing</code></li>
-<li>文件和目录相关需求，优先想到 <code>std.fs</code></li>
-<li>参数、环境变量、进程上下文相关需求，优先想到 <code>std.process</code></li>
-<li>动态分配和 allocator 相关入口，优先想到 <code>std.heap</code></li>
+<li><code>std.process</code> 从程序入口拿到上下文</li>
+<li><code>std.fs</code> 读取外部数据</li>
+<li><code>std.mem</code> 解析和整理输入</li>
+<li><code>std.fmt</code> 组织输出文本</li>
+<li><code>std.heap</code> 提供动态内存支持</li>
+<li><code>std.debug</code> 和 <code>std.testing</code> 分别负责开发期观察与验证</li>
 </ol>
-<p>如果已经建立了这张“高频模块入口地图”，这一章的目标就达成了。<br>接下来的深入学习中，无需背完整 API，可以按下面的思路继续推进：</p>
+<p>接下来继续学习时，可以按下面的方向深入：</p>
 <ul>
-<li>想系统理解 allocator 和资源责任 → 读<a href="#内存管理模型">内存管理模型</a></li>
-<li>想系统学习测试方法 → 读<a href="#测试与验证从单元测试到基准测量">测试与验证：从单元测试到基准测量</a></li>
-<li>想看文件系统与参数处理在真实工具中的组合 → 读<a href="#实战案例---cli-工具开发">实战案例 - CLI 工具开发</a></li>
+<li>想系统理解 allocator 与资源责任：读<a href="#内存管理模型">内存管理模型</a></li>
+<li>想系统学习测试：读<a href="#测试与验证从单元测试到基准测量">测试与验证：从单元测试到基准测量</a></li>
+<li>想看这些模块在真实工具中的组合：读<a href="#实战案例---cli-工具开发">实战案例 - CLI 工具开发</a></li>
 </ul>
-<p>回到 Zig 标准库本身，最稳定、也最值得反复建立的能力始终是：</p>
-<ul>
-<li>知道遇到问题时先想到哪个模块</li>
-<li>知道自己要找的是“模块职责”还是“具体 API”</li>
-<li>知道什么时候该继续读源码和当前版本文档确认细节</li>
-</ul>
+<p>回到标准库本身，最重要的能力始终是：</p>
+<blockquote>
+<p><strong>看到一个实际问题时，能迅速判断这条程序主线应该由哪些标准库模块来承担。</strong></p>
+</blockquote>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="编译期计算与元编程"><a class="header" href="#编译期计算与元编程">编译期计算与元编程</a></h1>
 <p>Zig 的 <code>comptime</code> 让一部分代码在编译阶段执行，从而把类型生成、约束检查、代码选择和预计算提前完成。本章聚焦于 <strong><code>comptime</code> 的机制</strong>——语法、内建函数、能力边界。泛型设计模式将在<a href="#泛型编程">泛型编程</a>中展开。</p>
@@ -5180,7 +5595,7 @@ fn max(comptime T: type, a: T, b: T) T {
 
 pub fn main() void {
     const a = max(i32, 10, 20);
-    const b = max(f64, 3.14, 2.71);
+    const b = max(f64, 3.14, 2.72);
 
     std.debug.print("int max: {}\n", .{a});
     std.debug.print("float max: {d}\n", .{b});
@@ -5206,23 +5621,8 @@ pub fn main() void {
 </code></pre>
 <hr>
 <h2 id="机制二comptime-块"><a class="header" href="#机制二comptime-块">机制二：<code>comptime</code> 块</a></h2>
-<p><code>comptime { }</code> 块强制其中的代码在编译期执行。最常见的用法是配合标签块计算编译期常量：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-const factorial_10 = comptime blk: {
-    var result: u32 = 1;
-    for (1..11) |i| {
-        result *= @as(u32, @intCast(i));
-    }
-    break :blk result;
-};
-
-pub fn main() void {
-    // factorial_10 == 3628800 (10!), 在编译期已经算好
-    std.debug.print("10! = {}\n", .{factorial_10});
-}
-</code></pre>
-<p><code>comptime</code> 块也可以用于编译期断言，确保静态约束成立：</p>
+<p><code>comptime { }</code> 块用于显式写出“一段代码必须在编译期执行”。</p>
+<p>如果只是初始化一个顶层 <code>const</code>常量对象，通常不需要额外写 <code>comptime</code>，因为顶层常量初始化本来就在编译期求值。<br>显式 <code>comptime</code> 更典型的用法，是在类型定义或普通代码附近写编译期检查：</p>
 <pre><code class="language-zig">const std = @import("std");
 
 const Block = struct {
@@ -5242,6 +5642,7 @@ pub fn main() void {
     std.debug.print("first byte: {}\n", .{b.data[0]});
 }
 </code></pre>
+<p>这个例子里，<code>comptime</code> 的作用不是“计算一个常量”，而是把静态约束放到编译期检查。<br>如果断言不成立，错误会在编译阶段直接暴露出来。</p>
 <hr>
 <h2 id="机制三comptime-var"><a class="header" href="#机制三comptime-var">机制三：<code>comptime var</code></a></h2>
 <p><code>comptime var</code> 声明一个只存在于编译期的可变变量，可以在编译期循环中累积状态：</p>
@@ -7374,7 +7775,7 @@ vtable: *const VTable, // 指向方法表的指针
 <hr>
 <h2 id="常见分配器它们各自解决什么问题"><a class="header" href="#常见分配器它们各自解决什么问题">常见分配器：它们各自解决什么问题</a></h2>
 <p>本节的重点是建立“这些分配器分别适合什么场景”。</p>
-<h3 id="stdtestingallocator"><a class="header" href="#stdtestingallocator"><code>std.testing.allocator</code></a></h3>
+<h3 id="stdtestingallocator-1"><a class="header" href="#stdtestingallocator-1"><code>std.testing.allocator</code></a></h3>
 <p>这是测试里最值得优先熟悉的分配器。</p>
 <p>特点：</p>
 <ul>
@@ -8014,6 +8415,782 @@ fn alloc(ctx: *anyopaque, n: usize, alignment: mem.Alignment, ra: usize) ?[*]u8 
 <p>下一章将学习 <a href="#与-c-语言的互操作性">与 C 语言的互操作性</a>，从“如何在 Zig 中组织抽象边界“推进到“如何跨 ABI 边界与 C 世界协作“。</p>
 </blockquote>
 <div style="break-before: page; page-break-before: always;"></div>
+<h1 id="stdio-接口详解"><a class="header" href="#stdio-接口详解">std.Io 接口详解</a></h1>
+<blockquote>
+<p><strong>版本说明</strong>：</p>
+<p><code>std.Io</code> 是 Zig 0.16 引入的重大接口变更。它将文件系统、网络、定时器、同步等几乎所有可能阻塞的操作统一到一个接口之下。这一接口目前处于“可用于大多数场景并收集反馈“的阶段，未来可能会根据实际使用继续演进。本章代码以 0.16-dev 源码为准。</p>
+</blockquote>
+<h2 id="为什么需要-stdio"><a class="header" href="#为什么需要-stdio">为什么需要 <code>std.Io</code>？</a></h2>
+<p>在 0.16 之前，文件操作散布在 <code>std.fs</code> 和 <code>std.posix</code> 中。0.16 做了一件与 Allocator 模型对齐的事情：</p>
+<blockquote>
+<p><strong>所有执行 I/O 的代码都需要访问一个 <code>Io</code> 实例，就像所有分配内存的代码都需要访问一个 <code>Allocator</code> 实例一样。</strong></p>
+</blockquote>
+<p>这意味着：</p>
+<ul>
+<li><code>std.fs</code> 的 API 已迁移到 <code>std.Io.File</code> 和 <code>std.Io.Dir</code> 下</li>
+<li><code>std.posix</code> 的大部分 API 已被 <code>std.Io</code> 取代</li>
+<li>大多数 I/O API 现在都需要一个 <code>std.Io</code> 参数</li>
+<li>底层平台特定 API 仍然可用（<code>std.c</code> 也在需要时可以 使用）</li>
+</ul>
+<p>这种设计带来的核心好处是：<strong>通过切换你实例化的 <code>Io</code> 实现，就能选择同步、异步（协程、线程等）不同的 I/O 模型</strong>，而业务代码不需要改动。</p>
+<hr>
+<h2 id="获取-io-实例"><a class="header" href="#获取-io-实例">获取 <code>Io</code> 实例</a></h2>
+<p>使用 <code>std.Io</code> 的第一步是拿到一个 <code>Io</code> 实例。常见场景有三种：</p>
+<h3 id="在测试中"><a class="header" href="#在测试中">在测试中</a></h3>
+<pre><code class="language-zig">const std = @import("std");
+
+test "使用 testing.io" {
+    const io = std.testing.io;
+    // 接下来所有 I/O 操作都可以使用 io
+}
+</code></pre>
+<p><code>std.testing.io</code> 是标准库为测试预先准备好的 <code>Io</code> 实例。</p>
+<h3 id="在-juicy-main-中"><a class="header" href="#在-juicy-main-中">在 juicy main 中</a></h3>
+<p>0.16 引入了“juicy main“入口，标准库可以提供预选的 <code>Io</code> 和 <code>Allocator</code> 实例：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+    const gpa = init.gpa;
+    // ...
+}
+</code></pre>
+<p><code>init.io</code> 会根据平台能力自动选择合适的实现。</p>
+<h3 id="手动创建"><a class="header" href="#手动创建">手动创建</a></h3>
+<p>如果需要明确控制 I/O 模型，可以自己创建：</p>
+<pre><code class="language-zig">const std = @import("std");
+const Io = std.Io;
+
+pub fn main() !void {
+    // 单线程版本——不使用并发
+    var threaded: Io.Threaded = .init_single_threaded;
+    const io = threaded.io();
+
+    // 多线程版本——支持异步和并发
+    // var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    // var threaded = Io.Threaded.init(gpa.allocator(), .{});
+    // const io = threaded.io();
+}
+</code></pre>
+<p>目前唯一完整可用的实现是 <code>std.Io.Threaded</code>。其他实现包括：</p>
+<ul>
+<li><code>failing</code>：用于测试，所有操作直接失败</li>
+<li><code>Evented</code>：基于 <code>Uring</code>（Linux）、<code>Kqueue</code>（BSD）或 <code>Dispatch</code>（macOS），目前为概念验证阶段</li>
+</ul>
+<hr>
+<h2 id="文件操作基础"><a class="header" href="#文件操作基础">文件操作基础</a></h2>
+<h3 id="打开与关闭文件"><a class="header" href="#打开与关闭文件">打开与关闭文件</a></h3>
+<p>文件操作从 <code>std.Io.Dir</code> 开始。<code>Dir.cwd()</code> 返回当前工作目录的句柄：</p>
+<pre><code class="language-zig">const std = @import("std");
+const Io = std.Io;
+
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+
+    // 打开文件用于读取
+    if (Io.Dir.cwd().openFile(io, "input.txt", .{})) |file| {
+        defer file.close(io);
+
+        // 使用 file 进行读写...
+    } else |err| switch (err) {
+        error.FileNotFound =&gt; {
+            std.debug.print("文件未找到\n", .{});
+        },
+        error.AccessDenied =&gt; {
+            std.debug.print("访问被拒绝\n", .{});
+        },
+        else =&gt; |e| return e,
+    }
+}
+</code></pre>
+<p>注意关键变化：</p>
+<ul>
+<li>旧版：<code>std.fs.cwd().openFile(path, .{})</code></li>
+<li>新版：<code>std.Io.Dir.cwd().openFile(io, path, .{})</code></li>
+</ul>
+<p><code>io</code> 作为第一个参数传入每个 I/O 函数。</p>
+<h3 id="创建文件"><a class="header" href="#创建文件">创建文件</a></h3>
+<pre><code class="language-zig">const std = @import("std");
+const Io = std.Io;
+
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+
+    const file = try Io.Dir.cwd().createFile(io, "output.txt", .{});
+    defer file.close(io);
+
+    // 写入数据
+    try file.writeStreamingAll(io, "hello from zig\n");
+}
+</code></pre>
+<h3 id="简单写入"><a class="header" href="#简单写入">简单写入</a></h3>
+<p><code>File.writeStreamingAll</code> 是最直接的写入方式，适合写入整块数据：</p>
+<pre><code class="language-zig">try file.writeStreamingAll(io, "some content");
+</code></pre>
+<p>对于更精细的控制（缓冲写入、格式化输出），需要使用 Writer 接口，后面会详细介绍。</p>
+<hr>
+<h2 id="读取文件内容"><a class="header" href="#读取文件内容">读取文件内容</a></h2>
+<h3 id="读取整个文件"><a class="header" href="#读取整个文件">读取整个文件</a></h3>
+<p><code>Dir.readFile</code> 将整个文件读入已有缓冲区：</p>
+<pre><code class="language-zig">const std = @import("std");
+const Io = std.Io;
+
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+
+    // 缓冲区必须足够大以容纳整个文件
+    var buf: [10240]u8 = undefined;
+    const contents = Io.Dir.readFile(Io.Dir.cwd(), io, "input.txt", &amp;buf) catch |err| switch (err) {
+        error.FileNotFound =&gt; {
+            std.debug.print("文件未找到\n", .{});
+            return;
+        },
+        else =&gt; |e| return e,
+    };
+
+    // contents 是 buf 上的一个切片，不是新分配的内存
+    std.debug.print("读取了 {d} 字节\n", .{contents.len});
+
+    // 按行遍历
+    var tok = std.mem.tokenizeSequence(u8, contents, "\n");
+    while (tok.next()) |line| {
+        std.debug.print("行: {s}\n", .{line});
+    }
+}
+</code></pre>
+<p>几点注意：</p>
+<ul>
+<li><code>contents</code> 只是 <code>buf</code> 上的一个切片，不会凭空产生内存</li>
+<li>应该使用 <code>contents</code> 而不是 <code>buf</code>，因为 <code>contents.len</code> 对应实际读取的数据量</li>
+<li>如果文件比 <code>buf</code> 大，只会读取 <code>buf.len</code> 字节，剩余内容留在文件中</li>
+<li>生产代码应检查 <code>contents.len &lt; buf.len</code> 来判断是否读取了全部内容</li>
+</ul>
+<p>如果文件大小未知，可以先 <code>statFile</code> 获取大小，再用 allocator 分配足够的空间：</p>
+<pre><code class="language-zig">const stat = try Io.Dir.cwd().statFile(io, "input.txt", .{});
+var buf = try init.gpa.alloc(u8, stat.size);
+defer init.gpa.free(buf);
+const contents = try Io.Dir.readFile(Io.Dir.cwd(), io, "input.txt", buf);
+</code></pre>
+<h3 id="使用-reader-按行读取"><a class="header" href="#使用-reader-按行读取">使用 Reader 按行读取</a></h3>
+<p>对于大文件或行式处理，使用 <code>File.Reader</code> 更合适：</p>
+<pre><code class="language-zig">const std = @import("std");
+const Io = std.Io;
+
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+
+    const file = try Io.Dir.cwd().openFile(io, "input.txt", .{});
+    defer file.close(io);
+
+    // 创建带缓冲的 Reader
+    var buf: [1024]u8 = undefined;
+    var file_reader: Io.File.Reader = file.reader(io, &amp;buf);
+
+    // takeDelimiter 返回到分隔符为止的数据（可选结果）
+    while (file_reader.interface.takeDelimiter('\n')) |result| {
+        if (result) |line| {
+            std.debug.print("行: {s}\n", .{line});
+        } else {
+            // null 表示流结束
+            break;
+        }
+    } else |err| switch (err) {
+        error.ReadFailed =&gt; {
+            std.debug.print("读取失败\n", .{});
+            return file_reader.err.?;
+        },
+        error.StreamTooLong =&gt; {
+            std.debug.print("单行超过缓冲区大小\n", .{});
+            return err;
+        },
+    }
+}
+</code></pre>
+<h3 id="理解-reader-的-interface-字段"><a class="header" href="#理解-reader-的-interface-字段">理解 Reader 的 interface 字段</a></h3>
+<p><code>File.Reader</code> 是一个具体实现，它包含一个 <code>interface</code> 字段（类型为 <code>Io.Reader</code>）来提供通用读取接口：</p>
+<pre><code class="language-zig">var file_reader: Io.File.Reader = file.reader(io, &amp;buf);
+
+// 通过 interface 访问通用方法
+while (file_reader.interface.takeDelimiter('\n')) |result| {
+    // ...
+}
+</code></pre>
+<p><strong>常见陷阱</strong>：不要复制 <code>interface</code>，必须通过引用访问：</p>
+<pre><code class="language-zig">// 正确：直接使用
+file_reader.interface.takeDelimiter('\n');
+
+// 正确：取地址赋值
+const reader = &amp;file_reader.interface;
+
+// 错误！复制会断开与父 Reader 的连接
+// const reader = file_reader.interface;
+</code></pre>
+<h3 id="takedelimiter-的三种变体"><a class="header" href="#takedelimiter-的三种变体">takeDelimiter 的三种变体</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>方法</th><th>返回内容</th><th>遇到流结束时的行为</th></tr>
+</thead>
+<tbody>
+<tr><td><code>takeDelimiter(delim)</code></td><td>不含分隔符的数据</td><td>返回 <code>null</code>（可选结果）</td></tr>
+<tr><td><code>takeDelimiterInclusive(delim)</code></td><td>含分隔符的数据</td><td>返回 <code>error.EndOfStream</code></td></tr>
+<tr><td><code>takeDelimiterExclusive(delim)</code></td><td>不含分隔符的数据</td><td>返回尾数据或 <code>error.EndOfStream</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>使用 <code>takeDelimiterInclusive</code> 时，如果文件最后一行没有以 <code>\n</code> 结尾，会有“尾部“数据需要处理：</p>
+<pre><code class="language-zig">while (file_reader.interface.takeDelimiterInclusive('\n')) |line| {
+    std.debug.print("{s}", .{line}); // 注意：line 已包含 \n
+} else |err| switch (err) {
+    error.ReadFailed =&gt; return file_reader.err.?,
+    error.EndOfStream =&gt; {
+        // 处理尾部数据（没有 \n 结尾的最后一行）
+        const remaining = file_reader.interface.buffer[file_reader.interface.seek..file_reader.interface.end];
+        if (remaining.len &gt; 0) {
+            std.debug.print("尾部: {s}\n", .{remaining});
+        }
+    },
+    error.StreamTooLong =&gt; return err,
+}
+</code></pre>
+<h3 id="使用流式读取处理任意长度行"><a class="header" href="#使用流式读取处理任意长度行">使用流式读取处理任意长度行</a></h3>
+<p>如果行长度不可预知，可以使用 <code>Writer.Allocating</code> 进行动态分配的流式读取：</p>
+<pre><code class="language-zig">const std = @import("std");
+const Io = std.Io;
+
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+
+    const file = try Io.Dir.cwd().openFile(io, "input.txt", .{});
+    defer file.close(io);
+
+    var line = Io.Writer.Allocating.init(init.gpa);
+    defer line.deinit();
+
+    var buf: [64]u8 = undefined; // 较小的缓冲区也能工作
+    var file_reader: Io.File.Reader = file.reader(io, &amp;buf);
+
+    while (file_reader.interface.streamDelimiter(&amp;line.writer, '\n')) |written_count| {
+        _ = written_count;
+        // 跳过分隔符本身
+        file_reader.interface.toss(1);
+
+        std.debug.print("行: {s}\n", .{line.written()});
+        line.clearRetainingCapacity();
+    } else |err| switch (err) {
+        error.ReadFailed, error.WriteFailed =&gt; return file_reader.err.?,
+        error.EndOfStream =&gt; {
+            // 处理尾部
+            if (line.written().len &gt; 0) {
+                std.debug.print("尾部: {s}\n", .{line.written()});
+            }
+        },
+        else =&gt; return err,
+    }
+}
+</code></pre>
+<h3 id="字节级读取"><a class="header" href="#字节级读取">字节级读取</a></h3>
+<p>Reader 也支持更细粒度的读取操作：</p>
+<pre><code class="language-zig">// 读取单个字节
+const byte = try reader.interface.takeByte();
+
+// 读取整数（指定字节序）
+const int = try reader.interface.takeInt(u32, .little);
+
+// 读取固定数量的字节
+const chunk = try reader.interface.take(16);
+</code></pre>
+<p>还有 <code>takeStruct</code>、<code>takeEnum</code>、<code>peekByte</code>、<code>peek</code> 等方法值得探索。</p>
+<hr>
+<h2 id="写入文件内容"><a class="header" href="#写入文件内容">写入文件内容</a></h2>
+<h3 id="使用-filewriter"><a class="header" href="#使用-filewriter">使用 File.Writer</a></h3>
+<p>对于需要缓冲、格式化等功能的写入，使用 <code>File.Writer</code>：</p>
+<pre><code class="language-zig">const std = @import("std");
+const Io = std.Io;
+
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+
+    const file = try Io.Dir.cwd().createFile(io, "output.txt", .{});
+    defer file.close(io);
+
+    var buf: [1024]u8 = undefined;
+    var file_writer: Io.File.Writer = file.writer(io, &amp;buf);
+
+    // 写入数据
+    try file_writer.interface.writeAll("hello\n");
+    try file_writer.interface.print("count = {d}\n", .{42});
+    try file_writer.interface.writeByte(0x0A);
+    try file_writer.interface.writeInt(u32, 1234, .little);
+
+    // 写完后刷新缓冲
+    try file_writer.interface.flush();
+}
+</code></pre>
+<p><strong>重要</strong>：写入操作后务必调用 <code>flush()</code>，确保缓冲区中的数据写入底层文件。</p>
+<h3 id="固定缓冲区-writer用于测试或内存写入"><a class="header" href="#固定缓冲区-writer用于测试或内存写入">固定缓冲区 Writer（用于测试或内存写入）</a></h3>
+<p><code>Io.Writer.fixed</code> 创建一个写入到已有缓冲区的 Writer：</p>
+<pre><code class="language-zig">var buf: [1024]u8 = undefined;
+var writer: std.Io.Writer = .fixed(&amp;buf);
+
+try writer.writeAll("hello");
+try writer.writeByte('\n');
+try writer.print("value = {d}\n", .{42});
+
+// 获取已写入的内容
+const written = writer.buffered();
+std.debug.print("{s}", .{written});
+</code></pre>
+<p>对于 <code>.fixed()</code> Writer，<code>flush()</code> 是空操作（no-op），但仍建议养成调用习惯。</p>
+<hr>
+<h2 id="错误处理的特殊之处"><a class="header" href="#错误处理的特殊之处">错误处理的特殊之处</a></h2>
+<p><code>std.Io</code> 的错误处理有几个需要特别注意的地方。</p>
+<h3 id="readfailed-和-writefailed"><a class="header" href="#readfailed-和-writefailed">ReadFailed 和 WriteFailed</a></h3>
+<p>Reader 和 Writer 的通用接口只暴露 <code>ReadFailed</code> 和 <code>WriteFailed</code> 这样的高层错误。具体错误信息保存在具体实现的 <code>.err</code> 字段中：</p>
+<pre><code class="language-zig">var file_reader: Io.File.Reader = file.reader(io, &amp;buf);
+
+// 在读取循环中
+while (file_reader.interface.takeDelimiter('\n')) |result| {
+    if (result) |line| {
+        // 处理行
+    } else break;
+} else |err| switch (err) {
+    error.ReadFailed =&gt; {
+        // 必须通过 file_reader.err 获取具体错误
+        return file_reader.err.?;
+    },
+    error.StreamTooLong =&gt; return err,
+}
+</code></pre>
+<h3 id="errorcanceled-的重要性"><a class="header" href="#errorcanceled-的重要性">error.Canceled 的重要性</a></h3>
+<p>在异步/并发上下文中，<code>error.Canceled</code> 是一个特殊错误，用于任务取消机制。<strong>它必须被正确传播</strong>，取消才能工作：</p>
+<pre><code class="language-zig">fn processFile(io: Io, file: Io.File) !void {
+    var buf: [1024]u8 = undefined;
+    var file_reader = file.reader(io, &amp;buf);
+
+    while (file_reader.interface.takeDelimiter('\n')) |result| {
+        if (result) |line| {
+            try handleLine(io, line);
+        } else break;
+    } else |err| switch (err) {
+        error.ReadFailed =&gt; {
+            // 关键：传播 Canceled 错误
+            // file_reader.err 可能是 error.Canceled
+            return file_reader.err.?;
+        },
+        error.StreamTooLong =&gt; return err,
+    }
+}
+</code></pre>
+<h3 id="上层与下层的错误处理策略"><a class="header" href="#上层与下层的错误处理策略">上层与下层的错误处理策略</a></h3>
+<p>一个常见的模式是：</p>
+<ul>
+<li><strong>上层代码</strong>（创建 Reader/Writer 的地方）负责检查 <code>.err</code> 字段</li>
+<li><strong>下层代码</strong>（只接收 <code>Io.Reader</code> 或 <code>Io.Writer</code> 接口的函数）直接用 <code>try</code> 传播</li>
+</ul>
+<pre><code class="language-zig">// 下层函数只看到接口
+fn handleLine(reader: *Io.Reader, line: []const u8) !void {
+    // 出错时直接 try，让 ReadFailed 传播上去
+    _ = try reader.take(10);
+}
+
+// 上层代码知道具体实现
+fn process(io: Io) !void {
+    var file_reader = file.reader(io, &amp;buf);
+    handleLine(&amp;file_reader.interface, "some line") catch |err| switch (err) {
+        error.ReadFailed =&gt; return file_reader.err.?, // 在这里获取具体错误
+        else =&gt; |e| return e,
+    };
+}
+</code></pre>
+<hr>
+<h2 id="时间相关-api"><a class="header" href="#时间相关-api">时间相关 API</a></h2>
+<p><code>std.Io</code> 引入了 <code>Timestamp</code>、<code>Duration</code> 和 <code>Clock</code> 类型，比之前的 API 有很大改进。</p>
+<h3 id="clock时钟类型"><a class="header" href="#clock时钟类型">Clock：时钟类型</a></h3>
+<pre><code class="language-zig">pub const Clock = enum {
+    real,         // 系统墙上时钟（受 NTP 和手动调整影响）
+    awake,        // 单调时钟（不含系统休眠时间）
+    boot,         // 单调时钟（含系统休眠时间）
+    cpu_process,  // 进程使用的 CPU 时间
+    cpu_thread,   // 线程使用的 CPU 时间
+};
+</code></pre>
+<h3 id="duration时间长度"><a class="header" href="#duration时间长度">Duration：时间长度</a></h3>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+
+    // 从不同单位创建 Duration
+    const d1 = std.Io.Duration.fromNanoseconds(100);
+    const d2 = std.Io.Duration.fromMicroseconds(500);
+    const d3 = std.Io.Duration.fromMilliseconds(200);
+    const d4 = std.Io.Duration.fromSeconds(3);
+
+    // 转换为不同单位
+    std.debug.print("毫秒: {d}\n", .{d3.toMilliseconds()});
+    std.debug.print("秒: {d}\n", .{d4.toSeconds()});
+}
+</code></pre>
+<h3 id="timestamp时间点"><a class="header" href="#timestamp时间点">Timestamp：时间点</a></h3>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+
+    // 获取当前时间
+    const now = std.Io.Timestamp.now(io, .real);
+
+    // 计算时间差
+    const start = std.Io.Timestamp.now(io, .awake);
+    // ... 执行一些操作 ...
+    const end = std.Io.Timestamp.now(io, .awake);
+    const elapsed = start.durationTo(end);
+    std.debug.print("耗时: {}\n", .{elapsed});
+}
+</code></pre>
+<h3 id="sleep休眠"><a class="header" href="#sleep休眠">sleep：休眠</a></h3>
+<pre><code class="language-zig">const std = @import("std");
+
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+
+    // 休眠 2 秒（使用 real 时钟）
+    try io.sleep(.fromSeconds(2), .real);
+
+    // sleep 也可能返回 error.Canceled（在异步上下文中）
+}
+</code></pre>
+<hr>
+<h2 id="异步基础"><a class="header" href="#异步基础">异步基础</a></h2>
+<p><code>std.Io</code> 不只是 I/O 接口，它还是一个管理异步和并发任务的运行时。</p>
+<h3 id="三个核心概念"><a class="header" href="#三个核心概念">三个核心概念</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>概念</th><th>含义</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>异步（asynchrony）</strong></td><td>操作可以不按严格顺序执行，具有被并发推进的潜力</td></tr>
+<tr><td><strong>并发（concurrency）</strong></td><td>多个任务同时被推进（不一定同时执行）</td></tr>
+<tr><td><strong>并行（parallelism）</strong></td><td>多个任务真正在同一物理时刻执行</td></tr>
+</tbody>
+</table>
+</div>
+<p><code>std.Io</code> 提供异步和并发能力，其中并发是可选的。</p>
+<h3 id="ioasync-和-future"><a class="header" href="#ioasync-和-future">io.async 和 Future</a></h3>
+<p><code>io.async</code> 启动一个异步任务，返回一个 <code>Future</code>：</p>
+<pre><code class="language-zig">const std = @import("std");
+const Io = std.Io;
+
+fn saveData(io: Io, file_name: []const u8, data: []const u8) !Io.File {
+    const fd = try Io.Dir.cwd().createFile(io, file_name, .{});
+    errdefer fd.close(io);
+    try fd.writeStreamingAll(io, data);
+    return fd;
+}
+
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+
+    // 同时启动两个异步保存任务
+    var future_foo = io.async(saveData, .{ io, "foo.txt", "foo\n" });
+    var future_bar = io.async(saveData, .{ io, "bar.txt", "bar\n" });
+
+    // 等待两个任务完成
+    const foo = try future_foo.await(io);
+    defer foo.close(io);
+    const bar = try future_bar.await(io);
+    defer bar.close(io);
+}
+</code></pre>
+<p>两个保存操作互不依赖，可以受益于异步执行。</p>
+<h3 id="await-和-cancel"><a class="header" href="#await-和-cancel">await 和 cancel</a></h3>
+<ul>
+<li><strong><code>await</code></strong>：等待任务完成，返回结果</li>
+<li><strong><code>cancel</code></strong>：请求取消任务，然后等待完成，返回结果</li>
+<li>两者在任务已完成时行为相同，直接返回结果</li>
+<li>取消通过 <code>error.Canceled</code> 被任务检测到</li>
+</ul>
+<h3 id="资源泄漏问题"><a class="header" href="#资源泄漏问题">资源泄漏问题</a></h3>
+<p>上面的代码有一个隐患：如果 <code>future_foo.await</code> 失败，<code>future_bar</code> 永远不会被 await，导致 Future 和文件句柄泄漏。</p>
+<p>解决方案是用 <code>defer</code> 加 <code>cancel</code>：</p>
+<pre><code class="language-zig">pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+
+    var future_foo = io.async(saveData, .{ io, "foo.txt", "foo\n" });
+    defer if (future_foo.cancel(io)) |file| file.close(io) else |_| {};
+
+    var future_bar = io.async(saveData, .{ io, "bar.txt", "bar\n" });
+    defer if (future_bar.cancel(io)) |file| file.close(io) else |_| {};
+
+    // cancel 在已完成的任务上等同于 await，返回结果
+    // 在未完成的任务上则请求取消
+    // 无论哪种情况，都确保资源被清理
+    _ = try future_foo.await(io);
+    _ = try future_bar.await(io);
+}
+</code></pre>
+<p><code>cancel</code> 的返回类型和原函数相同。使用 <code>if (future.cancel(io))</code> 模式：</p>
+<ul>
+<li>成功时拿到返回值（如文件句柄），进行清理</li>
+<li>失败时（包括 <code>error.Canceled</code>）用 <code>else |_| {}</code> 忽略</li>
+</ul>
+<p>这是 <code>std.Io</code> 异步编程中最重要的模式之一。</p>
+<h3 id="异步打开文件"><a class="header" href="#异步打开文件">异步打开文件</a></h3>
+<pre><code class="language-zig">const std = @import("std");
+const Io = std.Io;
+
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+
+    // 异步打开文件
+    var open_task = io.async(Io.Dir.openFile, .{ Io.Dir.cwd(), io, "data.txt", .{} });
+    defer if (open_task.cancel(io)) |file| file.close(io) else |_| {};
+
+    // 等待文件打开
+    const file = try open_task.await(io);
+    // 现在可以读取...
+}
+</code></pre>
+<hr>
+<h2 id="并发"><a class="header" href="#并发">并发</a></h2>
+<h3 id="ioconcurrent"><a class="header" href="#ioconcurrent">io.concurrent</a></h3>
+<p><code>io.concurrent</code> 保证真正的并发。如果不可用则返回 <code>error.ConcurrencyUnavailable</code>：</p>
+<pre><code class="language-zig">var future = try io.concurrent(someTask, .{io, arg1, arg2});
+defer _ = future.cancel(io) catch {};
+</code></pre>
+<p>juicy main 提供的 <code>io</code> 实例在可能的情况下会支持并发。</p>
+<h3 id="队列生产者-消费者模式"><a class="header" href="#队列生产者-消费者模式">队列：生产者-消费者模式</a></h3>
+<p><code>std.Io.Queue</code> 是多生产者、多消费者的 FIFO 队列，操作在队列满/空时会阻塞：</p>
+<pre><code class="language-zig">const std = @import("std");
+const Io = std.Io;
+
+const Task = struct {
+    id: Id,
+    status: enum { started, pending, finished },
+    const Id = enum(u8) { a, b, c };
+};
+
+fn logger(io: Io, queue: *Io.Queue(Task)) !void {
+    // getOne 在队列为空时阻塞
+    while (queue.getOne(io)) |t| {
+        std.debug.print("{s}: {s}\n", .{ @tagName(t.status), @tagName(t.id) });
+    } else |e| return e;
+}
+
+fn doWork(io: Io, task_id: Task.Id, queue: *Io.Queue(Task)) !void {
+    try queue.putOne(io, .{ .id = task_id, .status = .started });
+    try io.sleep(.fromSeconds(2), .real);
+    try queue.putOne(io, .{ .id = task_id, .status = .finished });
+}
+
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+
+    var buf: [10]Task = undefined;
+    var queue: Io.Queue(Task) = .init(&amp;buf);
+
+    // 日志任务需要并发运行
+    var future_logger = try io.concurrent(logger, .{ io, &amp;queue });
+    defer future_logger.cancel(io) catch {};
+
+    var future_a = io.async(doWork, .{ io, .a, &amp;queue });
+    defer future_a.cancel(io) catch {};
+
+    var future_b = io.async(doWork, .{ io, .b, &amp;queue });
+    defer future_b.cancel(io) catch {};
+
+    try future_a.await(io);
+    try future_b.await(io);
+
+    // 关闭队列，让 logger 能正常退出
+    queue.close(io);
+    try future_logger.await(io);
+}
+</code></pre>
+<p><strong>重要</strong>：<code>queue.close(io)</code> 会让 <code>getOne</code> 在处理完剩余元素后返回 <code>error.Closed</code>，而不是永远阻塞。这是让消费者任务正常退出的关键。</p>
+<h3 id="group管理多个-future"><a class="header" href="#group管理多个-future">Group：管理多个 Future</a></h3>
+<p><code>Io.Group</code> 高效管理任意数量的 Future，可以一起 await 或 cancel：</p>
+<pre><code class="language-zig">const std = @import("std");
+const Io = std.Io;
+
+fn worker(io: Io, id: usize) !void {
+    try io.sleep(.fromSeconds(@intCast(id)), .real);
+    std.debug.print("worker {} done\n", .{id});
+}
+
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+
+    var group: Io.Group = .init;
+
+    // 添加多个异步任务到组
+    for (0..5) |i| {
+        group.async(io, worker, .{ io, i });
+    }
+
+    // 等待所有任务完成
+    try group.await(io);
+}
+</code></pre>
+<p>Group 的限制是：</p>
+<ul>
+<li>只能整体 await 或 cancel，不能单独操作</li>
+<li>返回类型限制为 <code>void</code>、<code>error{Canceled}</code> 或 <code>error{Canceled}!void</code></li>
+</ul>
+<h3 id="select更灵活的多任务管理"><a class="header" href="#select更灵活的多任务管理">Select：更灵活的多任务管理</a></h3>
+<p><code>Io.Select</code> 结合了 Group 和 Queue 的能力，支持不同的返回类型：</p>
+<pre><code class="language-zig">const std = @import("std");
+const Io = std.Io;
+
+// 定义结果类型为 tagged union
+const Result = union(enum) {
+    file_content: []const u8,
+    network_data: []const u8,
+    timeout: void,
+};
+
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+
+    var select: Io.Select(Result) = .{ .io = io };
+    defer select.cancelDiscard(io);
+
+    // 添加不同类型的任务
+    select.async(.file_content, readFile, .{io, "data.txt"});
+    select.async(.network_data, fetchNetwork, .{io, "example.com"});
+
+    // 等待下一个完成的任务
+    while (select.next(io)) |result| {
+        switch (result) {
+            .file_content =&gt; |data| std.debug.print("文件: {s}\n", .{data}),
+            .network_data =&gt; |data| std.debug.print("网络: {s}\n", .{data}),
+            .timeout =&gt; std.debug.print("超时\n", .{}),
+        }
+    } else |err| switch (err) {
+        error.Canceled =&gt; return,
+        else =&gt; return err,
+    }
+}
+</code></pre>
+<p><code>cancelDiscard</code> 取消并丢弃所有结果（不需要缓冲空间），但如果任务返回需要清理的资源，必须使用 <code>cancel</code>。</p>
+<hr>
+<h2 id="同步原语"><a class="header" href="#同步原语">同步原语</a></h2>
+<p><code>std.Io</code> 提供了与任务管理集成的同步原语，应优先使用这些而不是操作系统原语：</p>
+<ul>
+<li><code>Io.RwLock</code>：读写锁</li>
+<li><code>Io.Semaphore</code>：信号量</li>
+<li><code>Io.futexWait</code> / <code>Io.futexWake</code>：底层等待/唤醒</li>
+</ul>
+<p>这些原语与 <code>Io</code> 实现的任务调度集成，在不同 <code>Io</code> 后端下行为一致。操作系统的同步原语在某些 <code>Io</code> 实现下可能无法按预期工作。</p>
+<hr>
+<h2 id="完整示例文件处理工具"><a class="header" href="#完整示例文件处理工具">完整示例：文件处理工具</a></h2>
+<p>下面是一个综合运用本章知识的例子——一个简单的文件处理工具：</p>
+<pre><code class="language-zig">const std = @import("std");
+const Io = std.Io;
+
+fn processFile(io: Io, input_path: []const u8, output_path: []const u8) !void {
+    // 打开输入文件
+    const input = Io.Dir.cwd().openFile(io, input_path, .{}) catch |err| switch (err) {
+        error.FileNotFound =&gt; {
+            std.debug.print("输入文件不存在: {s}\n", .{input_path});
+            return err;
+        },
+        else =&gt; |e| return e,
+    };
+    defer input.close(io);
+
+    // 创建输出文件
+    const output = try Io.Dir.cwd().createFile(io, output_path, .{});
+    defer output.close(io);
+
+    // 创建读写器
+    var read_buf: [1024]u8 = undefined;
+    var file_reader: Io.File.Reader = input.reader(io, &amp;read_buf);
+
+    var write_buf: [1024]u8 = undefined;
+    var file_writer: Io.File.Writer = output.writer(io, &amp;write_buf);
+
+    var line_num: usize = 0;
+
+    // 按行处理
+    while (file_reader.interface.takeDelimiter('\n')) |result| {
+        if (result) |line| {
+            line_num += 1;
+            try file_writer.interface.print("{d}: {s}\n", .{ line_num, line });
+        } else break;
+    } else |err| switch (err) {
+        error.ReadFailed =&gt; return file_reader.err.?,
+        error.StreamTooLong =&gt; {
+            std.debug.print("行过长，超过缓冲区\n", .{});
+            return err;
+        },
+    }
+
+    // 确保所有数据写入
+    try file_writer.interface.flush();
+    std.debug.print("处理完成，共 {d} 行\n", .{line_num});
+}
+
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+    try processFile(io, "input.txt", "output.txt");
+}
+</code></pre>
+<hr>
+<h2 id="从旧-api-迁移"><a class="header" href="#从旧-api-迁移">从旧 API 迁移</a></h2>
+<p>如果你有使用旧版 <code>std.fs</code> 的代码，迁移的核心变化是：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>旧版</th><th>新版</th></tr>
+</thead>
+<tbody>
+<tr><td><code>std.fs.cwd()</code></td><td><code>std.Io.Dir.cwd()</code></td></tr>
+<tr><td><code>cwd.openFile(path, .{})</code></td><td><code>cwd.openFile(io, path, .{})</code></td></tr>
+<tr><td><code>cwd.createFile(path, .{})</code></td><td><code>cwd.createFile(io, path, .{})</code></td></tr>
+<tr><td><code>file.readToEndAlloc(gpa, max)</code></td><td>使用 <code>Dir.readFile</code> 或 <code>File.Reader</code></td></tr>
+<tr><td><code>file.writeAll(data)</code></td><td><code>file.writeStreamingAll(io, data)</code> 或使用 <code>File.Writer</code></td></tr>
+<tr><td><code>file.close()</code></td><td><code>file.close(io)</code></td></tr>
+<tr><td><code>std.posix</code> 相关操作</td><td><code>std.Io</code> 中的对应方法</td></tr>
+</tbody>
+</table>
+</div>
+<p>每个 I/O 操作现在都需要传入 <code>io</code> 参数，这是最大的变化。</p>
+<hr>
+<h2 id="本章小结-7"><a class="header" href="#本章小结-7">本章小结</a></h2>
+<p><code>std.Io</code> 是 Zig I/O 模型的核心抽象，它的设计遵循与 Allocator 相同的理念：</p>
+<ol>
+<li><strong>显式传递</strong>：所有 I/O 操作需要 <code>Io</code> 实例，就像内存分配需要 <code>Allocator</code></li>
+<li><strong>实现可切换</strong>：通过选择不同的 <code>Io</code> 实现（Threaded、Evented 等），改变 I/O 模型</li>
+<li><strong>异步与并发一体化</strong>：Future、Group、Select 提供从简单到复杂的多任务管理</li>
+<li><strong>错误处理要注意</strong>：<code>ReadFailed</code>/<code>WriteFailed</code> 下有具体错误；<code>error.Canceled</code> 必须正确传播</li>
+<li><strong>资源管理要严谨</strong>：使用 <code>defer</code> + <code>cancel</code> 模式确保异步任务的资源不泄漏</li>
+</ol>
+<p>使用 <code>std.Io</code> 时要建立的直觉：</p>
+<ul>
+<li>文件操作从 <code>Io.Dir.cwd()</code> 出发，所有方法第一个参数是 <code>io</code></li>
+<li>读取用 <code>File.Reader</code>（通过 <code>file.reader(io, &amp;buf)</code> 创建）</li>
+<li>写入用 <code>File.Writer</code>（通过 <code>file.writer(io, &amp;buf)</code> 创建），别忘了 <code>flush()</code></li>
+<li>简单场景用 <code>Dir.readFile</code> / <code>File.writeStreamingAll</code></li>
+<li>异步场景用 <code>io.async</code> + <code>defer cancel</code> 模式</li>
+<li>需要真正并发时用 <code>io.concurrent</code></li>
+</ul>
+<blockquote>
+<p><strong>相关阅读</strong>：</p>
+<ul>
+<li>并发编程的线程、锁、原子操作基础见<a href="#并发编程概述">并发编程概述</a></li>
+<li>更完整的异步 I/O 方向讨论见<a href="#异步-io现状历史与未来方向">异步 I/O：现状与未来方向</a></li>
+<li>内存分配策略见<a href="#内存管理模型">内存管理模型</a></li>
+</ul>
+</blockquote>
+<h2 id="参考"><a class="header" href="#参考">参考</a></h2>
+<ul>
+<li><a href="https://ziggit.dev/t/std-io-overview/14994">std.Io overview</a></li>
+<li><a href="https://ziggit.dev/t/file-i-o-basics-0-16/14968">File I/O basics (0.16)</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
 <h1 id="与-c-语言的互操作性"><a class="header" href="#与-c-语言的互操作性">与 C 语言的互操作性</a></h1>
 <p>这一章不把重点放在“罗列尽可能多的 C 互操作语法“，而是把重点放在几个真正决定成败的边界上：</p>
 <blockquote>
@@ -8587,7 +9764,7 @@ b.installArtifact(exe);
 </ol>
 <p>如果答不出来，就说明这段边界还不够稳。</p>
 <hr>
-<h2 id="本章小结-7"><a class="header" href="#本章小结-7">本章小结</a></h2>
+<h2 id="本章小结-8"><a class="header" href="#本章小结-8">本章小结</a></h2>
 <p>这一章最重要的目标，不是让读者背下多少互操作语法，而是建立一套更可靠的边界意识：</p>
 <ul>
 <li><strong>C 互操作首先是 ABI 问题，不只是语法问题</strong></li>
@@ -8610,8 +9787,8 @@ b.installArtifact(exe);
 <h1 id="并发编程概述"><a class="header" href="#并发编程概述">并发编程概述</a></h1>
 <blockquote>
 <p><strong>进阶</strong>：</p>
-<p>本章的重点是建立 Zig 中并发编程的<strong>稳定概念框架</strong>：线程、共享状态、同步原语、原子操作与常见取舍。</p>
-<p>与 I/O 相关的“异步方向”在开发版语境下仍然更容易演进，因此本章不会把某些 dev 版接口当作稳定 API 手册来讲解。关于这一方向的阅读建议，请结合第三部分的<a href="#异步-io现状历史与未来方向">异步 I/O：现状与未来方向</a>一起看。</p>
+<p>本章聚焦于 Zig 中基于<strong>操作系统线程</strong>的并发编程：线程、共享状态、同步原语、原子操作与常见取舍。</p>
+<p>Zig 0.16 引入的 <code>std.Io</code> 接口提供了更高层的异步和并发能力（<code>Future</code>、<code>Queue</code>、<code>Group</code>、<code>Select</code> 等），这些内容已在 <a href="#stdio-接口详解">std.Io 接口详解</a> 中专门讲解。但理解本章的线程模型和同步原语，仍然是正确使用 <code>std.Io</code> 异步能力的基础——<code>std.Io.Threaded</code> 的底层实现正是基于操作系统线程。</p>
 </blockquote>
 <h2 id="三个容易混淆的概念"><a class="header" href="#三个容易混淆的概念">三个容易混淆的概念</a></h2>
 <p>在进入具体代码之前，必须先分清：<strong>异步（asynchrony）</strong>、<strong>并发（concurrency）</strong>、<strong>并行（parallelism）</strong>。</p>
@@ -8627,6 +9804,7 @@ b.installArtifact(exe);
 </tbody>
 </table>
 </div>
+<p>这三个概念在 <a href="#stdio-接口详解">std.Io 接口详解</a> 中也会出现，但那里的重点是如何用 <code>Io</code> API 来利用异步和并发；本章的重点则是底层的线程机制和同步工具。</p>
 <h3 id="异步顺序是否重要"><a class="header" href="#异步顺序是否重要">异步：“顺序是否重要”</a></h3>
 <p>异步首先讨论的是<strong>正确性约束</strong>，而不是“有没有多线程”。</p>
 <p>如果两个操作只要最终都完成即可，中间顺序并不重要，那么它们就具有异步性。</p>
@@ -8944,16 +10122,38 @@ pub fn main(_: std.process.Init) !void {
 </table>
 </div>
 <p>这张表不是绝对规则，但很适合作为第一判断。</p>
-<h2 id="当前语境下如何看待异步-io方向"><a class="header" href="#当前语境下如何看待异步-io方向">当前语境下，如何看待“异步 I/O”方向？</a></h2>
-<p>可能已经在博客、issue、标准库源码或开发版讨论中看到过与异步 I/O 相关的方向性接口。</p>
-<p>对于本教程读者，更重要的是建立一个<strong>稳妥认知</strong>：</p>
-<ol>
-<li>这属于更容易演进的区域</li>
-<li>它和线程模型不是简单替代关系</li>
-<li>教学上更适合先掌握线程、锁、条件变量、原子这些稳定概念</li>
-<li>真要落地具体 API，必须以本地版本和源码为准</li>
-</ol>
-<p>因此，本章不把某个开发版里的 I/O 并发接口当作“现在必须背下来的主线知识”。</p>
+<h2 id="线程模型与-stdio-的关系"><a class="header" href="#线程模型与-stdio-的关系">线程模型与 <code>std.Io</code> 的关系</a></h2>
+<p>在 <a href="#stdio-接口详解">std.Io 接口详解</a> 中，我们介绍了 <code>std.Io</code> 的异步和并发能力。那么，本章讲的线程模型与 <code>std.Io</code> 是什么关系？</p>
+<h3 id="stdiothreaded-的底层就是线程"><a class="header" href="#stdiothreaded-的底层就是线程"><code>std.Io.Threaded</code> 的底层就是线程</a></h3>
+<p>目前唯一完整可用的 <code>Io</code> 实现 <code>std.Io.Threaded</code>，底层使用的就是操作系统线程。当你调用 <code>io.async()</code> 时，<code>Threaded</code> 实现会将任务分配给线程池中的线程执行。</p>
+<p>这意味着：</p>
+<ul>
+<li>理解线程、锁、原子操作是理解 <code>std.Io</code> 行为的基础</li>
+<li>本章讨论的数据竞争、竞态条件等问题，在 <code>std.Io</code> 的异步上下文中同样存在</li>
+<li>本章的“常见坑“（锁持有时间过长、资源生命周期等）同样适用于使用 <code>std.Io</code> 的代码</li>
+</ul>
+<h3 id="两套同步原语怎么选"><a class="header" href="#两套同步原语怎么选">两套同步原语怎么选？</a></h3>
+<p><code>std.Io</code> 和 <code>std.Thread</code> 各自提供了同步原语：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th><code>std.Thread</code> 原语</th><th><code>std.Io</code> 原语</th><th>适用场景</th></tr>
+</thead>
+<tbody>
+<tr><td><code>Mutex</code></td><td><code>Io.RwLock</code></td><td>传统线程代码 / <code>Io</code> 异步上下文</td></tr>
+<tr><td><code>Condition</code></td><td><code>Io.Semaphore</code></td><td>传统线程代码 / <code>Io</code> 异步上下文</td></tr>
+<tr><td>原子操作</td><td><code>Io.futexWait</code> / <code>Io.futexWake</code></td><td>简单标志位 / 与 <code>Io</code> 任务管理集成</td></tr>
+</tbody>
+</table>
+</div>
+<p>选择原则很简单：</p>
+<ul>
+<li><strong>代码全面使用 <code>std.Io</code></strong>（异步任务、<code>io.async</code>、<code>Future</code> 等）→ 优先用 <code>Io</code> 的同步原语，因为它们与 <code>Io</code> 的任务调度集成，在不同 <code>Io</code> 后端下行为一致</li>
+<li><strong>传统多线程程序</strong>（<code>std.Thread.spawn</code>、<code>join</code>、<code>Mutex</code>）→ 用 <code>std.Thread</code> 的原语，它更简单直接</li>
+</ul>
+<blockquote>
+<p><strong>注意</strong>：<code>std.Io</code> 的异步任务应避免使用 <code>threadlocal</code>。不同 <code>Io</code> 实现可能使用不同的并发单元，<code>threadlocal</code> 代码在未来切换到非线程实现时可能行为异常。</p>
+</blockquote>
 <h2 id="并发编程最常见的几个坑"><a class="header" href="#并发编程最常见的几个坑">并发编程最常见的几个坑</a></h2>
 <h3 id="1-把睡眠等待当同步机制"><a class="header" href="#1-把睡眠等待当同步机制">1. 把“睡眠等待”当同步机制</a></h3>
 <p><code>std.time.sleep()</code> 可以模拟场景，但不能代替真正的同步原语。</p>
@@ -8991,10 +10191,10 @@ pub fn main(_: std.process.Init) !void {
 <ul>
 <li>自己维护一组工作线程 + 任务队列</li>
 <li>使用社区提供的第三方库</li>
-<li>关注 <code>std.Io</code> 下正在演进的异步 I/O 基础设施，它在某些场景下可以替代传统线程池</li>
+<li>使用 <code>std.Io</code> 的异步能力（<code>io.async</code>、<code>Group</code> 等）来获得类似效果，详见 <a href="#stdio-接口详解">std.Io 接口详解</a></li>
 </ul>
 <p>对于学习目的，手动管理一组线程加上条件变量通知，恰好是理解线程池内部工作原理的好练习。</p>
-<h2 id="本章小结-8"><a class="header" href="#本章小结-8">本章小结</a></h2>
+<h2 id="本章小结-9"><a class="header" href="#本章小结-9">本章小结</a></h2>
 <p>本章的核心判断：</p>
 <ul>
 <li>并发、并行、异步不是一回事</li>
@@ -9002,9 +10202,15 @@ pub fn main(_: std.process.Init) !void {
 <li>复杂共享状态优先考虑锁</li>
 <li>简单计数和标志位可以考虑原子操作</li>
 <li>能不共享，就尽量不共享</li>
-<li>对版本敏感的异步 I/O 方向，先把它当作“需要结合本地版本核对的高级主题”</li>
 </ul>
-<p>如果已经能看清这些边界，那么在后续阅读测试、构建、网络和实战章节时，就更不容易把“并发写法”误当成“只是语法技巧”。</p>
+<p>如果已经能看清这些边界，那么在后续阅读 <code>std.Io</code> 接口、测试、构建和网络章节时，就更不容易把“并发写法“误当成“只是语法技巧“。</p>
+<blockquote>
+<p><strong>相关阅读</strong>：</p>
+<ul>
+<li>想了解 <code>std.Io</code> 提供的异步和并发能力，见 <a href="#stdio-接口详解">std.Io 接口详解</a></li>
+<li>想了解异步 I/O 的历史背景和决策框架，见 <a href="#异步-io现状历史与未来方向">异步 I/O：现状与未来方向</a></li>
+</ul>
+</blockquote>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="测试与验证从单元测试到基准测量"><a class="header" href="#测试与验证从单元测试到基准测量">测试与验证：从单元测试到基准测量</a></h1>
 <blockquote>
@@ -9110,7 +10316,7 @@ test "clamp returns original value when already in range" {
 <hr>
 <h2 id="最常用的断言函数"><a class="header" href="#最常用的断言函数">最常用的断言函数</a></h2>
 <p>Zig 的测试辅助主要来自 <code>std.testing</code>。<br>不需要把所有辅助函数都记住，掌握下面这些最常用的即可。</p>
-<h3 id="expect"><a class="header" href="#expect"><code>expect</code></a></h3>
+<h3 id="expect-1"><a class="header" href="#expect-1"><code>expect</code></a></h3>
 <p>用于断言一个布尔表达式为真：</p>
 <pre><code class="language-zig">const std = @import("std");
 
@@ -9124,7 +10330,7 @@ test "expect checks boolean conditions" {
 <li>简单条件判断</li>
 <li>不需要特别展示“期望值/实际值”的场景</li>
 </ul>
-<h3 id="expectequal"><a class="header" href="#expectequal"><code>expectEqual</code></a></h3>
+<h3 id="expectequal-1"><a class="header" href="#expectequal-1"><code>expectEqual</code></a></h3>
 <p>用于比较两个值是否相等：</p>
 <pre><code class="language-zig">const std = @import("std");
 
@@ -9157,7 +10363,7 @@ test "expectEqualSlices compares slice contents" {
     try std.testing.expectEqualSlices(u8, &amp;expected, &amp;actual);
 }
 </code></pre>
-<h3 id="expecterror"><a class="header" href="#expecterror"><code>expectError</code></a></h3>
+<h3 id="expecterror-1"><a class="header" href="#expecterror-1"><code>expectError</code></a></h3>
 <p>用于验证错误路径是否返回了预期错误：</p>
 <pre><code class="language-zig">const std = @import("std");
 
@@ -9877,7 +11083,7 @@ exe.root_module.link_libc = true;
 <li><strong>最后再看是否是 <code>build.zig</code> API 本身发生了版本差异</strong></li>
 </ol>
 <p>这个顺序很重要，因为很多时候问题根本不在业务代码里。</p>
-<h2 id="本章小结-9"><a class="header" href="#本章小结-9">本章小结</a></h2>
+<h2 id="本章小结-10"><a class="header" href="#本章小结-10">本章小结</a></h2>
 <p>对 Zig 的构建系统与包管理来说，最重要的不是记住多少字段名，而是建立这几层判断：</p>
 <ul>
 <li><code>build.zig</code> 负责构建逻辑，<code>build.zig.zon</code> 负责项目清单与依赖来源</li>
@@ -12395,7 +13601,7 @@ pub fn main(_: std.process.Init) void {
 }
 </code></pre>
 <hr>
-<h2 id="本章小结-10"><a class="header" href="#本章小结-10">本章小结</a></h2>
+<h2 id="本章小结-11"><a class="header" href="#本章小结-11">本章小结</a></h2>
 <p>这一章最重要的收获，不是“会写几个 <code>@Vector</code> 示例”，而是理解下面这些判断：</p>
 <ul>
 <li><code>@Vector</code> 表达的是向量语义，不是自动性能承诺</li>
@@ -12407,173 +13613,75 @@ pub fn main(_: std.process.Init) void {
 <hr>
 <blockquote>
 <p>💡 <strong>下一章预告</strong></p>
-<p>下一章我们将学习 <a href="#异步-io现状历史与未来方向">异步 I/O：现状与未来方向</a>，从“数据并行”切换到另一个同样容易被误解的话题：Zig 当前异步能力的现实状态，以及为什么线程模型仍然是更稳妥的实践主线。</p>
+<p>下一章我们将学习 <a href="#异步-io现状历史与未来方向">异步 I/O：现状与未来方向</a>，从“数据并行“切换到 Zig 异步模型的历史演进：旧的 <code>async</code>/<code>await</code> 为什么退出了主线，<code>std.Io</code> 又是如何成为新的统一方向的。</p>
 </blockquote>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="异步-io现状历史与未来方向"><a class="header" href="#异步-io现状历史与未来方向">异步 I/O：现状、历史与未来方向</a></h1>
 <blockquote>
-<p><strong>章节定位</strong>：这一章更适合作为第三部分中的<strong>方向性专题</strong>，而不是一个可以直接照抄实现的“实战模板”。<br>在当前 Zig 0.16.0-dev 的语境下，异步 I/O 是一个<strong>非常值得理解、但不适合死记具体 API 细节</strong>的话题。</p>
-<p>阅读这一章时，请先明确区分三件事：</p>
+<p><strong>章节定位</strong>：这一章是第三部分中的<strong>方向性专题</strong>，聚焦于 Zig 异步 I/O 的<strong>历史演进和决策框架</strong>。</p>
+<p>如果你想学习 <code>std.Io</code> 的具体 API 用法（文件读写、Reader/Writer、async/cancel/Future、Queue/Group/Select 等），请直接阅读第二部分的 <a href="#stdio-接口详解">std.Io 接口详解</a>。</p>
+<p>本章要回答的问题是：</p>
 <ol>
-<li><strong>今天写可靠程序时，什么是更稳妥的实践主线</strong></li>
-<li><strong>旧的语言级 <code>async</code> / <code>await</code> 为什么不再是当前主线</strong></li>
-<li><strong><code>std.Io</code> 所代表的新方向到底意味着什么</strong></li>
+<li>Zig 的异步模型经历过怎样的演进？旧的 <code>async</code>/<code>await</code> 为什么不再是主线？</li>
+<li>如果你遇到旧代码，应该如何理解和迁移？</li>
+<li>在标准库之外，第三方异步库应该怎么评估？</li>
+<li>在不同场景下，应该选择什么并发策略？</li>
 </ol>
-<p>如果你带着“我现在就要做一个稳定项目”的目标阅读，那么这章最重要的收获并不是某个异步接口名字，而是：</p>
-<blockquote>
-<p><strong>当前更稳妥的做法，通常仍然是线程 + 阻塞 I/O + 清楚的同步边界。</strong></p>
-</blockquote>
 <p><strong>相关阅读与衔接建议</strong>：</p>
 <ul>
-<li>如果你还没有系统梳理线程、锁、原子操作和共享状态边界，建议先回看第二部分的<a href="#并发编程概述">并发编程概述</a>。</li>
-<li>如果你想先看一个更贴近网络程序的完整案例，可以结合本部分前面的<a href="#实战案例---http-服务器设计与最小实现">实战案例 - HTTP 服务器设计与最小实现</a>一起读，帮助区分“网络 I/O 实战”与“异步模型专题”。</li>
-<li>读完本章后，建议继续阅读<a href="#高级内存管理技巧专题">高级内存管理技巧（专题）</a>，把注意力从“任务如何推进”转向“资源如何控制”，补齐另一条常见的系统编程主线。</li>
+<li><code>std.Io</code> 的具体 API 教程见 <a href="#stdio-接口详解">std.Io 接口详解</a></li>
+<li>线程、锁、原子操作等并发基础见 <a href="#并发编程概述">并发编程概述</a></li>
+<li>网络程序实战见 <a href="#实战案例---http-服务器设计与最小实现">实战案例 - HTTP 服务器设计与最小实现</a></li>
 </ul>
 </blockquote>
 <hr>
 <h2 id="先给结论今天应该怎么理解-zig-的异步问题"><a class="header" href="#先给结论今天应该怎么理解-zig-的异步问题">先给结论：今天应该怎么理解 Zig 的异步问题？</a></h2>
 <p>在当前教程语境下，更合理的判断是：</p>
 <ul>
-<li><strong>旧的语言级 <code>async</code> / <code>await</code> 已经不是当前主线</strong></li>
-<li><strong>围绕 <code>std.Io</code> 的新式统一 I/O 方向值得持续关注</strong></li>
-<li><strong>但如果你现在要写能调试、能维护、能解释的程序，线程模型通常仍是更稳妥的主线</strong></li>
+<li><strong><code>std.Io</code> 已经提供了可用的异步和并发接口</strong>（<code>Future</code>、<code>Queue</code>、<code>Group</code>、<code>Select</code> 等），具体用法见 <a href="#stdio-接口详解">std.Io 接口详解</a></li>
+<li><strong>旧的语言级 <code>async</code> / <code>await</code> 已经不是当前主线</strong>，本章会解释其历史背景</li>
+<li><strong>线程模型仍然是最底层、最稳定的基础</strong>，见 <a href="#并发编程概述">并发编程概述</a></li>
+<li><strong><code>std.Io</code> 接口仍在演进中</strong>，适合学习和使用，但要注意 API 可能在未来版本中调整</li>
 </ul>
 <p>也就是说，不要把问题理解成：</p>
 <ul>
-<li>“Zig 有没有异步能力？”</li>
+<li>“Zig 有没有异步能力？”——有，在 <code>std.Io</code> 中</li>
 </ul>
 <p>而应该理解成：</p>
 <ul>
-<li>“Zig 当前把哪些并发/I/O 能力视为稳定实践？”</li>
-<li>“哪些能力还在发展中？”</li>
-<li>“我应该把哪些内容当作生产经验，哪些内容当作方向理解？”</li>
+<li>“Zig 的异步能力是怎么演进到今天的？”</li>
+<li>“旧的 <code>async</code>/<code>await</code> 为什么被替换了？”</li>
+<li>“如果遇到旧代码或第三方库，应该怎么判断？”</li>
 </ul>
 <hr>
-<h2 id="第一部分稳定实践主线"><a class="header" href="#第一部分稳定实践主线">第一部分：稳定实践主线</a></h2>
-<h2 id="为什么线程仍然是当前更稳妥的入口"><a class="header" href="#为什么线程仍然是当前更稳妥的入口">为什么线程仍然是当前更稳妥的入口？</a></h2>
-<p>对于今天的大多数 Zig 用户来说，线程仍然具备几个明显优势：</p>
-<ol>
-<li>
-<p><strong>模型直观</strong></p>
-<ul>
-<li>一个线程就是一个操作系统调度单元</li>
-<li>创建、等待、同步的语义都更容易解释</li>
-</ul>
-</li>
-<li>
-<p><strong>调试路径清楚</strong></p>
-<ul>
-<li>比起尚在演进的 I/O 抽象，线程问题更容易被定位和复现</li>
-</ul>
-</li>
-<li>
-<p><strong>生态认知更稳定</strong></p>
-<ul>
-<li>即使标准库某些高层接口继续变化，线程与同步原语的基本思路仍然更稳定</li>
-</ul>
-</li>
-<li>
-<p><strong>适合先学会“并发责任边界”</strong></p>
-<ul>
-<li>共享数据</li>
-<li>锁</li>
-<li>原子操作</li>
-<li>生命周期和资源释放</li>
-<li>这些能力本来就必须掌握</li>
-</ul>
-</li>
-</ol>
-<p>所以，在教程里更好的建议通常不是：</p>
-<blockquote>
-<p>“先学未来可能更高级的异步接口。”</p>
-</blockquote>
-<p>而是：</p>
-<blockquote>
-<p><strong>先把线程、阻塞 I/O、错误处理和资源清理这些稳定主线学扎实。</strong></p>
-</blockquote>
-<hr>
-<h2 id="当前更稳妥的实践建议"><a class="header" href="#当前更稳妥的实践建议">当前更稳妥的实践建议</a></h2>
-<p>可以先用下面这张表建立整体判断：</p>
+<h2 id="稳定实践主线"><a class="header" href="#稳定实践主线">稳定实践主线</a></h2>
+<p>在深入历史背景之前，先建立一个整体判断：</p>
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th>场景</th><th>当前更稳妥的方案</th><th>说明</th></tr>
+<tr><th>场景</th><th>当前推荐的方案</th><th>说明</th></tr>
 </thead>
 <tbody>
-<tr><td>CPU 密集型任务</td><td><code>std.Thread</code></td><td>直接利用操作系统线程</td></tr>
-<tr><td>一般 I/O 任务</td><td>阻塞 I/O + 清晰线程模型</td><td>更容易验证正确性</td></tr>
-<tr><td>后台任务处理</td><td>固定工作线程 + 任务队列</td><td>比“抽象异步”更容易维护</td></tr>
-<tr><td>高并发网络服务</td><td>根据版本与生态谨慎评估</td><td>需要额外关注库与标准库演进</td></tr>
-<tr><td>研究未来方向</td><td>阅读 <code>std.Io</code> 设计思路</td><td>更适合学模型而不是背接口</td></tr>
+<tr><td>一般 I/O 任务</td><td><code>std.Io</code> + <code>io.async</code></td><td>统一接口，支持异步，见 <a href="#stdio-接口详解">std.Io 接口详解</a></td></tr>
+<tr><td>CPU 密集型任务</td><td><code>std.Thread</code></td><td>直接利用操作系统线程，见 <a href="#并发编程概述">并发编程概述</a></td></tr>
+<tr><td>后台任务处理</td><td><code>std.Io.concurrent</code> + <code>Queue</code></td><td>保证并发，见 <a href="#stdio-接口详解">std.Io 接口详解</a></td></tr>
+<tr><td>高并发网络服务</td><td>根据版本与生态谨慎评估</td><td>可关注 <code>std.Io.Evented</code>（概念验证阶段）或第三方库</td></tr>
+<tr><td>简单多线程程序</td><td><code>std.Thread</code> + <code>Mutex</code></td><td>最直接的方案，见 <a href="#并发编程概述">并发编程概述</a></td></tr>
 </tbody>
 </table>
 </div>
-<p>这张表最想提醒你的不是“线程永远最好”，而是：</p>
+<p>这张表最想提醒你的不是“某个方案永远最好“，而是：</p>
 <blockquote>
-<p><strong>当稳定性、可维护性和可验证性更重要时，线程常常是当前 Zig 中更现实的起点。</strong></p>
+<p><strong>在稳定性和可维护性更重要的场景里，选择你能理解、能验证、能解释的方案。</strong></p>
 </blockquote>
-<hr>
-<h2 id="一个最小线程示例"><a class="header" href="#一个最小线程示例">一个最小线程示例</a></h2>
-<pre><code class="language-zig">const std = @import("std");
-
-fn worker(id: usize) void {
-    for (0..3) |i| {
-        std.debug.print("worker {}: iteration {}\n", .{ id, i });
-        std.time.sleep(10 * std.time.ns_per_ms);
-    }
-}
-
-pub fn main() !void {
-    const t1 = try std.Thread.spawn(.{}, worker, .{1});
-    const t2 = try std.Thread.spawn(.{}, worker, .{2});
-
-    t1.join();
-    t2.join();
-
-    std.debug.print("all workers finished\n", .{});
-}
-</code></pre>
-<p>这个例子虽然简单，但它很好地体现了当前更稳定的实践路线：</p>
-<ul>
-<li>创建线程</li>
-<li>让线程执行明确工作</li>
-<li>用 <code>join()</code> 等待完成</li>
-<li>不引入额外事件循环模型</li>
-<li>调试路径清楚</li>
-</ul>
-<p>第一次学习时，这种例子比“看起来更高级但接口仍在变化”的异步示例更适合作为主线。</p>
-<hr>
-<h2 id="固定工作线程不等于真正的线程池"><a class="header" href="#固定工作线程不等于真正的线程池">固定工作线程，不等于真正的线程池</a></h2>
-<p>很多教程里会把“开几个线程分别做事”直接叫线程池。<br>这在概念上并不准确。</p>
-<p>真正更接近“线程池”的结构通常至少包括：</p>
-<ul>
-<li>固定数量的工作线程</li>
-<li>一个共享任务队列</li>
-<li>提交任务的接口</li>
-<li>等待/关闭机制</li>
-<li>明确的同步策略</li>
-</ul>
-<p>如果只是像下面这样：</p>
-<ul>
-<li>启动 4 个线程</li>
-<li>每个线程各自处理一段固定工作</li>
-</ul>
-<p>那它更像是：</p>
-<blockquote>
-<p><strong>多线程并行执行</strong>，而不是完整的线程池设计。</p>
-</blockquote>
-<p>这一点看似是术语问题，但其实和工程理解高度相关：<br><strong>名称越准确，责任边界就越容易被讲清楚。</strong></p>
-<hr>
-<h2 id="稳定实践中真正该优先掌握什么"><a class="header" href="#稳定实践中真正该优先掌握什么">稳定实践中真正该优先掌握什么？</a></h2>
-<p>如果你现在准备写真实程序，优先掌握这些能力会更有价值：</p>
+<p>在此基础上，下面几项能力无论选择哪种方案都值得掌握：</p>
 <ol>
-<li><strong>如何安全地创建和等待线程</strong></li>
 <li><strong>如何避免无意义共享</strong></li>
-<li><strong>如何用锁或原子操作保护共享状态</strong></li>
+<li><strong>如何用同步原语保护共享状态</strong></li>
 <li><strong>如何让错误路径和资源清理保持清楚</strong></li>
-<li><strong>如何把阻塞 I/O 组织进一个可维护的结构里</strong></li>
+<li><strong>如何把 I/O 组织进一个可维护的结构里</strong></li>
 </ol>
-<p>你会发现，这些能力并不会因为未来异步接口变化而失效。<br>相反，它们是你之后理解任何更高级并发模型的基础。</p>
+<p>这些能力不会因为 <code>std.Io</code> 接口变化而失效——它们是任何并发模型的基础。</p>
 <hr>
 <h2 id="第二部分历史背景"><a class="header" href="#第二部分历史背景">第二部分：历史背景</a></h2>
 <h2 id="为什么旧的-async--await-不再是当前主线"><a class="header" href="#为什么旧的-async--await-不再是当前主线">为什么旧的 <code>async</code> / <code>await</code> 不再是当前主线？</a></h2>
@@ -12691,45 +13799,36 @@ pub fn main() !void {
 <p><strong>把问题重新映射到今天更稳定的并发模型上。</strong></p>
 </blockquote>
 <hr>
-<h2 id="第三部分未来方向"><a class="header" href="#第三部分未来方向">第三部分：未来方向</a></h2>
-<h2 id="为什么-stdio-值得关注"><a class="header" href="#为什么-stdio-值得关注">为什么 <code>std.Io</code> 值得关注？</a></h2>
-<p>虽然当前不适合把 <code>std.Io</code> 的具体 API 当成稳定教材接口死记，<br>但它依然非常值得关注，因为它代表了一条重要设计方向：</p>
-<blockquote>
-<p><strong>让 I/O 能力以更统一、更显式、由调用者提供上下文的方式组织起来。</strong></p>
-</blockquote>
-<p>这条方向之所以重要，是因为它可能帮助 Zig 在未来更好地处理：</p>
+<h2 id="stdio-的现状与演进"><a class="header" href="#stdio-的现状与演进"><code>std.Io</code> 的现状与演进</a></h2>
+<h3 id="stdio-已经可用"><a class="header" href="#stdio-已经可用"><code>std.Io</code> 已经可用</a></h3>
+<p><code>std.Io</code> 在 0.16 中已经提供了可用的接口，覆盖：</p>
 <ul>
-<li>文件 I/O</li>
-<li>网络 I/O</li>
-<li>标准输入输出</li>
-<li>并发 I/O 驱动</li>
-<li>阻塞与非阻塞模型之间的统一表达</li>
+<li>文件 I/O（<code>Io.Dir</code>、<code>Io.File</code>）</li>
+<li>流式读写（<code>Reader</code>、<code>Writer</code>）</li>
+<li>异步任务（<code>io.async</code>、<code>Future</code>、<code>await</code>/<code>cancel</code>）</li>
+<li>并发保证（<code>io.concurrent</code>）</li>
+<li>任务协调（<code>Queue</code>、<code>Group</code>、<code>Select</code>）</li>
+<li>时间操作（<code>Timestamp</code>、<code>Duration</code>、<code>sleep</code>）</li>
+<li>同步原语（<code>RwLock</code>、<code>Semaphore</code>、<code>futexWait</code>/<code>futexWake</code>）</li>
 </ul>
-<p>换句话说，<code>std.Io</code> 的价值，不只是“多了一套 API”，而是它在尝试回答：</p>
+<p>具体用法已经在 <a href="#stdio-接口详解">std.Io 接口详解</a> 中详细讲解。</p>
+<h3 id="但接口仍在演进"><a class="header" href="#但接口仍在演进">但接口仍在演进</a></h3>
+<p><code>std.Io</code> 目前处于“可用于大多数场景并收集反馈“的阶段。这意味着：</p>
 <ul>
-<li>Zig 应该怎样组织统一 I/O 模型？</li>
-<li>I/O 能力与运行模型之间的边界应该如何表达？</li>
-<li>库代码如何描述“我需要做 I/O”，而不是直接绑定某一种固定运行时？</li>
+<li>方法名和类型形状可能继续调整</li>
+<li>某些平台上的实现还不完整</li>
+<li><code>Evented</code> 实现（基于 <code>io_uring</code>、<code>kqueue</code>、<code>dispatch</code>）仍处于概念验证阶段</li>
+<li>一些已知的设计不足正在被收集和讨论</li>
 </ul>
-<hr>
-<h2 id="stdio-更应该怎么读"><a class="header" href="#stdio-更应该怎么读"><code>std.Io</code> 更应该怎么读？</a></h2>
-<p>如果你在当前开发版语境下阅读 <code>std.Io</code> 相关内容，更好的阅读姿势不是：</p>
-<ul>
-<li>看到一个接口就立刻背下来</li>
-<li>把示例当作长期稳定模板</li>
-<li>试图立刻据此设计大型项目架构</li>
-</ul>
-<p>而是优先关注这些问题：</p>
+<p>因此，更好的阅读姿态是：</p>
 <ol>
-<li><strong>它在试图统一什么问题？</strong></li>
-<li><strong>它如何把 I/O 上下文显式暴露给调用者？</strong></li>
-<li><strong>它试图避免哪些旧式隐式运行时模型的缺点？</strong></li>
-<li><strong>哪些部分是设计方向，哪些部分已经足够稳定？</strong></li>
+<li><strong>积极学习和使用</strong>——接口已经足够用于大多数真实项目</li>
+<li><strong>关注设计意图</strong>——理解它为什么这样设计，而不只是记住接口</li>
+<li><strong>做好重构准备</strong>——如果你在大型项目中使用，预留未来 API 变化的应对空间</li>
+<li><strong>结合源码确认</strong>——遇到问题时查阅 <code>std.Io</code> 源码，获取最准确的信息</li>
 </ol>
-<p>在当前阶段，这种“读设计意图”的价值通常高于“背接口名字”。</p>
-<hr>
-<h2 id="异步并发并行不要混为一谈"><a class="header" href="#异步并发并行不要混为一谈">异步、并发、并行不要混为一谈</a></h2>
-<p>这是理解 Zig 当前方向时最重要的概念区分之一。</p>
+<h3 id="异步并发并行不要混为一谈"><a class="header" href="#异步并发并行不要混为一谈">异步、并发、并行不要混为一谈</a></h3>
+<p>这三个概念在 <a href="#并发编程概述">并发编程概述</a> 和 <a href="#stdio-接口详解">std.Io 接口详解</a> 中都有涉及。这里再次强调，因为它们是理解异步演进时最容易混淆的：</p>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -12742,35 +13841,11 @@ pub fn main() !void {
 </tbody>
 </table>
 </div>
-<p>很多讨论一旦混乱，根源都在于把这三个词混成了一个“高级性能功能”。</p>
-<p>更稳妥的理解是：</p>
+<p>在 Zig 当前语境里，<code>std.Io</code> 同时提供了异步（<code>io.async</code>）和并发（<code>io.concurrent</code>）能力，但它们不是同一回事：</p>
 <ul>
-<li><strong>异步不等于多线程</strong></li>
-<li><strong>并发不等于并行</strong></li>
-<li><strong>有异步表达能力，不代表一定要强制事件循环</strong></li>
-<li><strong>有并行能力，也不代表接口设计就自动合理</strong></li>
+<li>异步不保证真正的同时执行，只提供“可以被并发推进“的潜力</li>
+<li>并发保证同时推进，但可能失败（<code>error.ConcurrencyUnavailable</code>）</li>
 </ul>
-<p>这也是为什么在 Zig 当前语境里，讨论未来 I/O 方向时，比起“有没有 async 关键字”，更重要的是：</p>
-<blockquote>
-<p><strong>这个模型如何表达任务推进、I/O 驱动和调用者责任。</strong></p>
-</blockquote>
-<hr>
-<h2 id="为什么这一方向仍然不适合当作稳定教程-api-来教"><a class="header" href="#为什么这一方向仍然不适合当作稳定教程-api-来教">为什么这一方向仍然不适合当作稳定教程 API 来教？</a></h2>
-<p>因为开发版标准库在这些区域仍可能继续演进。<br>这意味着：</p>
-<ul>
-<li>方法名可能变化</li>
-<li>类型形状可能变化</li>
-<li>示例写法可能变化</li>
-<li>某些调用模式可能继续重构</li>
-</ul>
-<p>所以，在教程里更负责的写法应该是：</p>
-<ul>
-<li>讲清楚方向</li>
-<li>标注版本敏感</li>
-<li>提醒读者结合本地标准库源码确认</li>
-<li>不把实验性或快速演进接口包装成“稳定范式”</li>
-</ul>
-<p>也正因为如此，本章不把 <code>std.Io</code> 的具体开发版调用形式当成主教学示例。</p>
 <hr>
 <h2 id="第四部分第三方库应该怎么理解"><a class="header" href="#第四部分第三方库应该怎么理解">第四部分：第三方库应该怎么理解？</a></h2>
 <p>当标准库的高层异步 I/O 方向仍在演进时，很多实际项目会考虑第三方库。<br>这是现实情况，但阅读时也需要保持清醒：</p>
@@ -12835,10 +13910,10 @@ pub fn main() !void {
 <p>这时再去评估更前沿的 I/O 模型，通常才更合理。</p>
 <hr>
 <h2 id="本章最容易产生的误解"><a class="header" href="#本章最容易产生的误解">本章最容易产生的误解</a></h2>
-<h2 id="误解-1没有语言级-asyncawait-就等于-zig-没有并发能力"><a class="header" href="#误解-1没有语言级-asyncawait-就等于-zig-没有并发能力">误解 1：没有语言级 <code>async/await</code> 就等于 Zig 没有并发能力</a></h2>
-<p>错误。<br>Zig 当然有并发能力，而且线程仍然是非常现实的主线能力。</p>
-<h2 id="误解-2未来方向已经足够稳定可以直接按开发版示例建项目"><a class="header" href="#误解-2未来方向已经足够稳定可以直接按开发版示例建项目">误解 2：未来方向已经足够稳定，可以直接按开发版示例建项目</a></h2>
-<p>这通常过于乐观。<br>在快速演进区域，理解方向比背接口更重要。</p>
+<h2 id="误解-1zig-没有异步能力"><a class="header" href="#误解-1zig-没有异步能力">误解 1：Zig 没有异步能力</a></h2>
+<p>错误。<code>std.Io</code> 提供了完整的异步和并发接口，包括 <code>Future</code>、<code>Queue</code>、<code>Group</code>、<code>Select</code> 等。详见 <a href="#stdio-接口详解">std.Io 接口详解</a>。</p>
+<h2 id="误解-2旧的语言级-asyncawait-只是被改名了"><a class="header" href="#误解-2旧的语言级-asyncawait-只是被改名了">误解 2：旧的语言级 <code>async</code>/<code>await</code> 只是被改名了</a></h2>
+<p>错误。旧的 <code>async</code>/<code>suspend</code>/<code>resume</code> 是语言级关键字，而 <code>std.Io</code> 的异步是通过库层接口实现的，设计理念和调用模式完全不同。本章的“历史背景“部分详细解释了这一转变。</p>
 <h2 id="误解-3线程只是落后方案"><a class="header" href="#误解-3线程只是落后方案">误解 3：线程只是“落后方案”</a></h2>
 <p>也不对。<br>对于今天的大多数 Zig 项目，线程并不是退而求其次，而是更容易解释和验证的现实路径。</p>
 <h2 id="误解-4只要听起来像异步就一定更高级更高性能"><a class="header" href="#误解-4只要听起来像异步就一定更高级更高性能">误解 4：只要听起来像异步，就一定更高级、更高性能</a></h2>
@@ -12847,35 +13922,29 @@ pub fn main() !void {
 <p>也不一定。<br>第三方库往往同样面临版本漂移和接口变化问题。</p>
 <hr>
 <h2 id="如果你是第一次学这一章应该带走什么"><a class="header" href="#如果你是第一次学这一章应该带走什么">如果你是第一次学这一章，应该带走什么？</a></h2>
-<p>第一次阅读时，建议优先带走下面这组结论：</p>
 <ol>
-<li><strong>今天写可靠 Zig 程序时，线程通常仍是更稳妥的并发主线</strong></li>
-<li><strong>旧的语言级 <code>async</code> / <code>await</code> 已经不再是当前主线</strong></li>
-<li><strong><code>std.Io</code> 值得关注，但更适合当作方向理解，而不是稳定 API 背诵对象</strong></li>
+<li><strong><code>std.Io</code> 已经提供了可用的异步和并发接口</strong>，具体用法见 <a href="#stdio-接口详解">std.Io 接口详解</a></li>
+<li><strong>旧的语言级 <code>async</code> / <code>await</code> 已经退出主线</strong>，本章解释了为什么</li>
+<li><strong>线程模型仍然是最底层的基础</strong>，见 <a href="#并发编程概述">并发编程概述</a></li>
 <li><strong>异步、并发、并行是三件不同的事</strong></li>
-<li><strong>真正重要的不是追逐某个“更高级”的模型，而是选一个你能验证、能维护、能解释的模型</strong></li>
+<li><strong>第三方库和标准库方向各有适用场景</strong>，选择时需要结合版本、维护状态和项目需求</li>
 </ol>
 <hr>
 <h2 id="小结-7"><a class="header" href="#小结-7">小结</a></h2>
-<p>这一章最重要的，不是让你立刻掌握一套“异步框架写法”，而是帮助你建立对 Zig 当前现状的正确预期。</p>
-<p>你可以把本章总结成三句话：</p>
+<p>这一章不是 API 教程——那是 <a href="#stdio-接口详解">std.Io 接口详解</a> 的任务。</p>
+<p>本章的核心是帮你理解：</p>
 <ol>
-<li><strong>稳定实践上，线程仍然是当前更现实的主线。</strong></li>
-<li><strong>历史上，旧的语言级 <code>async</code> / <code>await</code> 已经退出主线。</strong></li>
-<li><strong>未来方向上，<code>std.Io</code> 很重要，但目前更适合理解设计思路，而不是死记具体接口。</strong></li>
+<li><strong>历史脉络</strong>：旧的语言级 <code>async</code>/<code>await</code>/<code>suspend</code>/<code>resume</code> 为什么退出了主线</li>
+<li><strong>现状判断</strong>：<code>std.Io</code> 已经可用但仍在演进，线程模型是最稳定的基础</li>
+<li><strong>决策框架</strong>：遇到旧代码、第三方库或选型问题时，如何做出合理判断</li>
 </ol>
 <p>如果你读完之后，已经能更清楚地区分：</p>
 <ul>
-<li>什么是今天可依赖的实践</li>
-<li>什么是历史遗留认知</li>
-<li>什么是值得持续关注的未来方向</li>
+<li>什么是今天可使用的 <code>std.Io</code> 接口</li>
+<li>什么是已经退出的旧语言级方案</li>
+<li>什么时候该选线程、什么时候该用 <code>std.Io</code> 的异步能力</li>
 </ul>
 <p>那么这一章就达到目的了。</p>
-<hr>
-<blockquote>
-<p>💡 <strong>下一章预告</strong></p>
-<p>下一章我们将学习<a href="#高级内存管理技巧专题">高级内存管理技巧</a>，把注意力从“任务如何推进”转回“资源如何控制”，继续讨论调试期观测、对象复用和更底层的性能/正确性权衡。</p>
-</blockquote>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="高级内存管理技巧专题"><a class="header" href="#高级内存管理技巧专题">高级内存管理技巧（专题）</a></h1>
 <blockquote>
@@ -13352,7 +14421,7 @@ pub fn main(_: std.process.Init) !void {
 </ul>
 <p>如果这些问题开始变成你的自然思维，那么这一章的目标就达到了。</p>
 <hr>
-<h2 id="本章小结-11"><a class="header" href="#本章小结-11">本章小结</a></h2>
+<h2 id="本章小结-12"><a class="header" href="#本章小结-12">本章小结</a></h2>
 <p>这一章讨论了两类典型的高级内存技巧：</p>
 <ol>
 <li><strong>包装分配器</strong>：更适合观察、统计和实验</li>
@@ -13692,7 +14761,7 @@ fn divide(a: i32, b: i32) i32 {
 <p><strong>Measure → Debug → Verify</strong> 这条工作流本身。</p>
 </blockquote>
 <hr>
-<h2 id="本章小结-12"><a class="header" href="#本章小结-12">本章小结</a></h2>
+<h2 id="本章小结-13"><a class="header" href="#本章小结-13">本章小结</a></h2>
 <p>这一章最希望你带走的，不是某个“性能秘籍”，而是一个更稳妥的实践顺序：</p>
 <ol>
 <li><strong>先测量，再优化</strong></li>

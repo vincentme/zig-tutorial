@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-5349b6ee.js";
+            window.path_to_searchindex_js = "../searchindex-d724f321.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-84df0a14.js"></script>
+        <script src="../toc-4c2eaf17.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -184,8 +184,8 @@
                         <h1 id="并发编程概述"><a class="header" href="#并发编程概述">并发编程概述</a></h1>
 <blockquote>
 <p><strong>进阶</strong>：</p>
-<p>本章的重点是建立 Zig 中并发编程的<strong>稳定概念框架</strong>：线程、共享状态、同步原语、原子操作与常见取舍。</p>
-<p>与 I/O 相关的“异步方向”在开发版语境下仍然更容易演进，因此本章不会把某些 dev 版接口当作稳定 API 手册来讲解。关于这一方向的阅读建议，请结合第三部分的<a href="../part3-practice/chapter-async.html">异步 I/O：现状与未来方向</a>一起看。</p>
+<p>本章聚焦于 Zig 中基于<strong>操作系统线程</strong>的并发编程：线程、共享状态、同步原语、原子操作与常见取舍。</p>
+<p>Zig 0.16 引入的 <code>std.Io</code> 接口提供了更高层的异步和并发能力（<code>Future</code>、<code>Queue</code>、<code>Group</code>、<code>Select</code> 等），这些内容已在 <a href="chapter-io.html">std.Io 接口详解</a> 中专门讲解。但理解本章的线程模型和同步原语，仍然是正确使用 <code>std.Io</code> 异步能力的基础——<code>std.Io.Threaded</code> 的底层实现正是基于操作系统线程。</p>
 </blockquote>
 <h2 id="三个容易混淆的概念"><a class="header" href="#三个容易混淆的概念">三个容易混淆的概念</a></h2>
 <p>在进入具体代码之前，必须先分清：<strong>异步（asynchrony）</strong>、<strong>并发（concurrency）</strong>、<strong>并行（parallelism）</strong>。</p>
@@ -201,6 +201,7 @@
 </tbody>
 </table>
 </div>
+<p>这三个概念在 <a href="chapter-io.html">std.Io 接口详解</a> 中也会出现，但那里的重点是如何用 <code>Io</code> API 来利用异步和并发；本章的重点则是底层的线程机制和同步工具。</p>
 <h3 id="异步顺序是否重要"><a class="header" href="#异步顺序是否重要">异步：“顺序是否重要”</a></h3>
 <p>异步首先讨论的是<strong>正确性约束</strong>，而不是“有没有多线程”。</p>
 <p>如果两个操作只要最终都完成即可，中间顺序并不重要，那么它们就具有异步性。</p>
@@ -518,16 +519,38 @@ pub fn main(_: std.process.Init) !void {
 </table>
 </div>
 <p>这张表不是绝对规则，但很适合作为第一判断。</p>
-<h2 id="当前语境下如何看待异步-io方向"><a class="header" href="#当前语境下如何看待异步-io方向">当前语境下，如何看待“异步 I/O”方向？</a></h2>
-<p>可能已经在博客、issue、标准库源码或开发版讨论中看到过与异步 I/O 相关的方向性接口。</p>
-<p>对于本教程读者，更重要的是建立一个<strong>稳妥认知</strong>：</p>
-<ol>
-<li>这属于更容易演进的区域</li>
-<li>它和线程模型不是简单替代关系</li>
-<li>教学上更适合先掌握线程、锁、条件变量、原子这些稳定概念</li>
-<li>真要落地具体 API，必须以本地版本和源码为准</li>
-</ol>
-<p>因此，本章不把某个开发版里的 I/O 并发接口当作“现在必须背下来的主线知识”。</p>
+<h2 id="线程模型与-stdio-的关系"><a class="header" href="#线程模型与-stdio-的关系">线程模型与 <code>std.Io</code> 的关系</a></h2>
+<p>在 <a href="chapter-io.html">std.Io 接口详解</a> 中，我们介绍了 <code>std.Io</code> 的异步和并发能力。那么，本章讲的线程模型与 <code>std.Io</code> 是什么关系？</p>
+<h3 id="stdiothreaded-的底层就是线程"><a class="header" href="#stdiothreaded-的底层就是线程"><code>std.Io.Threaded</code> 的底层就是线程</a></h3>
+<p>目前唯一完整可用的 <code>Io</code> 实现 <code>std.Io.Threaded</code>，底层使用的就是操作系统线程。当你调用 <code>io.async()</code> 时，<code>Threaded</code> 实现会将任务分配给线程池中的线程执行。</p>
+<p>这意味着：</p>
+<ul>
+<li>理解线程、锁、原子操作是理解 <code>std.Io</code> 行为的基础</li>
+<li>本章讨论的数据竞争、竞态条件等问题，在 <code>std.Io</code> 的异步上下文中同样存在</li>
+<li>本章的“常见坑“（锁持有时间过长、资源生命周期等）同样适用于使用 <code>std.Io</code> 的代码</li>
+</ul>
+<h3 id="两套同步原语怎么选"><a class="header" href="#两套同步原语怎么选">两套同步原语怎么选？</a></h3>
+<p><code>std.Io</code> 和 <code>std.Thread</code> 各自提供了同步原语：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th><code>std.Thread</code> 原语</th><th><code>std.Io</code> 原语</th><th>适用场景</th></tr>
+</thead>
+<tbody>
+<tr><td><code>Mutex</code></td><td><code>Io.RwLock</code></td><td>传统线程代码 / <code>Io</code> 异步上下文</td></tr>
+<tr><td><code>Condition</code></td><td><code>Io.Semaphore</code></td><td>传统线程代码 / <code>Io</code> 异步上下文</td></tr>
+<tr><td>原子操作</td><td><code>Io.futexWait</code> / <code>Io.futexWake</code></td><td>简单标志位 / 与 <code>Io</code> 任务管理集成</td></tr>
+</tbody>
+</table>
+</div>
+<p>选择原则很简单：</p>
+<ul>
+<li><strong>代码全面使用 <code>std.Io</code></strong>（异步任务、<code>io.async</code>、<code>Future</code> 等）→ 优先用 <code>Io</code> 的同步原语，因为它们与 <code>Io</code> 的任务调度集成，在不同 <code>Io</code> 后端下行为一致</li>
+<li><strong>传统多线程程序</strong>（<code>std.Thread.spawn</code>、<code>join</code>、<code>Mutex</code>）→ 用 <code>std.Thread</code> 的原语，它更简单直接</li>
+</ul>
+<blockquote>
+<p><strong>注意</strong>：<code>std.Io</code> 的异步任务应避免使用 <code>threadlocal</code>。不同 <code>Io</code> 实现可能使用不同的并发单元，<code>threadlocal</code> 代码在未来切换到非线程实现时可能行为异常。</p>
+</blockquote>
 <h2 id="并发编程最常见的几个坑"><a class="header" href="#并发编程最常见的几个坑">并发编程最常见的几个坑</a></h2>
 <h3 id="1-把睡眠等待当同步机制"><a class="header" href="#1-把睡眠等待当同步机制">1. 把“睡眠等待”当同步机制</a></h3>
 <p><code>std.time.sleep()</code> 可以模拟场景，但不能代替真正的同步原语。</p>
@@ -565,7 +588,7 @@ pub fn main(_: std.process.Init) !void {
 <ul>
 <li>自己维护一组工作线程 + 任务队列</li>
 <li>使用社区提供的第三方库</li>
-<li>关注 <code>std.Io</code> 下正在演进的异步 I/O 基础设施，它在某些场景下可以替代传统线程池</li>
+<li>使用 <code>std.Io</code> 的异步能力（<code>io.async</code>、<code>Group</code> 等）来获得类似效果，详见 <a href="chapter-io.html">std.Io 接口详解</a></li>
 </ul>
 <p>对于学习目的，手动管理一组线程加上条件变量通知，恰好是理解线程池内部工作原理的好练习。</p>
 <h2 id="本章小结"><a class="header" href="#本章小结">本章小结</a></h2>
@@ -576,9 +599,15 @@ pub fn main(_: std.process.Init) !void {
 <li>复杂共享状态优先考虑锁</li>
 <li>简单计数和标志位可以考虑原子操作</li>
 <li>能不共享，就尽量不共享</li>
-<li>对版本敏感的异步 I/O 方向，先把它当作“需要结合本地版本核对的高级主题”</li>
 </ul>
-<p>如果已经能看清这些边界，那么在后续阅读测试、构建、网络和实战章节时，就更不容易把“并发写法”误当成“只是语法技巧”。</p>
+<p>如果已经能看清这些边界，那么在后续阅读 <code>std.Io</code> 接口、测试、构建和网络章节时，就更不容易把“并发写法“误当成“只是语法技巧“。</p>
+<blockquote>
+<p><strong>相关阅读</strong>：</p>
+<ul>
+<li>想了解 <code>std.Io</code> 提供的异步和并发能力，见 <a href="chapter-io.html">std.Io 接口详解</a></li>
+<li>想了解异步 I/O 的历史背景和决策框架，见 <a href="../part3-practice/chapter-async.html">异步 I/O：现状与未来方向</a></li>
+</ul>
+</blockquote>
 
                     </main>
 

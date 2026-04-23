@@ -167,13 +167,7 @@ Hello, World!
 
 ### 最小写法
 
-```zig
-const std = @import("std");
-
-pub fn main() void {
-    std.debug.print("Hello, World!\n", .{});
-}
-```
+这就是前面"第一个 Zig 程序"中展示的写法。
 
 适合：
 
@@ -242,34 +236,6 @@ pub fn main(_: std.process.Init) void {
 > `main` 是否接收 `std.process.Init`，和是否返回 `!void`，是两个不同维度的问题：
 > - 是否接收 `init`，取决于是否需要那份初始化上下文
 > - 是否返回 `!void`，取决于是否需要传播错误
-
----
-
-## 一个更贴近 0.16 的输出示例
-
-后面接触 0.16 的 I/O 风格时，可能会看到类似下面的写法：
-
-```zig
-const std = @import("std");
-
-pub fn main(init: std.process.Init) !void {
-    try std.Io.File.stdout().writeStreamingAll(init.io, "Hello, World!\n");
-}
-```
-
-这段代码的意义是：
-
-- 使用 `std.process.Init`
-- 通过 `init.io` 访问 I/O 上下文
-- 明确写入标准输出
-- 使用 `try` 传播潜在错误
-
-不过请注意两点：
-
-1. 这比最小版 `Hello, World!` 更贴近 0.16 的 I/O 思路
-2. 它也更容易让初学者一开始就被细节绊住
-
-所以本章建议先用最小版本跑通，后续再逐步理解这个版本。
 
 ---
 

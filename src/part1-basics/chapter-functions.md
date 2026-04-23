@@ -92,7 +92,7 @@ Hello, Zig!
 安全除法: 5
 ```
 
-> **深入学习**：可选返回值和错误联合类型的详细用法请参考[控制流与资源管理](chapter-control-flow.md)和[错误处理基础](chapter-error-handling.md)。
+> **深入学习**：关于 `?T`（可选类型）和 `!T`（错误联合类型）的详细对比，见[错误处理](chapter-error-handling.md)章节。
 
 ### Zig 函数的一些基础限制
 

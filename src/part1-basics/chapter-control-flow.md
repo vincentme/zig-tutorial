@@ -13,14 +13,7 @@ Zig 的可选类型使用 `?T` 表示，用于表示值可能存在或不存在�
 - 不能直接使用可选值，必须先解包（通过 `if`、`orelse`、`.?` 等操作）
 - 类型系统区分 `T` 和 `?T`，意图清晰，代码显式可读
 
-可选类型 `?T` 和错误联合类型 `!T` 都用于表示"可能失败"的值，但用途不同：
-
-| 类型 | 含义               | 使用场景           |
-| ---- | ------------------ | ------------------ |
-| `?T` | 值可能存在或不存在 | 查找操作、可选配置 |
-| `!T` | 操作可能成功或失败 | 可能出错的操作     |
-
-> **深入学习**：错误联合类型的详细用法将在[错误处理基础](chapter-error-handling.md)中讲解。
+`?T` 表示值可能不存在，`!T` 表示操作可能失败。两者的详细对比和各自的处理方式，分别在[可选类型](#可选类型optional)和[错误处理](chapter-error-handling.md)章节展开。
 
 ### 解包操作
 
@@ -184,32 +177,7 @@ pub fn main(_: std.process.Init) void {
 
 ### 模式匹配解包错误联合类型
 
-if 也可以解包错误联合类型，分别处理成功和失败：
-
-```zig
-const std = @import("std");
-
-fn divide(a: i32, b: i32) !i32 {
-    if (b == 0) return error.DivisionByZero;
-    return @divTrunc(a, b);
-}
-
-pub fn main(_: std.process.Init) void {
-    const result = divide(10, 2);
-    
-    // 成功时 |value| 获取值，失败时 |err| 获取错误
-    if (result) |value| {
-        std.debug.print("结果：{}\n", .{value});
-    } else |err| {
-        std.debug.print("错误：{}\n", .{err});
-    }
-}
-```
-
-**预期输出：**
-```
-结果：5
-```
+`if` 也可以解包错误联合类型（`!T`），语法与可选类型解包类似，详见[错误处理](chapter-error-handling.md)章节。
 
 ## while 循环
 
@@ -694,24 +662,7 @@ pub fn main(_: std.process.Init) void {
 
 ### defer vs errdefer
 
-`errdefer` 与 `defer` 类似，但只在函数返回错误时执行，正常返回时不执行。典型场景是**所有权转移**：函数成功时将资源返回给调用者（调用者负责释放），仅在失败时才需要清理。
-
-| 机制        | 执行时机           | 适用场景                     |
-| ----------- | ------------------ | ---------------------------- |
-| `defer`     | 作用域结束时始终执行 | 资源在函数内完成生命周期     |
-| `errdefer`  | 仅函数返回错误时执行 | 资源成功时转移给调用者       |
-
-```zig
-fn allocateAndInit(allocator: std.mem.Allocator) !*Resource {
-    const resource = try allocator.create(Resource);
-    errdefer allocator.destroy(resource);  // 失败时释放
-    
-    try resource.init();  // 如果这里失败，errdefer 会执行
-    return resource;      // 成功时，errdefer 不执行，调用者负责释放
-}
-```
-
-> **深入学习**：errdefer 的完整用法（多资源管理、错误捕获 `|err|` 等）请参考[错误处理基础](chapter-error-handling.md#errdefer)。
+`errdefer` 与 `defer` 类似，但只在函数返回错误时执行，正常返回时不执行。典型场景是**所有权转移**：函数成功时将资源返回给调用者（调用者负责释放），仅在失败时才需要清理。关于 `errdefer` 的完整用法、与 `defer` 的详细对比、以及失败路径清理的模式，将在[错误处理](chapter-error-handling.md)章节展开。
 
 ## 块表达式（Block Expression）
 
@@ -799,13 +750,15 @@ pub fn main(_: std.process.Init) void {
 
 ## unreachable
 
-`unreachable` 表示某个代码路径在逻辑上不应被执行。它的类型是 `noreturn`，因此可以出现在任何需要值的位置。在安全模式（Debug、ReleaseSafe）下执行到 `unreachable` 会触发 panic。
+`unreachable` 的核心含义是向编译器声明"这个条件在逻辑上一定为真"。它的类型是 `noreturn`，因此可以出现在任何需要值的位置。编译器可以利用这个声明做优化——例如声明了 `b != 0`，编译器就可以省去除零检查，甚至用位移替代除法。
+
+在安全模式（Debug、ReleaseSafe）下，执行到 `unreachable` 会触发 panic，帮助在开发阶段定位问题。在非安全模式（ReleaseFast、ReleaseSmall）下，编译器假设 `unreachable` 路径永远不会被执行，并据此优化代码。
 
 常见用途包括：
 
-- 在 `switch` 中标记不可能到达的分支
-- 在已知不会失败的 `catch` 中表达断言
-- 作为编译器优化提示（非安全模式下为未定义行为）
+- 在 `switch` 中标记穷尽后不可能到达的分支
+- 在已知不会失败的 `catch` 中表达断言（如 `catch unreachable`）
+- 在函数入口声明调用者必须满足的前提条件
 
 ```zig
 const std = @import("std");
@@ -821,7 +774,19 @@ pub fn main(_: std.process.Init) void {
 }
 ```
 
-> **注意**：`unreachable` 在非安全模式下是未定义行为。仅在确实能证明某条路径不可达时使用，否则应使用正常的错误处理。
+### `std.debug.assert`
+
+`std.debug.assert` 是 `unreachable` 的一行封装：
+
+```zig
+// 这两种写法等价：
+if (!(x > 0)) unreachable;
+std.debug.assert(x > 0);
+```
+
+它不是宏，而是普通函数，因此表达式在所有构建模式下都会被求值——不会因为 release 模式就跳过。与某些语言中 assert 在 release 下消失不同，Zig 的 assert 只是比较检查可能被优化掉，表达式本身仍然执行。
+
+> **注意**：`unreachable` 和 `assert` 在非安全模式下是未定义行为。仅在确实能证明条件恒为真时使用，否则应使用正常的错误处理。
 
 ## 本章要点
 
@@ -834,4 +799,4 @@ pub fn main(_: std.process.Init) void {
 | **switch**     | 穷尽性检查；支持范围匹配、多值匹配、枚举匹配、值捕获 |
 | **defer**      | 作用域结束时执行（LIFO）；`errdefer` 仅错误时执行   |
 | **块表达式**   | 带标签的作用域，通过 `break :label value` 返回值   |
-| **unreachable** | 标记不可达路径；安全模式下触发 panic，非安全模式下为未定义行为 |
+| **unreachable** | 向编译器声明"此条件恒为真"；辅助优化，安全模式下违反则 panic；`std.debug.assert` 是其一行封装 |

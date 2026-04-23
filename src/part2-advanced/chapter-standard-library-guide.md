@@ -6,37 +6,20 @@
 
 ## 标准库模块速查表
 
-| 模块 | 主要职责 | 掌握优先级 |
-| ---- | -------- | ---------- |
-| `std.mem` | 字节与切片操作、比较、搜索、拷贝、分配器工具 | ★★★ 必须优先 |
-| `std.fmt` | 格式化输出、字符串拼装、解析辅助 | ★★★ 必须优先 |
-| `std.debug` | 调试打印、断言、调试辅助 | ★★★ 必须优先 |
-| `std.testing` | 单元测试断言、测试分配器 | ★★★ 必须优先 |
-| `std.fs` | 文件与目录操作、路径拼装、遍历、元信息 | ★★☆ 高频常用 |
-| `std.process` | 命令行参数、环境变量、子进程 | ★★☆ 高频常用 |
-| `std.heap` | 分配器实现（arena、page、debug 等） | ★★☆ 高频常用 |
+| 模块 | 一句话说明 | 掌握优先级 |
+| ---- | ---------- | ---------- |
+| `std.mem` | 切片比较（`eql`）、搜索（`indexOf`）、裁剪（`trim`）、拷贝（`copyForwards`）等字节级操作的核心入口 | ★★★ 必须优先 |
+| `std.fmt` | `allocPrint` / `bufPrint` / 格式化字符串拼装，与 `std.debug.print` 共享格式语法 | ★★★ 必须优先 |
+| `std.debug` | `print` 输出调试信息、`assert` 断言——学习和排错阶段最常用的入口 | ★★★ 必须优先 |
+| `std.testing` | `expect` / `expectEqual` / `expectError` 等测试断言，以及 `testing.allocator`（带泄漏检测的测试分配器） | ★★★ 必须优先 |
+| `std.fs` | 打开 / 创建文件、遍历目录、读取元信息、路径拼装——CLI 工具和配置加载的基础 | ★★☆ 高频常用 |
+| `std.process` | 获取命令行参数与环境变量、启动子进程、访问程序入口上下文 | ★★☆ 高频常用 |
+| `std.heap` | `page_allocator`、`ArenaAllocator`、`FixedBufferAllocator`、调试分配器等——理解分配器显式传递模式的关键 | ★★☆ 高频常用 |
 | `std.math` | 数值与数学函数、边界辅助 | ★☆☆ 按需查阅 |
 | `std.json` | JSON 解析与序列化 | ★☆☆ 按需查阅 |
 | `std.crypto` | 哈希、签名、随机数等密码学能力 | ★☆☆ 按需查阅 |
 | `std.Build` | 构建脚本 API | 工程阶段重点 |
 | `std.Io` / 网络 | I/O 抽象、流、网络 | 版本敏感区 |
-
-## 第一批：基础四模块
-
-| 模块 | 一句话说明 |
-| ---- | ---------- |
-| `std.mem` | 切片比较（`eql`）、搜索（`indexOf`）、裁剪（`trim`）、拷贝（`copyForwards`）等字节级操作的核心入口 |
-| `std.fmt` | `allocPrint` / `bufPrint` / 格式化字符串拼装，与 `std.debug.print` 共享格式语法 |
-| `std.debug` | `print` 输出调试信息、`assert` 断言——学习和排错阶段最常用的入口 |
-| `std.testing` | `expect` / `expectEqual` / `expectError` 等测试断言，以及 `testing.allocator`（带泄漏检测的测试分配器） |
-
-## 第二批：工程化模块
-
-| 模块 | 一句话说明 |
-| ---- | ---------- |
-| `std.fs` | 打开 / 创建文件、遍历目录、读取元信息、路径拼装——CLI 工具和配置加载的基础 |
-| `std.process` | 获取命令行参数与环境变量、启动子进程、访问程序入口上下文 |
-| `std.heap` | `page_allocator`、`ArenaAllocator`、`FixedBufferAllocator`、调试分配器等——理解分配器显式传递模式的关键 |
 
 > 各模块的详细示例与用法见《常用标准库模块详解》。
 
