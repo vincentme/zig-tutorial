@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-ab6996a3.js";
+            window.path_to_searchindex_js = "../searchindex-eaf4bf9b.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-4c2eaf17.js"></script>
+        <script src="../toc-626d6463.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -305,109 +305,29 @@ pub fn main() void {
 <li>如果想更明确地控制输出流，后面可以再学习 <code>stdout</code> 相关 API</li>
 </ul>
 <hr>
-<h2 id="zig-016-中常见的-main-写法"><a class="header" href="#zig-016-中常见的-main-写法">Zig 0.16 中常见的 <code>main</code> 写法</a></h2>
-<p>在 Zig 0.16 中，有不止一种 <code>main</code> 写法。
-本教程后续示例会根据需要使用不同形式，现在只需要先认识它们。</p>
-<h3 id="最小写法"><a class="header" href="#最小写法">最小写法</a></h3>
-<p>这就是前面“第一个 Zig 程序“中展示的写法。</p>
-<p>适合：</p>
-<ul>
-<li>最简单的示例</li>
-<li>不需要向上传播错误</li>
-<li>只做少量调试输出</li>
-</ul>
-<h3 id="需要错误传播时"><a class="header" href="#需要错误传播时">需要错误传播时</a></h3>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn main() !void {
-    try std.fs.cwd().access("build.zig", .{});
-}
-</code></pre>
-<p>适合：</p>
-<ul>
-<li>入口函数里要使用 <code>try</code></li>
-<li>希望把错误直接向外返回</li>
-<li>示例中已经开始接触显式错误处理</li>
-</ul>
-<h3 id="使用-stdprocessinit--stdprocessinitminimal-的-016-风格写法"><a class="header" href="#使用-stdprocessinit--stdprocessinitminimal-的-016-风格写法">使用 <code>std.process.Init</code> / <code>std.process.Init.Minimal</code> 的 0.16 风格写法</a></h3>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn main(_: std.process.Init.Minimal) void {
-    std.debug.print("Hello from Zig 0.16!\n", .{});
-}
-</code></pre>
-<p>也可能看到更完整的形式：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn main(_: std.process.Init) void {
-    std.debug.print("Hello from Zig 0.16!\n", .{});
-}
-</code></pre>
-<p>可以先简单理解为：</p>
-<ul>
-<li><code>std.process.Init.Minimal</code>：只接收最基本的初始化上下文</li>
-<li><code>std.process.Init</code>：接收更完整的初始化上下文</li>
-</ul>
-<p>适合：</p>
-<ul>
-<li>想和 Zig 0.16 的新式入口风格保持一致</li>
-<li>在示例或标准库代码里看到了这种写法</li>
-<li>后续可能需要访问入口初始化信息</li>
-</ul>
-<p>如果示例不需要使用上下文，可以将参数写成 <code>_</code>。</p>
-<h3 id="应该怎么选"><a class="header" href="#应该怎么选">应该怎么选？</a></h3>
-<p>对于本章的第一个程序：</p>
-<ul>
-<li><strong>想最快跑起来</strong>：用 <code>pub fn main() void</code></li>
-<li><strong>马上要用 <code>try</code></strong>：用 <code>pub fn main() !void</code></li>
-<li><strong>想和本教程后续多数 0.16 示例保持一致</strong>：用 <code>pub fn main(_: std.process.Init.Minimal) void</code>、<code>pub fn main(_: std.process.Init) void</code>，或它们对应的 <code>!void</code> 版本</li>
-</ul>
-<blockquote>
-<p><strong>注意</strong>
-<code>main</code> 是否接收 <code>std.process.Init</code>，和是否返回 <code>!void</code>，是两个不同维度的问题：</p>
-<ul>
-<li>是否接收 <code>init</code>，取决于是否需要那份初始化上下文</li>
-<li>是否返回 <code>!void</code>，取决于是否需要传播错误</li>
-</ul>
-</blockquote>
+<h2 id="zig-016-的-main-形式"><a class="header" href="#zig-016-的-main-形式">Zig 0.16 的 <code>main</code> 形式</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>形式</th><th>用途</th></tr>
+</thead>
+<tbody>
+<tr><td><code>pub fn main() void</code></td><td>最简单的示例</td></tr>
+<tr><td><code>pub fn main() !void</code></td><td>需要 <code>try</code> 传播错误</td></tr>
+<tr><td><code>pub fn main(_: std.process.Init) !void</code></td><td>0.16 推荐：可访问 <code>io</code>、<code>gpa</code>、<code>args</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>是否接收 <code>std.process.Init</code>（访问初始化上下文）与是否返回 <code>!void</code>（错误传播）是两个独立维度。</p>
 <hr>
-<h2 id="现在最值得记住的几个命令"><a class="header" href="#现在最值得记住的几个命令">现在最值得记住的几个命令</a></h2>
-<p>在学习早期，最常用的不是一大堆复杂命令，而是下面这几个：</p>
-<h3 id="运行单文件程序"><a class="header" href="#运行单文件程序">运行单文件程序</a></h3>
-<pre><code class="language-bash">zig run hello.zig
+<h2 id="常用命令与工作流"><a class="header" href="#常用命令与工作流">常用命令与工作流</a></h2>
+<pre><code class="language-bash">zig run hello.zig      # 运行单文件
+zig test hello.zig     # 运行测试
+zig fmt hello.zig      # 格式化代码
+zig build-exe hello.zig # 编译可执行文件
 </code></pre>
-<h3 id="运行测试"><a class="header" href="#运行测试">运行测试</a></h3>
-<pre><code class="language-bash">zig test hello.zig
-</code></pre>
-<h3 id="格式化代码"><a class="header" href="#格式化代码">格式化代码</a></h3>
-<pre><code class="language-bash">zig fmt hello.zig
-</code></pre>
-<h3 id="构建可执行文件"><a class="header" href="#构建可执行文件">构建可执行文件</a></h3>
-<pre><code class="language-bash">zig build-exe hello.zig
-</code></pre>
-<p>入门阶段掌握这四个命令，已经足够覆盖大多数单文件练习场景。</p>
-<hr>
-<h2 id="一个推荐的最小工作流"><a class="header" href="#一个推荐的最小工作流">一个推荐的最小工作流</a></h2>
-<p>刚开始学 Zig 时，可以把每次练习控制在以下流程中：</p>
-<ol>
-<li>新建一个 <code>.zig</code> 文件</li>
-<li>写一个很小的示例</li>
-<li>用 <code>zig fmt</code> 格式化</li>
-<li>用 <code>zig run</code> 运行</li>
-<li>修改一点点代码再运行</li>
-<li>看懂编译器报错在说什么</li>
-</ol>
-<p>例如：</p>
-<pre><code class="language-bash">zig fmt hello.zig
-zig run hello.zig
-zig test hello.zig
-</code></pre>
-<p>这个节奏非常适合入门，因为它能帮助快速建立三种感觉：</p>
-<ul>
-<li>Zig 代码长什么样</li>
-<li>Zig 编译器如何报错</li>
-<li>Zig 工具链在日常开发中怎么配合使用</li>
-</ul>
+<p>排查安装问题时使用 <code>zig env</code> 查看标准库路径和版本信息。</p>
+<p>入门建议的节奏：写一个很小的示例 → <code>zig fmt</code> → <code>zig run</code> → 修改再运行 → 看懂编译器报错。</p>
 <hr>
 <h2 id="关于项目结构先认识不急着展开"><a class="header" href="#关于项目结构先认识不急着展开">关于项目结构：先认识，不急着展开</a></h2>
 <p>如果运行过：</p>

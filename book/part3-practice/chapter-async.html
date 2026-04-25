@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-ab6996a3.js";
+            window.path_to_searchindex_js = "../searchindex-eaf4bf9b.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-4c2eaf17.js"></script>
+        <script src="../toc-626d6463.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -257,12 +257,23 @@
 <hr>
 <h2 id="小结"><a class="header" href="#小结">小结</a></h2>
 <ol>
-<li>旧的语言级 <code>async</code>/<code>await</code>/<code>suspend</code>/<code>resume</code> 已退出主线，原因是设计复杂度和运行时落地难度</li>
-<li><code>std.Io</code> 已提供可用的异步和并发接口，但仍处于演进阶段</li>
+<li>旧的语言级 <code>async</code>/<code>await</code>/<code>suspend</code>/<code>resume</code> 已退出主线</li>
+<li><code>std.Io</code> 已提供可用的异步和并发接口（<code>io.async</code>、<code>Future</code>、<code>Queue</code>、<code>Group</code>、<code>Select</code>）</li>
 <li>线程模型仍然是最稳定的基础</li>
-<li>异步、并发、并行是不同的概念，不要混为一谈</li>
+<li>异步、并发、并行是不同的概念</li>
 </ol>
-<p>如果你读完后能区分“什么是今天可用的 <code>std.Io</code> 接口“和“什么是已退出的旧方案“，这章就达到目的了。</p>
+<h3 id="新旧对比"><a class="header" href="#新旧对比">新旧对比</a></h3>
+<p>旧风格（Zig 0.10 伪代码，已移除）：</p>
+<pre><code class="language-zig">// 旧：语言级 async/await
+var frame = async worker();
+const result = await frame;
+</code></pre>
+<p>新风格（Zig 0.16）：</p>
+<pre><code class="language-zig">// 新：std.Io 函数式异步
+var future = io.async(worker, .{arg});
+const result = try future.await(io);
+</code></pre>
+<p>核心变迁：从语言级关键字 → 库级显式接口，<code>io</code> 作为统一上下文传入。</p>
 
                     </main>
 

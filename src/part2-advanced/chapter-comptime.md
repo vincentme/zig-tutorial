@@ -585,4 +585,4 @@ test "describeType" {
 
 ---
 
-上述机制是 Zig 泛型、零成本抽象和元编程的底层基础。掌握它们之后，下一章[泛型编程](chapter-generics.md)将展示如何把这些机制组合成可复用的设计模式。
+> **相关阅读**：[泛型编程](chapter-generics.md)

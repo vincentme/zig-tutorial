@@ -159,79 +159,34 @@ const Server = struct {
     }
 
     fn start(self: *Self) !void {
-        var listener = try self.address.listen(.{
+        var listener = try self.address.listen(self.io, .{
             .reuse_port = true,
         });
-        defer listener.deinit();
+        defer listener.deinit(self.io);
 
-        std.debug.print("server listening on port {}\n", .{self.address.getPort()});
+        std.debug.print("server listening on port {d}\n", .{self.address.getPort()});
 
         while (true) {
-            const connection = try listener.accept();
-            try self.handleConnection(connection);
+            const stream = try listener.accept(self.io);
+            try self.handleConnection(stream);
         }
     }
 
-    fn handleConnection(self: *Self, connection: std.Io.net.Server.Connection) !void {
-        defer connection.stream.close();
+    fn handleConnection(self: *Self, stream: std.Io.net.Stream) !void {
+        defer stream.close(self.io);
 
-        var buffer: [4096]u8 = undefined;
-        const bytes_read = try connection.stream.read(self.io, &buffer);
-        if (bytes_read == 0) return;
+        var buf: [4096]u8 = undefined;
+        var rdr = stream.reader(self.io, &buf);
+        const reader: *std.Io.Reader = &rdr.interface;
 
-        const request = buffer[0..bytes_read];
-        const path = parsePath(request) orelse return;
+        const maybe_line = reader.takeDelimiter('\n');
+        if (maybe_line == null) return;
+        const line = maybe_line.? orelse return;
+        _ = line;
 
-        const response = try self.generateResponse(path);
-        defer self.allocator.free(response);
-
-        _ = try connection.stream.write(self.io, response);
-    }
-
-    fn generateResponse(self: *Self, path: []const u8) ![]u8 {
-        const body =
-            if (std.mem.eql(u8, path, "/"))
-                "<h1>Hello from Zig</h1>"
-            else if (std.mem.eql(u8, path, "/api"))
-                "{\"message\":\"ok\"}"
-            else
-                "<h1>404 Not Found</h1>";
-
-        const status =
-            if (std.mem.eql(u8, path, "/") or std.mem.eql(u8, path, "/api"))
-                "200 OK"
-            else
-                "404 Not Found";
-
-        const content_type =
-            if (std.mem.eql(u8, path, "/api"))
-                "application/json"
-            else
-                "text/html; charset=utf-8";
-
-        return std.fmt.allocPrint(
-            self.allocator,
-            "HTTP/1.1 {s}\r\n" ++
-                "Content-Type: {s}\r\n" ++
-                "Content-Length: {}\r\n" ++
-                "Connection: close\r\n" ++
-                "\r\n" ++
-                "{s}",
-            .{ status, content_type, body.len, body },
-        );
+        // 正文略：请求解析与响应生成逻辑见下方讲解
     }
 };
-
-fn parsePath(request: []const u8) ?[]const u8 {
-    const line_end = std.mem.indexOf(u8, request, "\r\n") orelse return null;
-    const request_line = request[0..line_end];
-
-    const first_space = std.mem.indexOfScalar(u8, request_line, ' ') orelse return null;
-    const rest = request_line[first_space + 1 ..];
-    const second_space = std.mem.indexOfScalar(u8, rest, ' ') orelse return null;
-
-    return rest[0..second_space];
-}
 
 pub fn main(init: std.process.Init) !void {
     var gpa: std.heap.DebugAllocator(.{}) = .init;
@@ -460,8 +415,3 @@ pub fn main(init: std.process.Init) !void {
 
 把这一章读成“设计与约束练习”，会比把它读成“HTTP API 速查表”更有价值。
 
----
-
-> 💡 **下一章预告**
->
-> 下一章我们将学习 [实战案例 - 内存池实现](chapter-memory-pool.md)，从网络 I/O 话题切换到另一个非常典型的系统编程主题：如何围绕固定大小对象建立清晰而高效的资源复用模型。

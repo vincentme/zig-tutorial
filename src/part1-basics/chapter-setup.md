@@ -160,141 +160,30 @@ Hello, World!
 
 ---
 
-## Zig 0.16 中常见的 `main` 写法
+## Zig 0.16 的 `main` 形式
 
-在 Zig 0.16 中，有不止一种 `main` 写法。
-本教程后续示例会根据需要使用不同形式，现在只需要先认识它们。
+| 形式 | 用途 |
+| ---- | ---- |
+| `pub fn main() void` | 最简单的示例 |
+| `pub fn main() !void` | 需要 `try` 传播错误 |
+| `pub fn main(_: std.process.Init) !void` | 0.16 推荐：可访问 `io`、`gpa`、`args` |
 
-### 最小写法
-
-这就是前面"第一个 Zig 程序"中展示的写法。
-
-适合：
-
-- 最简单的示例
-- 不需要向上传播错误
-- 只做少量调试输出
-
-### 需要错误传播时
-
-```zig
-const std = @import("std");
-
-pub fn main() !void {
-    try std.fs.cwd().access("build.zig", .{});
-}
-```
-
-适合：
-
-- 入口函数里要使用 `try`
-- 希望把错误直接向外返回
-- 示例中已经开始接触显式错误处理
-
-### 使用 `std.process.Init` / `std.process.Init.Minimal` 的 0.16 风格写法
-
-```zig
-const std = @import("std");
-
-pub fn main(_: std.process.Init.Minimal) void {
-    std.debug.print("Hello from Zig 0.16!\n", .{});
-}
-```
-
-也可能看到更完整的形式：
-
-```zig
-const std = @import("std");
-
-pub fn main(_: std.process.Init) void {
-    std.debug.print("Hello from Zig 0.16!\n", .{});
-}
-```
-
-可以先简单理解为：
-
-- `std.process.Init.Minimal`：只接收最基本的初始化上下文
-- `std.process.Init`：接收更完整的初始化上下文
-
-适合：
-
-- 想和 Zig 0.16 的新式入口风格保持一致
-- 在示例或标准库代码里看到了这种写法
-- 后续可能需要访问入口初始化信息
-
-如果示例不需要使用上下文，可以将参数写成 `_`。
-
-### 应该怎么选？
-
-对于本章的第一个程序：
-
-- **想最快跑起来**：用 `pub fn main() void`
-- **马上要用 `try`**：用 `pub fn main() !void`
-- **想和本教程后续多数 0.16 示例保持一致**：用 `pub fn main(_: std.process.Init.Minimal) void`、`pub fn main(_: std.process.Init) void`，或它们对应的 `!void` 版本
-
-> **注意**
-> `main` 是否接收 `std.process.Init`，和是否返回 `!void`，是两个不同维度的问题：
-> - 是否接收 `init`，取决于是否需要那份初始化上下文
-> - 是否返回 `!void`，取决于是否需要传播错误
+是否接收 `std.process.Init`（访问初始化上下文）与是否返回 `!void`（错误传播）是两个独立维度。
 
 ---
 
-## 现在最值得记住的几个命令
-
-在学习早期，最常用的不是一大堆复杂命令，而是下面这几个：
-
-### 运行单文件程序
+## 常用命令与工作流
 
 ```bash
-zig run hello.zig
+zig run hello.zig      # 运行单文件
+zig test hello.zig     # 运行测试
+zig fmt hello.zig      # 格式化代码
+zig build-exe hello.zig # 编译可执行文件
 ```
 
-### 运行测试
+排查安装问题时使用 `zig env` 查看标准库路径和版本信息。
 
-```bash
-zig test hello.zig
-```
-
-### 格式化代码
-
-```bash
-zig fmt hello.zig
-```
-
-### 构建可执行文件
-
-```bash
-zig build-exe hello.zig
-```
-
-入门阶段掌握这四个命令，已经足够覆盖大多数单文件练习场景。
-
----
-
-## 一个推荐的最小工作流
-
-刚开始学 Zig 时，可以把每次练习控制在以下流程中：
-
-1. 新建一个 `.zig` 文件
-2. 写一个很小的示例
-3. 用 `zig fmt` 格式化
-4. 用 `zig run` 运行
-5. 修改一点点代码再运行
-6. 看懂编译器报错在说什么
-
-例如：
-
-```bash
-zig fmt hello.zig
-zig run hello.zig
-zig test hello.zig
-```
-
-这个节奏非常适合入门，因为它能帮助快速建立三种感觉：
-
-- Zig 代码长什么样
-- Zig 编译器如何报错
-- Zig 工具链在日常开发中怎么配合使用
+入门建议的节奏：写一个很小的示例 → `zig fmt` → `zig run` → 修改再运行 → 看懂编译器报错。
 
 ---
 

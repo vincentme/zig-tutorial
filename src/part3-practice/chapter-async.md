@@ -78,9 +78,25 @@ Zig 曾经探索过语言级的 `async`/`await`/`suspend`/`resume` 关键字。�
 
 ## 小结
 
-1. 旧的语言级 `async`/`await`/`suspend`/`resume` 已退出主线，原因是设计复杂度和运行时落地难度
-2. `std.Io` 已提供可用的异步和并发接口，但仍处于演进阶段
+1. 旧的语言级 `async`/`await`/`suspend`/`resume` 已退出主线
+2. `std.Io` 已提供可用的异步和并发接口（`io.async`、`Future`、`Queue`、`Group`、`Select`）
 3. 线程模型仍然是最稳定的基础
-4. 异步、并发、并行是不同的概念，不要混为一谈
+4. 异步、并发、并行是不同的概念
 
-如果你读完后能区分"什么是今天可用的 `std.Io` 接口"和"什么是已退出的旧方案"，这章就达到目的了。
+### 新旧对比
+
+旧风格（Zig 0.10 伪代码，已移除）：
+```zig
+// 旧：语言级 async/await
+var frame = async worker();
+const result = await frame;
+```
+
+新风格（Zig 0.16）：
+```zig
+// 新：std.Io 函数式异步
+var future = io.async(worker, .{arg});
+const result = try future.await(io);
+```
+
+核心变迁：从语言级关键字 → 库级显式接口，`io` 作为统一上下文传入。

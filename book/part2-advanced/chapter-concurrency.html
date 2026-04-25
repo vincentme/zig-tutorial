@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-ab6996a3.js";
+            window.path_to_searchindex_js = "../searchindex-eaf4bf9b.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-4c2eaf17.js"></script>
+        <script src="../toc-626d6463.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -573,6 +573,8 @@ pub fn main(_: std.process.Init) !void {
 <li>使用 <code>std.Io</code> 的异步能力（<code>io.async</code>、<code>Group</code> 等）来获得类似效果，详见 <a href="chapter-io.html">std.Io 接口详解</a></li>
 </ul>
 <p>对于学习目的，手动管理一组线程加上条件变量通知，恰好是理解线程池内部工作原理的好练习。</p>
+<h2 id="关于死锁"><a class="header" href="#关于死锁">关于死锁</a></h2>
+<p>死锁的经典条件：<strong>互斥</strong>（需要独占资源）+ <strong>持有并等待</strong>（持有一个锁的同时等待另一个锁）+ <strong>不可抢占</strong> + <strong>循环等待</strong>。避免方法：锁的获取顺序在所有代码路径中保持一致；避免嵌套锁；使用 <code>tryLock</code> + 短暂超时而非无限等待。</p>
 <h2 id="本章小结"><a class="header" href="#本章小结">本章小结</a></h2>
 <p>本章的核心判断：</p>
 <ul>

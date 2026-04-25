@@ -615,9 +615,9 @@ pub fn main(_: std.process.Init) void {
 
 ```zig
 // 文件操作：确保文件关闭
-fn readFile(path: []const u8) !void {
-    const file = try std.fs.cwd().openFile(path, .{});
-    defer file.close();
+fn readFile(io: std.Io, path: []const u8) !void {
+    const file = try std.Io.Dir.cwd().openFile(io, path, .{});
+    defer file.close(io);
     // 使用文件...
 }
 

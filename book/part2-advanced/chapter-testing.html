@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-ab6996a3.js";
+            window.path_to_searchindex_js = "../searchindex-eaf4bf9b.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-4c2eaf17.js"></script>
+        <script src="../toc-626d6463.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -201,30 +201,8 @@
 </ul>
 </blockquote>
 <hr>
-<h2 id="为什么测试在-zig-中尤其重要"><a class="header" href="#为什么测试在-zig-中尤其重要">为什么测试在 Zig 中尤其重要？</a></h2>
-<p>Zig 强调几件事：</p>
-<ul>
-<li>显式错误处理</li>
-<li>显式资源管理</li>
-<li>显式分配器传递</li>
-<li>尽量让失败模式清楚可见</li>
-</ul>
-<p>这意味着很多代码的正确性，不只体现在“正常路径能跑通”，还体现在：</p>
-<ul>
-<li>错误是否真的被正确返回</li>
-<li>资源是否在失败时也能被释放</li>
-<li>边界输入是否被正确处理</li>
-<li>抽象接口是否足够清晰，容易验证</li>
-</ul>
-<p>换句话说，在 Zig 里，<strong>测试往往直接暴露设计是否清楚</strong>。</p>
-<p>例如，如果一个函数难以测试，常常说明它可能：</p>
-<ul>
-<li>隐含了过多全局状态</li>
-<li>混杂了太多职责</li>
-<li>所有权边界不清楚</li>
-<li>对失败路径缺乏明确约定</li>
-</ul>
-<p>所以，测试不只是“质量保证”，也是一种<strong>设计反馈机制</strong>。</p>
+<h2 id="为什么测试在-zig-中很重要"><a class="header" href="#为什么测试在-zig-中很重要">为什么测试在 Zig 中很重要</a></h2>
+<p>Zig 强调显式错误处理、显式资源管理和显式分配器传递。测试直接验证这些约束是否被遵守。难以测试的函数往往说明设计本身需要改进。</p>
 <hr>
 <h2 id="zig-测试的基本形式"><a class="header" href="#zig-测试的基本形式">Zig 测试的基本形式</a></h2>
 <p>Zig 使用 <code>test</code> 块定义测试：</p>
@@ -367,10 +345,11 @@ test "floating-point values should use approximate comparison" {
 </ul>
 <p>更实用的顺序通常是：</p>
 <ol>
-<li><strong>先测核心行为</strong> — 也就是这个函数最主要的承诺是什么。例如 <code>divide(a, b)</code>：正常除法能否返回结果？除数为零时是否返回预期错误？</li>
-<li><strong>再测边界条件</strong> — 空输入、最小值/最大值、长度为 0 或 1 的切片、极小/极大容量、容器空/满状态。</li>
-<li><strong>再测失败路径</strong> — 尤其是分配失败、输入无效、文件不存在、解析失败、资源初始化中途失败等场景。</li>
-<li><strong>最后再补回归测试</strong> — 如果修过一个 bug，就应该尽量为那个 bug 增加一个测试，让它以后不会悄悄回来。</li>
+<li><strong>先测核心行为</strong> — 函数最主要的承诺：正常输入能否返回正确结果？失败时是否返回预期错误？</li>
+<li><strong>再测边界条件</strong> — 空输入、最小值/最大值、长度为 0 的切片、容器空/满状态</li>
+<li><strong>再测失败路径</strong> — 分配失败、输入无效、文件不存在、解析失败、资源初始化中途失败</li>
+<li><strong>再补资源释放检查</strong> — 如果涉及分配，验证 <code>defer</code> 和 <code>errdefer</code> 的执行</li>
+<li><strong>最后补回归测试</strong> — 修过的 bug 应增加测试，防止悄悄回归</li>
 </ol>
 <hr>
 <h2 id="一个更完整的测试示例"><a class="header" href="#一个更完整的测试示例">一个更完整的测试示例</a></h2>
@@ -500,14 +479,6 @@ const Counter = struct {
 <li>但它不是一开始必须依赖的主线能力</li>
 </ul>
 <p>很多时候，<strong>顶层测试块已经足够</strong>。</p>
-<h3 id="关于-refalldecls"><a class="header" href="#关于-refalldecls">关于 <code>refAllDecls</code></a></h3>
-<p>一些资料中可能出现 <code>std.testing.refAllDecls(...)</code>。<br>它的作用通常是帮助引用声明，从而让某些嵌套测试也被纳入测试流程。</p>
-<p>但对本教程阶段来说，更值得记住的是这条原则：</p>
-<blockquote>
-<p><strong>先把顶层测试写清楚，再把嵌套测试当作组织手段，而不是核心能力。</strong></p>
-</blockquote>
-<p>也就是说，<code>refAllDecls</code> 是“知道它存在即可”的高级补充，第一次阅读不必深究其内部机制。</p>
-<hr>
 <h2 id="测试过滤与选择性运行"><a class="header" href="#测试过滤与选择性运行">测试过滤与选择性运行</a></h2>
 <p>当测试数量变多时，通常不需要每次都跑全部测试。<br>这时可以使用测试过滤。</p>
 <p>例如：</p>
@@ -544,29 +515,16 @@ const Counter = struct {
 <li>测试失败时，日志本身就像一句行为说明</li>
 </ol>
 <hr>
-<h2 id="什么是好测试"><a class="header" href="#什么是好测试">什么是“好测试“？</a></h2>
-<p>好测试通常有这些特征：</p>
-<h3 id="1-关注一个明确行为"><a class="header" href="#1-关注一个明确行为">1. 关注一个明确行为</a></h3>
-<p>不要在一个测试里同时验证十件事。否则一旦失败，很难快速定位原因。</p>
-<blockquote>
-<p><strong>反面</strong>：一个测试塞太多断言，失败时难以定位问题。</p>
-</blockquote>
-<h3 id="2-输入和预期都清楚"><a class="header" href="#2-输入和预期都清楚">2. 输入和预期都清楚</a></h3>
-<p>不要让读者猜这个测试到底在验证什么。</p>
-<h3 id="3-命名像一句行为描述"><a class="header" href="#3-命名像一句行为描述">3. 命名像一句行为描述</a></h3>
-<p>测试名本身应该能帮助理解代码。</p>
-<blockquote>
-<p><strong>反面</strong>：模糊的测试名会让失败日志失去价值。</p>
-</blockquote>
-<h3 id="4-对失败路径同样重视"><a class="header" href="#4-对失败路径同样重视">4. 对失败路径同样重视</a></h3>
-<p>失败路径常常更值得测，尤其在 Zig 中。</p>
-<blockquote>
-<p><strong>反面</strong>：只测快乐路径是最常见的问题。</p>
-</blockquote>
-<h3 id="5-不依赖隐式全局状态理清资源所有权"><a class="header" href="#5-不依赖隐式全局状态理清资源所有权">5. 不依赖隐式全局状态，理清资源所有权</a></h3>
-<p>如果测试必须依赖复杂外部状态，通常说明设计可以继续改进。测试里说不清楚资源所有权，往往说明接口设计也还不够清楚。</p>
-<h3 id="6-把基准测量当成提问工具而非结论"><a class="header" href="#6-把基准测量当成提问工具而非结论">6. 把基准测量当成提问工具，而非结论</a></h3>
-<p>基准测量应该帮助提出更好的问题，而不是导致过早下结论。</p>
+<h2 id="什么是好测试"><a class="header" href="#什么是好测试">什么是好测试</a></h2>
+<ol>
+<li>关注一个明确行为</li>
+<li>输入和预期都清楚</li>
+<li>命名像一句行为描述</li>
+<li>同样重视失败路径</li>
+<li>不依赖隐式全局状态</li>
+<li>把基准测量当作提问工具
+基准测量应该帮助提出更好的问题，而不是导致过早下结论。</li>
+</ol>
 <hr>
 <h2 id="一个简单容器测试示例"><a class="header" href="#一个简单容器测试示例">一个简单容器测试示例</a></h2>
 <p>下面是一个更贴近第二部分后续章节的例子：</p>
@@ -679,23 +637,6 @@ fn sum(items: []const u64) u64 {
 </blockquote>
 <p>至于更复杂的构建集成，可以结合后续构建系统章节再看。</p>
 <hr>
-<h2 id="推荐的写测试顺序"><a class="header" href="#推荐的写测试顺序">推荐的写测试顺序</a></h2>
-<p>编写新模块时，可以参考下面这个顺序：</p>
-<ol>
-<li>先写一个最小成功案例</li>
-<li>再写一个最小失败案例</li>
-<li>再补边界输入</li>
-<li>如果涉及分配，加入资源释放检查</li>
-<li>如果未来可能优化，再补简单计时比较</li>
-</ol>
-<p>这套顺序很适合 Zig，因为它天然贴合：</p>
-<ul>
-<li>显式错误处理</li>
-<li>显式资源管理</li>
-<li>小步验证</li>
-<li>先正确再优化</li>
-</ul>
-<hr>
 <h2 id="小结"><a class="header" href="#小结">小结</a></h2>
 <p>这一章最重要的，不是记住一长串测试 API，而是建立下面这些习惯：</p>
 <ul>
@@ -715,8 +656,7 @@ fn sum(items: []const u64) u64 {
 <p>那么这一章就达到目的了。</p>
 <hr>
 <blockquote>
-<p><strong>相关阅读</strong>：</p>
-<p>下一章我们将进入 <a href="chapter-package-management.html">构建系统与包管理</a>，继续把“代码能写对”推进到“项目能组织、能构建、能复用”。</p>
+<p><strong>相关阅读</strong>：<a href="chapter-package-management.html">构建系统与包管理</a></p>
 </blockquote>
 
                     </main>

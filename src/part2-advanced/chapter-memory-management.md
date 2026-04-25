@@ -677,6 +677,4 @@ test "current ArrayList style is explicit about allocation context" {
 
 ---
 
-> **相关阅读**：
->
-> 下一章我们将进入[接口、组合与设计模式](chapter-interfaces.md)，继续讨论：当代码规模变大时，应该如何组织抽象、表达能力边界，以及在编译期抽象与运行时抽象之间做出选择。
+> **相关阅读**：[接口、组合与设计模式](chapter-interfaces.md)

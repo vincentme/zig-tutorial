@@ -1,22 +1,12 @@
 # 泛型编程
 
-> **进阶**：本章讨论 Zig 中泛型的**设计模式**——何时使用泛型、如何设计类型参数、怎样表达约束。
-> 关于 `comptime` 的底层机制（语法、内建函数、能力边界），参见[编译期计算与元编程](chapter-comptime.md)。
-> 阅读时抓住心智模型，不必急着记所有技巧；重点理解"类型也是编译期值""泛型是类型工厂""约束要尽量写清楚"；
-> 遇到复杂的 `@typeInfo` 示例时，优先看懂它在解决什么问题，而不是逐字背代码。
->
-> **相关阅读**：
-> - 建议先读完[编译期计算与元编程](chapter-comptime.md)中的 `comptime` 心智模型，再看本章会更顺
-> - 如果读到后半章开始频繁思考"这些抽象最后怎样落到真实数据访问上"，可以接着读[指针、切片与对齐](chapter-pointers.md)
+> **进阶**：本章讨论 Zig 中泛型的**设计模式**。关于 `comptime` 的底层机制，参见[编译期计算与元编程](chapter-comptime.md)。
 
 ---
 
 ## 先建立正确心智模型
 
-很多语言把泛型讲成"一个模板，可以套很多类型"。
-这个说法不算错，但在 Zig 里，如果只停留在这个层面，很快就会遇到困惑。
-
-更贴近 Zig 的理解方式是：
+更贴近 Zig 的理解方式：
 
 1. **类型本身可以作为编译期值传递**
 2. **泛型函数本质上就是接收编译期类型参数的函数**
@@ -24,56 +14,29 @@
 4. **实例化发生在编译期，而不是运行时**
 5. **约束通常不是写在一套独立"trait 语法"里，而是通过编译期检查显式表达**
 
-所以，本章真正要掌握的不是"怎么把函数写得更通用"，而是：
+所以，泛型本质上是 `comptime` 能力的延伸：把类型作为编译期参数传入，生成针对该类型的专门实现。
 
-> **Zig 如何把"类型参数化"这件事，统一到 `comptime` 语义下，以及如何围绕这个能力做出清晰的设计。**
+---
+
+## 与 C++/Rust 泛型的差异
+
+C++ 用 `template<typename T>`，Rust 用 `T: Trait` 约束。Zig 把类型参数显式写成编译期值：
+
+```zig
+fn add(comptime T: type, a: T, b: T) T {
+    return a + b;
+}
+```
+
+核心差异：Zig 不引入独立的模板/trait 语法——类型也是值，约束靠 `comptime` 检查显式表达。
 
 ---
 
 ## 为什么需要泛型？
 
-如果没有泛型，很容易写出大量重复代码：
-
-```zig
-const std = @import("std");
-
-fn addI32(a: i32, b: i32) i32 {
-    return a + b;
-}
-
-fn addF64(a: f64, b: f64) f64 {
-    return a + b;
-}
-
-fn addU8(a: u8, b: u8) u8 {
-    return a + b;
-}
-
-test "duplicated add functions" {
-    try std.testing.expect(addI32(3, 5) == 8);
-    try std.testing.expect(addF64(1.5, 0.5) == 2.0);
-    try std.testing.expect(addU8(1, 9) == 10);
-}
-```
-
-这样写的问题很直接：
-
-- 同一种逻辑要重复维护
-- 新增类型时要继续复制
-- 如果逻辑稍微复杂一点，重复成本会迅速变高
-
-泛型的价值就在于：
-
-- **复用实现**
-- **保持类型安全**
-- **把错误尽量提前到编译期**
-- **不引入额外运行时分发成本**
-
----
+没有泛型时，同一种逻辑需要为每种类型重复维护。泛型的价值在于复用实现、保持类型安全、把错误提前到编译期、不引入额外运行时分发成本。
 
 ## 最基本的泛型函数
-
-这是最典型的 Zig 泛型形式：
 
 ```zig
 const std = @import("std");
@@ -82,126 +45,27 @@ fn identity(comptime T: type, value: T) T {
     return value;
 }
 
-test "identity keeps type and value" {
+test "identity" {
     try std.testing.expectEqual(@as(i32, 42), identity(i32, 42));
     try std.testing.expectEqual(@as(f64, 3.14), identity(f64, 3.14));
 }
 ```
 
-要点只有两个：
-
-1. `T` 是一个编译期已知的类型参数
-2. `value` 的类型由这个参数决定
-
-可以这样理解：
-
-> "在编译期把类型传进来，然后得到一份针对该类型专门成立的实现。"
-
-关于编译期实例化的机制细节，参见[编译期计算与元编程](chapter-comptime.md)。
-
----
+要点：`T` 是编译期已知的类型参数，实例化发生在编译期。
 
 ## `anytype` 与显式类型参数
 
-初学者容易把 `anytype` 和 `comptime T: type` 混为一谈。两者确实都在编译期解析类型，但设计意图不同。
-
-`anytype` 让参数的具体类型由调用点决定，函数体会基于实际类型进行编译期检查：
+`anytype` 让参数类型由调用点决定，适合写短小、意图明确的通用函数：
 
 ```zig
-const std = @import("std");
-
 fn printTwice(value: anytype) void {
     std.debug.print("{} {}\n", .{ value, value });
 }
-
-test "anytype example compiles" {
-    printTwice(@as(i32, 42));
-    printTwice(true);
-}
 ```
 
-### 可以把 `anytype` 看成什么？
-- 一种方便的编译期参数推导方式
-- 适合写很短、局部、意图明确的通用函数
-
-### 什么时候更适合显式写 `comptime T: type`？
-- 希望把"类型入口"写清楚
-- 要在返回值或多个参数之间复用同一类型参数
-- 要为类型写约束
-- 要返回 `type`
-- 想让读者更明确地看到这是一个真正的类型驱动抽象
-
-一个简单判断方式是：
-
-> 如果已经开始关心"这个函数到底支持哪些类型、返回什么类型、边界在哪"，通常就该考虑显式写出 `comptime T: type` 了。
+需要把类型入口写清楚、返回值与参数复用同一类型、或为类型写约束时，使用显式 `comptime T: type`。
 
 ---
-
-## Zig 泛型和其他语言有什么不同？
-
-有了上面两个基本形式，现在可以和其他语言做一个快速对比。
-
-### 和 C++ 模板相比
-
-C++ 模板：
-
-```zig
-// /dev/null/cpp-template.txt#L1-4
-template<typename T>
-T add(T a, T b) {
-    return a + b;
-}
-```
-
-Zig 泛型：
-
-```zig
-const std = @import("std");
-
-fn add(comptime T: type, a: T, b: T) T {
-    return a + b;
-}
-
-test "zig generic add" {
-    try std.testing.expectEqual(@as(i32, 8), add(i32, 3, 5));
-    try std.testing.expectEqual(@as(f64, 4.0), add(f64, 1.5, 2.5));
-}
-```
-
-差别在于：
-
-- Zig 把"类型参数是编译期参数"写得更显式
-- Zig 不额外引入一套模板语言
-- Zig 更强调"统一语义"，而不是"语法糖很多但体系分裂"
-
-### 和 Rust 泛型相比
-
-Rust 更常见的写法是：
-
-```zig
-// /dev/null/rust-generic.txt#L1-5
-use std::ops::Add;
-
-fn add<T: Add<Output = T>>(a: T, b: T) -> T {
-    a + b
-}
-```
-
-而 Zig 更常见的思路是：
-
-- 直接接收 `comptime T: type`
-- 需要约束时，用编译期检查自己表达出来
-- 不依赖一整套 trait 体系来统一所有抽象
-
-这带来的结果是：
-
-- Zig 的约束表达更自由
-- 但也更要求把边界写清楚
-- 如果约束没写清楚，读者容易误解"这个泛型到底适用于哪些类型"
-
----
-
-## 关于"类型推断"：不要把它想复杂
 
 有些语言的泛型喜欢尽量自动推断一切。
 Zig 在这件事上的风格更保守，也更显式。
@@ -652,56 +516,13 @@ test "generic error union return" {
 
 ---
 
-## 泛型与运行时接口：何时用哪个？
-
-泛型适合类型在编译期已知的场景：保留静态类型信息、编译器可做专门化优化、不需要运行时切换实现。运行时接口（VTable）适合具体实现要到运行时才确定的场景：需要动态分发、类型擦除或跨模块边界抽象。一个实用的判断标准是：**多态需求发生在编译期还是运行时？**
-
-泛型的价值在于让代码更清晰、更安全、更可复用。如果泛型让理解成本显著上升——大量 `@typeInfo` 嵌套、复杂的类型工厂、难以解释的通用代码——就应该重新评估设计。Zig 中的"零成本抽象"意味着可以把很多抽象提前到编译期完成，避免不必要的运行时负担，但这不代表编译时间或代码体积没有成本，依然需要配合"边界清楚"和"实现克制"。
-
-泛型与运行时接口的完整对比和选型建议，见[接口与设计模式](../part2-advanced/chapter-interfaces.md)章节。
-
----
-
 ## 测试泛型代码
 
-泛型代码的一个常见问题是：只用一种类型测试，就以为所有类型都能正常工作。好的做法是用多种类型分别实例化并测试：
-
-```zig
-const std = @import("std");
-
-fn isZero(comptime T: type, value: T) bool {
-    return value == 0;
-}
-
-test "isZero with i32" {
-    try std.testing.expect(isZero(i32, 0));
-    try std.testing.expect(!isZero(i32, 1));
-}
-
-test "isZero with f64" {
-    try std.testing.expect(isZero(f64, 0.0));
-    try std.testing.expect(!isZero(f64, 1.5));
-}
-
-test "isZero with u8" {
-    try std.testing.expect(isZero(u8, 0));
-    try std.testing.expect(!isZero(u8, 42));
-}
-```
-
-为每种目标类型写独立的 `test` 块有几个好处：
-
-- 测试名称能标识出具体类型，失败时定位更快
-- 不同类型可能触发不同的编译期分支，需要分别覆盖
-- 边界值（如整数溢出、浮点精度）因类型而异，分开测试更清晰
-
-> **注意**：如果泛型函数内部使用了 `@typeInfo` 做分支，那么每个分支对应的类型都应该至少有一个测试覆盖。
-
----
+泛型代码需用多种类型分别测试，因为不同类型可能触发不同的编译期分支。为每种目标类型写独立 `test` 块，失败时定位更快。如果泛型函数使用了 `@typeInfo` 做分支，每个分支至少覆盖一类。
 
 ## 小结
 
-**泛型设计的核心原则：**
+泛型设计的核心原则：
 
 1. **泛型是 `comptime` 能力的延伸。** 类型参数是编译期值，实例化发生在编译期。
 2. **泛型不等于万能。** 边界和约束需要显式表达。
@@ -716,16 +537,6 @@ test "isZero with u8" {
 - **泛型容器里隐藏 allocator**——资源从哪里来、什么时候释放，最好显式表达
 - **只追求"更通用"而忽略"更清晰"**——一个真正好的泛型抽象，应该更容易被解释和验证
 
-**检验学习效果的几个问题：**
-
-- 某个抽象发生在编译期还是运行时？
-- 某处为什么适合用泛型？
-- 某个泛型真正支持哪些类型？
-- 约束有没有被清楚表达？
-- 抽象之后，代码是否真的更清晰？
-
 ---
 
-> **相关阅读**：
->
-> 下一章将学习 [指针、切片与对齐](chapter-pointers.md)，进一步理解 Zig 中数据访问、借用视图、切片和底层内存表示之间的关系。
+> **相关阅读**：[指针、切片与对齐](chapter-pointers.md)

@@ -1,5 +1,37 @@
 # 常用标准库模块详解
 
+## 速查表
+
+| 模块 | 说明 | 优先级 |
+| ---- | ---- | ------ |
+| `std.mem` | 切片比较、搜索、裁剪、拷贝等字节级操作 | ★★★ |
+| `std.fmt` | `allocPrint` / `bufPrint` / 格式化字符串 | ★★★ |
+| `std.debug` | `print` 调试输出、`assert` 断言 | ★★★ |
+| `std.testing` | 测试断言、`testing.allocator`（带泄漏检测） | ★★★ |
+| `std.fs` / `Io.Dir` | 打开/创建文件、遍历目录、路径操作 | ★★☆ |
+| `std.process` | 命令行参数、环境变量、程序入口上下文 | ★★☆ |
+| `std.heap` | 分配器（Arena、FixedBuffer、Debug 等） | ★★☆ |
+| `std.math` | 数值与数学函数 | ★☆☆ |
+| `std.json` | JSON 解析与序列化 | ★☆☆ |
+| `std.Build` | 构建脚本 API | 工程阶段重点 |
+
+> **版本说明**：本教程面向 Zig 0.16.0 稳定版。构建系统、I/O 接口等区域优先以本地标准库源码为准。
+
+## 问题 → 模块速查
+
+| 需求 | 模块 |
+| ---- | ---- |
+| 比较字符串或切片 | `std.mem` |
+| 拼装字符串 | `std.fmt` |
+| 调试输出 | `std.debug` |
+| 打开文件、遍历目录 | `std.Io.Dir` / `std.Io.File` |
+| 处理命令行参数、环境变量 | `std.process` |
+| 编写测试、比较预期结果 | `std.testing` |
+| 选择或组合分配器 | `std.heap` |
+| I/O / 网络 | 本地标准库源码 + 当前文挡 |
+
+---
+
 这一章讲解标准库中最常用、也最容易在真实程序里一起出现的几个模块：
 
 - `std.mem`
@@ -198,17 +230,6 @@ pub fn main(_: std.process.Init) void {
 }
 ```
 
-### 使用 `std.mem` 时要建立的直觉
-
-1. 很多“字符串问题”在 Zig 里首先是“字节切片问题”
-2. 先想清楚你手里的是数组、切片，还是固定缓冲区
-3. `std.mem` 经常出现在输入处理、协议解析、配置解析、路径判断的第一步
-4. 它通常不负责“拥有数据”，而是负责“处理已有数据视图”
-
-> **相关阅读**：关于数组、切片和底层视图的关系，可以回看[复合类型](../part1-basics/chapter-compound-types.md)。
-
----
-
 ## `std.fmt`
 
 `std.fmt` 负责格式化。
@@ -357,19 +378,6 @@ pub fn main(_: std.process.Init) !void {
 - 所以必须传入 allocator
 - 返回结果由调用者负责释放
 
-### 使用 `std.fmt` 时要建立的直觉
-
-1. 先区分“格式化”与“输出”
-2. 字符串切片优先想到 `{s}`，整数优先想到 `{d}`
-3. 复合值调试时可以先用 `{any}`
-4. 有固定缓冲区时，优先考虑 `bufPrint`
-5. 需要独立拥有结果时，再考虑 `allocPrint`
-6. 一旦用了 `allocPrint`，就要立刻想到 allocator 和释放责任
-
-> **相关阅读**：allocator 的系统理解见[内存管理模型](chapter-memory-management.md)。
-
----
-
 ## `std.debug`
 
 `std.debug` 是学习阶段和开发阶段都非常高频的模块。
@@ -457,17 +465,6 @@ pub fn main(_: std.process.Init) void {
 ```
 
 这里的重点不是“处理用户输入错误”，而是“验证内部不变量”。
-
-### 使用 `std.debug` 时要建立的直觉
-
-1. `print` 用来快速观察状态
-2. `assert` 用来表达内部逻辑假设
-3. 用户输入错误通常应该走正常错误处理，而不是只靠 `assert`
-4. 调试输出越靠近问题发生点，越容易定位根因
-
-> **相关阅读**：错误路径的系统处理见[错误处理](../part1-basics/chapter-error-handling.md)。
-
----
 
 ## `std.testing`
 
@@ -565,21 +562,10 @@ test "parseAssignment rejects empty value" {
 - 重复释放
 - 生命周期错误
 
-### 使用 `std.testing` 时要建立的直觉
-
-1. 测试应该覆盖正常路径、错误路径和边界条件
-2. 小函数更容易写出清晰测试
-3. 测试不是额外装饰，而是接口行为的一部分
-4. 只靠手动运行和打印，通常不够稳定
-
-> **相关阅读**：更完整的测试方法见[测试与验证：从单元测试到基准测量](chapter-testing.md)。
-
----
-
 ## `std.fs`
 
-只要开始写真实程序，文件和目录几乎一定会出现。  
-这时 `std.fs` 往往就是最该先想到的模块。
+在 Zig 0.16 中，文件系统操作的核心类型是 `std.Io.Dir` 和 `std.Io.File`。  
+只要开始写真实程序，文件和目录几乎一定会出现。
 
 它负责的典型问题包括：
 
@@ -592,9 +578,9 @@ test "parseAssignment rejects empty value" {
 
 更常见的入口是：
 
-- `std.fs.cwd()`
+- `Io.Dir.cwd()`——获取当前工作目录的句柄
 - 目录对象上的 `openFile`、`createFile`、`openDir`
-- 文件对象上的 `readToEndAlloc`、`writeAll`、`close`
+- 文件对象上的 `writeStreamingAll`、`reader` / `writer`
 - 目录遍历的 `iterate`
 
 下面这个例子模拟一个很常见的小工具流程：
@@ -606,38 +592,38 @@ test "parseAssignment rejects empty value" {
 
 ```zig
 const std = @import("std");
+const Io = std.Io;
 
 pub fn main(init: std.process.Init) !void {
-    const cwd = std.fs.cwd();
-
-    const input_file = try cwd.openFile("input.txt", .{});
-    defer input_file.close();
+    const io = init.io;
+    const gpa = init.gpa;
 
     // 把整个文件读入动态内存，后面就可以按普通切片继续处理。
-    const content = try input_file.readToEndAlloc(init.gpa, 1024 * 1024);
-    defer init.gpa.free(content);
+    const content = try Io.Dir.cwd().readFileAlloc(io, "input.txt", gpa, .limited(1024 * 1024));
+    defer gpa.free(content);
 
     const trimmed = std.mem.trim(u8, content, " \t\r\n");
 
-    const output_file = try cwd.createFile("output.txt", .{ .truncate = true });
-    defer output_file.close();
+    const output_file = try Io.Dir.cwd().createFile(io, "output.txt", .{ .truncate = true });
+    defer output_file.close(io);
 
-    try output_file.writeAll("processed: ");
-    try output_file.writeAll(trimmed);
-    try output_file.writeAll("\n");
+    try output_file.writeStreamingAll(io, "processed: ");
+    try output_file.writeStreamingAll(io, trimmed);
+    try output_file.writeStreamingAll(io, "\n");
 
     std.debug.print("wrote output.txt\n", .{});
 }
 ```
 
-这个例子里，`std.fs` 的主线非常清楚：
+这个例子里，文件操作的主线非常清楚：
 
-- 目录对象负责“从哪里操作”
-- 文件对象负责“读写什么”
-- 打开后的资源要关闭
+- 目录对象负责「从哪里操作」
+- 文件对象负责「读写什么」
+- `io` 是 0.16 中所有 I/O 操作的显式入口
+- 打开后的资源要关闭（`defer xxx.close(io)`）
 - 读取到动态内存后要释放
 
-这也是为什么 `std.fs` 经常和 `std.mem`、`std.process`、`std.heap` 一起出现。
+这也是为什么文件操作经常和 `std.mem`、`std.process`、`std.heap` 一起出现。
 
 ### 创建并写入文件
 
@@ -645,15 +631,16 @@ pub fn main(init: std.process.Init) !void {
 
 ```zig
 const std = @import("std");
+const Io = std.Io;
 
-pub fn main(_: std.process.Init) !void {
-    const cwd = std.fs.cwd();
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
 
-    const file = try cwd.createFile("example.txt", .{});
-    defer file.close();
+    const file = try Io.Dir.cwd().createFile(io, "example.txt", .{});
+    defer file.close(io);
 
-    // 文件句柄打开后要记得关闭，写入则通过 `writeAll` 完成。
-    try file.writeAll("hello from zig\n");
+    // 文件句柄打开后要记得关闭，写入则通过 `writeStreamingAll` 完成。
+    try file.writeStreamingAll(io, "hello from zig\n");
 }
 ```
 
@@ -663,30 +650,21 @@ pub fn main(_: std.process.Init) !void {
 
 ```zig
 const std = @import("std");
+const Io = std.Io;
 
-pub fn main(_: std.process.Init) !void {
-    const cwd = std.fs.cwd();
-    var dir = try cwd.openDir(".", .{ .iterate = true });
-    defer dir.close();
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+
+    var dir = try Io.Dir.cwd().openDir(io, ".", .{ .iterate = true });
+    defer dir.close(io);
 
     // 目录遍历通过迭代器逐项产出目录项。
     var it = dir.iterate();
-    while (try it.next()) |entry| {
+    while (try it.next(io)) |entry| {
         std.debug.print("{s}\n", .{entry.name});
     }
 }
 ```
-
-### 使用 `std.fs` 时要建立的直觉
-
-1. 文件系统操作天然可能失败，所以错误处理是常态
-2. 打开文件和目录意味着资源管理责任
-3. 很多操作都从某个目录对象出发，而不是全局函数
-4. `std.fs` 经常是 CLI 工具、配置系统、代码生成工具的核心模块
-
-> **相关阅读**：更完整的工具型程序见[实战案例 - CLI 工具开发](../part3-practice/chapter-cli-tool.md)。
-
----
 
 ## `std.process`
 
@@ -739,11 +717,13 @@ pub fn main(init: std.process.Init) !void {
     std.debug.print("mode = {s}\n", .{mode});
     std.debug.print("input = {s}\n", .{input_path});
 
-    const cwd = std.fs.cwd();
-    const file = try cwd.openFile(input_path, .{});
-    defer file.close();
+    const io = init.io;
+    const file = try std.Io.Dir.cwd().openFile(io, input_path, .{});
+    defer file.close(io);
 
-    const content = try file.readToEndAlloc(init.gpa, 1024 * 1024);
+    var read_buf: [1024]u8 = undefined;
+    var file_reader = file.reader(io, &read_buf);
+    const content = try file_reader.interface.allocRemaining(init.gpa, .limited(1024 * 1024));
     defer init.gpa.free(content);
 
     const trimmed = std.mem.trim(u8, content, " \t\r\n");
@@ -799,17 +779,6 @@ pub fn main(init: std.process.Init) void {
 
 - 找到时得到值
 - 找不到时得到 `null`
-
-### 使用 `std.process` 时要建立的直觉
-
-1. 参数、环境变量、默认 allocator 都属于进程上下文的一部分
-2. 在 0.16-dev 中，这些上下文通过 `std.process.Init` 显式传入
-3. `std.process` 经常位于程序入口层，而不是业务逻辑深处
-4. CLI 工具通常会把 `std.process`、`std.fs`、`std.mem`、`std.fmt` 串成一条主线
-
-> **相关阅读**：更完整的命令行工具设计见[实战案例 - CLI 工具开发](../part3-practice/chapter-cli-tool.md)。
-
----
 
 ## `std.ArrayList`
 
@@ -934,17 +903,6 @@ list.clearAndFree(allocator);
 const owned = try list.toOwnedSlice(allocator);
 defer allocator.free(owned);
 ```
-
-### 使用 `std.ArrayList` 时要建立的直觉
-
-1. 它是"数量不确定的同类型元素"的首选容器
-2. 能预估大小时用 `initCapacity`，可以避免重新分配的开销
-3. `items` 字段就是普通切片，所有切片操作都适用
-4. 0.16 中 `ArrayList` 是非托管的——每个可能触发分配的方法都需要传入 allocator
-5. `swapRemove` 比 `orderedRemove` 快，但会打乱元素顺序
-6. 如果需要一个由调用方管理生命周期的缓冲区来逐步构建字节序列，`ArrayList(u8)` 是常用选择
-
----
 
 ## `std.HashMap`
 
@@ -1086,19 +1044,6 @@ _ = map.orderedRemove(3); // O(n)，保持剩余元素的顺序
 
 `.keys()` 和 `.values()` 直接返回切片，这让 `array_hash_map` 在需要序列化、调试输出或批量处理时更方便。
 
-### 使用 `std.HashMap` 时要建立的直觉
-
-1. 需要按键快速查找值时，第一个想到的应该是 `AutoHashMap`
-2. key 是字符串时用 `StringHashMap`——它按内容比较，不是按指针
-3. 需要保持插入顺序或频繁遍历时用 `array_hash_map`
-4. `AutoHashMap` / `StringHashMap` 是托管的；`array_hash_map` 是非托管的——注意方法签名差异
-5. `get` 返回 `?V`——使用前必须处理"不存在"的情况
-6. 迭代 `HashMap` 期间不要修改它，否则迭代器会失效
-
-> **相关阅读**：关于 allocator 和内存管理策略的深入讨论，见[内存管理模型](chapter-memory-management.md)。
-
----
-
 ## `std.heap`
 
 `std.heap` 是理解 allocator 的第一入口。
@@ -1185,16 +1130,23 @@ pub fn main(_: std.process.Init) !void {
 
 在固定内存块上分配，不向系统申请新内存，适合已知上限、嵌入式或临时工作区。详见[内存管理模型](chapter-memory-management.md)。
 
-### 使用 `std.heap` 时要建立的直觉
-
-1. allocator 是接口的一部分，不是隐藏背景设施
-2. 选择 allocator，本质上是在选择资源组织方式
-3. 一旦发生分配，就要立刻想到释放责任
-4. `std.heap` 往往不是单独使用，而是作为其他模块的基础设施出现
-
-> **相关阅读**：allocator 的完整模型见[内存管理模型](chapter-memory-management.md)。
-
 ---
+
+## 各模块直觉速查
+
+| 模块 | 核心直觉 |
+| ---- | -------- |
+| `std.mem` | 字符串问题是字节切片问题；不拥有数据，只处理数据视图 |
+| `std.fmt` | 先区分格式化与输出；固定缓冲区用 `bufPrint`，需所有权用 `allocPrint` |
+| `std.debug` | `print` 观察状态，`assert` 表达逻辑假设 |
+| `std.testing` | 覆盖正常/错误/边界路径；小函数易测 |
+| `std.Io` | `io` 是 0.16 I/O 统一入口；操作从目录对象出发 |
+| `std.process` | 参数与环境变量从 `Init` 显式传入；位于入口层 |
+| `std.ArrayList` | 不定数量元素首选；0.16 非托管，方法传 allocator |
+| `std.HashMap` | 字符串用 `StringHashMap`；保持顺序用 `array_hash_map` |
+| `std.heap` | allocator 是接口的一部分；分配即资源责任 |
+
+> **相关阅读**：[内存管理模型](chapter-memory-management.md)、[测试与验证](chapter-testing.md)、[CLI 工具开发](../part3-practice/chapter-cli-tool.md)
 
 ## 一个稍完整的组合示例
 
@@ -1253,11 +1205,11 @@ pub fn main(init: std.process.Init) !void {
 
     const mode = init.environ_map.get("APP_MODE") orelse "default";
 
-    const cwd = std.fs.cwd();
-    const input_file = try cwd.openFile(input_path, .{});
-    defer input_file.close();
+    const io = init.io;
 
-    const content = try input_file.readToEndAlloc(init.gpa, 1024 * 1024);
+    var read_buf: [1024]u8 = undefined;
+    var file_reader = try std.Io.Dir.cwd().openFile(io, input_path, .{}).reader(io, &read_buf);
+    const content = try file_reader.interface.allocRemaining(init.gpa, .limited(1024 * 1024));
     defer init.gpa.free(content);
 
     // 先按行拆分输入，再逐行做配置解析。

@@ -65,7 +65,7 @@ my-project/
 
 ```zig
 .{
-    .name = "my-project",
+    .name = .my_project,
     .version = "0.0.0",
     .fingerprint = 0xa8b2f3e4c59d7061, // zig init 自动生成，请勿手动修改
     .minimum_zig_version = "0.16.0",

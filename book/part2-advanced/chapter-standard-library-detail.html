@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-ab6996a3.js";
+            window.path_to_searchindex_js = "../searchindex-eaf4bf9b.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-4c2eaf17.js"></script>
+        <script src="../toc-626d6463.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -182,6 +182,48 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="常用标准库模块详解"><a class="header" href="#常用标准库模块详解">常用标准库模块详解</a></h1>
+<h2 id="速查表"><a class="header" href="#速查表">速查表</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>模块</th><th>说明</th><th>优先级</th></tr>
+</thead>
+<tbody>
+<tr><td><code>std.mem</code></td><td>切片比较、搜索、裁剪、拷贝等字节级操作</td><td>★★★</td></tr>
+<tr><td><code>std.fmt</code></td><td><code>allocPrint</code> / <code>bufPrint</code> / 格式化字符串</td><td>★★★</td></tr>
+<tr><td><code>std.debug</code></td><td><code>print</code> 调试输出、<code>assert</code> 断言</td><td>★★★</td></tr>
+<tr><td><code>std.testing</code></td><td>测试断言、<code>testing.allocator</code>（带泄漏检测）</td><td>★★★</td></tr>
+<tr><td><code>std.fs</code> / <code>Io.Dir</code></td><td>打开/创建文件、遍历目录、路径操作</td><td>★★☆</td></tr>
+<tr><td><code>std.process</code></td><td>命令行参数、环境变量、程序入口上下文</td><td>★★☆</td></tr>
+<tr><td><code>std.heap</code></td><td>分配器（Arena、FixedBuffer、Debug 等）</td><td>★★☆</td></tr>
+<tr><td><code>std.math</code></td><td>数值与数学函数</td><td>★☆☆</td></tr>
+<tr><td><code>std.json</code></td><td>JSON 解析与序列化</td><td>★☆☆</td></tr>
+<tr><td><code>std.Build</code></td><td>构建脚本 API</td><td>工程阶段重点</td></tr>
+</tbody>
+</table>
+</div>
+<blockquote>
+<p><strong>版本说明</strong>：本教程面向 Zig 0.16.0 稳定版。构建系统、I/O 接口等区域优先以本地标准库源码为准。</p>
+</blockquote>
+<h2 id="问题--模块速查"><a class="header" href="#问题--模块速查">问题 → 模块速查</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>需求</th><th>模块</th></tr>
+</thead>
+<tbody>
+<tr><td>比较字符串或切片</td><td><code>std.mem</code></td></tr>
+<tr><td>拼装字符串</td><td><code>std.fmt</code></td></tr>
+<tr><td>调试输出</td><td><code>std.debug</code></td></tr>
+<tr><td>打开文件、遍历目录</td><td><code>std.Io.Dir</code> / <code>std.Io.File</code></td></tr>
+<tr><td>处理命令行参数、环境变量</td><td><code>std.process</code></td></tr>
+<tr><td>编写测试、比较预期结果</td><td><code>std.testing</code></td></tr>
+<tr><td>选择或组合分配器</td><td><code>std.heap</code></td></tr>
+<tr><td>I/O / 网络</td><td>本地标准库源码 + 当前文挡</td></tr>
+</tbody>
+</table>
+</div>
+<hr>
 <p>这一章讲解标准库中最常用、也最容易在真实程序里一起出现的几个模块：</p>
 <ul>
 <li><code>std.mem</code></li>
@@ -354,17 +396,6 @@ pub fn main(_: std.process.Init) void {
     std.debug.print("{s}\n", .{buffer[0..source.len]});
 }
 </code></pre>
-<h3 id="使用-stdmem-时要建立的直觉"><a class="header" href="#使用-stdmem-时要建立的直觉">使用 <code>std.mem</code> 时要建立的直觉</a></h3>
-<ol>
-<li>很多“字符串问题”在 Zig 里首先是“字节切片问题”</li>
-<li>先想清楚你手里的是数组、切片，还是固定缓冲区</li>
-<li><code>std.mem</code> 经常出现在输入处理、协议解析、配置解析、路径判断的第一步</li>
-<li>它通常不负责“拥有数据”，而是负责“处理已有数据视图”</li>
-</ol>
-<blockquote>
-<p><strong>相关阅读</strong>：关于数组、切片和底层视图的关系，可以回看<a href="../part1-basics/chapter-compound-types.html">复合类型</a>。</p>
-</blockquote>
-<hr>
 <h2 id="stdfmt"><a class="header" href="#stdfmt"><code>std.fmt</code></a></h2>
 <p><code>std.fmt</code> 负责格式化。</p>
 <p>它解决的问题不是“打印到哪里”，而是：</p>
@@ -497,19 +528,6 @@ pub fn main(_: std.process.Init) !void {
 <li>所以必须传入 allocator</li>
 <li>返回结果由调用者负责释放</li>
 </ul>
-<h3 id="使用-stdfmt-时要建立的直觉"><a class="header" href="#使用-stdfmt-时要建立的直觉">使用 <code>std.fmt</code> 时要建立的直觉</a></h3>
-<ol>
-<li>先区分“格式化”与“输出”</li>
-<li>字符串切片优先想到 <code>{s}</code>，整数优先想到 <code>{d}</code></li>
-<li>复合值调试时可以先用 <code>{any}</code></li>
-<li>有固定缓冲区时，优先考虑 <code>bufPrint</code></li>
-<li>需要独立拥有结果时，再考虑 <code>allocPrint</code></li>
-<li>一旦用了 <code>allocPrint</code>，就要立刻想到 allocator 和释放责任</li>
-</ol>
-<blockquote>
-<p><strong>相关阅读</strong>：allocator 的系统理解见<a href="chapter-memory-management.html">内存管理模型</a>。</p>
-</blockquote>
-<hr>
 <h2 id="stddebug"><a class="header" href="#stddebug"><code>std.debug</code></a></h2>
 <p><code>std.debug</code> 是学习阶段和开发阶段都非常高频的模块。</p>
 <p>它最重要的价值不是“功能多”，而是：</p>
@@ -584,17 +602,6 @@ pub fn main(_: std.process.Init) void {
 }
 </code></pre>
 <p>这里的重点不是“处理用户输入错误”，而是“验证内部不变量”。</p>
-<h3 id="使用-stddebug-时要建立的直觉"><a class="header" href="#使用-stddebug-时要建立的直觉">使用 <code>std.debug</code> 时要建立的直觉</a></h3>
-<ol>
-<li><code>print</code> 用来快速观察状态</li>
-<li><code>assert</code> 用来表达内部逻辑假设</li>
-<li>用户输入错误通常应该走正常错误处理，而不是只靠 <code>assert</code></li>
-<li>调试输出越靠近问题发生点，越容易定位根因</li>
-</ol>
-<blockquote>
-<p><strong>相关阅读</strong>：错误路径的系统处理见<a href="../part1-basics/chapter-error-handling.html">错误处理</a>。</p>
-</blockquote>
-<hr>
 <h2 id="stdtesting"><a class="header" href="#stdtesting"><code>std.testing</code></a></h2>
 <p><code>std.testing</code> 是 Zig 测试代码最核心的入口。</p>
 <p>它的重点不是“把测试写得很花”，而是：</p>
@@ -690,19 +697,8 @@ test "parseAssignment rejects empty value" {
 <li>重复释放</li>
 <li>生命周期错误</li>
 </ul>
-<h3 id="使用-stdtesting-时要建立的直觉"><a class="header" href="#使用-stdtesting-时要建立的直觉">使用 <code>std.testing</code> 时要建立的直觉</a></h3>
-<ol>
-<li>测试应该覆盖正常路径、错误路径和边界条件</li>
-<li>小函数更容易写出清晰测试</li>
-<li>测试不是额外装饰，而是接口行为的一部分</li>
-<li>只靠手动运行和打印，通常不够稳定</li>
-</ol>
-<blockquote>
-<p><strong>相关阅读</strong>：更完整的测试方法见<a href="chapter-testing.html">测试与验证：从单元测试到基准测量</a>。</p>
-</blockquote>
-<hr>
 <h2 id="stdfs"><a class="header" href="#stdfs"><code>std.fs</code></a></h2>
-<p>只要开始写真实程序，文件和目录几乎一定会出现。<br>这时 <code>std.fs</code> 往往就是最该先想到的模块。</p>
+<p>在 Zig 0.16 中，文件系统操作的核心类型是 <code>std.Io.Dir</code> 和 <code>std.Io.File</code>。<br>只要开始写真实程序，文件和目录几乎一定会出现。</p>
 <p>它负责的典型问题包括：</p>
 <ul>
 <li>打开文件</li>
@@ -714,9 +710,9 @@ test "parseAssignment rejects empty value" {
 </ul>
 <p>更常见的入口是：</p>
 <ul>
-<li><code>std.fs.cwd()</code></li>
+<li><code>Io.Dir.cwd()</code>——获取当前工作目录的句柄</li>
 <li>目录对象上的 <code>openFile</code>、<code>createFile</code>、<code>openDir</code></li>
-<li>文件对象上的 <code>readToEndAlloc</code>、<code>writeAll</code>、<code>close</code></li>
+<li>文件对象上的 <code>writeStreamingAll</code>、<code>reader</code> / <code>writer</code></li>
 <li>目录遍历的 <code>iterate</code></li>
 </ul>
 <p>下面这个例子模拟一个很常见的小工具流程：</p>
@@ -727,78 +723,70 @@ test "parseAssignment rejects empty value" {
 <li>创建输出文件并写入结果</li>
 </ol>
 <pre><code class="language-zig">const std = @import("std");
+const Io = std.Io;
 
 pub fn main(init: std.process.Init) !void {
-    const cwd = std.fs.cwd();
-
-    const input_file = try cwd.openFile("input.txt", .{});
-    defer input_file.close();
+    const io = init.io;
+    const gpa = init.gpa;
 
     // 把整个文件读入动态内存，后面就可以按普通切片继续处理。
-    const content = try input_file.readToEndAlloc(init.gpa, 1024 * 1024);
-    defer init.gpa.free(content);
+    const content = try Io.Dir.cwd().readFileAlloc(io, "input.txt", gpa, .limited(1024 * 1024));
+    defer gpa.free(content);
 
     const trimmed = std.mem.trim(u8, content, " \t\r\n");
 
-    const output_file = try cwd.createFile("output.txt", .{ .truncate = true });
-    defer output_file.close();
+    const output_file = try Io.Dir.cwd().createFile(io, "output.txt", .{ .truncate = true });
+    defer output_file.close(io);
 
-    try output_file.writeAll("processed: ");
-    try output_file.writeAll(trimmed);
-    try output_file.writeAll("\n");
+    try output_file.writeStreamingAll(io, "processed: ");
+    try output_file.writeStreamingAll(io, trimmed);
+    try output_file.writeStreamingAll(io, "\n");
 
     std.debug.print("wrote output.txt\n", .{});
 }
 </code></pre>
-<p>这个例子里，<code>std.fs</code> 的主线非常清楚：</p>
+<p>这个例子里，文件操作的主线非常清楚：</p>
 <ul>
-<li>目录对象负责“从哪里操作”</li>
-<li>文件对象负责“读写什么”</li>
-<li>打开后的资源要关闭</li>
+<li>目录对象负责「从哪里操作」</li>
+<li>文件对象负责「读写什么」</li>
+<li><code>io</code> 是 0.16 中所有 I/O 操作的显式入口</li>
+<li>打开后的资源要关闭（<code>defer xxx.close(io)</code>）</li>
 <li>读取到动态内存后要释放</li>
 </ul>
-<p>这也是为什么 <code>std.fs</code> 经常和 <code>std.mem</code>、<code>std.process</code>、<code>std.heap</code> 一起出现。</p>
+<p>这也是为什么文件操作经常和 <code>std.mem</code>、<code>std.process</code>、<code>std.heap</code> 一起出现。</p>
 <h3 id="创建并写入文件"><a class="header" href="#创建并写入文件">创建并写入文件</a></h3>
 <p>最小写文件示例如下：</p>
 <pre><code class="language-zig">const std = @import("std");
+const Io = std.Io;
 
-pub fn main(_: std.process.Init) !void {
-    const cwd = std.fs.cwd();
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
 
-    const file = try cwd.createFile("example.txt", .{});
-    defer file.close();
+    const file = try Io.Dir.cwd().createFile(io, "example.txt", .{});
+    defer file.close(io);
 
-    // 文件句柄打开后要记得关闭，写入则通过 `writeAll` 完成。
-    try file.writeAll("hello from zig\n");
+    // 文件句柄打开后要记得关闭，写入则通过 `writeStreamingAll` 完成。
+    try file.writeStreamingAll(io, "hello from zig\n");
 }
 </code></pre>
 <h3 id="遍历目录项"><a class="header" href="#遍历目录项">遍历目录项</a></h3>
 <p>目录遍历也是高频需求。</p>
 <pre><code class="language-zig">const std = @import("std");
+const Io = std.Io;
 
-pub fn main(_: std.process.Init) !void {
-    const cwd = std.fs.cwd();
-    var dir = try cwd.openDir(".", .{ .iterate = true });
-    defer dir.close();
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+
+    var dir = try Io.Dir.cwd().openDir(io, ".", .{ .iterate = true });
+    defer dir.close(io);
 
     // 目录遍历通过迭代器逐项产出目录项。
     var it = dir.iterate();
-    while (try it.next()) |entry| {
+    while (try it.next(io)) |entry| {
         std.debug.print("{s}\n", .{entry.name});
     }
 }
 </code></pre>
-<h3 id="使用-stdfs-时要建立的直觉"><a class="header" href="#使用-stdfs-时要建立的直觉">使用 <code>std.fs</code> 时要建立的直觉</a></h3>
-<ol>
-<li>文件系统操作天然可能失败，所以错误处理是常态</li>
-<li>打开文件和目录意味着资源管理责任</li>
-<li>很多操作都从某个目录对象出发，而不是全局函数</li>
-<li><code>std.fs</code> 经常是 CLI 工具、配置系统、代码生成工具的核心模块</li>
-</ol>
-<blockquote>
-<p><strong>相关阅读</strong>：更完整的工具型程序见<a href="../part3-practice/chapter-cli-tool.html">实战案例 - CLI 工具开发</a>。</p>
-</blockquote>
-<hr>
 <h2 id="stdprocess"><a class="header" href="#stdprocess"><code>std.process</code></a></h2>
 <p><code>std.process</code> 负责处理程序作为一个进程运行时的上下文。</p>
 <p>在 Zig 0.16-dev 中，这一点尤其重要，因为程序入口通常直接接收 <code>std.process.Init</code>，很多进程相关能力都从这里进入。</p>
@@ -846,11 +834,13 @@ pub fn main(init: std.process.Init) !void {
     std.debug.print("mode = {s}\n", .{mode});
     std.debug.print("input = {s}\n", .{input_path});
 
-    const cwd = std.fs.cwd();
-    const file = try cwd.openFile(input_path, .{});
-    defer file.close();
+    const io = init.io;
+    const file = try std.Io.Dir.cwd().openFile(io, input_path, .{});
+    defer file.close(io);
 
-    const content = try file.readToEndAlloc(init.gpa, 1024 * 1024);
+    var read_buf: [1024]u8 = undefined;
+    var file_reader = file.reader(io, &amp;read_buf);
+    const content = try file_reader.interface.allocRemaining(init.gpa, .limited(1024 * 1024));
     defer init.gpa.free(content);
 
     const trimmed = std.mem.trim(u8, content, " \t\r\n");
@@ -898,17 +888,6 @@ pub fn main(init: std.process.Init) void {
 <li>找到时得到值</li>
 <li>找不到时得到 <code>null</code></li>
 </ul>
-<h3 id="使用-stdprocess-时要建立的直觉"><a class="header" href="#使用-stdprocess-时要建立的直觉">使用 <code>std.process</code> 时要建立的直觉</a></h3>
-<ol>
-<li>参数、环境变量、默认 allocator 都属于进程上下文的一部分</li>
-<li>在 0.16-dev 中，这些上下文通过 <code>std.process.Init</code> 显式传入</li>
-<li><code>std.process</code> 经常位于程序入口层，而不是业务逻辑深处</li>
-<li>CLI 工具通常会把 <code>std.process</code>、<code>std.fs</code>、<code>std.mem</code>、<code>std.fmt</code> 串成一条主线</li>
-</ol>
-<blockquote>
-<p><strong>相关阅读</strong>：更完整的命令行工具设计见<a href="../part3-practice/chapter-cli-tool.html">实战案例 - CLI 工具开发</a>。</p>
-</blockquote>
-<hr>
 <h2 id="stdarraylist"><a class="header" href="#stdarraylist"><code>std.ArrayList</code></a></h2>
 <p><code>std.ArrayList(T)</code> 是标准库提供的动态数组。它在运行时可以自动扩容，是处理“数量不确定的一组同类型元素“的首选结构。</p>
 <p>大多数语言里的“列表“或“数组“默认就是动态的（Python 的 <code>list</code>、JavaScript 的 <code>Array</code>）。但 Zig 中 <code>[N]T</code> 是固定大小的——动态数组需要通过 <code>std.ArrayList</code> 显式创建。</p>
@@ -1028,16 +1007,6 @@ list.clearAndFree(allocator);
 const owned = try list.toOwnedSlice(allocator);
 defer allocator.free(owned);
 </code></pre>
-<h3 id="使用-stdarraylist-时要建立的直觉"><a class="header" href="#使用-stdarraylist-时要建立的直觉">使用 <code>std.ArrayList</code> 时要建立的直觉</a></h3>
-<ol>
-<li>它是“数量不确定的同类型元素“的首选容器</li>
-<li>能预估大小时用 <code>initCapacity</code>，可以避免重新分配的开销</li>
-<li><code>items</code> 字段就是普通切片，所有切片操作都适用</li>
-<li>0.16 中 <code>ArrayList</code> 是非托管的——每个可能触发分配的方法都需要传入 allocator</li>
-<li><code>swapRemove</code> 比 <code>orderedRemove</code> 快，但会打乱元素顺序</li>
-<li>如果需要一个由调用方管理生命周期的缓冲区来逐步构建字节序列，<code>ArrayList(u8)</code> 是常用选择</li>
-</ol>
-<hr>
 <h2 id="stdhashmap"><a class="header" href="#stdhashmap"><code>std.HashMap</code></a></h2>
 <p><code>std.HashMap</code> 是基于哈希表的键值存储结构。给定一个 key，可以快速查找、插入或删除对应的 value。Zig 标准库提供了两个系列的实现：</p>
 <div class="table-wrapper">
@@ -1169,19 +1138,6 @@ _ = map.orderedRemove(3); // O(n)，保持剩余元素的顺序
 </table>
 </div>
 <p><code>.keys()</code> 和 <code>.values()</code> 直接返回切片，这让 <code>array_hash_map</code> 在需要序列化、调试输出或批量处理时更方便。</p>
-<h3 id="使用-stdhashmap-时要建立的直觉"><a class="header" href="#使用-stdhashmap-时要建立的直觉">使用 <code>std.HashMap</code> 时要建立的直觉</a></h3>
-<ol>
-<li>需要按键快速查找值时，第一个想到的应该是 <code>AutoHashMap</code></li>
-<li>key 是字符串时用 <code>StringHashMap</code>——它按内容比较，不是按指针</li>
-<li>需要保持插入顺序或频繁遍历时用 <code>array_hash_map</code></li>
-<li><code>AutoHashMap</code> / <code>StringHashMap</code> 是托管的；<code>array_hash_map</code> 是非托管的——注意方法签名差异</li>
-<li><code>get</code> 返回 <code>?V</code>——使用前必须处理“不存在“的情况</li>
-<li>迭代 <code>HashMap</code> 期间不要修改它，否则迭代器会失效</li>
-</ol>
-<blockquote>
-<p><strong>相关阅读</strong>：关于 allocator 和内存管理策略的深入讨论，见<a href="chapter-memory-management.html">内存管理模型</a>。</p>
-</blockquote>
-<hr>
 <h2 id="stdheap"><a class="header" href="#stdheap"><code>std.heap</code></a></h2>
 <p><code>std.heap</code> 是理解 allocator 的第一入口。</p>
 <p>它的重要性不在于“会分配内存”这么简单，而在于：</p>
@@ -1254,17 +1210,29 @@ pub fn main(_: std.process.Init) !void {
 <p>适合“集中分配、集中释放“的场景（如解析配置、构造语法树、请求级临时对象）。详见<a href="chapter-memory-management.html">内存管理模型</a>。</p>
 <h3 id="fixedbufferallocator"><a class="header" href="#fixedbufferallocator"><code>FixedBufferAllocator</code></a></h3>
 <p>在固定内存块上分配，不向系统申请新内存，适合已知上限、嵌入式或临时工作区。详见<a href="chapter-memory-management.html">内存管理模型</a>。</p>
-<h3 id="使用-stdheap-时要建立的直觉"><a class="header" href="#使用-stdheap-时要建立的直觉">使用 <code>std.heap</code> 时要建立的直觉</a></h3>
-<ol>
-<li>allocator 是接口的一部分，不是隐藏背景设施</li>
-<li>选择 allocator，本质上是在选择资源组织方式</li>
-<li>一旦发生分配，就要立刻想到释放责任</li>
-<li><code>std.heap</code> 往往不是单独使用，而是作为其他模块的基础设施出现</li>
-</ol>
-<blockquote>
-<p><strong>相关阅读</strong>：allocator 的完整模型见<a href="chapter-memory-management.html">内存管理模型</a>。</p>
-</blockquote>
 <hr>
+<h2 id="各模块直觉速查"><a class="header" href="#各模块直觉速查">各模块直觉速查</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>模块</th><th>核心直觉</th></tr>
+</thead>
+<tbody>
+<tr><td><code>std.mem</code></td><td>字符串问题是字节切片问题；不拥有数据，只处理数据视图</td></tr>
+<tr><td><code>std.fmt</code></td><td>先区分格式化与输出；固定缓冲区用 <code>bufPrint</code>，需所有权用 <code>allocPrint</code></td></tr>
+<tr><td><code>std.debug</code></td><td><code>print</code> 观察状态，<code>assert</code> 表达逻辑假设</td></tr>
+<tr><td><code>std.testing</code></td><td>覆盖正常/错误/边界路径；小函数易测</td></tr>
+<tr><td><code>std.Io</code></td><td><code>io</code> 是 0.16 I/O 统一入口；操作从目录对象出发</td></tr>
+<tr><td><code>std.process</code></td><td>参数与环境变量从 <code>Init</code> 显式传入；位于入口层</td></tr>
+<tr><td><code>std.ArrayList</code></td><td>不定数量元素首选；0.16 非托管，方法传 allocator</td></tr>
+<tr><td><code>std.HashMap</code></td><td>字符串用 <code>StringHashMap</code>；保持顺序用 <code>array_hash_map</code></td></tr>
+<tr><td><code>std.heap</code></td><td>allocator 是接口的一部分；分配即资源责任</td></tr>
+</tbody>
+</table>
+</div>
+<blockquote>
+<p><strong>相关阅读</strong>：<a href="chapter-memory-management.html">内存管理模型</a>、<a href="chapter-testing.html">测试与验证</a>、<a href="../part3-practice/chapter-cli-tool.html">CLI 工具开发</a></p>
+</blockquote>
 <h2 id="一个稍完整的组合示例"><a class="header" href="#一个稍完整的组合示例">一个稍完整的组合示例</a></h2>
 <p>前面每个模块都单独看过了。下面把它们串起来，写一个更接近真实程序的小例子。</p>
 <p>这个程序做的事情是：</p>
@@ -1319,11 +1287,11 @@ pub fn main(init: std.process.Init) !void {
 
     const mode = init.environ_map.get("APP_MODE") orelse "default";
 
-    const cwd = std.fs.cwd();
-    const input_file = try cwd.openFile(input_path, .{});
-    defer input_file.close();
+    const io = init.io;
 
-    const content = try input_file.readToEndAlloc(init.gpa, 1024 * 1024);
+    var read_buf: [1024]u8 = undefined;
+    var file_reader = try std.Io.Dir.cwd().openFile(io, input_path, .{}).reader(io, &amp;read_buf);
+    const content = try file_reader.interface.allocRemaining(init.gpa, .limited(1024 * 1024));
     defer init.gpa.free(content);
 
     // 先按行拆分输入，再逐行做配置解析。
@@ -1397,7 +1365,7 @@ pub fn main(init: std.process.Init) !void {
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../part2-advanced/chapter-standard-library-guide.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../part1-basics/chapter-build-system.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
@@ -1411,7 +1379,7 @@ pub fn main(init: std.process.Init) !void {
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../part2-advanced/chapter-standard-library-guide.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../part1-basics/chapter-build-system.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 

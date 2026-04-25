@@ -80,13 +80,13 @@ fn workload() usize {
     return sum;
 }
 
-pub fn main() void {
-    const start = std.time.nanoTimestamp();
+pub fn main(init: std.process.Init) void {
+    const start = std.Io.Timestamp.now(init.io, .awake);
     const result = workload();
-    const end = std.time.nanoTimestamp();
+    const end = std.Io.Timestamp.now(init.io, .awake);
 
-    const elapsed_ns = end - start;
-    const elapsed_ms = @as(f64, @floatFromInt(elapsed_ns)) / std.time.ns_per_ms;
+    const elapsed = start.durationTo(end);
+    const elapsed_ms = @as(f64, @floatFromInt(elapsed.nanoseconds)) / std.time.ns_per_ms;
 
     std.debug.print("result = {}\n", .{result});
     std.debug.print("elapsed = {d:.3} ms\n", .{elapsed_ms});

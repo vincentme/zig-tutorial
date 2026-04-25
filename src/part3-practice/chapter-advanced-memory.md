@@ -49,49 +49,71 @@ const TrackingAllocator = struct {
 
     fn alloc(
         ctx: *anyopaque,
-        n: usize,
+        len: usize,
         alignment: std.mem.Alignment,
-        return_address: usize,
+        ret_addr: usize,
     ) ?[*]u8 {
         const self: *Self = @ptrCast(@alignCast(ctx));
-        const ptr = self.backing_allocator.rawAlloc(n, alignment, return_address) orelse return null;
+        const ptr = self.backing_allocator.vtable.alloc(
+            self.backing_allocator.ptr,
+            len,
+            alignment,
+            ret_addr,
+        ) orelse return null;
         self.allocations += 1;
-        self.bytes_allocated += n;
+        self.bytes_allocated += len;
         return ptr;
     }
 
     fn resize(
         ctx: *anyopaque,
-        buf: []u8,
+        memory: []u8,
         alignment: std.mem.Alignment,
         new_len: usize,
-        return_address: usize,
+        ret_addr: usize,
     ) bool {
         const self: *Self = @ptrCast(@alignCast(ctx));
-        return self.backing_allocator.rawResize(buf, alignment, new_len, return_address);
+        return self.backing_allocator.vtable.resize(
+            self.backing_allocator.ptr,
+            memory,
+            alignment,
+            new_len,
+            ret_addr,
+        );
     }
 
     fn remap(
         ctx: *anyopaque,
-        buf: []u8,
+        memory: []u8,
         alignment: std.mem.Alignment,
         new_len: usize,
-        return_address: usize,
+        ret_addr: usize,
     ) ?[*]u8 {
         const self: *Self = @ptrCast(@alignCast(ctx));
-        return self.backing_allocator.rawRemap(buf, alignment, new_len, return_address);
+        return self.backing_allocator.vtable.remap(
+            self.backing_allocator.ptr,
+            memory,
+            alignment,
+            new_len,
+            ret_addr,
+        );
     }
 
     fn free(
         ctx: *anyopaque,
-        buf: []u8,
+        memory: []u8,
         alignment: std.mem.Alignment,
-        return_address: usize,
+        ret_addr: usize,
     ) void {
         const self: *Self = @ptrCast(@alignCast(ctx));
         self.deallocations += 1;
-        self.bytes_allocated -= buf.len;
-        self.backing_allocator.rawFree(buf, alignment, return_address);
+        self.bytes_allocated -= memory.len;
+        self.backing_allocator.vtable.free(
+            self.backing_allocator.ptr,
+            memory,
+            alignment,
+            ret_addr,
+        );
     }
 
     fn printStats(self: *const Self) void {

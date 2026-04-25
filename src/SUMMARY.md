@@ -15,7 +15,6 @@
 
 # 第二部分：高级特性
 
-- [标准库导航与阅读指南](part2-advanced/chapter-standard-library-guide.md)
 - [常用标准库模块详解](part2-advanced/chapter-standard-library-detail.md)
 - [编译期计算与元编程](part2-advanced/chapter-comptime.md)
 - [泛型编程](part2-advanced/chapter-generics.md)
@@ -29,6 +28,8 @@
 - [构建系统与包管理](part2-advanced/chapter-package-management.md)
 
 # 第三部分：实战与专题
+
+> 本部分案例均为教学原型——刻意简化了错误处理完备性、网络异常场景、持久化、鉴权等生产环境必需的方面。各章的价值在于展示如何将语言机制和标准库能力组合起来解决实际问题，而非提供可直接上线的成品。
 
 - [实战案例 - CLI 工具开发](part3-practice/chapter-cli-tool.md)
 - [实战案例 - HTTP 服务器设计与最小实现](part3-practice/chapter-http-server.md)
