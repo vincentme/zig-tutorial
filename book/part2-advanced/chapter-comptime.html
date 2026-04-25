@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d724f321.js";
+            window.path_to_searchindex_js = "../searchindex-ab6996a3.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-4c2eaf17.js"></script>
@@ -654,19 +654,23 @@ test "describeType" {
 }
 </code></pre>
 <hr>
-<h2 id="comptime-适用场景速览"><a class="header" href="#comptime-适用场景速览"><code>comptime</code> 适用场景速览</a></h2>
+<h2 id="本章小结核心机制与适用场景"><a class="header" href="#本章小结核心机制与适用场景">本章小结：核心机制与适用场景</a></h2>
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th>场景</th><th>说明</th></tr>
+<tr><th>机制</th><th>关键语法</th><th>适用场景</th></tr>
 </thead>
 <tbody>
-<tr><td>泛型数据结构与函数</td><td>类型参数化，编译期特化——详见<a href="chapter-generics.html">泛型编程</a></td></tr>
-<tr><td>编译期约束检查</td><td>用 <code>@compileError</code> 在编译期拒绝不合法的类型或配置</td></tr>
-<tr><td>根据类型生成代码路径</td><td><code>@typeInfo</code> + <code>switch</code>，按类型选择不同实现</td></tr>
-<tr><td>预计算静态数据</td><td>查找表、常量派生值、编译期生成的静态数据</td></tr>
-<tr><td>嵌入外部资源</td><td><code>@embedFile</code> 将文件内容嵌入二进制</td></tr>
-<tr><td>编译期断言</td><td><code>comptime { }</code> 块中做静态检查</td></tr>
+<tr><td>编译期参数</td><td><code>fn f(comptime T: type, ...)</code></td><td>泛型数据结构与函数，类型参数化——详见<a href="chapter-generics.html">泛型编程</a></td></tr>
+<tr><td>编译期块</td><td><code>comptime { }</code>, <code>comptime blk: { ... }</code></td><td>编译期断言与静态检查</td></tr>
+<tr><td>编译期变量</td><td><code>comptime var x = ...</code></td><td>预计算静态数据</td></tr>
+<tr><td>类型反射</td><td><code>@typeInfo(T)</code></td><td>根据类型生成代码路径</td></tr>
+<tr><td>类型构造</td><td><code>@Int</code>, <code>@Struct</code>, <code>@Enum</code> 等</td><td>编译期生成自定义类型</td></tr>
+<tr><td>声明/字段检查</td><td><code>@hasDecl</code>, <code>@hasField</code></td><td>编译期鸭子类型检查</td></tr>
+<tr><td>编译期错误</td><td><code>@compileError("msg")</code></td><td>编译期约束检查</td></tr>
+<tr><td>文件嵌入</td><td><code>@embedFile("path")</code></td><td>嵌入外部资源</td></tr>
+<tr><td>循环展开</td><td><code>inline for</code></td><td>编译期遍历与展开</td></tr>
+<tr><td>性能配额</td><td><code>@setEvalBranchQuota(N)</code></td><td>调整编译期计算上限</td></tr>
 </tbody>
 </table>
 </div>
@@ -687,31 +691,10 @@ test "describeType" {
 <h3 id="5-别用-comptime-掩盖设计不清"><a class="header" href="#5-别用-comptime-掩盖设计不清">5. 别用 <code>comptime</code> 掩盖设计不清</a></h3>
 <p>有时问题不是“需要更强的元编程“，而是数据结构没想清楚、接口边界没想清楚。继续堆 <code>comptime</code> 只会放大混乱。</p>
 <blockquote>
-<p><strong>注意</strong>：编译期抽象和运行时抽象的选择是第二部分的核心主线之一。如果需要运行时切换实现、动态加载、类型擦除、VTable，那更适合运行时抽象，而不是 <code>comptime</code>。</p>
+<p><strong>注意</strong>：如果需要运行时切换实现、类型擦除或 VTable，那更适合运行时抽象而非 <code>comptime</code>。完整对比见<a href="../part2-advanced/chapter-interfaces.html">接口与设计模式</a>章节。</p>
 </blockquote>
 <hr>
-<h2 id="本章小结"><a class="header" href="#本章小结">本章小结</a></h2>
-<p>本章覆盖的 <code>comptime</code> 核心机制：</p>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>机制</th><th>关键语法/内建函数</th></tr>
-</thead>
-<tbody>
-<tr><td>编译期参数</td><td><code>fn f(comptime T: type, ...)</code></td></tr>
-<tr><td>编译期块</td><td><code>comptime { }</code>, <code>comptime blk: { break :blk val; }</code></td></tr>
-<tr><td>编译期变量</td><td><code>comptime var x = ...</code></td></tr>
-<tr><td>类型反射</td><td><code>@typeInfo(T)</code></td></tr>
-<tr><td>类型构造</td><td><code>@Int</code>, <code>@Struct</code>, <code>@Enum</code>, <code>@Union</code>, <code>@Pointer</code>, <code>@Fn</code>, <code>@Tuple</code></td></tr>
-<tr><td>声明/字段检查</td><td><code>@hasDecl(T, name)</code>, <code>@hasField(T, name)</code></td></tr>
-<tr><td>编译期错误</td><td><code>@compileError("message")</code></td></tr>
-<tr><td>文件嵌入</td><td><code>@embedFile("path")</code></td></tr>
-<tr><td>循环展开</td><td><code>inline for</code></td></tr>
-<tr><td>性能配额</td><td><code>@setEvalBranchQuota(N)</code></td></tr>
-</tbody>
-</table>
-</div>
-<p>这些机制是 Zig 泛型、零成本抽象和元编程的底层基础。掌握它们之后，下一章<a href="chapter-generics.html">泛型编程</a>将展示如何把这些机制组合成可复用的设计模式。</p>
+<p>上述机制是 Zig 泛型、零成本抽象和元编程的底层基础。掌握它们之后，下一章<a href="chapter-generics.html">泛型编程</a>将展示如何把这些机制组合成可复用的设计模式。</p>
 
                     </main>
 

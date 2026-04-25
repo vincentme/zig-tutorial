@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d724f321.js";
+            window.path_to_searchindex_js = "../searchindex-ab6996a3.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-4c2eaf17.js"></script>
@@ -182,49 +182,23 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="接口组合与设计模式"><a class="header" href="#接口组合与设计模式">接口、组合与设计模式</a></h1>
-<p>这一章回答一个贴近 Zig 风格的核心问题：</p>
-<blockquote>
-<p><strong>当需要抽象一组行为时，应该优先选择泛型、联合类型，还是手写 VTable？</strong></p>
-</blockquote>
-<p>Zig 不把“接口“当默认起手式，而是强调：</p>
-<ul>
-<li>先看问题能否在编译期解决</li>
-<li>先用最简单、最清楚的抽象</li>
-<li>只有在确实需要运行时切换实现时，才引入更动态的方案</li>
-</ul>
-<p>本章围绕一条判断主线展开：<strong>编译期还是运行时？封闭集合还是开放集合？</strong></p>
-<hr>
-<h2 id="先给结论三种常见抽象手段怎么选"><a class="header" href="#先给结论三种常见抽象手段怎么选">先给结论：三种常见抽象手段怎么选？</a></h2>
+<p>在 Zig 中抽象一组行为时，选择取决于两个维度：<strong>编译期还是运行时？封闭集合还是开放集合？</strong></p>
+<p>三种方案按推荐优先级：</p>
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th>方案</th><th>适合场景</th><th>成本与特点</th></tr>
+<tr><th>方案</th><th>适用场景</th><th>成本与特点</th></tr>
 </thead>
 <tbody>
-<tr><td>泛型 / <code>anytype</code></td><td>类型在编译期已知</td><td>零运行时开销，最符合 Zig 默认风格</td></tr>
-<tr><td><code>union(enum)</code></td><td>变体集合有限且封闭</td><td>结构清楚，编译器可穷尽检查</td></tr>
-<tr><td>VTable / <code>*anyopaque</code> + 函数指针</td><td>需要运行时动态替换实现</td><td>最灵活，也最复杂</td></tr>
+<tr><td>泛型 / <code>anytype</code></td><td>编译期已知类型</td><td>零运行时开销</td></tr>
+<tr><td><code>union(enum)</code></td><td>封闭变体集合</td><td>编译器穷尽检查</td></tr>
+<tr><td>VTable / <code>*anyopaque</code> + 函数指针</td><td>运行时动态替换实现</td><td>最灵活，也最复杂</td></tr>
 </tbody>
 </table>
 </div>
-<blockquote>
-<p><strong>注意</strong>：优先从泛型开始；只有在问题明确要求运行时抽象时，再考虑 VTable。</p>
-</blockquote>
 <hr>
-<h2 id="第一种方案泛型是默认首选"><a class="header" href="#第一种方案泛型是默认首选">第一种方案：泛型是默认首选</a></h2>
-<p>如果具体类型在编译期已知，通常应优先使用泛型。</p>
-<h3 id="最小例子"><a class="header" href="#最小例子">最小例子</a></h3>
-<pre><code class="language-zig">const std = @import("std");
-
-fn writeLine(writer: anytype, line: []const u8) !void {
-    try writer.writeAll(line);
-    try writer.writeAll("\n");
-}
-</code></pre>
-<p>这个函数不要求先定义统一接口类型，只要求传入的对象具备 <code>writeAll</code> 方法。编译器在实例化时检查约束是否满足。</p>
-<p><strong>优点</strong>：无运行时分发开销、类型检查在编译期完成、代码更短更直接。</p>
-<p><strong>局限</strong>：不能把不同实现放进同一个运行时容器，不能在运行时决定使用哪种实现。</p>
-<h3 id="可运行示例"><a class="header" href="#可运行示例">可运行示例</a></h3>
+<h2 id="泛型anytype"><a class="header" href="#泛型anytype">泛型：<code>anytype</code></a></h2>
+<p>具体类型在编译期已知时，泛型是默认首选。</p>
 <pre><code class="language-zig">const std = @import("std");
 
 fn writeLine(writer: anytype, line: []const u8) !void {
@@ -234,20 +208,20 @@ fn writeLine(writer: anytype, line: []const u8) !void {
 
 test "泛型 writeLine" {
     var buf: [64]u8 = undefined;
-    var stream = std.io.fixedBufferStream(&amp;buf);
-    const writer = stream.writer();
+    var writer: std.Io.Writer = .fixed(&amp;buf);
 
     writeLine(writer, "hello") catch unreachable;
     writeLine(writer, "world") catch unreachable;
 
-    try std.testing.expectEqualStrings("hello\nworld\n", stream.getWritten());
+    try std.testing.expectEqualStrings("hello\nworld\n", writer.buffered());
 }
 </code></pre>
+<p>函数不要求提前定义统一接口类型，只要求传入对象具备 <code>writeAll</code> 方法。编译器在实例化时检查约束。</p>
+<p><strong>优点</strong>：无运行时分发开销、编译期类型检查、代码简洁。</p>
+<p><strong>局限</strong>：不能把不同实现放进同一个运行时容器，不能在运行时切换实现类型。</p>
 <hr>
-<h2 id="第二种方案tagged-union-适合封闭变体"><a class="header" href="#第二种方案tagged-union-适合封闭变体">第二种方案：tagged union 适合封闭变体</a></h2>
-<p>如果面对一个<strong>有限且封闭</strong>的实现集合，<code>union(enum)</code> 往往比 VTable 更清楚。</p>
-<h3 id="典型场景"><a class="header" href="#典型场景">典型场景</a></h3>
-<p>比如固定的几种输出目标，不需要用户自由扩展：</p>
+<h2 id="tagged-unionunionenum"><a class="header" href="#tagged-unionunionenum">Tagged Union：<code>union(enum)</code></a></h2>
+<p>实现集合有限且封闭时，<code>union(enum)</code> 比 VTable 更清楚。</p>
 <pre><code class="language-zig">const std = @import("std");
 
 const Output = union(enum) {
@@ -272,57 +246,18 @@ test "union 分发" {
     try std.testing.expectEqualStrings("hello from union", list.items);
 }
 </code></pre>
-<p><strong>优势</strong>：分支可穷尽检查、结构明确、容易阅读和调试、不需要维护函数指针表。</p>
+<p><strong>优势</strong>：分支穷尽检查、结构明确、易阅读调试、无需维护函数指针表。</p>
 <p><strong>适用场景</strong>：AST 节点、命令类型、有限状态机、项目内部固定的几种策略。</p>
 <hr>
-<h2 id="第三种方案vtable-适合开放集合与运行时抽象"><a class="header" href="#第三种方案vtable-适合开放集合与运行时抽象">第三种方案：VTable 适合开放集合与运行时抽象</a></h2>
-<p>只有在需要以下能力时，VTable 才值得引入：</p>
+<h2 id="vtableanyopaque--函数指针"><a class="header" href="#vtableanyopaque--函数指针">VTable：<code>*anyopaque</code> + 函数指针</a></h2>
+<p>VTable 是开放集合与运行时抽象的工具，核心三步：<strong>类型擦除</strong>（<code>*anyopaque</code>）→ <strong>运行时分发</strong>（函数指针）→ <strong>类型恢复</strong>（<code>@ptrCast(@alignCast(...))</code>）。</p>
+<p>只有在需要以下能力时才引入：</p>
 <ul>
 <li>运行时动态替换实现</li>
-<li>擦除具体类型，将不同实现统一存入容器</li>
+<li>擦除具体类型，将不同实现存入统一容器</li>
 <li>跨模块边界暴露稳定的运行时接口</li>
 <li>插件式架构</li>
 </ul>
-<h3 id="最小-vtable-模式"><a class="header" href="#最小-vtable-模式">最小 VTable 模式</a></h3>
-<pre><code class="language-zig">const std = @import("std");
-
-const Writer = struct {
-    ptr: *anyopaque,
-    vtable: *const VTable,
-
-    const VTable = struct {
-        writeAll: *const fn (ptr: *anyopaque, data: []const u8) anyerror!void,
-    };
-
-    pub fn writeAll(self: Writer, data: []const u8) !void {
-        try self.vtable.writeAll(self.ptr, data);
-    }
-};
-</code></pre>
-<p><code>Writer</code> 不知道具体实现类型，只持有一个被擦除后的指针和一张函数表。</p>
-<h3 id="具体实现"><a class="header" href="#具体实现">具体实现</a></h3>
-<pre><code class="language-zig">const BufferWriter = struct {
-    list: *std.ArrayList(u8),
-
-    fn writeAll(ptr: *anyopaque, data: []const u8) anyerror!void {
-        const self: *BufferWriter = @ptrCast(@alignCast(ptr));
-        try self.list.appendSlice(data);
-    }
-
-    const vtable = Writer.VTable{
-        .writeAll = writeAll,
-    };
-
-    pub fn writer(self: *BufferWriter) Writer {
-        return .{
-            .ptr = self,
-            .vtable = &amp;vtable,
-        };
-    }
-};
-</code></pre>
-<p>模式核心有三步：<strong>类型擦除</strong>（具体实现装进 <code>*anyopaque</code>）→ <strong>运行时分发</strong>（调用走函数指针）→ <strong>类型恢复</strong>（实现函数内用 <code>@ptrCast(@alignCast(...))</code> 转回具体类型）。</p>
-<h3 id="完整可运行示例"><a class="header" href="#完整可运行示例">完整可运行示例</a></h3>
 <pre><code class="language-zig">const std = @import("std");
 
 const Writer = struct {
@@ -365,18 +300,34 @@ test "VTable Writer 端到端" {
     var bw = BufferWriter{ .list = &amp;list };
     const w = bw.writer();
 
-    // 通过擦除后的接口写入
     try w.writeAll("hello ");
     try w.writeAll("vtable");
 
     try std.testing.expectEqualStrings("hello vtable", list.items);
 }
 </code></pre>
+<h3 id="何时避免-vtable"><a class="header" href="#何时避免-vtable">何时避免 VTable</a></h3>
+<p>以下场景通常不需要运行时接口：</p>
+<ul>
+<li>只有两三个固定实现</li>
+<li>调用点具体类型已知</li>
+<li>只是想减少重复函数，并非需要运行时多态</li>
+<li>项目规模小，抽象边界不稳定</li>
+<li>仅仅因为“别的语言先定义接口“而引入</li>
+</ul>
+<p>这类场景引入 VTable 只会增加样板代码、复杂调试路径和模糊的生命周期边界。</p>
+<h3 id="常见陷阱"><a class="header" href="#常见陷阱">常见陷阱</a></h3>
+<ol>
+<li><strong>生命周期不清</strong> — <code>ptr: *anyopaque</code> 指向的对象由谁拥有、谁负责释放？接口值是否可能比底层对象活得更久？</li>
+<li><strong>类型恢复写错</strong> — <code>@ptrCast(@alignCast(ptr))</code> 恢复时，类型与假设不一致会导致未定义行为。</li>
+<li><strong>过度抽象</strong> — 允许运行时多态不代表应该使用。</li>
+<li><strong>错误边界过宽</strong> — 所有函数返回 <code>anyerror</code> 让接口语义模糊。</li>
+<li><strong>把泛型问题当成 VTable 问题</strong> — 很多场景一个 <code>anytype</code> 函数就足够。</li>
+</ol>
 <hr>
-<h2 id="标准库中的真实案例"><a class="header" href="#标准库中的真实案例">标准库中的真实案例</a></h2>
-<p>Zig 标准库大量使用上述三种模式，值得对照学习：</p>
-<h3 id="stdmemallocator--经典-vtable-模式"><a class="header" href="#stdmemallocator--经典-vtable-模式"><code>std.mem.Allocator</code> — 经典 VTable 模式</a></h3>
-<p><code>Allocator</code> 的结构与上面的 <code>Writer</code> 如出一辙：</p>
+<h2 id="标准库中的-vtable-实例"><a class="header" href="#标准库中的-vtable-实例">标准库中的 VTable 实例</a></h2>
+<h3 id="stdmemallocator"><a class="header" href="#stdmemallocator"><code>std.mem.Allocator</code></a></h3>
+<p><code>Allocator</code> 的结构与上面的 <code>Writer</code> 一致：</p>
 <pre><code class="language-zig">// lib/std/mem/Allocator.zig（简化）
 ptr: *anyopaque,
 vtable: *const VTable,
@@ -388,72 +339,44 @@ pub const VTable = struct {
     free: *const fn (*anyopaque, memory: []u8, alignment: Alignment, ret_addr: usize) void,
 };
 </code></pre>
-<p>具体实现（如 <code>FixedBufferAllocator</code>）通过 <code>allocator()</code> 方法返回 <code>Allocator</code>，内部将 <code>self</code> 作为 <code>ptr</code>、把静态 VTable 取地址作为 <code>vtable</code>——和前面 <code>BufferWriter.writer()</code> 的模式完全一致。</p>
-<h3 id="stdiowriter--vtable-模式的完整形态"><a class="header" href="#stdiowriter--vtable-模式的完整形态"><code>std.Io.Writer</code> — VTable 模式的完整形态</a></h3>
-<p>0.16-dev 中 <code>std.Io.Writer</code> 也是 VTable 结构，增加了内置缓冲区：</p>
+<p>具体实现（如 <code>FixedBufferAllocator</code>）通过 <code>allocator()</code> 方法返回 <code>Allocator</code>，与前面 <code>BufferWriter.writer()</code> 的模式一致。</p>
+<h3 id="stdiowriter"><a class="header" href="#stdiowriter"><code>std.Io.Writer</code></a></h3>
+<p><code>std.Io.Writer</code> 也是 VTable 结构，增加了内置缓冲区：</p>
 <pre><code class="language-zig">// lib/std/Io/Writer.zig（简化）
 vtable: *const VTable,
 buffer: []u8,
 end: usize = 0,
 </code></pre>
-<p>这说明 VTable 模式在标准库中已经是成熟的基础设施，而非“教学用的玩具“。</p>
-<h3 id="ptrcastaligncast--vtable-实现的标准写法"><a class="header" href="#ptrcastaligncast--vtable-实现的标准写法"><code>@ptrCast(@alignCast(...))</code> — VTable 实现的标准写法</a></h3>
-<p>标准库中所有 VTable 具体实现都使用这一模式恢复类型：</p>
+<h3 id="ptrcastaligncast--标准恢复写法"><a class="header" href="#ptrcastaligncast--标准恢复写法"><code>@ptrCast(@alignCast(...))</code> — 标准恢复写法</a></h3>
+<p>VTable 实现函数中，通过 <code>@ptrCast(@alignCast(ptr))</code> 将 <code>*anyopaque</code> 恢复为具体类型：</p>
 <pre><code class="language-zig">// lib/std/heap/FixedBufferAllocator.zig
 fn alloc(ctx: *anyopaque, n: usize, alignment: mem.Alignment, ra: usize) ?[*]u8 {
     const self: *FixedBufferAllocator = @ptrCast(@alignCast(ctx));
     // ...
 }
 </code></pre>
-<blockquote>
-<p><strong>注意</strong>：<code>@ptrCast(@alignCast(...))</code> 不是装饰品——如果对象类型和假设的不一致，会导致未定义行为。务必确保类型擦除和恢复两端一致。</p>
-</blockquote>
+<p>关于 <code>@ptrCast</code> 和 <code>@alignCast</code> 的详细说明，见<a href="chapter-pointers.html">指针、切片与对齐</a>。</p>
 <hr>
 <h2 id="组合比继承更重要"><a class="header" href="#组合比继承更重要">组合比继承更重要</a></h2>
-<p>对 Zig 来说，<strong>组合</strong>往往比“模拟继承体系“更重要。</p>
-<p>组合的意思是：一个结构体持有另一个结构体、一个模块调用另一个模块、功能通过显式依赖组装出来。</p>
+<p>在 Zig 中，组合比模拟继承体系更自然：</p>
 <pre><code class="language-zig">const Service = struct {
     allocator: std.mem.Allocator,
     cache: Cache,
     logger: Logger,
 };
 </code></pre>
-<p>这里表达的不是“Service 继承了什么“，而是 Service 依赖哪些能力、这些能力如何被显式传入、模块边界在哪里。</p>
-<p><strong>好处</strong>：依赖关系更清楚、生命周期更容易追踪、更适合显式资源管理、测试时更容易替换部件。</p>
+<p>依赖关系、模块边界和生命周期通过结构体字段显式表达，测试时容易替换部件，资源管理路径也一目了然。</p>
 <hr>
-<h2 id="什么时候不要用运行时接口"><a class="header" href="#什么时候不要用运行时接口">什么时候不要用运行时接口？</a></h2>
-<p>这个问题比“什么时候该用“还重要。以下场景通常不需要 VTable：</p>
+<h2 id="小结"><a class="header" href="#小结">小结</a></h2>
 <ul>
-<li>只有两三个固定实现</li>
-<li>调用点的具体类型本来就已知</li>
-<li>只是想少写几遍相似函数</li>
-<li>只是因为“别的语言会先定义接口“</li>
-<li>项目规模还很小，抽象边界并不稳定</li>
+<li><strong>泛型 / <code>anytype</code></strong> — 默认首选，编译期已知类型，零运行时开销。</li>
+<li><strong><code>union(enum)</code></strong> — 封闭变体集合，编译器穷尽检查。</li>
+<li><strong>VTable</strong> — 开放运行时抽象，最灵活也最复杂。<code>std.mem.Allocator</code> 和 <code>std.Io.Writer</code> 是成熟范例。</li>
 </ul>
-<p>这类场景里，运行时接口只会带来更多样板代码、更复杂的调试路径和更模糊的生命周期边界。</p>
-<hr>
-<h2 id="vtable-模式最容易踩的坑"><a class="header" href="#vtable-模式最容易踩的坑">VTable 模式最容易踩的坑</a></h2>
-<p>如果确实要用 VTable，至少注意以下风险：</p>
-<ol>
-<li><strong>生命周期不清楚</strong> — <code>ptr: *anyopaque</code> 指向的对象由谁拥有？谁负责释放？接口值是否可能比底层对象活得更久？</li>
-<li><strong>类型恢复写错</strong> — <code>@ptrCast(@alignCast(ptr))</code> 在恢复具体类型，如果对象类型和假设不一致，后果严重。</li>
-<li><strong>把简单问题抽象复杂了</strong> — 很多时候只需要一个泛型函数，却提前上了整套 VTable。</li>
-<li><strong>错误边界过于宽泛</strong> — 所有函数都返回 <code>anyerror</code> 会让接口语义变得模糊。</li>
-<li><strong>混淆“能做“和“应该做“</strong> — 能做运行时多态不代表应该做，这是最常见的设计误区。</li>
-</ol>
-<hr>
-<h2 id="本章小结"><a class="header" href="#本章小结">本章小结</a></h2>
-<p>在 Zig 中，接口问题本质上是<strong>抽象层次选择问题</strong>：</p>
-<ul>
-<li><strong>泛型 / <code>anytype</code></strong> — 默认首选，适合编译期已知类型，零运行时开销。</li>
-<li><strong><code>union(enum)</code></strong> — 适合封闭变体集合，编译器保证穷尽检查。</li>
-<li><strong>VTable</strong> — 适合真正需要运行时开放抽象的场景，最灵活也最复杂。标准库的 <code>std.mem.Allocator</code> 和 <code>std.Io.Writer</code> 都是成熟范例。</li>
-</ul>
-<p>把这三种方案的适用边界区分清楚，大多数“接口设计问题“就已经解决了一大半。</p>
+<p>区分清楚三种方案的适用边界，就解决了大多数接口设计问题。</p>
 <hr>
 <blockquote>
-<p><strong>相关阅读</strong>：</p>
-<p>下一章将学习 <a href="chapter-c-interop.html">与 C 语言的互操作性</a>，从“如何在 Zig 中组织抽象边界“推进到“如何跨 ABI 边界与 C 世界协作“。</p>
+<p><strong>相关阅读</strong>：<a href="chapter-c-interop.html">与 C 语言的互操作性</a></p>
 </blockquote>
 
                     </main>

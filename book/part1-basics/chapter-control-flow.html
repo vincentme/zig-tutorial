@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d724f321.js";
+            window.path_to_searchindex_js = "../searchindex-ab6996a3.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-4c2eaf17.js"></script>
@@ -192,21 +192,7 @@
 <li>不能直接使用可选值，必须先解包（通过 <code>if</code>、<code>orelse</code>、<code>.?</code> 等操作）</li>
 <li>类型系统区分 <code>T</code> 和 <code>?T</code>，意图清晰，代码显式可读</li>
 </ul>
-<p>可选类型 <code>?T</code> 和错误联合类型 <code>!T</code> 都用于表示“可能失败“的值，但用途不同：</p>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>类型</th><th>含义</th><th>使用场景</th></tr>
-</thead>
-<tbody>
-<tr><td><code>?T</code></td><td>值可能存在或不存在</td><td>查找操作、可选配置</td></tr>
-<tr><td><code>!T</code></td><td>操作可能成功或失败</td><td>可能出错的操作</td></tr>
-</tbody>
-</table>
-</div>
-<blockquote>
-<p><strong>深入学习</strong>：错误联合类型的详细用法将在<a href="chapter-error-handling.html">错误处理基础</a>中讲解。</p>
-</blockquote>
+<p><code>?T</code> 表示值可能不存在，<code>!T</code> 表示操作可能失败。两者的详细对比和各自的处理方式，分别在<a href="#可选类型optional">可选类型</a>和<a href="chapter-error-handling.html">错误处理</a>章节展开。</p>
 <h3 id="解包操作"><a class="header" href="#解包操作">解包操作</a></h3>
 <p>Zig 提供了三种解包可选类型的方式：<code>if</code> 模式匹配、<code>.?</code> 操作符和 <code>orelse</code> 表达式。其中，<code>if</code> 解包会在后文介绍 <code>if</code> 语句时结合示例详细说明</p>
 <h4 id="-操作符"><a class="header" href="#-操作符">.? 操作符</a></h4>
@@ -344,28 +330,7 @@ pub fn main(_: std.process.Init) void {
 结果：84
 </code></pre>
 <h3 id="模式匹配解包错误联合类型"><a class="header" href="#模式匹配解包错误联合类型">模式匹配解包错误联合类型</a></h3>
-<p>if 也可以解包错误联合类型，分别处理成功和失败：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-fn divide(a: i32, b: i32) !i32 {
-    if (b == 0) return error.DivisionByZero;
-    return @divTrunc(a, b);
-}
-
-pub fn main(_: std.process.Init) void {
-    const result = divide(10, 2);
-    
-    // 成功时 |value| 获取值，失败时 |err| 获取错误
-    if (result) |value| {
-        std.debug.print("结果：{}\n", .{value});
-    } else |err| {
-        std.debug.print("错误：{}\n", .{err});
-    }
-}
-</code></pre>
-<p><strong>预期输出：</strong></p>
-<pre><code>结果：5
-</code></pre>
+<p><code>if</code> 也可以解包错误联合类型（<code>!T</code>），语法与可选类型解包类似，详见<a href="chapter-error-handling.html">错误处理</a>章节。</p>
 <h2 id="while-循环"><a class="header" href="#while-循环">while 循环</a></h2>
 <p>while 循环用于重复执行代码块，与 if 类似，while 也支持可选类型解包、错误联合类型解包和作为表达式使用。</p>
 <p>Zig 的 while 循环支持：</p>
@@ -792,29 +757,7 @@ pub fn main(_: std.process.Init) void {
 第一个 defer
 </code></pre>
 <h3 id="defer-vs-errdefer"><a class="header" href="#defer-vs-errdefer">defer vs errdefer</a></h3>
-<p><code>errdefer</code> 与 <code>defer</code> 类似，但只在函数返回错误时执行，正常返回时不执行。典型场景是<strong>所有权转移</strong>：函数成功时将资源返回给调用者（调用者负责释放），仅在失败时才需要清理。</p>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>机制</th><th>执行时机</th><th>适用场景</th></tr>
-</thead>
-<tbody>
-<tr><td><code>defer</code></td><td>作用域结束时始终执行</td><td>资源在函数内完成生命周期</td></tr>
-<tr><td><code>errdefer</code></td><td>仅函数返回错误时执行</td><td>资源成功时转移给调用者</td></tr>
-</tbody>
-</table>
-</div>
-<pre><code class="language-zig">fn allocateAndInit(allocator: std.mem.Allocator) !*Resource {
-    const resource = try allocator.create(Resource);
-    errdefer allocator.destroy(resource);  // 失败时释放
-    
-    try resource.init();  // 如果这里失败，errdefer 会执行
-    return resource;      // 成功时，errdefer 不执行，调用者负责释放
-}
-</code></pre>
-<blockquote>
-<p><strong>深入学习</strong>：errdefer 的完整用法（多资源管理、错误捕获 <code>|err|</code> 等）请参考<a href="chapter-error-handling.html#errdefer">错误处理基础</a>。</p>
-</blockquote>
+<p><code>errdefer</code> 与 <code>defer</code> 类似，但只在函数返回错误时执行，正常返回时不执行。典型场景是<strong>所有权转移</strong>：函数成功时将资源返回给调用者（调用者负责释放），仅在失败时才需要清理。关于 <code>errdefer</code> 的完整用法、与 <code>defer</code> 的详细对比、以及失败路径清理的模式，将在<a href="chapter-error-handling.html">错误处理</a>章节展开。</p>
 <h2 id="块表达式block-expression"><a class="header" href="#块表达式block-expression">块表达式（Block Expression）</a></h2>
 <p>if、while、for 等控制流语句都可以作为表达式返回值，而块表达式则提供了另一种创建表达式的方式。块表达式是一个带标签的作用域，可以包含多条语句和复杂的控制流逻辑，最终通过 <code>break :label value</code> 返回一个值。</p>
 <h3 id="基本语法"><a class="header" href="#基本语法">基本语法</a></h3>
@@ -887,12 +830,13 @@ pub fn main(_: std.process.Init) void {
 嵌套块结果: 10
 </code></pre>
 <h2 id="unreachable"><a class="header" href="#unreachable">unreachable</a></h2>
-<p><code>unreachable</code> 表示某个代码路径在逻辑上不应被执行。它的类型是 <code>noreturn</code>，因此可以出现在任何需要值的位置。在安全模式（Debug、ReleaseSafe）下执行到 <code>unreachable</code> 会触发 panic。</p>
+<p><code>unreachable</code> 的核心含义是向编译器声明“这个条件在逻辑上一定为真“。它的类型是 <code>noreturn</code>，因此可以出现在任何需要值的位置。编译器可以利用这个声明做优化——例如声明了 <code>b != 0</code>，编译器就可以省去除零检查，甚至用位移替代除法。</p>
+<p>在安全模式（Debug、ReleaseSafe）下，执行到 <code>unreachable</code> 会触发 panic，帮助在开发阶段定位问题。在非安全模式（ReleaseFast、ReleaseSmall）下，编译器假设 <code>unreachable</code> 路径永远不会被执行，并据此优化代码。</p>
 <p>常见用途包括：</p>
 <ul>
-<li>在 <code>switch</code> 中标记不可能到达的分支</li>
-<li>在已知不会失败的 <code>catch</code> 中表达断言</li>
-<li>作为编译器优化提示（非安全模式下为未定义行为）</li>
+<li>在 <code>switch</code> 中标记穷尽后不可能到达的分支</li>
+<li>在已知不会失败的 <code>catch</code> 中表达断言（如 <code>catch unreachable</code>）</li>
+<li>在函数入口声明调用者必须满足的前提条件</li>
 </ul>
 <pre><code class="language-zig">const std = @import("std");
 
@@ -906,8 +850,15 @@ pub fn main(_: std.process.Init) void {
     std.debug.print("result = {}\n", .{result});
 }
 </code></pre>
+<h3 id="stddebugassert"><a class="header" href="#stddebugassert"><code>std.debug.assert</code></a></h3>
+<p><code>std.debug.assert</code> 是 <code>unreachable</code> 的一行封装：</p>
+<pre><code class="language-zig">// 这两种写法等价：
+if (!(x &gt; 0)) unreachable;
+std.debug.assert(x &gt; 0);
+</code></pre>
+<p>它不是宏，而是普通函数，因此表达式在所有构建模式下都会被求值——不会因为 release 模式就跳过。与某些语言中 assert 在 release 下消失不同，Zig 的 assert 只是比较检查可能被优化掉，表达式本身仍然执行。</p>
 <blockquote>
-<p><strong>注意</strong>：<code>unreachable</code> 在非安全模式下是未定义行为。仅在确实能证明某条路径不可达时使用，否则应使用正常的错误处理。</p>
+<p><strong>注意</strong>：<code>unreachable</code> 和 <code>assert</code> 在非安全模式下是未定义行为。仅在确实能证明条件恒为真时使用，否则应使用正常的错误处理。</p>
 </blockquote>
 <h2 id="本章要点"><a class="header" href="#本章要点">本章要点</a></h2>
 <div class="table-wrapper">
@@ -923,7 +874,7 @@ pub fn main(_: std.process.Init) void {
 <tr><td><strong>switch</strong></td><td>穷尽性检查；支持范围匹配、多值匹配、枚举匹配、值捕获</td></tr>
 <tr><td><strong>defer</strong></td><td>作用域结束时执行（LIFO）；<code>errdefer</code> 仅错误时执行</td></tr>
 <tr><td><strong>块表达式</strong></td><td>带标签的作用域，通过 <code>break :label value</code> 返回值</td></tr>
-<tr><td><strong>unreachable</strong></td><td>标记不可达路径；安全模式下触发 panic，非安全模式下为未定义行为</td></tr>
+<tr><td><strong>unreachable</strong></td><td>向编译器声明“此条件恒为真“；辅助优化，安全模式下违反则 panic；<code>std.debug.assert</code> 是其一行封装</td></tr>
 </tbody>
 </table>
 </div>

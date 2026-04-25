@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d724f321.js";
+            window.path_to_searchindex_js = "../searchindex-ab6996a3.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-4c2eaf17.js"></script>
@@ -309,12 +309,7 @@ pub fn main() void {
 <p>在 Zig 0.16 中，有不止一种 <code>main</code> 写法。
 本教程后续示例会根据需要使用不同形式，现在只需要先认识它们。</p>
 <h3 id="最小写法"><a class="header" href="#最小写法">最小写法</a></h3>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn main() void {
-    std.debug.print("Hello, World!\n", .{});
-}
-</code></pre>
+<p>这就是前面“第一个 Zig 程序“中展示的写法。</p>
 <p>适合：</p>
 <ul>
 <li>最简单的示例</li>
@@ -375,28 +370,6 @@ pub fn main(_: std.process.Init) void {
 <li>是否返回 <code>!void</code>，取决于是否需要传播错误</li>
 </ul>
 </blockquote>
-<hr>
-<h2 id="一个更贴近-016-的输出示例"><a class="header" href="#一个更贴近-016-的输出示例">一个更贴近 0.16 的输出示例</a></h2>
-<p>后面接触 0.16 的 I/O 风格时，可能会看到类似下面的写法：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn main(init: std.process.Init) !void {
-    try std.Io.File.stdout().writeStreamingAll(init.io, "Hello, World!\n");
-}
-</code></pre>
-<p>这段代码的意义是：</p>
-<ul>
-<li>使用 <code>std.process.Init</code></li>
-<li>通过 <code>init.io</code> 访问 I/O 上下文</li>
-<li>明确写入标准输出</li>
-<li>使用 <code>try</code> 传播潜在错误</li>
-</ul>
-<p>不过请注意两点：</p>
-<ol>
-<li>这比最小版 <code>Hello, World!</code> 更贴近 0.16 的 I/O 思路</li>
-<li>它也更容易让初学者一开始就被细节绊住</li>
-</ol>
-<p>所以本章建议先用最小版本跑通，后续再逐步理解这个版本。</p>
 <hr>
 <h2 id="现在最值得记住的几个命令"><a class="header" href="#现在最值得记住的几个命令">现在最值得记住的几个命令</a></h2>
 <p>在学习早期，最常用的不是一大堆复杂命令，而是下面这几个：</p>

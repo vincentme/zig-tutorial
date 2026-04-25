@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d724f321.js";
+            window.path_to_searchindex_js = "../searchindex-ab6996a3.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-4c2eaf17.js"></script>
@@ -449,18 +449,7 @@ errdefer allocator.free(used);
 <li>分配占用标记数组</li>
 <li>把所有槽位初始化为空闲状态</li>
 </ol>
-<h3 id="为什么这里用-errdefer"><a class="header" href="#为什么这里用-errdefer">为什么这里用 <code>errdefer</code>？</a></h3>
-<p>因为初始化是一个典型的“分多步获取资源”的过程。</p>
-<ul>
-<li>第一步分配 <code>items</code></li>
-<li>第二步分配 <code>used</code></li>
-</ul>
-<p>如果第二步失败，而你没有清理第一步，那么就会泄漏 <code>items</code>。</p>
-<p>所以这里的 <code>errdefer</code> 表达的是：</p>
-<blockquote>
-<p><strong>如果初始化中途失败，已经成功获取的资源要立即回滚。</strong></p>
-</blockquote>
-<p>这也是 Zig 中很典型的资源管理模式。</p>
+<p>这里使用 <code>errdefer</code> 确保初始化中途失败时已分配的资源被回滚（<code>errdefer</code> 详见<a href="../part1-basics/chapter-error-handling.html">错误处理</a>）。</p>
 <hr>
 <h2 id="acquire借出对象时到底发生了什么"><a class="header" href="#acquire借出对象时到底发生了什么"><code>acquire</code>：借出对象时到底发生了什么？</a></h2>
 <p>实现如下：</p>
@@ -482,30 +471,7 @@ errdefer allocator.free(used);
 <li>将其标记为已使用</li>
 <li>返回该槽位的指针</li>
 </ol>
-<h3 id="这个接口为什么返回-t"><a class="header" href="#这个接口为什么返回-t">这个接口为什么返回 <code>?*T</code>？</a></h3>
-<p>因为获取对象可能失败。<br>失败的最直接原因就是：</p>
-<ul>
-<li>池已经满了</li>
-<li>没有任何空闲槽位</li>
-</ul>
-<p>所以这里返回可选指针是非常合理的：</p>
-<ul>
-<li><code>?*T</code> 表示“可能拿到对象，也可能拿不到”</li>
-<li>不强行 panic</li>
-<li>调用者必须显式处理“池满”情况</li>
-</ul>
-<h3 id="这个设计的优点"><a class="header" href="#这个设计的优点">这个设计的优点</a></h3>
-<ul>
-<li>接口语义清楚</li>
-<li>没有额外堆分配</li>
-<li>对调用者来说，拿到的就是可直接使用的对象地址</li>
-</ul>
-<h3 id="它的代价"><a class="header" href="#它的代价">它的代价</a></h3>
-<ul>
-<li>当前实现使用线性扫描</li>
-<li><code>acquire</code> 的时间复杂度是 <code>O(n)</code></li>
-</ul>
-<p>这对教学实现完全可以接受。<br>因为我们当前优先想讲清楚的是模型，而不是先上更复杂的空闲链表优化。</p>
+<p><code>acquire()</code> 返回 <code>?*T</code>：池满时返回 <code>null</code>，调用者必须显式处理。当前实现使用线性扫描，<code>acquire</code> 的时间复杂度为 <code>O(n)</code>。</p>
 <hr>
 <h2 id="release归还对象时真正困难的是什么"><a class="header" href="#release归还对象时真正困难的是什么"><code>release</code>：归还对象时真正困难的是什么？</a></h2>
 <p>实现如下：</p>

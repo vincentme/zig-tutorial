@@ -8,6 +8,8 @@
 - `std.testing`
 - `std.fs`
 - `std.process`
+- `std.ArrayList`：动态数组
+- `std.HashMap`：哈希表与键值存储
 - `std.heap`
 
 ---
@@ -809,6 +811,294 @@ pub fn main(init: std.process.Init) void {
 
 ---
 
+## `std.ArrayList`
+
+`std.ArrayList(T)` 是标准库提供的动态数组。它在运行时可以自动扩容，是处理"数量不确定的一组同类型元素"的首选结构。
+
+大多数语言里的"列表"或"数组"默认就是动态的（Python 的 `list`、JavaScript 的 `Array`）。但 Zig 中 `[N]T` 是固定大小的——动态数组需要通过 `std.ArrayList` 显式创建。
+
+在 Zig 0.16 中，`ArrayList` 采用**非托管（unmanaged）**设计：结构体内部不存储 allocator，而是由调用方在每个需要分配的方法上显式传入。这与前面各模块中 allocator 通过参数传递的模式一致。
+
+### 容量与长度
+
+动态数组有两个容易混淆的概念：
+
+- **长度**（`items.len`）：当前实际存储了多少个元素
+- **容量**（`capacity`）：当前已分配的空间能容纳多少个元素
+
+容量总是 ≥ 长度。当 `items.len == capacity` 时，再追加元素会触发重新分配——分配一块更大的内存，将已有元素复制过去，释放旧内存。这个过程代价较高，所以如果能预估元素数量，应该用 `initCapacity` 预先分配足够空间。
+
+### 创建与销毁
+
+```zig
+const std = @import("std");
+
+pub fn main(_: std.process.Init) !void {
+    const allocator = std.heap.page_allocator;
+
+    // 方式一：空列表，按需增长
+    var list: std.ArrayList(u8) = .empty;
+
+    // 方式二：预分配容量，避免后续重新分配（推荐）
+    var buf = try std.ArrayList(u8).initCapacity(allocator, 100);
+
+    // 使用完毕后释放内存
+    list.deinit(allocator);
+    buf.deinit(allocator);
+}
+```
+
+初始化方式对比：
+
+| 方式 | 写法 | 适用场景 |
+| ---- | ---- | -------- |
+| 空列表 | `var list: std.ArrayList(T) = .empty` | 不确定最终大小 |
+| 预分配 | `try std.ArrayList(T).initCapacity(gpa, n)` | 能预估元素数量 |
+
+`ArrayList` 的核心字段只有两个，都可以直接访问：
+
+| 字段 | 类型 | 含义 |
+| ---- | ---- | ---- |
+| `items` | `[]T` | 当前所有元素组成的切片 |
+| `capacity` | `usize` | 已分配空间能容纳的元素数 |
+
+`items` 就是普通切片——所有切片操作（索引、`for` 遍历、传给函数）都适用。
+
+### 追加元素
+
+```zig
+var list: std.ArrayList(u8) = .empty;
+defer list.deinit(allocator);
+
+try list.append(allocator, 'H');
+try list.append(allocator, 'e');
+try list.append(allocator, 'l');
+try list.append(allocator, 'l');
+try list.append(allocator, 'o');
+try list.appendSlice(allocator, " World");
+
+std.debug.print("{s}\n", .{list.items}); // Hello World
+std.debug.print("len={}, capacity={}\n", .{list.items.len, list.capacity});
+```
+
+- `append` 添加单个元素
+- `appendSlice` 添加一个切片的所有元素
+- 两者都可能触发重新分配，返回 `Allocator.Error!void`
+
+如果已经通过 `ensureTotalCapacity` 预留了足够空间，可以使用 `appendAssumeCapacity` 和 `appendSliceAssumeCapacity`——它们不会触发分配，也不返回 error，但如果容量不足会触发安全断言。
+
+### 删除元素
+
+```zig
+// pop：移除并返回最后一个元素，列表为空时返回 null
+const last = list.pop(); // ?T
+
+// orderedRemove：按下标移除，保持剩余元素顺序，O(n)
+// 返回被移除的值
+const removed = list.orderedRemove(3);
+
+// swapRemove：按下标移除，用末尾元素填补空位，O(1)
+// 不保持顺序，但更快
+const removed2 = list.swapRemove(0);
+```
+
+三种删除方式的对比：
+
+| 方法 | 复杂度 | 顺序 | 返回值 |
+| ---- | ------ | ---- | ------ |
+| `pop()` | O(1) | 只删末尾 | `?T` |
+| `orderedRemove(i)` | O(n) | 保持 | `T` |
+| `swapRemove(i)` | O(1) | 不保持 | `T` |
+
+这三种方法都不需要传入 allocator——它们只缩小列表，不涉及内存分配。
+
+### 插入与其他操作
+
+```zig
+// 在指定位置插入单个元素
+try list.insert(allocator, 0, 'X');
+
+// 在指定位置插入一个切片
+try list.insertSlice(allocator, 1, "YY");
+
+// 预分配更多空间（不改变长度）
+try list.ensureTotalCapacity(allocator, 200);
+
+// 清空但保留已分配的内存（后续追加时可复用）
+list.clearRetainingCapacity();
+
+// 清空并释放内存
+list.clearAndFree(allocator);
+
+// 将内容转移为调用方拥有的切片，列表变为空
+const owned = try list.toOwnedSlice(allocator);
+defer allocator.free(owned);
+```
+
+### 使用 `std.ArrayList` 时要建立的直觉
+
+1. 它是"数量不确定的同类型元素"的首选容器
+2. 能预估大小时用 `initCapacity`，可以避免重新分配的开销
+3. `items` 字段就是普通切片，所有切片操作都适用
+4. 0.16 中 `ArrayList` 是非托管的——每个可能触发分配的方法都需要传入 allocator
+5. `swapRemove` 比 `orderedRemove` 快，但会打乱元素顺序
+6. 如果需要一个由调用方管理生命周期的缓冲区来逐步构建字节序列，`ArrayList(u8)` 是常用选择
+
+---
+
+## `std.HashMap`
+
+`std.HashMap` 是基于哈希表的键值存储结构。给定一个 key，可以快速查找、插入或删除对应的 value。Zig 标准库提供了两个系列的实现：
+
+| 类型 | 特点 | 适用场景 |
+| ---- | ---- | -------- |
+| `AutoHashMap(K, V)` | 开放寻址，通用哈希 | 整数、枚举、指针等基础类型作为 key |
+| `StringHashMap(V)` | 同上，key 为 `[]const u8` | 字符串作为 key |
+| `array_hash_map.Auto(K, V)` | 数组存储，保留插入顺序 | 需要有序遍历 |
+| `array_hash_map.String(V)` | 同上，key 为 `[]const u8` | 字符串 key + 有序遍历 |
+
+`AutoHashMap` 和 `StringHashMap` 是**托管的**——结构体内部存储 allocator，调用方法时不需要额外传入。`array_hash_map` 系列是**非托管的**——每个可能分配的方法都需要传入 allocator。
+
+### 创建与基本操作
+
+```zig
+const std = @import("std");
+
+pub fn main(_: std.process.Init) !void {
+    const allocator = std.heap.page_allocator;
+
+    var scores = std.AutoHashMap(u32, u16).init(allocator);
+    defer scores.deinit();
+
+    // 插入
+    try scores.put(1001, 89);
+    try scores.put(1002, 55);
+    try scores.put(1003, 41);
+
+    // 查询
+    std.debug.print("count={}\n", .{scores.count()});
+    std.debug.print("score of 1002={}\n", .{scores.get(1002).?});
+    std.debug.print("has 9999={}\n", .{scores.contains(9999)});
+
+    // 删除
+    if (scores.remove(1003)) {
+        std.debug.print("removed 1003\n", .{});
+    }
+    std.debug.print("count after removal={}\n", .{scores.count()});
+}
+```
+
+常用方法一览：
+
+| 方法 | 返回值 | 说明 |
+| ---- | ------ | ---- |
+| `put(key, value)` | `!void` | 插入或覆盖已有值 |
+| `get(key)` | `?V` | 按键查值，不存在返回 `null` |
+| `getPtr(key)` | `?*V` | 返回值的指针（可就地修改） |
+| `contains(key)` | `bool` | 是否存在该 key |
+| `remove(key)` | `bool` | 删除，返回是否成功 |
+| `fetchRemove(key)` | `?KV` | 删除并返回被删除的键值对 |
+| `count()` | `u32` | 当前元素数量 |
+| `getOrPut(key)` | `!GetOrPutResult` | 存在则返回指针，不存在则插入空位 |
+
+`get` 返回 `?V`——使用前必须处理"不存在"的情况。这是 Zig 显式错误处理的体现：你不可能意外地访问一个不存在的值。
+
+### 遍历
+
+```zig
+var iter = scores.iterator();
+while (iter.next()) |entry| {
+    std.debug.print("key={}, value={}\n", .{entry.key_ptr.*, entry.value_ptr.*});
+}
+```
+
+迭代器返回的 `Entry` 包含 `key_ptr` 和 `value_ptr`（都是指针）。通过解引用可以读取值，也可以在遍历中修改值：
+
+```zig
+var iter = scores.iterator();
+while (iter.next()) |entry| {
+    if (entry.key_ptr.* == 1002) {
+        entry.value_ptr.* = 99; // 就地修改
+    }
+}
+```
+
+也可以只遍历键或值：
+
+```zig
+var ki = scores.keyIterator();
+while (ki.next()) |key| {
+    std.debug.print("key={}\n", .{key.*});
+}
+```
+
+> **注意**：`HashMap` 的迭代器在任何修改操作（`put`、`remove` 等）后会失效。如果需要边遍历边修改，应该先把要操作的键收集到一个列表中，遍历结束后再统一修改。
+
+### 字符串作为 key
+
+当 key 是字符串时，使用 `StringHashMap`：
+
+```zig
+var ages = std.StringHashMap(u8).init(allocator);
+defer ages.deinit();
+
+try ages.put("Alice", 25);
+try ages.put("Bob", 30);
+
+std.debug.print("Alice's age={}\n", .{ages.get("Alice").?});
+```
+
+`StringHashMap` 按字符串**内容**进行哈希和比较，不是按指针地址。key 的内存由调用方管理——`StringHashMap` 不会复制或释放 key 字符串本身。这意味着如果 key 指向的内存在 map 使用期间被释放，会导致未定义行为。
+
+### 有序哈希表：`array_hash_map`
+
+`AutoHashMap` 不保证遍历顺序——每次插入或删除都可能改变内部布局。如果需要保持插入顺序或频繁遍历，应该使用 `array_hash_map`：
+
+```zig
+const ArrayMap = std.array_hash_map.Auto(u32, []const u8);
+
+var map: ArrayMap = .empty;
+defer map.deinit(allocator);
+
+try map.put(allocator, 3, "three");
+try map.put(allocator, 1, "one");
+try map.put(allocator, 2, "two");
+
+// 遍历顺序就是插入顺序：3, 1, 2
+for (map.keys(), map.values()) |key, val| {
+    std.debug.print("{} = {s}\n", .{key, val});
+}
+
+// 删除方式有两种：
+_ = map.swapRemove(1);    // O(1)，不保持顺序
+// 或
+_ = map.orderedRemove(3); // O(n)，保持剩余元素的顺序
+```
+
+`array_hash_map` 与 `AutoHashMap` 的关键区别：
+
+| 特性 | `AutoHashMap` | `array_hash_map.Auto` |
+| ---- | ------------- | --------------------- |
+| allocator 传递 | 托管（内部存储） | 非托管（方法参数传入） |
+| 遍历顺序 | 不确定 | 插入顺序 |
+| 直接访问键/值 | 通过迭代器 | `.keys()` / `.values()` 返回切片 |
+| 删除方法 | `remove(key)` | `swapRemove(key)` / `orderedRemove(key)` |
+
+`.keys()` 和 `.values()` 直接返回切片，这让 `array_hash_map` 在需要序列化、调试输出或批量处理时更方便。
+
+### 使用 `std.HashMap` 时要建立的直觉
+
+1. 需要按键快速查找值时，第一个想到的应该是 `AutoHashMap`
+2. key 是字符串时用 `StringHashMap`——它按内容比较，不是按指针
+3. 需要保持插入顺序或频繁遍历时用 `array_hash_map`
+4. `AutoHashMap` / `StringHashMap` 是托管的；`array_hash_map` 是非托管的——注意方法签名差异
+5. `get` 返回 `?V`——使用前必须处理"不存在"的情况
+6. 迭代 `HashMap` 期间不要修改它，否则迭代器会失效
+
+> **相关阅读**：关于 allocator 和内存管理策略的深入讨论，见[内存管理模型](chapter-memory-management.md)。
+
+---
+
 ## `std.heap`
 
 `std.heap` 是理解 allocator 的第一入口。
@@ -1017,6 +1307,8 @@ pub fn main(init: std.process.Init) !void {
 - `std.testing`：固定行为、覆盖边界和错误路径
 - `std.fs`：处理文件和目录
 - `std.process`：处理参数、环境变量和进程上下文
+- `std.ArrayList`：动态数组——数量不确定的同类型元素的首选容器
+- `std.HashMap`：哈希表——按键快速查找值，注意选择合适的变体
 - `std.heap`：显式选择 allocator 和资源组织方式
 
 如果把真实程序看成一条主线，那么很常见的组合就是：
@@ -1024,9 +1316,10 @@ pub fn main(init: std.process.Init) !void {
 1. `std.process` 从程序入口拿到上下文
 2. `std.fs` 读取外部数据
 3. `std.mem` 解析和整理输入
-4. `std.fmt` 组织输出文本
-5. `std.heap` 提供动态内存支持
-6. `std.debug` 和 `std.testing` 分别负责开发期观察与验证
+4. `std.ArrayList` 和 `std.HashMap` 在处理过程中存储和组织数据
+5. `std.fmt` 组织输出文本
+6. `std.heap` 提供动态内存支持
+7. `std.debug` 和 `std.testing` 分别负责开发期观察与验证
 
 接下来继续学习时，可以按下面的方向深入：
 

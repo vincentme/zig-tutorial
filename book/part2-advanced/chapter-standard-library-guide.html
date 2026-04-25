@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d724f321.js";
+            window.path_to_searchindex_js = "../searchindex-ab6996a3.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-4c2eaf17.js"></script>
@@ -188,48 +188,21 @@
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th>模块</th><th>主要职责</th><th>掌握优先级</th></tr>
+<tr><th>模块</th><th>一句话说明</th><th>掌握优先级</th></tr>
 </thead>
 <tbody>
-<tr><td><code>std.mem</code></td><td>字节与切片操作、比较、搜索、拷贝、分配器工具</td><td>★★★ 必须优先</td></tr>
-<tr><td><code>std.fmt</code></td><td>格式化输出、字符串拼装、解析辅助</td><td>★★★ 必须优先</td></tr>
-<tr><td><code>std.debug</code></td><td>调试打印、断言、调试辅助</td><td>★★★ 必须优先</td></tr>
-<tr><td><code>std.testing</code></td><td>单元测试断言、测试分配器</td><td>★★★ 必须优先</td></tr>
-<tr><td><code>std.fs</code></td><td>文件与目录操作、路径拼装、遍历、元信息</td><td>★★☆ 高频常用</td></tr>
-<tr><td><code>std.process</code></td><td>命令行参数、环境变量、子进程</td><td>★★☆ 高频常用</td></tr>
-<tr><td><code>std.heap</code></td><td>分配器实现（arena、page、debug 等）</td><td>★★☆ 高频常用</td></tr>
+<tr><td><code>std.mem</code></td><td>切片比较（<code>eql</code>）、搜索（<code>indexOf</code>）、裁剪（<code>trim</code>）、拷贝（<code>copyForwards</code>）等字节级操作的核心入口</td><td>★★★ 必须优先</td></tr>
+<tr><td><code>std.fmt</code></td><td><code>allocPrint</code> / <code>bufPrint</code> / 格式化字符串拼装，与 <code>std.debug.print</code> 共享格式语法</td><td>★★★ 必须优先</td></tr>
+<tr><td><code>std.debug</code></td><td><code>print</code> 输出调试信息、<code>assert</code> 断言——学习和排错阶段最常用的入口</td><td>★★★ 必须优先</td></tr>
+<tr><td><code>std.testing</code></td><td><code>expect</code> / <code>expectEqual</code> / <code>expectError</code> 等测试断言，以及 <code>testing.allocator</code>（带泄漏检测的测试分配器）</td><td>★★★ 必须优先</td></tr>
+<tr><td><code>std.fs</code></td><td>打开 / 创建文件、遍历目录、读取元信息、路径拼装——CLI 工具和配置加载的基础</td><td>★★☆ 高频常用</td></tr>
+<tr><td><code>std.process</code></td><td>获取命令行参数与环境变量、启动子进程、访问程序入口上下文</td><td>★★☆ 高频常用</td></tr>
+<tr><td><code>std.heap</code></td><td><code>page_allocator</code>、<code>ArenaAllocator</code>、<code>FixedBufferAllocator</code>、调试分配器等——理解分配器显式传递模式的关键</td><td>★★☆ 高频常用</td></tr>
 <tr><td><code>std.math</code></td><td>数值与数学函数、边界辅助</td><td>★☆☆ 按需查阅</td></tr>
 <tr><td><code>std.json</code></td><td>JSON 解析与序列化</td><td>★☆☆ 按需查阅</td></tr>
 <tr><td><code>std.crypto</code></td><td>哈希、签名、随机数等密码学能力</td><td>★☆☆ 按需查阅</td></tr>
 <tr><td><code>std.Build</code></td><td>构建脚本 API</td><td>工程阶段重点</td></tr>
 <tr><td><code>std.Io</code> / 网络</td><td>I/O 抽象、流、网络</td><td>版本敏感区</td></tr>
-</tbody>
-</table>
-</div>
-<h2 id="第一批基础四模块"><a class="header" href="#第一批基础四模块">第一批：基础四模块</a></h2>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>模块</th><th>一句话说明</th></tr>
-</thead>
-<tbody>
-<tr><td><code>std.mem</code></td><td>切片比较（<code>eql</code>）、搜索（<code>indexOf</code>）、裁剪（<code>trim</code>）、拷贝（<code>copyForwards</code>）等字节级操作的核心入口</td></tr>
-<tr><td><code>std.fmt</code></td><td><code>allocPrint</code> / <code>bufPrint</code> / 格式化字符串拼装，与 <code>std.debug.print</code> 共享格式语法</td></tr>
-<tr><td><code>std.debug</code></td><td><code>print</code> 输出调试信息、<code>assert</code> 断言——学习和排错阶段最常用的入口</td></tr>
-<tr><td><code>std.testing</code></td><td><code>expect</code> / <code>expectEqual</code> / <code>expectError</code> 等测试断言，以及 <code>testing.allocator</code>（带泄漏检测的测试分配器）</td></tr>
-</tbody>
-</table>
-</div>
-<h2 id="第二批工程化模块"><a class="header" href="#第二批工程化模块">第二批：工程化模块</a></h2>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>模块</th><th>一句话说明</th></tr>
-</thead>
-<tbody>
-<tr><td><code>std.fs</code></td><td>打开 / 创建文件、遍历目录、读取元信息、路径拼装——CLI 工具和配置加载的基础</td></tr>
-<tr><td><code>std.process</code></td><td>获取命令行参数与环境变量、启动子进程、访问程序入口上下文</td></tr>
-<tr><td><code>std.heap</code></td><td><code>page_allocator</code>、<code>ArenaAllocator</code>、<code>FixedBufferAllocator</code>、调试分配器等——理解分配器显式传递模式的关键</td></tr>
 </tbody>
 </table>
 </div>

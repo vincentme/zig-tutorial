@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d724f321.js";
+            window.path_to_searchindex_js = "../searchindex-ab6996a3.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-4c2eaf17.js"></script>
@@ -235,20 +235,7 @@
 </ol>
 <hr>
 <h2 id="zig-与其他语言在内存管理上的差异"><a class="header" href="#zig-与其他语言在内存管理上的差异">Zig 与其他语言在内存管理上的差异</a></h2>
-<p>可以把几种常见路线做一个粗略对比：</p>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>语言/模型</th><th>主要机制</th><th>优点</th><th>代价</th></tr>
-</thead>
-<tbody>
-<tr><td>GC 语言</td><td>垃圾回收</td><td>使用方便，心智负担小</td><td>回收时机与性能开销较难精确控制</td></tr>
-<tr><td>Rust</td><td>所有权 + 借用检查</td><td>编译期约束强，很多错误能提前发现</td><td>学习曲线较陡，某些场景表达较绕</td></tr>
-<tr><td>Zig</td><td>显式分配器 + 手动管理 + 调试期检查</td><td>资源边界清楚，控制力强，接口灵活</td><td>需要开发者主动维护资源纪律</td></tr>
-</tbody>
-</table>
-</div>
-<p>这也是为什么 Zig 的教程里，“内存管理”不能只讲语法。<br>因为它本质上是<strong>设计问题</strong>，不是“几个 API 的记忆题”。</p>
+<p>与依赖 GC 的语言不同，Zig 没有自动回收。与 Rust 不同，Zig 没有借用检查器。Zig 依赖显式传递分配器和开发者自律来管理内存。这也意味着“内存管理“本质上是<strong>设计问题</strong>，不是“几个 API 的记忆题“。</p>
 <hr>
 <h2 id="所有权借用与生命周期"><a class="header" href="#所有权借用与生命周期">所有权、借用与生命周期</a></h2>
 <p>虽然 Zig 没有 Rust 式所有权系统，但依然需要主动建立这套思维。</p>
@@ -394,20 +381,8 @@ test "heap allocation requires explicit cleanup" {
 <li>可以更容易地构造失败路径</li>
 </ul>
 <h3 id="allocator-的接口结构ptr--vtable"><a class="header" href="#allocator-的接口结构ptr--vtable"><code>Allocator</code> 的接口结构：<code>ptr</code> + <code>vtable</code></a></h3>
-<p>理解 <code>std.mem.Allocator</code> 的内部结构有助于回答“allocator 为什么可以随意替换“。</p>
-<p>Zig 标准库中，<code>Allocator</code> 本身是一个<strong>胖指针</strong>（fat pointer），只包含两个字段：</p>
-<pre><code class="language-zig">// 来自 std/mem/Allocator.zig
-ptr: *anyopaque,       // 指向具体分配器实例的类型擦除指针
-vtable: *const VTable, // 指向方法表的指针
-</code></pre>
-<p>其中 <code>VTable</code> 定义了四个函数指针：<code>alloc</code>、<code>resize</code>、<code>remap</code>、<code>free</code>。</p>
-<p>这意味着：</p>
-<ul>
-<li>任何实现了这四个方法的类型，都可以通过 <code>.allocator()</code> 方法生成一个 <code>Allocator</code> 值</li>
-<li>调用方只和 <code>Allocator</code> 这个统一接口打交道，不关心背后是 <code>DebugAllocator</code>、<code>ArenaAllocator</code> 还是 <code>page_allocator</code></li>
-<li>这本质上是运行时多态：通过 <code>vtable</code> 做方法分派，通过 <code>ptr</code> 传递实例状态</li>
-</ul>
-<p>正因如此，函数签名里写 <code>allocator: std.mem.Allocator</code> 就够了——调用者可以传入任何分配器实现，被调用者不需要知道细节。这就是 Zig 中“分配器是接口“的实际含义。</p>
+<p><code>std.mem.Allocator</code> 使用显式接口模式：内部持有一个类型擦除指针 <code>ptr</code> 和一张函数表 <code>vtable</code>，通过运行时分发实现多态。任何实现了所需方法的类型都可以生成 <code>Allocator</code> 值，调用方只和统一接口打交道。</p>
+<p>Allocator 接口的内部结构（<code>ptr</code> + <code>vtable</code> 模式）在<a href="../part2-advanced/chapter-interfaces.html">接口与设计模式</a>章节有完整解析。</p>
 <hr>
 <h2 id="常见分配器它们各自解决什么问题"><a class="header" href="#常见分配器它们各自解决什么问题">常见分配器：它们各自解决什么问题</a></h2>
 <p>本节的重点是建立“这些分配器分别适合什么场景”。</p>

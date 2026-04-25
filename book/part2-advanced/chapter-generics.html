@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d724f321.js";
+            window.path_to_searchindex_js = "../searchindex-ab6996a3.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-4c2eaf17.js"></script>
@@ -184,13 +184,9 @@
                         <h1 id="泛型编程"><a class="header" href="#泛型编程">泛型编程</a></h1>
 <blockquote>
 <p><strong>进阶</strong>：本章讨论 Zig 中泛型的<strong>设计模式</strong>——何时使用泛型、如何设计类型参数、怎样表达约束。
-关于 <code>comptime</code> 的底层机制（语法、内建函数、能力边界），参见<a href="chapter-comptime.html">编译期计算与元编程</a>。</p>
-<p><strong>进阶</strong>：</p>
-<ul>
-<li>阅读时抓住心智模型，不必急着记所有技巧</li>
-<li>重点理解“类型也是编译期值““泛型是类型工厂”“约束要尽量写清楚”</li>
-<li>遇到复杂的 <code>@typeInfo</code> 示例时，优先看懂它在解决什么问题，而不是逐字背代码</li>
-</ul>
+关于 <code>comptime</code> 的底层机制（语法、内建函数、能力边界），参见<a href="chapter-comptime.html">编译期计算与元编程</a>。
+阅读时抓住心智模型，不必急着记所有技巧；重点理解“类型也是编译期值““泛型是类型工厂”“约束要尽量写清楚”；
+遇到复杂的 <code>@typeInfo</code> 示例时，优先看懂它在解决什么问题，而不是逐字背代码。</p>
 <p><strong>相关阅读</strong>：</p>
 <ul>
 <li>建议先读完<a href="chapter-comptime.html">编译期计算与元编程</a>中的 <code>comptime</code> 心智模型，再看本章会更顺</li>
@@ -744,82 +740,10 @@ test "generic error union return" {
 <li>调用方用 <code>try</code> 或 <code>catch</code> 处理即可，不需要关心泛型细节</li>
 </ul>
 <hr>
-<h2 id="为什么-zig-里泛型和接口经常一起讨论"><a class="header" href="#为什么-zig-里泛型和接口经常一起讨论">为什么 Zig 里“泛型“和“接口“经常一起讨论？</a></h2>
-<p>因为它们经常解决的是相邻但不同的问题。</p>
-<h3 id="泛型更适合什么场景"><a class="header" href="#泛型更适合什么场景">泛型更适合什么场景？</a></h3>
-<p>泛型更适合：</p>
-<ul>
-<li>类型在编译期已知</li>
-<li>希望保留静态类型信息</li>
-<li>希望编译器做专门化优化</li>
-<li>不需要在运行时切换不同实现</li>
-</ul>
-<h3 id="运行时接口更适合什么场景"><a class="header" href="#运行时接口更适合什么场景">运行时接口更适合什么场景？</a></h3>
-<p>运行时接口更适合：</p>
-<ul>
-<li>具体实现要到运行时才知道</li>
-<li>需要在同一套调用逻辑下切换多种后端</li>
-<li>需要做类型擦除或动态分发</li>
-</ul>
-<p>所以，一个很实用的判断问题是：</p>
-<blockquote>
-<p><strong>“多态“需求，是发生在编译期，还是运行时？</strong></p>
-</blockquote>
-<p>如果发生在编译期，泛型通常是更直接的答案。
-如果发生在运行时，泛型往往就不够了。</p>
-<hr>
-<h2 id="什么时候泛型会开始变得过度复杂"><a class="header" href="#什么时候泛型会开始变得过度复杂">什么时候泛型会开始变得“过度复杂“？</a></h2>
-<p>这是非常重要的工程判断题。</p>
-<p>当开始大量写下面这些东西时，就该停下来想一想：</p>
-<ul>
-<li>很多层 <code>@typeInfo</code></li>
-<li>很多分支式 <code>@compileError</code></li>
-<li>很复杂的类型工厂嵌套</li>
-<li>大量“自动生成方法“</li>
-<li>看起来很万能，但读起来很难解释的通用代码</li>
-</ul>
-<p>这并不意味着这些写法一定不好。
-而是说：</p>
-<blockquote>
-<p><strong>泛型真正的价值，在于让代码更清晰、更安全、更可复用。</strong>
-如果它让理解成本显著上升，就应该重新评估设计。</p>
-</blockquote>
-<h3 id="值得使用泛型的时候"><a class="header" href="#值得使用泛型的时候">值得使用泛型的时候</a></h3>
-<ul>
-<li>重复逻辑确实存在</li>
-<li>类型参数的边界清楚</li>
-<li>调用方式自然</li>
-<li>抽象后代码更短、更一致</li>
-</ul>
-<h3 id="暂时不值得使用泛型的时候"><a class="header" href="#暂时不值得使用泛型的时候">暂时不值得使用泛型的时候</a></h3>
-<ul>
-<li>只是为了展示技巧</li>
-<li>实际只会支持一两种类型</li>
-<li>约束很难解释</li>
-<li>引入后比直接写两份代码更难维护</li>
-</ul>
-<hr>
-<h2 id="zig-里的零成本抽象应该怎么理解"><a class="header" href="#zig-里的零成本抽象应该怎么理解">Zig 里的“零成本抽象“应该怎么理解？</a></h2>
-<p>很多人听到泛型时都会联想到“零成本抽象“。
-这个说法在 Zig 里通常成立，但不要把它理解得过于机械。</p>
-<p>更准确地说，它意味着：</p>
-<ul>
-<li>可以用编译期抽象组织代码</li>
-<li>同时仍然得到针对具体类型的静态实现</li>
-<li>不一定需要为“通用性“付出动态分发成本</li>
-</ul>
-<p>但这不代表：</p>
-<ul>
-<li>编译时间没有成本</li>
-<li>代码体积没有成本</li>
-<li>抽象越多越好</li>
-</ul>
-<p>所以更稳妥的理解是：</p>
-<blockquote>
-<p><strong>Zig 允许把很多抽象提前到编译期完成，从而避免不必要的运行时负担。</strong></p>
-</blockquote>
-<p>这是一种强大的能力，
-但依然需要配合“边界清楚“和“实现克制“。</p>
+<h2 id="泛型与运行时接口何时用哪个"><a class="header" href="#泛型与运行时接口何时用哪个">泛型与运行时接口：何时用哪个？</a></h2>
+<p>泛型适合类型在编译期已知的场景：保留静态类型信息、编译器可做专门化优化、不需要运行时切换实现。运行时接口（VTable）适合具体实现要到运行时才确定的场景：需要动态分发、类型擦除或跨模块边界抽象。一个实用的判断标准是：<strong>多态需求发生在编译期还是运行时？</strong></p>
+<p>泛型的价值在于让代码更清晰、更安全、更可复用。如果泛型让理解成本显著上升——大量 <code>@typeInfo</code> 嵌套、复杂的类型工厂、难以解释的通用代码——就应该重新评估设计。Zig 中的“零成本抽象“意味着可以把很多抽象提前到编译期完成，避免不必要的运行时负担，但这不代表编译时间或代码体积没有成本，依然需要配合“边界清楚“和“实现克制“。</p>
+<p>泛型与运行时接口的完整对比和选型建议，见<a href="../part2-advanced/chapter-interfaces.html">接口与设计模式</a>章节。</p>
 <hr>
 <h2 id="测试泛型代码"><a class="header" href="#测试泛型代码">测试泛型代码</a></h2>
 <p>泛型代码的一个常见问题是：只用一种类型测试，就以为所有类型都能正常工作。好的做法是用多种类型分别实例化并测试：</p>

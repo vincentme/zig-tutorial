@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d724f321.js";
+            window.path_to_searchindex_js = "../searchindex-ab6996a3.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-4c2eaf17.js"></script>
@@ -529,25 +529,7 @@ pub fn main(_: std.process.Init) !void {
 <li>本章讨论的数据竞争、竞态条件等问题，在 <code>std.Io</code> 的异步上下文中同样存在</li>
 <li>本章的“常见坑“（锁持有时间过长、资源生命周期等）同样适用于使用 <code>std.Io</code> 的代码</li>
 </ul>
-<h3 id="两套同步原语怎么选"><a class="header" href="#两套同步原语怎么选">两套同步原语怎么选？</a></h3>
-<p><code>std.Io</code> 和 <code>std.Thread</code> 各自提供了同步原语：</p>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th><code>std.Thread</code> 原语</th><th><code>std.Io</code> 原语</th><th>适用场景</th></tr>
-</thead>
-<tbody>
-<tr><td><code>Mutex</code></td><td><code>Io.RwLock</code></td><td>传统线程代码 / <code>Io</code> 异步上下文</td></tr>
-<tr><td><code>Condition</code></td><td><code>Io.Semaphore</code></td><td>传统线程代码 / <code>Io</code> 异步上下文</td></tr>
-<tr><td>原子操作</td><td><code>Io.futexWait</code> / <code>Io.futexWake</code></td><td>简单标志位 / 与 <code>Io</code> 任务管理集成</td></tr>
-</tbody>
-</table>
-</div>
-<p>选择原则很简单：</p>
-<ul>
-<li><strong>代码全面使用 <code>std.Io</code></strong>（异步任务、<code>io.async</code>、<code>Future</code> 等）→ 优先用 <code>Io</code> 的同步原语，因为它们与 <code>Io</code> 的任务调度集成，在不同 <code>Io</code> 后端下行为一致</li>
-<li><strong>传统多线程程序</strong>（<code>std.Thread.spawn</code>、<code>join</code>、<code>Mutex</code>）→ 用 <code>std.Thread</code> 的原语，它更简单直接</li>
-</ul>
+<p>关于 <code>std.Io</code> 如何实现异步和并发操作，见<a href="chapter-io.html">std.Io 接口详解</a>章节。</p>
 <blockquote>
 <p><strong>注意</strong>：<code>std.Io</code> 的异步任务应避免使用 <code>threadlocal</code>。不同 <code>Io</code> 实现可能使用不同的并发单元，<code>threadlocal</code> 代码在未来切换到非线程实现时可能行为异常。</p>
 </blockquote>

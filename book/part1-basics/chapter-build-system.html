@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d724f321.js";
+            window.path_to_searchindex_js = "../searchindex-ab6996a3.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-4c2eaf17.js"></script>
@@ -185,18 +185,13 @@
 <blockquote>
 <p><strong>章节定位</strong>：本章位于基础部分，主题是从“直接操作单个源文件“过渡到“组织一个项目的构建流程“。交叉编译、依赖管理、复杂构建配置等主题放在高级部分的<a href="../part2-advanced/chapter-package-management.html">构建系统与包管理</a>章节展开。</p>
 </blockquote>
-<p>前面的很多示例都直接对单个文件执行命令：</p>
-<pre><code class="language-bash">zig run hello.zig
-zig test math.zig
-</code></pre>
-<p>这种方式适合语法练习、最小实验和临时验证。项目开发则通常需要统一处理程序入口、测试方式、构建参数、可用步骤以及默认输出流程。此时面对的已经不只是“编译某个文件“，而是一个项目级的构建入口，用来组织构建、运行、测试和参数传递。</p>
+<p>前面的章节大量使用 <code>zig run</code>、<code>zig test</code> 等单文件命令。这些命令适合语法练习和临时验证，但项目开发通常需要统一的构建入口来组织工作流。</p>
 <h2 id="从单文件命令到项目构建"><a class="header" href="#从单文件命令到项目构建">从单文件命令到项目构建</a></h2>
-<p>单文件命令和项目构建面向的是不同层级的问题。</p>
 <p>单文件命令直接作用于当前文件：</p>
 <pre><code class="language-bash">zig run hello.zig
 zig test parse.zig
 </code></pre>
-<p>项目构建则围绕整个项目组织工作流。常见命令通常是：</p>
+<p>项目构建则围绕整个项目组织工作流：</p>
 <pre><code class="language-bash">zig build
 zig build run
 zig build test
@@ -206,7 +201,7 @@ zig build test
 <li><code>zig run hello.zig</code>：直接操作一个文件</li>
 <li><code>zig build run</code>：执行项目定义好的 <code>run</code> 步骤</li>
 </ul>
-<p><code>zig build</code> 的作用不是替代手写的编译或运行命令，而是在项目层面组织工作流。</p>
+<p><code>zig build</code> 的作用不是替代手写的编译或运行命令，而是在项目层面组织工作流。当命令行变得冗长、需要构建多个目标、需要暴露配置选项、或者构建流程因平台不同而变化时，<code>zig build</code> 就变得很有价值。</p>
 <h2 id="zig-init-生成的最小项目"><a class="header" href="#zig-init-生成的最小项目"><code>zig init</code> 生成的最小项目</a></h2>
 <p>在一个空目录中执行下面的命令：</p>
 <pre><code class="language-bash">mkdir my-project
@@ -278,14 +273,37 @@ const optimize = b.standardOptimizeOption(.{});
 </code></pre>
 <p>这两行给项目接入了标准构建参数：</p>
 <ul>
-<li><code>target</code>：目标平台</li>
-<li><code>optimize</code>：优化级别</li>
-</ul>
-<p>因此可以这样调用项目：</p>
+<li><code>target</code>：目标平台，即产物面向的运行环境。当前在 macOS 上开发但需要生成 Windows 或 Linux 产物时，就需要指定：
 <pre><code class="language-bash">zig build -Dtarget=x86_64-windows
-zig build -Doptimize=ReleaseFast
 </code></pre>
-<p>它们构成了项目的标准参数入口。</p>
+</li>
+<li><code>optimize</code>：优化级别，即这次构建更偏向调试还是发布：
+<pre><code class="language-bash">zig build -Doptimize=ReleaseFast
+</code></pre>
+</li>
+</ul>
+<p>Zig 提供四种优化模式，各有侧重：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>模式</th><th>特点</th><th>典型场景</th></tr>
+</thead>
+<tbody>
+<tr><td><code>Debug</code></td><td>包含完整调试信息，启用所有安全检查，不优化性能</td><td>开发调试阶段（默认）</td></tr>
+<tr><td><code>ReleaseSafe</code></td><td>启用优化，同时保留运行时安全检查</td><td>对安全性要求高的发布（服务端、加密、金融）</td></tr>
+<tr><td><code>ReleaseFast</code></td><td>最大性能优化，移除安全检查</td><td>对性能要求极致的场景（游戏、高频计算）</td></tr>
+<tr><td><code>ReleaseSmall</code></td><td>优化二进制体积</td><td>嵌入式、资源受限环境</td></tr>
+</tbody>
+</table>
+</div>
+<p>完整优化行为差异请参考 Zig 官方文档。</p>
+<p>如果不传 <code>-Dtarget</code> 和 <code>-Doptimize</code>，它们会使用合理的默认值：</p>
+<ul>
+<li><code>target</code> 默认为当前主机的原生平台（native target）</li>
+<li><code>optimize</code> 默认为 <code>Debug</code> 模式</li>
+</ul>
+<p>这两个默认值恰好是本地开发时最常用的配置。Zig 的“显式“原则在这里体现为：<code>build.zig</code> 的作者<strong>显式调用</strong>了 <code>standardTargetOptions</code> 和 <code>standardOptimizeOption</code>，并<strong>显式将结果传递</strong>给 <code>addExecutable</code> 的 <code>.target</code> 和 <code>.optimize</code> 字段。命令行参数没有传入时使用默认值，这属于“有合理默认值的显式配置“，而不是“隐式行为“——运行 <code>zig build --help</code> 可以看到这些参数及其说明。</p>
+<p>另外需要注意，<code>target</code> 和 <code>optimize</code> 传入 <code>addExecutable</code> 后控制的是<strong>编译器行为</strong>（生成什么平台的代码、启用哪些优化）。如果你的源代码需要读取这些信息（比如根据目标平台选择不同的代码路径），那是另一个层面的问题，需要通过后面讲到的 <code>addOptions</code> 机制把配置从构建脚本显式传入程序。</p>
 <h3 id="addexecutable"><a class="header" href="#addexecutable"><code>addExecutable</code></a></h3>
 <pre><code class="language-zig">const exe = b.addExecutable(.{
     .name = "my-app",
@@ -327,51 +345,34 @@ run_step.dependOn(&amp;run_cmd.step);
 <pre><code class="language-bash">zig build run
 </code></pre>
 <p><code>zig build</code> 能执行哪些步骤，不是固定不变的，而是由当前项目的 <code>build.zig</code> 决定的。</p>
+<h3 id="构建图初步概念"><a class="header" href="#构建图初步概念">构建图初步概念</a></h3>
+<p>Zig 的构建系统基于有向无环图（DAG）。<code>build.zig</code> 中定义的每一个编译目标、运行命令、安装动作都是一个“步骤“（Step），步骤之间通过依赖边连接。构建系统根据依赖关系确定执行顺序，没有依赖关系的步骤可以并发执行。</p>
+<p><code>install</code> 步骤是默认的主步骤——直接运行 <code>zig build</code> 时，构建系统会执行所有挂载到 <code>install</code> 下的步骤。<code>installArtifact</code> 就是把一个编译目标的输出挂载到 <code>install</code> 步骤上。</p>
+<p>构建产物的输出涉及两个目录：</p>
+<ul>
+<li><code>zig-out/</code>：安装前缀目录，存放最终产物。用户可以通过 <code>-p</code> 选项自定义路径。</li>
+<li><code>.zig-cache/</code>：构建缓存目录，存放中间产物和增量编译所需的缓存信息，用于加速后续构建。它可以安全删除（下次构建会重新生成），通常不应纳入版本控制。</li>
+</ul>
+<p>构建脚本应该通过构建系统提供的 API 来引用路径，而不是硬编码输出目录。硬编码路径会破坏缓存机制、并发安全性和构建图的可组合性。</p>
 <h2 id="一个最小可运行项目的闭环"><a class="header" href="#一个最小可运行项目的闭环">一个最小可运行项目的闭环</a></h2>
-<p>把前面的内容串起来，一个最小项目的基本工作流就是下面这几个命令。</p>
-<h3 id="构建项目"><a class="header" href="#构建项目">构建项目</a></h3>
-<pre><code class="language-bash">zig build
-</code></pre>
-<p>这会执行项目默认构建流程。对上面的例子来说，核心就是把定义好的可执行产物纳入构建与安装流程。</p>
-<p>构建产物默认输出到 <code>zig-out/</code> 目录，构建缓存存放在 <code>.zig-cache/</code> 目录。这两个目录由构建系统自动管理，通常应加入 <code>.gitignore</code>。</p>
-<h3 id="运行项目"><a class="header" href="#运行项目">运行项目</a></h3>
-<pre><code class="language-bash">zig build run
-</code></pre>
-<p>这会执行项目中显式定义的 <code>run</code> 步骤。它不是临时运行一个源文件，而是执行项目定义好的运行入口。</p>
-<p>向程序传递命令行参数时，使用 <code>--</code> 分隔构建参数和程序参数：</p>
-<pre><code class="language-bash">zig build run -- arg1 arg2
-</code></pre>
-<h3 id="查看项目支持哪些步骤"><a class="header" href="#查看项目支持哪些步骤">查看项目支持哪些步骤</a></h3>
-<pre><code class="language-bash">zig build --help
-</code></pre>
-<p>不同项目可以在 <code>build.zig</code> 中定义不同步骤，因此接手一个新项目时，先查看它提供了哪些步骤通常更有效。</p>
-<p>对应关系如下：</p>
-<ul>
-<li><code>zig build</code>：项目默认构建入口</li>
-<li><code>zig build run</code>：项目运行入口</li>
-<li><code>zig build --help</code>：查看项目提供了哪些入口</li>
-</ul>
-<h2 id="目标平台与优化级别"><a class="header" href="#目标平台与优化级别">目标平台与优化级别</a></h2>
-<p><code>target</code> 和 <code>optimize</code> 是最常见的构建参数。</p>
-<h3 id="target"><a class="header" href="#target"><code>target</code></a></h3>
-<p><code>target</code> 表示目标平台，也就是产物面向的运行环境。</p>
-<p>例如，当前在 macOS 上开发，但需要生成 Windows 或 Linux 的产物时，就需要指定目标平台：</p>
-<pre><code class="language-bash">zig build -Dtarget=x86_64-windows
-</code></pre>
-<p><code>target</code> 决定产物面向哪个目标环境。</p>
-<h3 id="optimize"><a class="header" href="#optimize"><code>optimize</code></a></h3>
-<p><code>optimize</code> 表示优化级别，也就是这次构建更偏向调试，还是更偏向发布。</p>
-<p>例如：</p>
-<pre><code class="language-bash">zig build -Doptimize=ReleaseFast
-</code></pre>
-<p>它描述的是这次构建的取向：</p>
-<ul>
-<li>调试阶段更关注调试体验和错误信息</li>
-<li>发布阶段更关注性能、体积或发布行为</li>
-</ul>
-<p>各种优化模式之间的完整差异属于进阶内容，此处关注它作为常见构建参数的作用即可。</p>
+<p>把前面的内容串起来，一个最小项目的基本工作流就是这几个命令：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>命令</th><th>作用</th></tr>
+</thead>
+<tbody>
+<tr><td><code>zig build</code></td><td>执行项目默认构建（即 <code>install</code> 步骤）</td></tr>
+<tr><td><code>zig build run</code></td><td>执行项目定义的 <code>run</code> 步骤</td></tr>
+<tr><td><code>zig build run -- arg1 arg2</code></td><td>向程序传递命令行参数（<code>--</code> 分隔构建参数与程序参数）</td></tr>
+<tr><td><code>zig build test</code></td><td>执行项目定义的 <code>test</code> 步骤</td></tr>
+<tr><td><code>zig build --help</code></td><td>查看当前项目定义了哪些步骤</td></tr>
+</tbody>
+</table>
+</div>
+<p>其中 <code>zig build run</code> 和 <code>zig build test</code> 能否使用，取决于项目是否定义了对应步骤。接手新项目时，优先查看 <code>zig build --help</code>。</p>
 <h2 id="把配置从构建脚本传给程序"><a class="header" href="#把配置从构建脚本传给程序">把配置从构建脚本传给程序</a></h2>
-<p>构建系统不仅决定“怎么构建“，也可以把配置值传给程序代码。例如：</p>
+<p>前面提到的 <code>target</code> 和 <code>optimize</code> 控制的是编译器行为，你的源代码通常不需要关心它们。但构建系统也可以把配置值传给你的<strong>程序代码</strong>，例如：</p>
 <ul>
 <li>是否开启日志</li>
 <li>是否启用某个实验特性</li>
@@ -476,12 +477,16 @@ pub fn build(b: *std.Build) void {
 <li>文档或其他辅助步骤</li>
 </ul>
 <p>这会让 <code>build.zig</code> 的结构更丰富，但核心思想不变：用步骤组织项目工作流。</p>
+<h3 id="库目标"><a class="header" href="#库目标">库目标</a></h3>
+<p>项目除了构建可执行文件，还可以构建库目标——静态库和动态库。静态库在链接时被完整嵌入最终产物，动态库则在运行时加载。构建脚本中通过 <code>b.addLibrary</code> 创建库目标，其他目标通过 <code>linkLibrary</code> 消费它。详见<a href="../part2-advanced/chapter-package-management.html">高级章节</a>。</p>
 <h3 id="外部依赖与系统库"><a class="header" href="#外部依赖与系统库">外部依赖与系统库</a></h3>
 <p>随着项目复杂度上升，还会遇到：</p>
 <ul>
 <li>外部依赖接入</li>
 <li>系统库链接</li>
 <li>C 代码集成</li>
+<li>文件生成与代码生成（构建期运行工具、生成 Zig 源码、为 <code>@embedFile</code> 生成资源）</li>
+<li>多平台发布策略</li>
 <li>更复杂的平台差异处理</li>
 </ul>
 <p>这些主题都放在高级部分系统展开。</p>
@@ -510,24 +515,6 @@ zig build --help
 <li><code>zig build run</code>、<code>zig build test</code> 的前提是项目里定义了对应步骤。</li>
 <li>不清楚一个项目支持什么时，优先看 <code>zig build --help</code>。</li>
 </ol>
-<h2 id="本章与高级构建系统与包管理的边界"><a class="header" href="#本章与高级构建系统与包管理的边界">本章与高级“构建系统与包管理“的边界</a></h2>
-<p>基础部分涵盖的内容：</p>
-<ul>
-<li>为什么项目需要 <code>build.zig</code></li>
-<li><code>zig init</code> 生成的几个核心文件分别做什么</li>
-<li>一个最小项目如何接通构建、运行、测试</li>
-<li><code>target</code> 和 <code>optimize</code> 的基本含义</li>
-<li>如何把简单配置从构建脚本传给程序</li>
-</ul>
-<p>下面这些主题，会放到高级章节继续展开：</p>
-<ul>
-<li><code>build.zig.zon</code> 的依赖声明细节</li>
-<li>外部依赖接入</li>
-<li>哈希获取与固定</li>
-<li>更复杂的模块组织</li>
-<li>系统库与 C 代码集成</li>
-<li>多平台、多目标的复杂构建策略</li>
-</ul>
 <h2 id="本章要点"><a class="header" href="#本章要点">本章要点</a></h2>
 <ol>
 <li>单文件命令适合练习和最小实验，项目开发更需要统一的构建入口。</li>
@@ -538,7 +525,19 @@ zig build --help
 <li><code>zig build run</code>、<code>zig build test</code> 是否可用，取决于项目是否定义了对应步骤。</li>
 <li><code>target</code> 和 <code>optimize</code> 是最常见的构建参数，分别对应目标平台和优化级别。</li>
 <li><code>build.zig</code> 也可以把构建期配置传给程序代码。</li>
+<li>构建系统基于有向无环图（DAG），步骤之间通过依赖边连接。<code>zig-out/</code> 存放最终产物，<code>.zig-cache/</code> 存放构建缓存。</li>
 </ol>
+<p>→ 以下主题将在<a href="../part2-advanced/chapter-package-management.html">高级章节</a>展开：</p>
+<ul>
+<li><code>build.zig.zon</code> 的依赖声明细节</li>
+<li>构建图的核心机制（DAG、惰性求值、并发与缓存）</li>
+<li>库目标：静态库与动态库</li>
+<li>文件生成与代码生成</li>
+<li>多目标构建与交叉编译发布</li>
+<li>外部依赖接入</li>
+<li>哈希获取与固定</li>
+<li>系统库与 C 代码集成</li>
+</ul>
 
                     </main>
 

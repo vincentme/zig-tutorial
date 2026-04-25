@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d724f321.js";
+            window.path_to_searchindex_js = "../searchindex-ab6996a3.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-4c2eaf17.js"></script>
@@ -183,7 +183,7 @@
                     <main>
                         <h1 id="错误处理"><a class="header" href="#错误处理">错误处理</a></h1>
 <p>错误处理是 Zig 最核心、也是最具辨识度的语言特性之一。</p>
-<p>许多语言把失败路径放在异常系统中，函数签名不直接体现失败可能，控制流可能在运行时离开当前路径。Zig 采用了不同的设计：<strong>把失败纳入类型系统</strong>，通过类型和控制流清楚表达操作是否可能失败、失败时返回什么、错误应当在何处处理。</p>
+<p>许多语言把失败路径放在异常系统中，函数签名不直接体现失败可能，控制流可能在运行时离开当前路径。Zig 采用了不同的设计：<strong>把失败纳入类型系统</strong>，通过类型和控制流清楚表达操作是否可能失败、失败时返回什么、错误应当在何处处理。这一设计使得接口更精确、资源管理更可靠，也更适合系统编程场景。语言设计层面的更多讨论见<a href="chapter-introduction.html">认识 Zig</a>。</p>
 <p>本章围绕四个核心概念展开：</p>
 <ul>
 <li><strong>错误集合（error set）</strong>：定义“可能出现哪些错误“</li>
@@ -193,13 +193,10 @@
 </ul>
 <p>本章涵盖：</p>
 <ul>
-<li>错误处理的设计出发点</li>
 <li>错误联合类型 <code>!T</code></li>
 <li>错误传播与处理策略</li>
 <li>失败路径清理：<code>defer</code> 与 <code>errdefer</code></li>
 </ul>
-<h2 id="错误处理的设计出发点"><a class="header" href="#错误处理的设计出发点">错误处理的设计出发点</a></h2>
-<p>Zig 将失败纳入类型系统，而非依赖异常机制。函数签名直接体现是否可能失败，调用点必须显式处理，控制流始终可见。这一设计使得接口更精确、资源管理更可靠，也更适合系统编程场景。语言设计层面的更多讨论见<a href="chapter-introduction.html">认识 Zig</a>。</p>
 <h2 id="错误集合"><a class="header" href="#错误集合">错误集合</a></h2>
 <p>错误集合用于定义一组命名错误值。</p>
 <p>它可以理解为：函数失败时返回的不是任意字符串或整数，而是一组<strong>受类型系统约束的错误值</strong>。</p>
@@ -539,12 +536,7 @@ fn example() void {
 <pre><code class="language-zig">const value = parseNumber("42") catch unreachable;
 </code></pre>
 <p>它的含义不是“忽略错误”，而是断言这里不可能失败；一旦失败，就说明程序的逻辑假设不成立。</p>
-<p>如果前面的表达式实际上返回了错误，程序就会执行到 <code>unreachable</code>：</p>
-<ul>
-<li>开启安全检查时，通常会触发运行时安全检查失败</li>
-<li>关闭安全检查时，属于未定义行为，不能依赖其结果</li>
-</ul>
-<p>因此，它只适合用于<strong>逻辑上确实可以证明不失败</strong>的场景，不应用来省略本应存在的错误处理。</p>
+<p>关于 <code>unreachable</code> 在不同构建模式下的行为，见<a href="chapter-control-flow.html#unreachable">控制流章节的 unreachable 小节</a>。它只适合用于<strong>逻辑上确实可以证明不失败</strong>的场景，不应用来省略本应存在的错误处理。</p>
 <p><strong>匹配具体错误</strong></p>
 <p>如果不同错误需要不同处理方式，可以在 <code>catch</code> 后配合 <code>switch</code> 使用。</p>
 <pre><code class="language-zig">const std = @import("std");
@@ -755,10 +747,10 @@ const BadError = error{
 <p>错误名应尽量语义明确，并能帮助调用者决定处理策略。像 <code>Failed</code>、<code>Bad</code>、<code>Error</code> 这样的名称通常过于笼统。</p>
 </li>
 <li>
-<p><strong>当前层不能处理时，就直接传播。</strong><br>没有恢复策略时，优先使用 <code>try</code>；只有在当前层确实知道如何恢复、转换或终止时，再使用 <code>catch</code>。为了“看起来处理过”而写的 <code>catch</code> 往往只会让控制流变得更模糊。</p>
+<p><strong>关于错误传播与处理策略的选择</strong>（何时用 <code>try</code>、何时用 <code>catch</code>），见前面的 <a href="#try传播错误"><code>try</code>：传播错误</a>和 <a href="#catch在当前层处理错误"><code>catch</code>：在当前层处理错误</a>小节。</p>
 </li>
 <li>
-<p><strong>谨慎使用 <code>catch unreachable</code>。</strong><br>只有在能够证明“这里不可能失败”时，才应使用 <code>catch unreachable</code>。它表达的是断言，而不是简写版的错误处理。</p>
+<p><strong>关于 <code>catch unreachable</code> 的使用注意</strong>，见前面的 <a href="#catch在当前层处理错误">catch unreachable</a>小节。</p>
 </li>
 <li>
 <p><strong>避免把 <code>anyerror</code> 当作默认方案。</strong><br><code>anyerror</code> 会降低接口精度。除非确实处于边界适配、原型验证或特殊抽象层中，否则应优先使用具体错误集。</p>

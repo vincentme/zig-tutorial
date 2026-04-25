@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d724f321.js";
+            window.path_to_searchindex_js = "../searchindex-ab6996a3.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-4c2eaf17.js"></script>
@@ -182,120 +182,35 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="指针切片与对齐"><a class="header" href="#指针切片与对齐">指针、切片与对齐</a></h1>
-<blockquote>
-<p><strong>进阶</strong>：这一章是第二部分里的基础核心章节之一。<br>在 Zig 中，很多“看起来像语法问题“的困惑，最后其实都和<strong>数据布局、生命周期、可变性、边界信息以及所有权责任</strong>有关。<br>因此，本章的目标不是把所有指针写法都列一遍，而是建立一条更可靠的理解路径：</p>
+<p>Zig 的指针设计要求在类型层面明确表达数据的完整语义：指向单个值还是连续数据、有没有长度信息、能不能修改、可能为空吗、对齐要求是什么。本章按以下顺序展开：</p>
 <ol>
-<li>先理解最常见的单项指针 <code>*T</code></li>
-<li>再理解最常用的数据视图：切片 <code>[]T</code></li>
-<li>然后区分数组指针、多项指针、可选指针</li>
-<li>最后再进入对齐、裸指针转换、<code>volatile</code>、<code>@fieldParentPtr</code> 这些更偏底层的话题</li>
+<li>单项指针 <code>*T</code> / <code>*const T</code></li>
+<li>切片 <code>[]T</code> / <code>[]const T</code></li>
+<li>数组指针、可选指针、多项指针</li>
+<li>对齐、指针转换、<code>volatile</code>、<code>@fieldParentPtr</code></li>
 </ol>
-<p>初次系统接触 Zig 指针时，建议优先把前半章读扎实；后半章的高级内容更适合作为“按需深入“。</p>
-</blockquote>
-<hr>
-<h2 id="相关阅读与衔接建议"><a class="header" href="#相关阅读与衔接建议">相关阅读与衔接建议</a></h2>
-<ul>
-<li>刚读完<a href="chapter-generics.html">泛型编程</a>的话，可以把这一章当成“编译期抽象“之后的下一步：开始把注意力从类型工厂与泛型接口，转向<strong>数据视图、可变性、边界信息和底层表示</strong>。</li>
-<li>接下来准备读<a href="chapter-memory-management.html">内存管理模型</a>的话，这一章其实就是很重要的前置基础。因为很多内存管理问题，最后都会落到：
-<ul>
-<li>拿到的是值、指针还是切片</li>
-<li>这里表达的是拥有、借用还是共享访问</li>
-<li>生命周期和边界信息是否足够清楚</li>
-</ul>
-</li>
-<li>如果目前只想抓主线，请优先掌握：
-<ul>
-<li><code>*T</code> / <code>*const T</code></li>
-<li><code>[]T</code> / <code>[]const T</code></li>
-<li><code>?*T</code></li>
-<li>数组指针与多项指针的基本区别<br>至于 <code>@ptrCast</code>、<code>@ptrFromInt</code>、<code>volatile</code>、<code>@fieldParentPtr</code>，更适合作为第二遍阅读时的“按需深入“。</li>
-</ul>
-</li>
-</ul>
-<hr>
-<h2 id="为什么这一章很重要"><a class="header" href="#为什么这一章很重要">为什么这一章很重要？</a></h2>
-<p>在 Zig 里，指针不是“高级技巧“，而是迟早会稳定接触的基本工具。原因很简单：</p>
-<ul>
-<li>函数参数常常需要避免复制大对象</li>
-<li>数据结构往往需要共享、修改或借用同一块内存</li>
-<li>切片、字符串、容器、分配器接口都和内存视图密切相关</li>
-<li>与 C 互操作、系统编程、内存管理更离不开指针语义</li>
-</ul>
-<p>但更重要的是：</p>
-<blockquote>
-<p><strong>Zig 的设计意图不是“模糊地用指针“，而是明确表达手里拿到的到底是什么。</strong></p>
-</blockquote>
-<p>因此，学习指针时，最值得反复问自己的不是“这个语法怎么写“，而是：</p>
-<ul>
-<li>这里指向的是单个值，还是一段连续数据？</li>
-<li>这里有没有长度信息？</li>
-<li>这里能不能修改原值？</li>
-<li>这里可能为空吗？</li>
-<li>这里的生命周期由谁保证？</li>
-<li>这里有没有对齐、越界或悬空风险？</li>
-</ul>
-<hr>
-<h2 id="先建立总览常见相关类型有哪些"><a class="header" href="#先建立总览常见相关类型有哪些">先建立总览：常见相关类型有哪些？</a></h2>
-<p>Zig 中最常见的几类“指向数据“的类型如下：</p>
+<h2 id="类型总览"><a class="header" href="#类型总览">类型总览</a></h2>
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th>类型</th><th>语法</th><th>表达的含义</th><th>最常见用途</th></tr>
+<tr><th>类型</th><th>语法</th><th>含义</th><th>常见用途</th></tr>
 </thead>
 <tbody>
 <tr><td>单项指针</td><td><code>*T</code></td><td>指向一个 <code>T</code> 值</td><td>传参、原地修改、避免复制</td></tr>
 <tr><td>只读单项指针</td><td><code>*const T</code></td><td>指向一个只读 <code>T</code> 值</td><td>只读借用</td></tr>
 <tr><td>可选指针</td><td><code>?*T</code></td><td>可能有一个 <code>T</code>，也可能没有</td><td>查找结果、可空句柄</td></tr>
-<tr><td>数组指针</td><td><code>*[N]T</code></td><td>指向一个固定长度数组</td><td>保留数组长度信息</td></tr>
-<tr><td>多项指针</td><td><code>[*]T</code></td><td>指向连续元素，但不携带长度</td><td>底层内存、C 互操作</td></tr>
-<tr><td>切片</td><td><code>[]T</code></td><td>指针 + 长度</td><td>最常见的动态序列视图</td></tr>
-<tr><td>只读切片</td><td><code>[]const T</code></td><td>只读的切片视图</td><td>字符串、只读序列参数</td></tr>
-<tr><td>哨兵切片</td><td><code>[:S]T</code></td><td>带长度，且约定以哨兵值结尾</td><td>与特定 C 风格数据协作</td></tr>
-<tr><td>哨兵多项指针</td><td><code>[*:S]T</code></td><td>无长度，但约定以哨兵值结尾</td><td>C 风格字符串、底层接口</td></tr>
+<tr><td>数组指针</td><td><code>*[N]T</code></td><td>指向固定长度数组</td><td>保留数组长度信息</td></tr>
+<tr><td>多项指针</td><td><code>[*]T</code></td><td>指向连续元素，不携带长度</td><td>底层内存、C 互操作</td></tr>
+<tr><td>切片</td><td><code>[]T</code></td><td>指针 + 长度</td><td>动态序列视图</td></tr>
+<tr><td>只读切片</td><td><code>[]const T</code></td><td>只读切片视图</td><td>字符串、只读序列参数</td></tr>
+<tr><td>哨兵切片</td><td><code>[:S]T</code></td><td>带长度，以哨兵值结尾</td><td>C 风格数据协作</td></tr>
+<tr><td>哨兵多项指针</td><td><code>[*:S]T</code></td><td>无长度，以哨兵值结尾</td><td>C 风格字符串</td></tr>
 </tbody>
 </table>
 </div>
-<p>建议牢牢记住三件事：</p>
-<ol>
-<li><strong>日常最常用的是 <code>*T</code> 和 <code>[]T</code></strong></li>
-<li><strong>切片比多项指针更安全，也更常见</strong></li>
-<li><strong>多项指针、裸地址转换、<code>volatile</code> 更偏系统/底层场景</strong></li>
-</ol>
-<hr>
+<p>日常最常用的是 <code>*T</code>、<code>*const T</code>、<code>[]T</code> 和 <code>[]const T</code>。多项指针、哨兵指针和裸地址转换主要用于系统/底层场景。</p>
 <h2 id="单项指针-t"><a class="header" href="#单项指针-t">单项指针 <code>*T</code></a></h2>
-<h3 id="什么是单项指针"><a class="header" href="#什么是单项指针">什么是单项指针？</a></h3>
-<p>单项指针 <code>*T</code> 表示：</p>
-<blockquote>
-<p><strong>这里有一个确定存在的 <code>T</code> 值，我拿到了它的地址。</strong></p>
-</blockquote>
-<p>它不表示“很多元素“，也不表示“可能为空“，更不附带长度信息。<br>它只是单纯地指向一个值。</p>
-<h3 id="基本操作"><a class="header" href="#基本操作">基本操作</a></h3>
-<ul>
-<li>取地址：<code>&amp;value</code></li>
-<li>解引用：<code>ptr.*</code></li>
-</ul>
-<p>示例：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-test "single item pointer basics" {
-    var value: i32 = 42;
-
-    const ptr: *i32 = &amp;value;
-    try std.testing.expect(ptr.* == 42);
-
-    ptr.* = 100;
-    try std.testing.expect(value == 100);
-}
-</code></pre>
-<p>这个例子的核心在于语义：</p>
-<ul>
-<li><code>ptr</code> 和 <code>value</code> 指向的是同一个底层值</li>
-<li>修改 <code>ptr.*</code>，就是在修改原始变量</li>
-<li>没有复制出第二份 <code>i32</code></li>
-</ul>
-<hr>
-<h3 id="t-和-const-t-的区别"><a class="header" href="#t-和-const-t-的区别"><code>*T</code> 和 <code>*const T</code> 的区别</a></h3>
-<p>很多时候，函数不应修改传入的数据。这时应该使用只读指针 <code>*const T</code>。</p>
+<p><code>*T</code> 指向一个确定存在的 <code>T</code> 值，不携带长度，不可为空。取地址用 <code>&amp;value</code>，解引用用 <code>ptr.*</code>。</p>
 <pre><code class="language-zig">const std = @import("std");
 
 const User = struct {
@@ -311,37 +226,21 @@ fn bumpScore(user: *User) void {
     user.score += 1;
 }
 
-test "mutable and const pointers" {
-    var user = User{
-        .id = 1,
-        .score = 10,
-    };
+test "single item pointer" {
+    var x: i32 = 42;
+    const ptr: *i32 = &amp;x;
 
+    ptr.* = 100;
+    try std.testing.expect(x == 100);
+
+    var user = User{ .id = 1, .score = 10 };
     printUser(&amp;user);
     bumpScore(&amp;user);
-
     try std.testing.expect(user.score == 11);
 }
 </code></pre>
-<p>这里表达得非常清楚：</p>
-<ul>
-<li><code>printUser</code> 只借用数据，只读不改</li>
-<li><code>bumpScore</code> 借用数据，并且会修改它</li>
-</ul>
-<p>这也是 Zig 一贯强调的风格：</p>
-<blockquote>
-<p><strong>把可变性写进类型里，而不是留给读者猜。</strong></p>
-</blockquote>
-<hr>
-<h3 id="什么时候用单项指针"><a class="header" href="#什么时候用单项指针">什么时候用单项指针？</a></h3>
-<p>常见场景有这些：</p>
-<ol>
-<li><strong>避免复制大对象</strong></li>
-<li><strong>需要原地修改数据</strong></li>
-<li><strong>数据结构之间需要建立链接</strong></li>
-<li><strong>明确表达“借用同一个对象“</strong></li>
-</ol>
-<p>比如函数参数：</p>
+<p><code>*T</code> 和 <code>*const T</code> 的区别在于可变性。<code>printUser</code> 接收 <code>*const User</code>，承诺不修改数据；<code>bumpScore</code> 接收 <code>*User</code>，允许原地修改。可变性写进类型，而不是留给调用者猜测。</p>
+<p>单项指针的典型使用场景：避免复制大对象、原地修改数据、在数据结构之间建立链接。下面的例子演示按指针传递大对象：</p>
 <pre><code class="language-zig">const std = @import("std");
 
 const Big = struct {
@@ -357,71 +256,9 @@ test "pass large value by pointer" {
     try std.testing.expect(inspect(&amp;value) == 1024);
 }
 </code></pre>
-<p>如果把这种对象按值传递，语义上就是复制；
-而按指针传递，语义上则是“借用已有对象“。</p>
-<hr>
+<p>按值传递会复制整个对象，按指针传递只是借用已有对象的地址。</p>
 <h2 id="切片-t"><a class="header" href="#切片-t">切片 <code>[]T</code></a></h2>
-<h3 id="为什么切片比很多指针话题更重要"><a class="header" href="#为什么切片比很多指针话题更重要">为什么切片比很多指针话题更重要？</a></h3>
-<p>虽然“指针章节“往往让人先想到 <code>*T</code>，但在实际 Zig 代码里，更高频接触的通常是：</p>
-<ul>
-<li><code>[]u8</code></li>
-<li><code>[]const u8</code></li>
-<li><code>[]T</code></li>
-<li><code>[]const T</code></li>
-</ul>
-<p>也就是切片。</p>
-<p>因为很多程序真正操作的不是“单个对象“，而是“一段连续数据“。<br>而切片正是 Zig 中最常用的这类数据视图。</p>
-<hr>
-<h3 id="什么是切片"><a class="header" href="#什么是切片">什么是切片？</a></h3>
-<p>切片 <code>[]T</code> 可以理解为：</p>
-<blockquote>
-<p><strong>一段连续 <code>T</code> 元素的视图，它同时携带起始地址和长度。</strong></p>
-</blockquote>
-<p>这和多项指针 <code>[*]T</code> 的关键区别在于：</p>
-<ul>
-<li>切片有长度</li>
-<li>切片的索引访问会做边界检查</li>
-<li>切片更适合作为普通代码中的序列视图</li>
-</ul>
-<p>示例：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-test "slice basics" {
-    var array = [_]i32{ 10, 20, 30, 40, 50 };
-
-    const slice: []i32 = array[1..4];
-
-    try std.testing.expect(slice.len == 3);
-    try std.testing.expect(slice[0] == 20);
-    try std.testing.expect(slice[2] == 40);
-
-    slice[1] = 99;
-    try std.testing.expect(array[2] == 99);
-}
-</code></pre>
-<p>这段代码说明了几个核心点：</p>
-<ul>
-<li><code>array[1..4]</code> 得到的是一个切片</li>
-<li>它是对原数组的一段“视图“，不是复制</li>
-<li>修改切片中的元素，会反映到原数组上</li>
-</ul>
-<hr>
-<h3 id="切片的心智模型"><a class="header" href="#切片的心智模型">切片的心智模型</a></h3>
-<p>理解切片时，可以把它当成两部分：</p>
-<ol>
-<li>一个起始指针</li>
-<li>一个长度</li>
-</ol>
-<p>因此，切片不是“单纯的地址“。<br>它是<strong>带边界信息的视图</strong>。</p>
-<p>这正是为什么切片在普通代码里比 <code>[*]T</code> 更值得优先使用：</p>
-<ul>
-<li>更安全</li>
-<li>更易读</li>
-<li>更能表达意图</li>
-</ul>
-<hr>
-<h3 id="只读切片-const-t"><a class="header" href="#只读切片-const-t">只读切片 <code>[]const T</code></a></h3>
-<p>如果只想读取一段数据，不允许修改，那么使用 <code>[]const T</code>。</p>
+<p>切片是 Zig 中最常用的序列视图，同时携带起始地址和长度。与多项指针 <code>[*]T</code> 的关键区别在于：切片有长度，索引访问会做边界检查。</p>
 <pre><code class="language-zig">const std = @import("std");
 
 fn sum(nums: []const i32) i32 {
@@ -432,28 +269,6 @@ fn sum(nums: []const i32) i32 {
     return total;
 }
 
-test "readonly slice parameter" {
-    const data = [_]i32{ 1, 2, 3, 4 };
-    try std.testing.expect(sum(&amp;data) == 10);
-}
-</code></pre>
-<p>这类写法在 Zig 中非常常见：</p>
-<ul>
-<li>字符串通常是 <code>[]const u8</code></li>
-<li>只读输入数据常用 <code>[]const T</code></li>
-<li>能只读时尽量只读，有助于减少误用</li>
-</ul>
-<hr>
-<h3 id="切片为什么适合作为函数参数"><a class="header" href="#切片为什么适合作为函数参数">切片为什么适合作为函数参数？</a></h3>
-<p>因为它能同时表达三件事：</p>
-<ol>
-<li>我拿到的是连续数据</li>
-<li>我知道长度</li>
-<li>我不拥有这块内存，只是借用它</li>
-</ol>
-<p>例如搜索：</p>
-<pre><code class="language-zig">const std = @import("std");
-
 fn findFirst(items: []const i32, target: i32) ?usize {
     for (items, 0..) |item, index| {
         if (item == target) return index;
@@ -461,27 +276,25 @@ fn findFirst(items: []const i32, target: i32) ?usize {
     return null;
 }
 
-test "find in slice" {
-    const data = [_]i32{ 5, 8, 13, 21 };
+test "slice basics" {
+    var array = [_]i32{ 10, 20, 30, 40, 50 };
+    const slice: []i32 = array[1..4];
 
-    try std.testing.expect(findFirst(&amp;data, 13).? == 2);
+    try std.testing.expect(slice.len == 3);
+    try std.testing.expect(slice[0] == 20);
+
+    slice[1] = 99;
+    try std.testing.expect(array[2] == 99);
+
+    const data = [_]i32{ 1, 2, 3, 4 };
+    try std.testing.expect(sum(&amp;data) == 10);
+    try std.testing.expect(findFirst(&amp;data, 3).? == 2);
     try std.testing.expect(findFirst(&amp;data, 99) == null);
 }
 </code></pre>
-<p>从接口设计角度看，这个函数写得很清楚：</p>
-<ul>
-<li>它不拥有 <code>items</code></li>
-<li>它不修改 <code>items</code></li>
-<li>它按只读序列来处理输入</li>
-</ul>
-<hr>
-<h3 id="字符串与-const-u8"><a class="header" href="#字符串与-const-u8">字符串与 <code>[]const u8</code></a></h3>
-<p>在 Zig 中，最常见的“字符串“表示其实不是单独的字符串对象，而是：</p>
-<ul>
-<li><code>[]const u8</code></li>
-</ul>
-<p>也就是“只读字节切片“。</p>
-<p>例如：</p>
+<p><code>array[1..4]</code> 产生原数组的一段视图，不是复制；修改切片中的元素会反映到原数组。<code>sum</code> 和 <code>findFirst</code> 都接收 <code>[]const i32</code>，表达“借用一段只读连续数据，不拥有也不修改“。</p>
+<h3 id="只读切片与字符串"><a class="header" href="#只读切片与字符串">只读切片与字符串</a></h3>
+<p><code>[]const T</code> 表示只读切片。字符串在 Zig 中就是 <code>[]const u8</code>——只读字节切片，没有独立的字符串类型。</p>
 <pre><code class="language-zig">const std = @import("std");
 
 fn startsWithHello(s: []const u8) bool {
@@ -493,74 +306,30 @@ test "string as readonly byte slice" {
     try std.testing.expect(!startsWithHello("world"));
 }
 </code></pre>
-<p>这很符合 Zig 的风格：</p>
+<h3 id="哨兵切片与哨兵指针"><a class="header" href="#哨兵切片与哨兵指针">哨兵切片与哨兵指针</a></h3>
+<p>C 字符串等数据使用哨兵值（如 <code>0</code>）标记结尾。对应类型：</p>
 <ul>
-<li>不把字符串神秘化</li>
-<li>它本质上就是字节序列</li>
-<li>是否带长度、是否带哨兵，要看具体类型</li>
+<li><code>[:0]const u8</code>：带长度，以 <code>0</code> 结尾的切片</li>
+<li><code>[*:0]const u8</code>：无长度，以 <code>0</code> 结尾的多项指针</li>
 </ul>
-<hr>
-<h3 id="哨兵切片和哨兵指针"><a class="header" href="#哨兵切片和哨兵指针">哨兵切片和哨兵指针</a></h3>
-<p>有些数据约定会使用结尾标记，例如 C 字符串常见的 <code>0</code> 结尾。<br>这时可能会看到：</p>
-<ul>
-<li><code>[*:0]const u8</code></li>
-<li><code>[:0]const u8</code></li>
-</ul>
-<p>它们表达的是：</p>
-<ul>
-<li>元素序列以某个哨兵值结尾</li>
-<li>类型里显式保留了这个约定</li>
-</ul>
-<p>不必把哨兵系列语法全部背下来。更重要的是理解：</p>
-<blockquote>
-<p><strong>长度信息和哨兵信息是两种不同的边界表达方式。</strong></p>
-</blockquote>
-<ul>
-<li>切片主要依赖长度</li>
-<li>C 风格字符串常依赖哨兵</li>
-<li>Zig 会把这些约束写进类型，而不是隐藏起来</li>
-</ul>
-<hr>
-<h2 id="其他指针类型"><a class="header" href="#其他指针类型">其他指针类型</a></h2>
-<h3 id="数组指针-nt"><a class="header" href="#数组指针-nt">数组指针 <code>*[N]T</code></a></h3>
-<p>数组指针 <code>*[N]T</code> 表示：</p>
-<blockquote>
-<p><strong>我指向的是一个长度在类型层面就固定下来的数组。</strong></p>
-</blockquote>
-<p>比如：</p>
+<p>长度信息和哨兵信息是两种不同的边界表达方式。切片主要依赖长度，C 风格接口常依赖哨兵。Zig 将这些约束写进类型而不是隐藏起来。</p>
+<h3 id="切片的底层字段"><a class="header" href="#切片的底层字段">切片的底层字段</a></h3>
+<p>切片是一个“胖指针“，通过 <code>.ptr</code> 和 <code>.len</code> 可以直接访问底层字段：</p>
 <pre><code class="language-zig">const std = @import("std");
 
-test "array pointer keeps array length in type" {
-    var data = [_]u8{ 1, 2, 3, 4 };
+test "slice ptr and len fields" {
+    var array = [_]i32{ 10, 20, 30, 40 };
+    const slice: []i32 = &amp;array;
 
-    const ptr: *[4]u8 = &amp;data;
-
-    try std.testing.expect(ptr[0] == 1);
-    try std.testing.expect(ptr[3] == 4);
-
-    ptr[1] = 99;
-    try std.testing.expect(data[1] == 99);
+    try std.testing.expect(slice.len == 4);
+    try std.testing.expect(slice.ptr[0] == 10);
+    try std.testing.expect(slice.ptr[2] == 30);
 }
 </code></pre>
-<p>和切片相比，数组指针的区别主要在于：</p>
-<ul>
-<li>长度是类型的一部分</li>
-<li>更适合那些“长度必须静态已知“的场景</li>
-<li>不如切片灵活</li>
-</ul>
-<p>可以这样记：</p>
-<ul>
-<li><code>*[N]T</code>：<strong>固定长度数组本体的地址</strong></li>
-<li><code>[]T</code>：<strong>一段运行时长度的序列视图</strong></li>
-</ul>
-<p><strong>什么时候数组指针有用？</strong></p>
-<p>它适合这些情况：</p>
-<ol>
-<li>明确要求某个固定长度</li>
-<li>想在类型层面保留这个约束</li>
-<li>处理的就是数组本身，而不是任意长度序列</li>
-</ol>
-<p>例如只接受 16 字节块：</p>
+<p><code>.ptr</code> 的类型是 <code>[*]i32</code>，即底层多项指针，访问时不做边界检查。</p>
+<h2 id="其他指针类型"><a class="header" href="#其他指针类型">其他指针类型</a></h2>
+<h3 id="数组指针-nt"><a class="header" href="#数组指针-nt">数组指针 <code>*[N]T</code></a></h3>
+<p>数组指针指向一个长度在类型层面固定的数组。与切片的区别：长度是类型的一部分，适合需要静态长度约束的场景。</p>
 <pre><code class="language-zig">const std = @import("std");
 
 fn xorBlock(block: *[16]u8, value: u8) void {
@@ -569,23 +338,26 @@ fn xorBlock(block: *[16]u8, value: u8) void {
     }
 }
 
-test "fixed size array pointer" {
+test "array pointer" {
+    var data = [_]u8{ 1, 2, 3, 4 };
+    const ptr: *[4]u8 = &amp;data;
+
+    try std.testing.expect(ptr[0] == 1);
+    ptr[1] = 99;
+    try std.testing.expect(data[1] == 99);
+
     var block = [_]u8{0} ** 16;
     xorBlock(&amp;block, 0xff);
-
     try std.testing.expect(block[0] == 0xff);
     try std.testing.expect(block[15] == 0xff);
 }
 </code></pre>
-<hr>
-<h3 id="可选指针-t"><a class="header" href="#可选指针-t">可选指针 <code>?*T</code></a></h3>
-<p>很多语言里，空指针是一种隐患。<br>Zig 的做法不是“假装空指针不存在“，而是要求显式写出来：</p>
 <ul>
-<li><code>*T</code>：一定有值</li>
-<li><code>?*T</code>：可能没有值</li>
+<li><code>*[N]T</code>：固定长度数组本体的地址</li>
+<li><code>[]T</code>：运行时长度的序列视图</li>
 </ul>
-<p>这让接口的语义更清楚，也强迫调用者处理“没有找到“的情况。</p>
-<p>示例：</p>
+<h3 id="可选指针-t"><a class="header" href="#可选指针-t">可选指针 <code>?*T</code></a></h3>
+<p><code>*T</code> 一定有值，<code>?*T</code> 允许为 <code>null</code>。接口返回 <code>?*T</code> 时，调用者必须处理“未找到“的情况。</p>
 <pre><code class="language-zig">const std = @import("std");
 
 fn findValue(items: []i32, target: i32) ?*i32 {
@@ -608,31 +380,9 @@ test "optional pointer" {
     try std.testing.expect(findValue(&amp;data, 100) == null);
 }
 </code></pre>
-<p><strong>什么时候返回 <code>?*T</code> 合适？</strong></p>
-<p>常见场景：</p>
-<ol>
-<li>在现有数据结构里查找元素</li>
-<li>返回“可能存在“的对象位置</li>
-<li>想让调用者原地修改找到的值</li>
-</ol>
-<p>但要注意一点：</p>
-<blockquote>
-<p>返回指针时，生命周期约束也随之暴露给了调用者。</p>
-</blockquote>
-<p>如果底层数据后续失效、被移动或被释放，那么这个指针也会失效。<br>所以返回 <code>?*T</code> 很强大，但也意味着必须清楚底层存储的生命周期。</p>
-<hr>
+<p>返回 <code>?*T</code> 时，底层存储的生命周期由调用者保证——如果底层数据被释放或移动，指针将失效。</p>
 <h3 id="多项指针-t"><a class="header" href="#多项指针-t">多项指针 <code>[*]T</code></a></h3>
-<p>多项指针 <code>[*]T</code> 表示：</p>
-<blockquote>
-<p><strong>这里有一段连续的 <code>T</code> 元素，但当前类型里不包含长度。</strong></p>
-</blockquote>
-<p>它通常用于：</p>
-<ul>
-<li>与 C 互操作</li>
-<li>底层内存操作</li>
-<li>已经通过其他方式知道边界的场景</li>
-</ul>
-<p>示例：</p>
+<p><code>[*]T</code> 指向连续元素但不携带长度，主要用于 C 互操作和底层内存操作。</p>
 <pre><code class="language-zig">const std = @import("std");
 
 test "many item pointer from array" {
@@ -647,144 +397,12 @@ test "many item pointer from array" {
     try std.testing.expect(slice.len == 4);
 }
 </code></pre>
-<p><strong>为什么普通代码里不应优先用 <code>[*]T</code>？</strong></p>
-<p>因为它没有长度。<br>这意味着：</p>
-<ul>
-<li>读代码的人需要额外知道边界来自哪里</li>
-<li>越界风险更难识别</li>
-<li>接口语义不如切片清楚</li>
-</ul>
-<p>所以在普通业务代码里，更推荐：</p>
-<ul>
-<li>用 <code>[]T</code> / <code>[]const T</code> 表示序列</li>
-<li>只有在确实需要底层语义时再使用 <code>[*]T</code></li>
-</ul>
-<p>可以理解为：</p>
+<p><code>[*]T</code> 没有长度信息，越界风险更难识别。普通代码中应优先使用 <code>[]T</code> 表示序列。</p>
 <blockquote>
-<p><strong><code>[*]T</code> 更像“底层原始视图“，<code>[]T</code> 更像“日常安全视图“。</strong></p>
+<p>Zig 禁止 C 风格的指针算术（如 <code>ptr + 1</code>）。需要偏移访问时使用切片索引 <code>slice[i]</code> 或多项指针索引 <code>ptr[i]</code>。</p>
 </blockquote>
-<hr>
-<h2 id="底层操作对齐转换与-volatile"><a class="header" href="#底层操作对齐转换与-volatile">底层操作：对齐、转换与 volatile</a></h2>
-<h3 id="对齐"><a class="header" href="#对齐">对齐</a></h3>
-<p>对齐可以简单理解为：</p>
-<blockquote>
-<p><strong>某个值的地址是否满足该类型或该平台要求的特定倍数边界。</strong></p>
-</blockquote>
-<p>比如一个值可能要求地址是 4 的倍数、8 的倍数或 16 的倍数。</p>
-<p>大多数时候，正常声明的变量都会自然满足自己的基本对齐要求。<br>但在下面这些场景里，对齐会变得重要：</p>
-<ul>
-<li>手动做指针转换</li>
-<li>访问底层内存</li>
-<li>与外部 ABI 交互</li>
-<li>进行 SIMD、MMIO 或特殊平台优化</li>
-</ul>
-<p><strong>显式对齐示例</strong></p>
-<pre><code class="language-zig">const std = @import("std");
-
-test "aligned value and aligned pointer" {
-    var value: i32 align(16) = 42;
-
-    const ptr: *align(16) i32 = &amp;value;
-
-    try std.testing.expect(ptr.* == 42);
-    try std.testing.expect(@intFromPtr(ptr) % 16 == 0);
-}
-</code></pre>
-<p>这个例子里：</p>
-<ul>
-<li><code>value</code> 被显式声明为 16 字节对齐</li>
-<li>因而取地址后，可以安全地得到 <code>*align(16) i32</code></li>
-</ul>
-<p>这里的重点不是“总要手动写对齐“，而是理解：</p>
-<blockquote>
-<p><strong>更强的对齐承诺必须有真实依据。</strong></p>
-</blockquote>
-<p>不能随意把一个普通 <code>*i32</code> 说成 <code>*align(16) i32</code>，<br>因为那等于对编译器做更强的保证。</p>
-<p><strong>为什么对齐很重要？</strong></p>
-<p>因为错误的对齐假设可能导致：</p>
-<ul>
-<li>性能下降</li>
-<li>某些平台直接崩溃</li>
-<li>未定义行为</li>
-<li>错误的代码生成假设</li>
-</ul>
-<p>所以只要开始接触：</p>
-<ul>
-<li><code>@ptrCast</code></li>
-<li><code>@alignCast</code></li>
-<li>原始内存视图</li>
-<li>硬件寄存器映射</li>
-</ul>
-<p>就要把对齐问题认真看待。</p>
-<hr>
-<h3 id="指针转换"><a class="header" href="#指针转换">指针转换</a></h3>
-<p>在 Zig 中，指针转换并不是“想转就转“的普通重命名。<br>它往往意味着：</p>
-<ul>
-<li>我知道底层内存布局兼容</li>
-<li>我知道当前地址满足目标类型的对齐要求</li>
-<li>我知道这种解释方式在当前场景下是合法的</li>
-</ul>
-<p>因此，指针转换应该理解成一种<strong>显式承诺</strong>，而不是“方便写法“。</p>
-<h4 id="ptrcast改变解释方式"><a class="header" href="#ptrcast改变解释方式"><code>@ptrCast</code>：改变解释方式</a></h4>
-<p>示例：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-test "ptrCast should be treated as low level operation" {
-    var value: u32 = 0x11223344;
-
-    const byte_ptr: *u8 = @ptrCast(&amp;value);
-
-    _ = byte_ptr;
-}
-</code></pre>
-<p>这个例子只是为了说明语法存在。<br>它<strong>不适合</strong>被理解为“普通代码里推荐这样做字节检查“。</p>
-<p>为什么？</p>
-<ul>
-<li>它会让读者很快掉进别名、布局、端序等更复杂的问题里</li>
-<li>如果只是想安全处理字节序列，通常更应该使用更明确的数据接口</li>
-<li>它属于底层能力，不是第一选择</li>
-</ul>
-<p>所以这里最值得记住的是：</p>
-<blockquote>
-<p><strong><code>@ptrCast</code> 不是禁用功能，但它属于需要清楚前提条件的低层工具。</strong></p>
-</blockquote>
-<h4 id="ptrfromint-和-intfromptr"><a class="header" href="#ptrfromint-和-intfromptr"><code>@ptrFromInt</code> 和 <code>@intFromPtr</code></a></h4>
-<p>这两个内置函数涉及“地址和整数之间的转换“。</p>
-<p>示例：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-test "pointer to integer" {
-    var value: i32 = 123;
-    const addr = @intFromPtr(&amp;value);
-
-    try std.testing.expect(addr != 0);
-}
-</code></pre>
-<p>而把整数直接变成指针则要危险得多：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-test "ptrFromInt is for very specific low level cases" {
-    const raw_addr: usize = 0x1000;
-    const ptr: *u8 = @ptrFromInt(raw_addr);
-
-    _ = ptr;
-}
-</code></pre>
-<p>这里必须非常明确：</p>
-<blockquote>
-<p><strong>在普通用户态程序里，随意把整数转成指针几乎没有通用教学价值。</strong></p>
-</blockquote>
-<p>它通常只在这些场景下才有意义：</p>
-<ul>
-<li>裸机开发</li>
-<li>内核开发</li>
-<li>MMIO 寄存器映射</li>
-<li>非常明确知道这个地址为何有效</li>
-</ul>
-<p>如果不是这些场景，请不要把它当成普通编程技巧。</p>
-<hr>
-<h3 id="隐式类型强制转换coercion"><a class="header" href="#隐式类型强制转换coercion">隐式类型强制转换（Coercion）</a></h3>
-<p>除了显式的 <code>@ptrCast</code>，Zig 还定义了一组<strong>隐式指针强制转换</strong>规则。<br>理解这些规则有助于消除“为什么这里不用转换也能传？“之类的常见困惑。</p>
+<h2 id="隐式类型强制转换"><a class="header" href="#隐式类型强制转换">隐式类型强制转换</a></h2>
+<p>Zig 定义了一组隐式指针强制转换规则，从更具体的类型向更宽泛的类型自动转换，反方向需要显式操作。</p>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -801,67 +419,64 @@ test "ptrFromInt is for very specific low level cases" {
 </tbody>
 </table>
 </div>
-<p>基本原则是：<strong>从更具体到更宽泛的方向可以隐式转换，反方向则需要显式操作。</strong></p>
-<p>切片本身是一个“胖指针“结构，可以通过 <code>.ptr</code> 和 <code>.len</code> 直接访问它的底层字段：</p>
+<h2 id="对齐"><a class="header" href="#对齐">对齐</a></h2>
+<p>对齐指值的地址是否满足特定倍数边界（如 4 字节、16 字节对齐）。正常声明的变量自动满足基本对齐要求。在手动指针转换、底层内存访问、SIMD 或 MMIO 等场景中，对齐需要显式处理。</p>
 <pre><code class="language-zig">const std = @import("std");
 
-test "slice ptr and len fields" {
-    var array = [_]i32{ 10, 20, 30, 40 };
-    const slice: []i32 = &amp;array;
+test "aligned value and pointer" {
+    var value: i32 align(16) = 42;
 
-    // .len 是切片携带的长度信息
-    try std.testing.expect(slice.len == 4);
+    const ptr: *align(16) i32 = &amp;value;
 
-    // .ptr 是底层的多项指针 [*]i32
-    try std.testing.expect(slice.ptr[0] == 10);
-    try std.testing.expect(slice.ptr[2] == 30);
+    try std.testing.expect(ptr.* == 42);
+    try std.testing.expect(@intFromPtr(ptr) % 16 == 0);
 }
 </code></pre>
-<blockquote>
-<p><strong>注意</strong>：Zig 禁止 C 风格的指针算术（如 <code>ptr + 1</code>）。需要偏移访问时，应使用切片索引（<code>slice[i]</code>）或多项指针索引（<code>ptr[i]</code>），而不是对指针做加法运算。这是 Zig 类型安全设计的一部分。</p>
-</blockquote>
-<hr>
-<h3 id="volatile-指针"><a class="header" href="#volatile-指针"><code>volatile</code> 指针</a></h3>
-<p><code>volatile</code> 的核心意思不是“线程安全“，也不是“防竞态“。<br>它表达的是：</p>
-<blockquote>
-<p><strong>这个地址上的读写具有外部可观察语义，编译器不应把这些访问随意优化掉。</strong></p>
-</blockquote>
-<p>它常见于：</p>
-<ul>
-<li>内存映射寄存器（MMIO）</li>
-<li>特定硬件设备访问</li>
-<li>某些极底层同步场景</li>
-</ul>
-<p>示例：</p>
+<p>更强的对齐承诺必须有真实依据——不能把普通 <code>*i32</code> 当作 <code>*align(16) i32</code>，这等于对编译器做更强的保证。错误的对齐假设可能导致性能下降、某些平台崩溃或未定义行为。</p>
+<h2 id="指针转换"><a class="header" href="#指针转换">指针转换</a></h2>
+<h3 id="ptrcast改变指针的解释方式"><a class="header" href="#ptrcast改变指针的解释方式"><code>@ptrCast</code>：改变指针的解释方式</a></h3>
+<p><code>@ptrCast</code> 将一种指针类型转为另一种，前提是底层内存布局兼容、地址满足目标类型的对齐要求。</p>
 <pre><code class="language-zig">const std = @import("std");
 
-// 仅作语法示意，不适用于普通用户态程序。
+test "ptrCast" {
+    var value: u32 = 0x11223344;
+    const byte_ptr: *u8 = @ptrCast(&amp;value);
+
+    _ = byte_ptr;
+}
+</code></pre>
+<p><code>@ptrCast</code> 属于底层工具，使用时需要清楚别名、布局、端序等问题。如果只是想安全处理字节序列，应优先使用更明确的接口。</p>
+<h3 id="intfromptr-和-ptrfromint地址与整数的转换"><a class="header" href="#intfromptr-和-ptrfromint地址与整数的转换"><code>@intFromPtr</code> 和 <code>@ptrFromInt</code>：地址与整数的转换</a></h3>
+<p><code>@intFromPtr</code> 将指针转为整数地址，<code>@ptrFromInt</code> 将整数转为指针。前者是安全的只读操作，后者只有在裸机开发、内核开发、MMIO 寄存器映射等明确知道地址有效的场景下才有意义。</p>
+<pre><code class="language-zig">const std = @import("std");
+
+test "pointer to integer" {
+    var value: i32 = 123;
+    const addr = @intFromPtr(&amp;value);
+
+    try std.testing.expect(addr != 0);
+}
+
+test "ptrFromInt" {
+    const raw_addr: usize = 0x1000;
+    const ptr: *u8 = @ptrFromInt(raw_addr);
+
+    _ = ptr;
+}
+</code></pre>
+<h2 id="volatile-指针"><a class="header" href="#volatile-指针"><code>volatile</code> 指针</a></h2>
+<p><code>volatile</code> 表示该地址上的读写具有外部可观察语义，编译器不应优化掉这些访问。它不等于线程安全，也不等于并发同步。主要用于内存映射寄存器（MMIO）和硬件设备访问。</p>
+<pre><code class="language-zig">const std = @import("std");
+
 const UART_DR: *volatile u32 = @ptrFromInt(0x4000_1000);
 
-test "volatile pointer example is conceptual only" {
+test "volatile pointer" {
     _ = UART_DR;
 }
 </code></pre>
-<p>这里必须强调两次：</p>
-<ol>
-<li>这不是普通程序该模仿的写法</li>
-<li><code>volatile</code> 不等于并发同步原语</li>
-</ol>
-<p>处理线程同步时，优先考虑锁、原子操作和并发模型；处理硬件寄存器时，才更可能需要 <code>volatile</code>。</p>
-<hr>
+<p>线程同步应使用锁、原子操作和并发模型，<code>volatile</code> 仅用于硬件寄存器等特殊场景。</p>
 <h2 id="fieldparentptr从字段指针反推结构体"><a class="header" href="#fieldparentptr从字段指针反推结构体"><code>@fieldParentPtr</code>：从字段指针反推结构体</a></h2>
-<h3 id="这个能力是做什么的"><a class="header" href="#这个能力是做什么的">这个能力是做什么的？</a></h3>
-<p><code>@fieldParentPtr</code> 可以从某个字段的指针，反推出整个结构体对象的指针。</p>
-<p>这在下面这类场景里特别有用：</p>
-<ul>
-<li>侵入式链表</li>
-<li>侵入式队列</li>
-<li>回调上下文对象</li>
-<li>底层容器实现</li>
-</ul>
-<p>它是很强的工具，但也明显属于高级内容。<br>如果目前还在巩固 <code>*T</code>、切片和生命周期，不必急着深挖。</p>
-<hr>
-<h3 id="基本示例"><a class="header" href="#基本示例">基本示例</a></h3>
+<p><code>@fieldParentPtr</code> 从某个字段的指针反推出整个结构体对象的指针，常用于侵入式链表、侵入式队列和回调上下文对象。</p>
 <pre><code class="language-zig">const std = @import("std");
 
 const Creature = struct {
@@ -875,7 +490,7 @@ fn boostMana(mana_ptr: *u32, amount: u32) void {
     creature_ptr.mana += amount;
 }
 
-test "fieldParentPtr basic example" {
+test "fieldParentPtr" {
     var elf = Creature{
         .health = 100.0,
         .mana = 10,
@@ -887,67 +502,7 @@ test "fieldParentPtr basic example" {
     try std.testing.expect(elf.mana == 30);
 }
 </code></pre>
-<p>这个机制依赖的前提是：</p>
-<ul>
-<li><code>mana_ptr</code> 确实来自某个 <code>Creature</code> 的 <code>mana</code> 字段</li>
-<li>这个字段偏移关系在当前类型布局中成立</li>
-</ul>
-<p>如果这些前提不成立，那么推导出的“父对象指针“也就不可靠。</p>
-<hr>
-<h3 id="为什么说它是高级特性"><a class="header" href="#为什么说它是高级特性">为什么说它是高级特性？</a></h3>
-<p>因为它隐含了很多前提：</p>
-<ul>
-<li>必须非常确定字段来源</li>
-<li>必须理解对象布局</li>
-<li>必须确认生命周期仍然有效</li>
-<li>需要承担更强的正确性责任</li>
-</ul>
-<p>所以对教程读者来说，更合适的定位是：</p>
-<blockquote>
-<p><strong>知道有这个能力，并理解它主要用于侵入式数据结构；普通业务代码不必优先依赖它。</strong></p>
-</blockquote>
-<hr>
-<h2 id="指针类型应该怎么选"><a class="header" href="#指针类型应该怎么选">指针类型应该怎么选？</a></h2>
-<p>这是本章最实用的问题之一。</p>
-<p>下面这张表可以帮助建立直觉：</p>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>场景</th><th>更推荐的类型</th><th>原因</th></tr>
-</thead>
-<tbody>
-<tr><td>只读借用单个值</td><td><code>*const T</code></td><td>清楚表达只读，不复制</td></tr>
-<tr><td>可修改单个值</td><td><code>*T</code></td><td>明确表达原地修改</td></tr>
-<tr><td>只读序列输入</td><td><code>[]const T</code></td><td>安全、常见、带长度</td></tr>
-<tr><td>可修改序列</td><td><code>[]T</code></td><td>适合批量处理连续数据</td></tr>
-<tr><td>固定长度数组</td><td><code>*[N]T</code></td><td>长度进入类型</td></tr>
-<tr><td>可能不存在的对象</td><td><code>?*T</code></td><td>显式处理空值</td></tr>
-<tr><td>底层原始连续内存</td><td><code>[*]T</code></td><td>无长度，偏底层</td></tr>
-<tr><td>MMIO / 硬件寄存器</td><td><code>*volatile T</code></td><td>外部可观察内存访问</td></tr>
-</tbody>
-</table>
-</div>
-<p>拿不准时，优先考虑这条经验：</p>
-<blockquote>
-<p><strong>普通代码优先：<code>*const T</code>、<code>*T</code>、<code>[]const T</code>、<code>[]T</code>。</strong><br>其他形式通常是更底层、更专业化的表达。</p>
-</blockquote>
-<hr>
-<h2 id="学指针时最容易踩的坑"><a class="header" href="#学指针时最容易踩的坑">学指针时最容易踩的坑</a></h2>
-<ol>
-<li><strong>把切片和指针混为一谈</strong>：切片内部包含指针，但它还有长度信息，语义和安全边界都不同。</li>
-<li><strong>不区分拥有和借用</strong>：拿到指针或切片不代表拥有底层内存。必须始终知道谁创建了这块内存、谁负责释放、什么时候它会失效。</li>
-<li><strong>过早沉迷底层技巧</strong>：<code>@ptrCast</code>、<code>@ptrFromInt</code>、<code>volatile</code>、<code>@fieldParentPtr</code> 都很强，但应在熟悉 <code>*T</code>、切片和可选指针之后再深入。</li>
-<li><strong>误把 <code>volatile</code> 当线程安全工具</strong>：它不是锁，也不是原子操作，也不自动解决竞态条件。</li>
-<li><strong>忽略对齐</strong>：手动做底层指针转换时，必须确认地址满足目标类型对齐要求，不可对编译器做过强承诺。</li>
-</ol>
-<hr>
-<h2 id="小结"><a class="header" href="#小结">小结</a></h2>
-<p>这一章的核心不是记住所有指针语法，而是建立一种判断方式：我手里的是单个值的地址还是一段数据视图？有没有长度和边界信息？能不能修改？可能为空吗？生命周期由谁保证？一旦这些判断清楚，Zig 的指针类型就不再是“一堆语法“，而是在明确描述数据关系和资源边界。</p>
-<hr>
-<blockquote>
-<p><strong>相关阅读</strong>：</p>
-<p>下一章我们将进入<a href="chapter-memory-management.html">内存管理模型</a>，继续把“数据视图与借用边界“推进到更完整的资源语义：谁拥有数据、谁负责释放、分配器如何参与接口设计，以及失败路径该如何收口。</p>
-</blockquote>
+<p>这个机制依赖字段确实来自对应结构体，字段偏移关系在当前类型布局中成立。</p>
 
                     </main>
 

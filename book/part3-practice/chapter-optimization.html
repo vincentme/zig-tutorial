@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d724f321.js";
+            window.path_to_searchindex_js = "../searchindex-ab6996a3.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-4c2eaf17.js"></script>
@@ -234,18 +234,7 @@
 <hr>
 <h2 id="第一步先测量而不是先猜"><a class="header" href="#第一步先测量而不是先猜">第一步：先测量，而不是先猜</a></h2>
 <h3 id="先区分构建模式"><a class="header" href="#先区分构建模式">先区分构建模式</a></h3>
-<p>Zig 的构建模式会显著影响运行行为。<br>如果你在 <code>Debug</code> 和 <code>ReleaseFast</code> 下比较结果，却没先说明这一点，那么结论往往没有参考价值。</p>
-<p>常见优化模式：</p>
-<ul>
-<li><code>Debug</code>：便于调试，安全检查完整，通常最慢</li>
-<li><code>ReleaseSafe</code>：有优化，同时保留较多安全检查</li>
-<li><code>ReleaseFast</code>：更强调速度，可能移除部分安全检查</li>
-<li><code>ReleaseSmall</code>：更强调体积</li>
-</ul>
-<p>如果你只记一条经验，那就是：</p>
-<blockquote>
-<p><strong>性能比较时，先明确自己在什么构建模式下运行。</strong></p>
-</blockquote>
+<p>构建模式会显著影响性能表现（各模式的区别见<a href="../part1-basics/chapter-build-system.html">构建系统章节</a>）。性能比较前先确认你用的是哪种模式。</p>
 <h3 id="一个最小测量示例"><a class="header" href="#一个最小测量示例">一个最小测量示例</a></h3>
 <p>下面这个例子适合演示“最基础的时间测量”，但它<strong>不是严格基准测试框架</strong>：</p>
 <pre><code class="language-zig">const std = @import("std");
@@ -277,38 +266,25 @@ pub fn main() void {
 <li>验证某段代码是不是明显变慢了</li>
 <li>对热点有一个初步感觉</li>
 </ul>
-<p>但它不适合直接得出“最终性能结论”，因为：</p>
+<p>但它不适合直接得出“最终性能结论“，因为：</p>
 <ul>
 <li>只跑一次，波动很大</li>
 <li>没有预热</li>
 <li>没有多轮统计</li>
 <li>很容易受到系统负载影响</li>
 </ul>
-<p>所以更准确地说，这种方法适合：</p>
+<p>如果想让粗测更可靠，可以注意以下几点：</p>
+<ul>
+<li><strong>多跑几轮</strong>，看整体趋势而非单次结果</li>
+<li><strong>固定输入规模</strong>，保证两次比较的输入数据和分布一致</li>
+<li><strong>避免把 <code>print</code> 开销混进热点</strong>，循环里频繁输出会掩盖真实计算时间</li>
+<li><strong>先判断瓶颈类型</strong>：如果时间都花在等待文件、网络、磁盘上，盯着算术优化没意义；只有热点在数据处理逻辑时，才值得考虑算法、数据布局等手段</li>
+</ul>
 <blockquote>
-<p><strong>做第一轮粗测，而不是做最终结论。</strong></p>
+<p><strong>这个方法适合做第一轮粗测，不适合做最终结论。</strong></p>
 </blockquote>
 <hr>
-<h2 id="让测量更可靠的几个做法"><a class="header" href="#让测量更可靠的几个做法">让测量更可靠的几个做法</a></h2>
-<h3 id="1-多跑几轮而不是只看一次"><a class="header" href="#1-多跑几轮而不是只看一次">1. 多跑几轮，而不是只看一次</a></h3>
-<p>如果你只看单次结果，偶然噪音就可能误导你。<br>更好的做法是多次运行同一个 workload，再看整体趋势。</p>
-<h3 id="2-固定输入规模"><a class="header" href="#2-固定输入规模">2. 固定输入规模</a></h3>
-<p>如果两次运行的输入不一样，那么结果通常不能直接比较。<br>性能对比要尽量保证：</p>
-<ul>
-<li>输入数据相同</li>
-<li>数据分布相同</li>
-<li>路径和环境条件尽量一致</li>
-</ul>
-<h3 id="3-避免把输出开销混进热点"><a class="header" href="#3-避免把输出开销混进热点">3. 避免把输出开销混进热点</a></h3>
-<p>如果你在循环里频繁 <code>print</code>，那你测到的很可能是 I/O，而不是核心计算。</p>
-<h3 id="4-先判断是-cpu-问题还是-io-问题"><a class="header" href="#4-先判断是-cpu-问题还是-io-问题">4. 先判断是 CPU 问题还是 I/O 问题</a></h3>
-<p>这个判断非常关键。</p>
-<ul>
-<li>如果时间都花在等待文件、网络、磁盘上，盯着算术优化往往没意义</li>
-<li>如果真正的热点在数据处理逻辑，才值得考虑算法、数据布局、向量化等手段</li>
-</ul>
-<hr>
-<h2 id="第二步调试时先看正确性和边界"><a class="header" href="#第二步调试时先看正确性和边界">第二步：调试时先看“正确性”和“边界”</a></h2>
+<h2 id="第二步调试时先看正确性和边界"><a class="header" href="#第二步调试时先看正确性和边界">第二步：调试时先看“正确性“和“边界“</a></h2>
 <p>很多所谓“性能问题”，最后查出来其实是：</p>
 <ul>
 <li>重复做了不必要的工作</li>
@@ -340,21 +316,7 @@ fn process(value: i32) void {
     }
 }
 </code></pre>
-<h4 id="stddebugassert"><a class="header" href="#stddebugassert"><code>std.debug.assert</code></a></h4>
-<p>适合表达“这里必须成立”的条件。</p>
-<pre><code class="language-zig">const std = @import("std");
-
-fn divide(a: i32, b: i32) i32 {
-    std.debug.assert(b != 0);
-    return @divTrunc(a, b);
-}
-</code></pre>
-<p>它的价值不只是“防崩溃”，更重要的是：</p>
-<ul>
-<li>让假设写进代码</li>
-<li>让错误更早暴露</li>
-<li>缩短定位问题的路径</li>
-</ul>
+<p>调试时可以用 <code>std.debug.assert</code>（见<a href="../part1-basics/chapter-control-flow.html">控制流章节</a>）在关键位置验证假设。</p>
 <h4 id="缩小问题范围"><a class="header" href="#缩小问题范围">缩小问题范围</a></h4>
 <p>如果一个完整程序太复杂，就先把问题切小：</p>
 <ul>
@@ -470,20 +432,6 @@ fn divide(a: i32, b: i32) i32 {
 <li>代码是否变得更难维护？</li>
 <li>这次优化的收益，是否值得它带来的复杂度？</li>
 </ul>
-<hr>
-<h2 id="一个推荐的最小实践循环"><a class="header" href="#一个推荐的最小实践循环">一个推荐的最小实践循环</a></h2>
-<p>如果你在做自己的 Zig 项目，我建议把优化过程尽量收敛成下面这个循环：</p>
-<ol>
-<li><strong>先写正确版本</strong></li>
-<li><strong>写测试，确保行为稳定</strong></li>
-<li><strong>做一轮粗测，找到真正值得看的地方</strong></li>
-<li><strong>加调试信息或断言，确认问题来源</strong></li>
-<li><strong>只改一个关键点</strong></li>
-<li><strong>重新运行测试</strong></li>
-<li><strong>重新测量</strong></li>
-<li><strong>记录结果，再决定是否继续</strong></li>
-</ol>
-<p>这个流程看起来很朴素，但它通常比“连续做很多聪明改动再一起测”更可靠。</p>
 <hr>
 <h2 id="版本敏感提醒"><a class="header" href="#版本敏感提醒">版本敏感提醒</a></h2>
 <p>本教程整体面向 Zig <code>0.16.0-dev</code> 语境。<br>对本章来说，真正重要的不是某个 API 名字是否变化，而是下面这些方法论：</p>
