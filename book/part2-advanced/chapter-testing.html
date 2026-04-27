@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-eaf4bf9b.js";
+            window.path_to_searchindex_js = "../searchindex-23a6b307.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-626d6463.js"></script>
@@ -200,10 +200,8 @@
 <li>如果准备进入第三部分实战案例，那么本章最值得反复回看的部分通常是：测试命名、错误路径验证、<code>std.testing.allocator</code> 和简单测量方法。</li>
 </ul>
 </blockquote>
-<hr>
 <h2 id="为什么测试在-zig-中很重要"><a class="header" href="#为什么测试在-zig-中很重要">为什么测试在 Zig 中很重要</a></h2>
 <p>Zig 强调显式错误处理、显式资源管理和显式分配器传递。测试直接验证这些约束是否被遵守。难以测试的函数往往说明设计本身需要改进。</p>
-<hr>
 <h2 id="zig-测试的基本形式"><a class="header" href="#zig-测试的基本形式">Zig 测试的基本形式</a></h2>
 <p>Zig 使用 <code>test</code> 块定义测试：</p>
 <pre><code class="language-zig">const std = @import("std");
@@ -230,7 +228,6 @@ test "add returns the sum of two integers" {
 <p>如果测试写在某个模块文件里，也可以直接测试那个文件：</p>
 <pre><code class="language-bash">zig test src/math.zig
 </code></pre>
-<hr>
 <h2 id="把测试和代码放在一起"><a class="header" href="#把测试和代码放在一起">把测试和代码放在一起</a></h2>
 <p>Zig 很常见的一种风格，是让测试与被测代码放在同一个文件中：</p>
 <pre><code class="language-zig">const std = @import("std");
@@ -260,7 +257,6 @@ test "clamp returns original value when already in range" {
 <li>测试本身也能起到“行为文档”的作用</li>
 </ul>
 <p>当然，当模块很大、测试很多时，也可以把测试拆到单独文件中。<br>但在本教程阶段，<strong>理解“测试描述行为”这件事，比纠结文件布局更重要</strong>。</p>
-<hr>
 <h2 id="最常用的断言函数"><a class="header" href="#最常用的断言函数">最常用的断言函数</a></h2>
 <p>Zig 的测试辅助主要来自 <code>std.testing</code>。<br>不需要把所有辅助函数都记住，掌握下面这些最常用的即可。</p>
 <h3 id="expect"><a class="header" href="#expect"><code>expect</code></a></h3>
@@ -335,7 +331,6 @@ test "floating-point values should use approximate comparison" {
     try std.testing.expectApproxEqAbs(expected, actual, 0.001);
 }
 </code></pre>
-<hr>
 <h2 id="先测什么优先级应该怎么排"><a class="header" href="#先测什么优先级应该怎么排">先测什么？优先级应该怎么排？</a></h2>
 <p>刚开始写测试时，最容易犯的错误是：</p>
 <ul>
@@ -351,7 +346,6 @@ test "floating-point values should use approximate comparison" {
 <li><strong>再补资源释放检查</strong> — 如果涉及分配，验证 <code>defer</code> 和 <code>errdefer</code> 的执行</li>
 <li><strong>最后补回归测试</strong> — 修过的 bug 应增加测试，防止悄悄回归</li>
 </ol>
-<hr>
 <h2 id="一个更完整的测试示例"><a class="header" href="#一个更完整的测试示例">一个更完整的测试示例</a></h2>
 <p>下面这个例子展示了正常路径、边界条件和错误路径如何组合：</p>
 <pre><code class="language-zig">const std = @import("std");
@@ -377,7 +371,6 @@ test "firstOrError returns error.EmptyInput for empty slices" {
 <li>两到三个行为测试</li>
 <li>明确区分正常路径和失败路径</li>
 </ul>
-<hr>
 <h2 id="用测试验证资源释放责任"><a class="header" href="#用测试验证资源释放责任">用测试验证资源释放责任</a></h2>
 <p>在 Zig 中，资源释放责任需要说清楚。<br>测试也应该帮助验证这件事。</p>
 <p>最常见的方式之一，是在测试中使用 <code>std.testing.allocator</code>。</p>
@@ -420,7 +413,6 @@ test "duplicate allocates and returns a copy" {
 <li>分配失败时会发生什么？</li>
 </ul>
 <p>如果这些问题在测试里说不清楚，通常说明接口本身也还不够清楚。</p>
-<hr>
 <h2 id="使用-defer-和-errdefer-设计可测试代码"><a class="header" href="#使用-defer-和-errdefer-设计可测试代码">使用 <code>defer</code> 和 <code>errdefer</code> 设计可测试代码</a></h2>
 <p>可测试的资源管理代码，往往也更容易写对。</p>
 <p>例如：</p>
@@ -452,7 +444,6 @@ test "buildMessage returns allocated greeting text" {
 <li>测试里也因此必须显式 <code>free</code></li>
 </ul>
 <p>这类结构很符合 Zig 的风格：<br><strong>资源边界清楚，因此也更容易测试。</strong></p>
-<hr>
 <h2 id="嵌套测试它是什么什么时候关心"><a class="header" href="#嵌套测试它是什么什么时候关心">嵌套测试：它是什么，什么时候关心？</a></h2>
 <p>Zig 支持把 <code>test</code> 写在结构体等声明内部。<br>这通常被称为“嵌套测试”：</p>
 <pre><code class="language-zig">const std = @import("std");
@@ -495,7 +486,6 @@ const Counter = struct {
 <li><code>divide truncates integer division toward zero</code></li>
 </ul>
 <p>都比简单写成 <code>test1</code>、<code>divide test</code> 更好。</p>
-<hr>
 <h2 id="怎样给测试命名更清楚"><a class="header" href="#怎样给测试命名更清楚">怎样给测试命名更清楚？</a></h2>
 <p>推荐的命名风格是：</p>
 <ul>
@@ -514,7 +504,6 @@ const Counter = struct {
 <li>读测试列表时就能大致知道覆盖了什么</li>
 <li>测试失败时，日志本身就像一句行为说明</li>
 </ol>
-<hr>
 <h2 id="什么是好测试"><a class="header" href="#什么是好测试">什么是好测试</a></h2>
 <ol>
 <li>关注一个明确行为</li>
@@ -525,7 +514,6 @@ const Counter = struct {
 <li>把基准测量当作提问工具
 基准测量应该帮助提出更好的问题，而不是导致过早下结论。</li>
 </ol>
-<hr>
 <h2 id="一个简单容器测试示例"><a class="header" href="#一个简单容器测试示例">一个简单容器测试示例</a></h2>
 <p>下面是一个更贴近第二部分后续章节的例子：</p>
 <pre><code class="language-zig">const std = @import("std");
@@ -581,7 +569,6 @@ test "Stack.push returns error.Full when capacity is exceeded" {
 <li>容量溢出错误单独测</li>
 </ul>
 <p>而不是把这三件事塞进一个超长测试里。</p>
-<hr>
 <h2 id="基准测试"><a class="header" href="#基准测试">基准测试</a></h2>
 <blockquote>
 <p><strong>基准测试的目标，是帮助比较实现差异，并验证优化是否真的有效。</strong></p>
@@ -613,7 +600,6 @@ fn sum(items: []const u64) u64 {
 </blockquote>
 <p>粗略计时适合观察耗时量级、对比两个实现的大致差异、判断是否值得深入分析。但它<strong>不适合</strong>得出精确的、可复现的性能结论——性能受编译优化级别、输入规模、缓存状态、机器负载等众多因素影响，一次测量结果应始终被审慎对待。</p>
 <p>测试和基准关注的问题不同：测试回答“对不对“（输出：通过/失败），基准回答“快不快“（输出：时间、吞吐等）。更合理的顺序是：先确认逻辑正确，再确认错误路径可靠，最后才讨论性能表现。</p>
-<hr>
 <h2 id="版本敏感说明哪些内容值得小心"><a class="header" href="#版本敏感说明哪些内容值得小心">版本敏感说明：哪些内容值得小心？</a></h2>
 <p>这一章里，真正稳定、应优先掌握的主线是：</p>
 <ul>
@@ -636,7 +622,6 @@ fn sum(items: []const u64) u64 {
 <p><strong>如何把一个 Zig 接口拆成可验证的行为，并为这些行为写出清楚的小测试。</strong></p>
 </blockquote>
 <p>至于更复杂的构建集成，可以结合后续构建系统章节再看。</p>
-<hr>
 <h2 id="小结"><a class="header" href="#小结">小结</a></h2>
 <p>这一章最重要的，不是记住一长串测试 API，而是建立下面这些习惯：</p>
 <ul>

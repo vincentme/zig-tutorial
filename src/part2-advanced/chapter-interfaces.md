@@ -10,8 +10,6 @@
 | `union(enum)` | 封闭变体集合 | 编译器穷尽检查 |
 | VTable / `*anyopaque` + 函数指针 | 运行时动态替换实现 | 最灵活，也最复杂 |
 
----
-
 ## 泛型：`anytype`
 
 具体类型在编译期已知时，泛型是默认首选。
@@ -40,8 +38,6 @@ test "泛型 writeLine" {
 **优点**：无运行时分发开销、编译期类型检查、代码简洁。
 
 **局限**：不能把不同实现放进同一个运行时容器，不能在运行时切换实现类型。
-
----
 
 ## Tagged Union：`union(enum)`
 
@@ -76,8 +72,6 @@ test "union 分发" {
 **优势**：分支穷尽检查、结构明确、易阅读调试、无需维护函数指针表。
 
 **适用场景**：AST 节点、命令类型、有限状态机、项目内部固定的几种策略。
-
----
 
 ## VTable：`*anyopaque` + 函数指针
 
@@ -159,8 +153,6 @@ test "VTable Writer 端到端" {
 4. **错误边界过宽** — 所有函数返回 `anyerror` 让接口语义模糊。
 5. **把泛型问题当成 VTable 问题** — 很多场景一个 `anytype` 函数就足够。
 
----
-
 ## 标准库中的 VTable 实例
 
 ### `std.mem.Allocator`
@@ -207,8 +199,6 @@ fn alloc(ctx: *anyopaque, n: usize, alignment: mem.Alignment, ra: usize) ?[*]u8 
 
 关于 `@ptrCast` 和 `@alignCast` 的详细说明，见[指针、切片与对齐](chapter-pointers.md)。
 
----
-
 ## 组合比继承更重要
 
 在 Zig 中，组合比模拟继承体系更自然：
@@ -222,8 +212,6 @@ const Service = struct {
 ```
 
 依赖关系、模块边界和生命周期通过结构体字段显式表达，测试时容易替换部件，资源管理路径也一目了然。
-
----
 
 ## 小结
 

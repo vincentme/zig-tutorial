@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-eaf4bf9b.js";
+            window.path_to_searchindex_js = "../searchindex-23a6b307.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-626d6463.js"></script>
@@ -249,6 +249,20 @@ pub fn main(init: std.process.Init) !void {
 <li>旧写法：<code>std.fs.cwd().openFile(path, .{})</code></li>
 <li>新写法：<code>std.Io.Dir.cwd().openFile(io, path, .{})</code></li>
 </ul>
+<p><code>openFile</code> 的第三个参数是 <code>OpenFlags</code>，常用选项：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>标志</th><th>作用</th></tr>
+</thead>
+<tbody>
+<tr><td><code>.mode = .read_only</code></td><td>只读（默认）</td></tr>
+<tr><td><code>.mode = .write_only</code></td><td>只写</td></tr>
+<tr><td><code>.mode = .read_write</code></td><td>读写</td></tr>
+</tbody>
+</table>
+</div>
+<p><code>createFile</code> 默认只写，加 <code>.read = true</code> 可同时开放读取。</p>
 <h3 id="直接写入整个字节切片"><a class="header" href="#直接写入整个字节切片">直接写入整个字节切片</a></h3>
 <p>整块写入时，可以直接使用 <code>File.writeStreamingAll</code>：</p>
 <pre><code class="language-zig">const std = @import("std");
@@ -365,6 +379,8 @@ _ = chunk;
 </code></pre>
 <h2 id="使用-filewriter"><a class="header" href="#使用-filewriter">使用 <code>File.Writer</code></a></h2>
 <p>需要缓冲、格式化或多次写入时，使用 <code>File.Writer</code>。</p>
+<h3 id="缓冲-io-与-flush"><a class="header" href="#缓冲-io-与-flush">缓冲 IO 与 flush</a></h3>
+<p>Zig 的 Reader 和 Writer 要求显式传入缓冲区——与 C 的 <code>FILE*</code>（隐式分配内部缓冲区）不同，程序员完全控制缓冲区的大小和生命周期，符合“无隐藏分配“原则。数据先写入缓冲区，调用 <code>flush()</code> 后才真正落到底层 IO 资源。忘记 <code>flush()</code> 最常见的结果是输出不完整。</p>
 <pre><code class="language-zig">const std = @import("std");
 const Io = std.Io;
 
@@ -383,7 +399,6 @@ pub fn main(init: std.process.Init) !void {
     try file_writer.interface.flush();
 }
 </code></pre>
-<p><code>flush()</code> 很重要。<code>File.Writer</code> 先写入缓冲区，不刷新就不能保证数据已经落到底层文件。</p>
 <h3 id="写入内存缓冲区"><a class="header" href="#写入内存缓冲区">写入内存缓冲区</a></h3>
 <p>写入内存而不是文件时，可以直接使用 <code>Io.Writer.fixed</code>：</p>
 <pre><code class="language-zig">const std = @import("std");
@@ -400,6 +415,34 @@ pub fn main() !void {
     std.debug.print("{s}", .{written});
 }
 </code></pre>
+<h2 id="标准输入输出"><a class="header" href="#标准输入输出">标准输入输出</a></h2>
+<p>操作系统为每个进程创建三个标准通道：stdin（输入）、stdout（输出）、stderr（错误）。Zig 通过 <code>std.Io.File</code> 暴露它们：</p>
+<pre><code class="language-zig">const std = @import("std");
+const Io = std.Io;
+
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+
+    // stdout：正常输出
+    var out_buf: [1024]u8 = undefined;
+    var stdout_writer = Io.File.stdout().writer(io, &amp;out_buf);
+    try stdout_writer.interface.writeAll("hello stdout\n");
+    try stdout_writer.interface.flush();
+
+    // stderr：错误和警告
+    var err_buf: [1024]u8 = undefined;
+    var stderr_writer = Io.File.stderr().writer(io, &amp;err_buf);
+    try stderr_writer.interface.writeAll("error: something went wrong\n");
+    try stderr_writer.interface.flush();
+
+    // stdin：读取用户输入（阻塞直到收到换行）
+    var in_buf: [1024]u8 = undefined;
+    var stdin_reader = Io.File.stdin().reader(io, &amp;in_buf);
+    const name = try stdin_reader.interface.takeDelimiter('\n');
+    std.debug.print("you typed: {s}\n", .{name});
+}
+</code></pre>
+<p>stdout 和 stderr 都用于输出，区别在于约定：正常输出走 stdout，错误和警告走 stderr（终端中通常以不同颜色显示）。</p>
 <h2 id="readfailedwritefailed-与-err"><a class="header" href="#readfailedwritefailed-与-err"><code>ReadFailed</code>、<code>WriteFailed</code> 与 <code>.err</code></a></h2>
 <p><code>Io.Reader</code> 和 <code>Io.Writer</code> 的通用接口会把底层错误折叠成较高层的错误：</p>
 <ul>

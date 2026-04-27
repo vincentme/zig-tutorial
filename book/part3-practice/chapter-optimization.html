@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-eaf4bf9b.js";
+            window.path_to_searchindex_js = "../searchindex-23a6b307.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-626d6463.js"></script>
@@ -187,7 +187,6 @@
 <p><strong>先测量，再调试，再验证。</strong></p>
 </blockquote>
 <p>如果你已经完成了前面的 CLI、HTTP、内存池等案例，这一章会更有价值，因为你已经有了可以观察、修改、比较的实际程序。<br>也正因为如此，本章更像一个<strong>实践工具箱</strong>，而不是一份需要按顺序死记的“固定答案”。</p>
-<hr>
 <h2 id="为什么性能优化最容易被做错"><a class="header" href="#为什么性能优化最容易被做错">为什么性能优化最容易被做错？</a></h2>
 <p>很多性能问题不是出在“不会优化”，而是出在<strong>优化顺序错误</strong>。</p>
 <p>常见误区包括：</p>
@@ -203,7 +202,6 @@
 <li><strong>先定位问题，再决定是否值得优化</strong></li>
 <li><strong>每次改动后都重新验证正确性和结果</strong></li>
 </ol>
-<hr>
 <h2 id="一个更可靠的工作流measure--debug--verify"><a class="header" href="#一个更可靠的工作流measure--debug--verify">一个更可靠的工作流：Measure → Debug → Verify</a></h2>
 <p>你可以把本章的主线记成下面三个词：</p>
 <h3 id="1-measure先测量"><a class="header" href="#1-measure先测量">1. Measure：先测量</a></h3>
@@ -231,7 +229,6 @@
 <li>性能是否真的改善</li>
 <li>改动是否只在某个偶然输入下才显得更快</li>
 </ul>
-<hr>
 <h2 id="第一步先测量而不是先猜"><a class="header" href="#第一步先测量而不是先猜">第一步：先测量，而不是先猜</a></h2>
 <h3 id="先区分构建模式"><a class="header" href="#先区分构建模式">先区分构建模式</a></h3>
 <p>构建模式会显著影响性能表现（各模式的区别见<a href="../part1-basics/chapter-build-system.html">构建系统章节</a>）。性能比较前先确认你用的是哪种模式。</p>
@@ -283,7 +280,6 @@ pub fn main(init: std.process.Init) void {
 <blockquote>
 <p><strong>这个方法适合做第一轮粗测，不适合做最终结论。</strong></p>
 </blockquote>
-<hr>
 <h2 id="第二步调试时先看正确性和边界"><a class="header" href="#第二步调试时先看正确性和边界">第二步：调试时先看“正确性“和“边界“</a></h2>
 <p>很多所谓“性能问题”，最后查出来其实是：</p>
 <ul>
@@ -326,7 +322,6 @@ fn process(value: i32) void {
 <li>只比较改动前后的一个局部版本</li>
 </ul>
 <p>这往往比一开始就盯着整个系统更有效。</p>
-<hr>
 <h2 id="第三步验证优化是否真的成立"><a class="header" href="#第三步验证优化是否真的成立">第三步：验证优化是否真的成立</a></h2>
 <p>这是最容易被忽略的一步。</p>
 <p>你做了一次“优化”之后，至少还要重新回答四个问题：</p>
@@ -351,7 +346,6 @@ fn process(value: i32) void {
 <li>局部更快，但整体工作流更难理解</li>
 </ul>
 <p>所以验证时，不要只看某一个局部数字。</p>
-<hr>
 <h2 id="优化时最值得优先考虑的方向"><a class="header" href="#优化时最值得优先考虑的方向">优化时最值得优先考虑的方向</a></h2>
 <p>在 Zig 里，真正“高收益且常见”的优化，通常不是最炫的那一类，而是这些：</p>
 <h3 id="1-减少不必要的分配"><a class="header" href="#1-减少不必要的分配">1. 减少不必要的分配</a></h3>
@@ -386,7 +380,6 @@ fn process(value: i32) void {
 <li>是否频繁跨结构跳转</li>
 <li>是否本来可以顺序访问，却写成了低局部性模式</li>
 </ul>
-<hr>
 <h2 id="什么时候才该考虑更底层的优化"><a class="header" href="#什么时候才该考虑更底层的优化">什么时候才该考虑更底层的优化？</a></h2>
 <p>更底层的优化当然重要，但不应成为默认起手式。</p>
 <p>例如这些方向：</p>
@@ -408,7 +401,6 @@ fn process(value: i32) void {
 <blockquote>
 <p><strong>先把“大方向”做对，再考虑“底层榨干”。</strong></p>
 </blockquote>
-<hr>
 <h2 id="一个更实用的性能检查清单"><a class="header" href="#一个更实用的性能检查清单">一个更实用的性能检查清单</a></h2>
 <p>当你怀疑某段代码慢时，可以按这个顺序检查：</p>
 <h3 id="测量前"><a class="header" href="#测量前">测量前</a></h3>
@@ -432,7 +424,6 @@ fn process(value: i32) void {
 <li>代码是否变得更难维护？</li>
 <li>这次优化的收益，是否值得它带来的复杂度？</li>
 </ul>
-<hr>
 <h2 id="版本敏感提醒"><a class="header" href="#版本敏感提醒">版本敏感提醒</a></h2>
 <p>本教程整体面向 Zig <code>0.16.0-dev</code> 语境。<br>对本章来说，真正重要的不是某个 API 名字是否变化，而是下面这些方法论：</p>
 <ul>
@@ -444,7 +435,6 @@ fn process(value: i32) void {
 <blockquote>
 <p><strong>Measure → Debug → Verify</strong> 这条工作流本身。</p>
 </blockquote>
-<hr>
 <h2 id="本章小结"><a class="header" href="#本章小结">本章小结</a></h2>
 <p>这一章最希望你带走的，不是某个“性能秘籍”，而是一个更稳妥的实践顺序：</p>
 <ol>

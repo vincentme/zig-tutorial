@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-eaf4bf9b.js";
+            window.path_to_searchindex_js = "../searchindex-23a6b307.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-626d6463.js"></script>
@@ -186,16 +186,16 @@
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th>模块</th><th>说明</th><th>优先级</th></tr>
+<tr><th>模块</th><th>常见需求</th><th>优先级</th></tr>
 </thead>
 <tbody>
-<tr><td><code>std.mem</code></td><td>切片比较、搜索、裁剪、拷贝等字节级操作</td><td>★★★</td></tr>
-<tr><td><code>std.fmt</code></td><td><code>allocPrint</code> / <code>bufPrint</code> / 格式化字符串</td><td>★★★</td></tr>
-<tr><td><code>std.debug</code></td><td><code>print</code> 调试输出、<code>assert</code> 断言</td><td>★★★</td></tr>
-<tr><td><code>std.testing</code></td><td>测试断言、<code>testing.allocator</code>（带泄漏检测）</td><td>★★★</td></tr>
-<tr><td><code>std.fs</code> / <code>Io.Dir</code></td><td>打开/创建文件、遍历目录、路径操作</td><td>★★☆</td></tr>
+<tr><td><code>std.mem</code></td><td>比较字符串或切片、搜索、裁剪、拷贝等字节级操作</td><td>★★★</td></tr>
+<tr><td><code>std.fmt</code></td><td>拼装字符串、<code>allocPrint</code> / <code>bufPrint</code> 格式化输出</td><td>★★★</td></tr>
+<tr><td><code>std.debug</code></td><td>调试输出、<code>assert</code> 断言</td><td>★★★</td></tr>
+<tr><td><code>std.testing</code></td><td>编写测试、比较预期结果、<code>testing.allocator</code>（带泄漏检测）</td><td>★★★</td></tr>
+<tr><td><code>std.Io.Dir</code> / <code>std.Io.File</code></td><td>打开/创建文件、遍历目录、路径操作</td><td>★★☆</td></tr>
 <tr><td><code>std.process</code></td><td>命令行参数、环境变量、程序入口上下文</td><td>★★☆</td></tr>
-<tr><td><code>std.heap</code></td><td>分配器（Arena、FixedBuffer、Debug 等）</td><td>★★☆</td></tr>
+<tr><td><code>std.heap</code></td><td>选择或组合分配器（Arena、FixedBuffer、Debug 等）</td><td>★★☆</td></tr>
 <tr><td><code>std.math</code></td><td>数值与数学函数</td><td>★☆☆</td></tr>
 <tr><td><code>std.json</code></td><td>JSON 解析与序列化</td><td>★☆☆</td></tr>
 <tr><td><code>std.Build</code></td><td>构建脚本 API</td><td>工程阶段重点</td></tr>
@@ -205,38 +205,6 @@
 <blockquote>
 <p><strong>版本说明</strong>：本教程面向 Zig 0.16.0 稳定版。构建系统、I/O 接口等区域优先以本地标准库源码为准。</p>
 </blockquote>
-<h2 id="问题--模块速查"><a class="header" href="#问题--模块速查">问题 → 模块速查</a></h2>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>需求</th><th>模块</th></tr>
-</thead>
-<tbody>
-<tr><td>比较字符串或切片</td><td><code>std.mem</code></td></tr>
-<tr><td>拼装字符串</td><td><code>std.fmt</code></td></tr>
-<tr><td>调试输出</td><td><code>std.debug</code></td></tr>
-<tr><td>打开文件、遍历目录</td><td><code>std.Io.Dir</code> / <code>std.Io.File</code></td></tr>
-<tr><td>处理命令行参数、环境变量</td><td><code>std.process</code></td></tr>
-<tr><td>编写测试、比较预期结果</td><td><code>std.testing</code></td></tr>
-<tr><td>选择或组合分配器</td><td><code>std.heap</code></td></tr>
-<tr><td>I/O / 网络</td><td>本地标准库源码 + 当前文挡</td></tr>
-</tbody>
-</table>
-</div>
-<hr>
-<p>这一章讲解标准库中最常用、也最容易在真实程序里一起出现的几个模块：</p>
-<ul>
-<li><code>std.mem</code></li>
-<li><code>std.fmt</code></li>
-<li><code>std.debug</code></li>
-<li><code>std.testing</code></li>
-<li><code>std.fs</code></li>
-<li><code>std.process</code></li>
-<li><code>std.ArrayList</code>：动态数组</li>
-<li><code>std.HashMap</code>：哈希表与键值存储</li>
-<li><code>std.heap</code></li>
-</ul>
-<hr>
 <h2 id="stdmem"><a class="header" href="#stdmem"><code>std.mem</code></a></h2>
 <p><code>std.mem</code> 是最基础、也最常用的标准库模块之一。</p>
 <p>在 Zig 里，很多看起来像“字符串处理”的问题，本质上其实是：</p>
@@ -255,7 +223,8 @@
 <li><code>std.mem.eql</code></li>
 <li><code>std.mem.startsWith</code></li>
 <li><code>std.mem.endsWith</code></li>
-<li><code>std.mem.indexOf</code></li>
+<li><code>std.mem.find</code></li>
+<li><code>std.mem.indexOfScalar</code></li>
 <li><code>std.mem.trim</code></li>
 <li><code>std.mem.splitScalar</code></li>
 <li><code>std.mem.copyForwards</code></li>
@@ -296,7 +265,7 @@ pub fn main(_: std.process.Init) !void {
         std.debug.print("fast suffix detected\n", .{});
     }
 
-    if (std.mem.indexOf(u8, value, "-")) |pos| {
+    if (std.mem.find(u8, value, "-")) |pos| {
         std.debug.print("separator '-' at index {}\n", .{pos});
     }
 
@@ -310,7 +279,7 @@ pub fn main(_: std.process.Init) !void {
 </code></pre>
 <h3 id="eql比较切片内容"><a class="header" href="#eql比较切片内容"><code>eql</code>：比较切片内容</a></h3>
 <p>切片比较最常见的需求是“内容是否相同”，这时通常用 <code>std.mem.eql</code>。</p>
-<pre><code class="language-zig-tutorial/src/part2-advanced/chapter-standard-library-detail.md#L82-93">const std = @import("std");
+<pre><code class="language-zig">const std = @import("std");
 
 pub fn main(_: std.process.Init) void {
     const a = "zig";
@@ -376,14 +345,14 @@ pub fn main(_: std.process.Init) void {
     std.debug.print("trimmed: [{s}]\n", .{trimmed});
 }
 </code></pre>
-<p>第三个参数不是“某一种空白模式”，而是“要裁掉的字符集合”。因此你经常会看到：</p>
+<p>第三个参数是“要裁掉的字符集合”，常见值有：</p>
 <ul>
 <li><code>" "</code></li>
 <li><code>" \t\r\n"</code></li>
 </ul>
 <h3 id="copyforwards"><a class="header" href="#copyforwards"><code>copyForwards</code></a></h3>
 <p>当你已经有目标缓冲区时，<code>copyForwards</code> 是最直接的复制方式之一。</p>
-<pre><code class="language-zig-tutorial/src/part2-advanced/chapter-standard-library-detail.md#L153-164">const std = @import("std");
+<pre><code class="language-zig">const std = @import("std");
 
 pub fn main(_: std.process.Init) void {
     var buffer: [8]u8 = undefined;
@@ -473,60 +442,8 @@ pub fn main(_: std.process.Init) !void {
 </code></pre>
 <p>这个例子体现了 <code>std.fmt</code> 最常见的两条主线：</p>
 <ul>
-<li><strong>短生命周期、固定大小</strong>：优先 <code>bufPrint</code></li>
-<li><strong>结果长度不方便预估，或者需要独立拥有结果</strong>：使用 <code>allocPrint</code></li>
-</ul>
-<h3 id="bufprint把格式化结果写入缓冲区"><a class="header" href="#bufprint把格式化结果写入缓冲区"><code>bufPrint</code>：把格式化结果写入缓冲区</a></h3>
-<p><code>bufPrint</code> 的典型场景是：</p>
-<ul>
-<li>你已经有一块栈上数组</li>
-<li>你不想做堆分配</li>
-<li>你只需要一段临时结果</li>
-</ul>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn main(_: std.process.Init) !void {
-    var buffer: [64]u8 = undefined;
-
-    // 返回值是“实际写入的那一段切片”，而不是整个数组。
-    const result = try std.fmt.bufPrint(
-        &amp;buffer,
-        "name={s}, version={d}",
-        .{ "zig", 16 },
-    );
-
-    std.debug.print("{s}\n", .{result});
-}
-</code></pre>
-<p>这里要注意：</p>
-<ul>
-<li>返回值是切片，不是整个数组</li>
-<li>它表示“实际写入的那一段”</li>
-<li>如果缓冲区不够大，会返回错误</li>
-</ul>
-<h3 id="allocprint分配并返回格式化结果"><a class="header" href="#allocprint分配并返回格式化结果"><code>allocPrint</code>：分配并返回格式化结果</a></h3>
-<p>当你不想自己准备缓冲区，或者结果长度不容易预估时，<code>allocPrint</code> 更方便。</p>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn main(_: std.process.Init) !void {
-    const allocator = std.heap.page_allocator;
-
-    // 这里会发生分配，因此结果的释放责任也落在调用者身上。
-    const text = try std.fmt.allocPrint(
-        allocator,
-        "hello, {s}!",
-        .{"zig"},
-    );
-    defer allocator.free(text);
-
-    std.debug.print("{s}\n", .{text});
-}
-</code></pre>
-<p>这里最重要的不是“会格式化”，而是：</p>
-<ul>
-<li>它发生了分配</li>
-<li>所以必须传入 allocator</li>
-<li>返回结果由调用者负责释放</li>
+<li><strong>短生命周期、固定大小</strong>：优先 <code>bufPrint</code>。返回值是实际写入的切片，不是整个数组；缓冲区不够大会返回错误。</li>
+<li><strong>结果长度不方便预估，或者需要独立拥有结果</strong>：使用 <code>allocPrint</code>。它会发生堆分配，因此必须传入 allocator，返回结果由调用者负责释放 (<code>defer allocator.free(...)</code>)。</li>
 </ul>
 <h2 id="stddebug"><a class="header" href="#stddebug"><code>std.debug</code></a></h2>
 <p><code>std.debug</code> 是学习阶段和开发阶段都非常高频的模块。</p>
@@ -1210,7 +1127,6 @@ pub fn main(_: std.process.Init) !void {
 <p>适合“集中分配、集中释放“的场景（如解析配置、构造语法树、请求级临时对象）。详见<a href="chapter-memory-management.html">内存管理模型</a>。</p>
 <h3 id="fixedbufferallocator"><a class="header" href="#fixedbufferallocator"><code>FixedBufferAllocator</code></a></h3>
 <p>在固定内存块上分配，不向系统申请新内存，适合已知上限、嵌入式或临时工作区。详见<a href="chapter-memory-management.html">内存管理模型</a>。</p>
-<hr>
 <h2 id="各模块直觉速查"><a class="header" href="#各模块直觉速查">各模块直觉速查</a></h2>
 <div class="table-wrapper">
 <table>
@@ -1297,23 +1213,23 @@ pub fn main(init: std.process.Init) !void {
     // 先按行拆分输入，再逐行做配置解析。
     var lines = std.mem.splitScalar(u8, content, '\n');
 
-    // `ArrayList` 适合逐步构造一段最终输出文本。
-    var report = std.ArrayList(u8).init(init.gpa);
+    // `Io.Writer.Allocating` 适合逐步构造一段最终输出文本。
+    var report = std.Io.Writer.Allocating.init(init.gpa);
     defer report.deinit();
 
-    try report.writer().print("mode: {s}\n", .{mode});
-    try report.writer().writeAll("parsed entries:\n");
+    try report.writer.print("mode: {s}\n", .{mode});
+    try report.writer.writeAll("parsed entries:\n");
 
     while (lines.next()) |line| {
         const parsed = try parseLine(line) orelse continue;
-        try report.writer().print("  {s} = {s}\n", .{ parsed.key, parsed.value });
+        try report.writer.print("  {s} = {s}\n", .{ parsed.key, parsed.value });
     }
 
-    const output_file = try cwd.createFile("report.txt", .{ .truncate = true });
-    defer output_file.close();
+    const output_file = try std.Io.Dir.cwd().createFile(io, "report.txt", .{ .truncate = true });
+    defer output_file.close(io);
 
-    try output_file.writeAll(report.items);
-    std.debug.print("{s}", .{report.items});
+    try output_file.writeStreamingAll(io, report.written());
+    std.debug.print("{s}", .{report.written()});
 }
 </code></pre>
 <p>这个例子最值得观察的不是某一个 API，而是模块之间的职责分工：</p>
@@ -1326,7 +1242,6 @@ pub fn main(init: std.process.Init) !void {
 <li><code>std.debug</code>：把结果输出到终端</li>
 </ul>
 <p>这就是 Zig 标准库在真实程序里的常见样子：<br><strong>不是单个模块孤立使用，而是围绕一条清晰的程序主线协作。</strong></p>
-<hr>
 <h2 id="本章小结"><a class="header" href="#本章小结">本章小结</a></h2>
 <p>这一章的重点不是覆盖尽可能多的 API，而是建立面向实战的第一轮标准库直觉：</p>
 <ul>

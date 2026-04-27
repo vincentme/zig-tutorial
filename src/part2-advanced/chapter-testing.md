@@ -16,13 +16,9 @@
 > - 如果准备继续阅读[构建系统与包管理](chapter-package-management.md)，可以把本章理解为“先把模块验证清楚，再把测试接入项目构建流程”的过渡章节。
 > - 如果准备进入第三部分实战案例，那么本章最值得反复回看的部分通常是：测试命名、错误路径验证、`std.testing.allocator` 和简单测量方法。
 
----
-
 ## 为什么测试在 Zig 中很重要
 
 Zig 强调显式错误处理、显式资源管理和显式分配器传递。测试直接验证这些约束是否被遵守。难以测试的函数往往说明设计本身需要改进。
-
----
 
 ## Zig 测试的基本形式
 
@@ -61,8 +57,6 @@ zig test src/main.zig
 zig test src/math.zig
 ```
 
----
-
 ## 把测试和代码放在一起
 
 Zig 很常见的一种风格，是让测试与被测代码放在同一个文件中：
@@ -97,8 +91,6 @@ test "clamp returns original value when already in range" {
 
 当然，当模块很大、测试很多时，也可以把测试拆到单独文件中。  
 但在本教程阶段，**理解“测试描述行为”这件事，比纠结文件布局更重要**。
-
----
 
 ## 最常用的断言函数
 
@@ -205,8 +197,6 @@ test "floating-point values should use approximate comparison" {
 }
 ```
 
----
-
 ## 先测什么？优先级应该怎么排？
 
 刚开始写测试时，最容易犯的错误是：
@@ -222,8 +212,6 @@ test "floating-point values should use approximate comparison" {
 3. **再测失败路径** — 分配失败、输入无效、文件不存在、解析失败、资源初始化中途失败
 4. **再补资源释放检查** — 如果涉及分配，验证 `defer` 和 `errdefer` 的执行
 5. **最后补回归测试** — 修过的 bug 应增加测试，防止悄悄回归
-
----
 
 ## 一个更完整的测试示例
 
@@ -253,8 +241,6 @@ test "firstOrError returns error.EmptyInput for empty slices" {
 - 一个小函数
 - 两到三个行为测试
 - 明确区分正常路径和失败路径
-
----
 
 ## 用测试验证资源释放责任
 
@@ -308,8 +294,6 @@ test "duplicate allocates and returns a copy" {
 
 如果这些问题在测试里说不清楚，通常说明接口本身也还不够清楚。
 
----
-
 ## 使用 `defer` 和 `errdefer` 设计可测试代码
 
 可测试的资源管理代码，往往也更容易写对。
@@ -347,8 +331,6 @@ test "buildMessage returns allocated greeting text" {
 
 这类结构很符合 Zig 的风格：  
 **资源边界清楚，因此也更容易测试。**
-
----
 
 ## 嵌套测试：它是什么，什么时候关心？
 
@@ -407,8 +389,6 @@ zig test src/math.zig --test-filter "divide"
 
 都比简单写成 `test1`、`divide test` 更好。
 
----
-
 ## 怎样给测试命名更清楚？
 
 推荐的命名风格是：
@@ -428,8 +408,6 @@ zig test src/math.zig --test-filter "divide"
 1. 读测试列表时就能大致知道覆盖了什么
 2. 测试失败时，日志本身就像一句行为说明
 
----
-
 ## 什么是好测试
 
 1. 关注一个明确行为
@@ -439,8 +417,6 @@ zig test src/math.zig --test-filter "divide"
 5. 不依赖隐式全局状态
 6. 把基准测量当作提问工具
 基准测量应该帮助提出更好的问题，而不是导致过早下结论。
-
----
 
 ## 一个简单容器测试示例
 
@@ -502,8 +478,6 @@ test "Stack.push returns error.Full when capacity is exceeded" {
 
 而不是把这三件事塞进一个超长测试里。
 
----
-
 ## 基准测试
 
 > **基准测试的目标，是帮助比较实现差异，并验证优化是否真的有效。**
@@ -540,8 +514,6 @@ fn sum(items: []const u64) u64 {
 
 测试和基准关注的问题不同：测试回答"对不对"（输出：通过/失败），基准回答"快不快"（输出：时间、吞吐等）。更合理的顺序是：先确认逻辑正确，再确认错误路径可靠，最后才讨论性能表现。
 
----
-
 ## 版本敏感说明：哪些内容值得小心？
 
 这一章里，真正稳定、应优先掌握的主线是：
@@ -566,8 +538,6 @@ fn sum(items: []const u64) u64 {
 > **如何把一个 Zig 接口拆成可验证的行为，并为这些行为写出清楚的小测试。**
 
 至于更复杂的构建集成，可以结合后续构建系统章节再看。
-
----
 
 ## 小结
 

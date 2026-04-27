@@ -141,8 +141,6 @@ pub fn main(_: std.process.Init) void {
 }
 ```
 
----
-
 ## 本章小结
 
 这一章最重要的收获，不是“会写几个 `@Vector` 示例”，而是理解下面这些判断：

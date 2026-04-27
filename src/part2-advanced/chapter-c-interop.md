@@ -9,8 +9,6 @@ Zig 与 C 的互操作核心是 **ABI 边界**：函数签名、数据布局、�
 3. **资源管理边界** — 分配与释放的归属
 4. **构建与链接边界** — 头文件、系统库的路径与链接
 
----
-
 ## ABI 与类型差异
 
 ABI（Application Binary Interface）决定了函数参数如何传递、返回值如何传回、结构体如何布局。Zig 的切片 `[]T`（指针+长度）、可选类型 `?T`、错误联合 `!T` 等在 Zig 内部很有表达力，但跨 ABI 边界时应退回到更基础的表示：裸指针、显式长度、整数错误码、`extern struct`。
@@ -20,8 +18,6 @@ ABI（Application Binary Interface）决定了函数参数如何传递、返回�
 - 是否要求 NUL 终止？
 - 是否要求 `extern struct` 保证 C ABI 布局？
 - 错误该转换成什么？
-
----
 
 ## 导入 C
 
@@ -55,8 +51,6 @@ pub extern fn make_point(x: f32, y: f32) Point;
 ```
 
 翻译结果是机器生成的参考，不适合直接复制到项目中。
-
----
 
 ## 字符串
 
@@ -99,8 +93,6 @@ pub fn main() !void {
 
 `dupeZ` 返回 `[:0]u8`，编译器层面保证 NUL 终止。非零哨兵值可用 `allocator.dupeSentinel(u8, slice, sentinel_value)`。
 
----
-
 ## 资源与所有权
 
 跨语言边界的资源管理遵循三条原则：
@@ -108,8 +100,6 @@ pub fn main() !void {
 1. **谁分配，谁释放** — Zig 分配 → Zig 释放，C 分配（`malloc`）→ C 释放（`free`）。
 2. **不混用分配器** — Zig allocator 和 C allocator 的实现、元数据布局、调试状态都可能不同，混用会导致未定义行为。
 3. **优先使用 C 库提供的构造函数** — 如果 C 库提供了 `xxx_create()` / `xxx_destroy()` 等入口，应优先使用它们，因为库作者往往隐含了字段初始化顺序、额外状态位、平台相关设置等约束。手工填结构体字段容易被库内部约定所困。
-
----
 
 ## extern struct
 
@@ -142,8 +132,6 @@ test "Pixel layout" {
 ```
 
 纯 Zig 内部用普通 `struct` 即可，编译器可自由优化布局。`extern struct` 仅用于确实要跨 ABI 边界的类型。
-
----
 
 ## 导出给 C
 
@@ -181,8 +169,6 @@ int sum_array(const int *ptr, size_t len);
 
 对外 ABI 设计通常比 Zig 内部 API 更朴素——这不是退步，而是边界设计本来就更保守。
 
----
-
 ## 回调函数
 
 C 库通过函数指针接受回调时（排序、事件、线程入口等），Zig 侧需声明 `callconv(.c)`：
@@ -211,8 +197,6 @@ test "qsort callback" {
 
 关键要素：`callconv(.c)` 匹配 C 调用约定；`?*const anyopaque` 对应 `const void*`，需 `@ptrCast(@alignCast(...))` 恢复具体类型；返回 `c_int` 匹配 C 的 `int`。
 
----
-
 ## 构建与链接
 
 在 `build.zig` 中链接 C 库：
@@ -235,8 +219,6 @@ b.installArtifact(exe);
 
 构建脚本的核心意图只有几类：链接系统库（`linkSystemLibrary`）、启用 libc（`link_libc = true`）、添加头文件路径（`addIncludePath`）、添加 C 源文件（`addCSourceFiles`）。遇到不确定的写法时，先理解目标再核对本地 Zig 版本的 API。
 
----
-
 ## 常见陷阱
 
 1. **把 `[]const u8` 直接传给 C** — 只保证长度，不保证 NUL 终止。
@@ -247,8 +229,6 @@ b.installArtifact(exe);
 6. **认为 `c_int`/`c_long` 跨平台一致** — 这些是 ABI 类型，大小随平台变化。
 
 排查顺序：先查边界类型（是否要求 NUL 终止？是否需 `extern struct`？），再查所有权（谁分配？谁释放？混用了分配器？），再查构建（头文件路径、系统库安装、版本 API 匹配），最后再怀疑 API 细节。
-
----
 
 ## 小结
 

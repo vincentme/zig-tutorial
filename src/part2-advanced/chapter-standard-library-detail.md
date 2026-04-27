@@ -2,49 +2,20 @@
 
 ## 速查表
 
-| 模块 | 说明 | 优先级 |
-| ---- | ---- | ------ |
-| `std.mem` | 切片比较、搜索、裁剪、拷贝等字节级操作 | ★★★ |
-| `std.fmt` | `allocPrint` / `bufPrint` / 格式化字符串 | ★★★ |
-| `std.debug` | `print` 调试输出、`assert` 断言 | ★★★ |
-| `std.testing` | 测试断言、`testing.allocator`（带泄漏检测） | ★★★ |
-| `std.fs` / `Io.Dir` | 打开/创建文件、遍历目录、路径操作 | ★★☆ |
-| `std.process` | 命令行参数、环境变量、程序入口上下文 | ★★☆ |
-| `std.heap` | 分配器（Arena、FixedBuffer、Debug 等） | ★★☆ |
-| `std.math` | 数值与数学函数 | ★☆☆ |
-| `std.json` | JSON 解析与序列化 | ★☆☆ |
-| `std.Build` | 构建脚本 API | 工程阶段重点 |
+| 模块                         | 常见需求                                                  | 优先级       |
+| ---------------------------- | --------------------------------------------------------- | ------------ |
+| `std.mem`                    | 比较字符串或切片、搜索、裁剪、拷贝等字节级操作            | ★★★          |
+| `std.fmt`                    | 拼装字符串、`allocPrint` / `bufPrint` 格式化输出          | ★★★          |
+| `std.debug`                  | 调试输出、`assert` 断言                                   | ★★★          |
+| `std.testing`                | 编写测试、比较预期结果、`testing.allocator`（带泄漏检测） | ★★★          |
+| `std.Io.Dir` / `std.Io.File` | 打开/创建文件、遍历目录、路径操作                         | ★★☆          |
+| `std.process`                | 命令行参数、环境变量、程序入口上下文                      | ★★☆          |
+| `std.heap`                   | 选择或组合分配器（Arena、FixedBuffer、Debug 等）          | ★★☆          |
+| `std.math`                   | 数值与数学函数                                            | ★☆☆          |
+| `std.json`                   | JSON 解析与序列化                                         | ★☆☆          |
+| `std.Build`                  | 构建脚本 API                                              | 工程阶段重点 |
 
 > **版本说明**：本教程面向 Zig 0.16.0 稳定版。构建系统、I/O 接口等区域优先以本地标准库源码为准。
-
-## 问题 → 模块速查
-
-| 需求 | 模块 |
-| ---- | ---- |
-| 比较字符串或切片 | `std.mem` |
-| 拼装字符串 | `std.fmt` |
-| 调试输出 | `std.debug` |
-| 打开文件、遍历目录 | `std.Io.Dir` / `std.Io.File` |
-| 处理命令行参数、环境变量 | `std.process` |
-| 编写测试、比较预期结果 | `std.testing` |
-| 选择或组合分配器 | `std.heap` |
-| I/O / 网络 | 本地标准库源码 + 当前文挡 |
-
----
-
-这一章讲解标准库中最常用、也最容易在真实程序里一起出现的几个模块：
-
-- `std.mem`
-- `std.fmt`
-- `std.debug`
-- `std.testing`
-- `std.fs`
-- `std.process`
-- `std.ArrayList`：动态数组
-- `std.HashMap`：哈希表与键值存储
-- `std.heap`
-
----
 
 ## `std.mem`
 
@@ -66,7 +37,8 @@
 - `std.mem.eql`
 - `std.mem.startsWith`
 - `std.mem.endsWith`
-- `std.mem.indexOf`
+- `std.mem.find`
+- `std.mem.indexOfScalar`
 - `std.mem.trim`
 - `std.mem.splitScalar`
 - `std.mem.copyForwards`
@@ -109,7 +81,7 @@ pub fn main(_: std.process.Init) !void {
         std.debug.print("fast suffix detected\n", .{});
     }
 
-    if (std.mem.indexOf(u8, value, "-")) |pos| {
+    if (std.mem.find(u8, value, "-")) |pos| {
         std.debug.print("separator '-' at index {}\n", .{pos});
     }
 
@@ -126,7 +98,7 @@ pub fn main(_: std.process.Init) !void {
 
 切片比较最常见的需求是“内容是否相同”，这时通常用 `std.mem.eql`。
 
-```zig-tutorial/src/part2-advanced/chapter-standard-library-detail.md#L82-93
+```zig
 const std = @import("std");
 
 pub fn main(_: std.process.Init) void {
@@ -206,7 +178,7 @@ pub fn main(_: std.process.Init) void {
 }
 ```
 
-第三个参数不是“某一种空白模式”，而是“要裁掉的字符集合”。因此你经常会看到：
+第三个参数是“要裁掉的字符集合”，常见值有：
 
 - `" "`
 - `" \t\r\n"`
@@ -215,7 +187,7 @@ pub fn main(_: std.process.Init) void {
 
 当你已经有目标缓冲区时，`copyForwards` 是最直接的复制方式之一。
 
-```zig-tutorial/src/part2-advanced/chapter-standard-library-detail.md#L153-164
+```zig
 const std = @import("std");
 
 pub fn main(_: std.process.Init) void {
@@ -316,67 +288,8 @@ pub fn main(_: std.process.Init) !void {
 
 这个例子体现了 `std.fmt` 最常见的两条主线：
 
-- **短生命周期、固定大小**：优先 `bufPrint`
-- **结果长度不方便预估，或者需要独立拥有结果**：使用 `allocPrint`
-
-### `bufPrint`：把格式化结果写入缓冲区
-
-`bufPrint` 的典型场景是：
-
-- 你已经有一块栈上数组
-- 你不想做堆分配
-- 你只需要一段临时结果
-
-```zig
-const std = @import("std");
-
-pub fn main(_: std.process.Init) !void {
-    var buffer: [64]u8 = undefined;
-
-    // 返回值是“实际写入的那一段切片”，而不是整个数组。
-    const result = try std.fmt.bufPrint(
-        &buffer,
-        "name={s}, version={d}",
-        .{ "zig", 16 },
-    );
-
-    std.debug.print("{s}\n", .{result});
-}
-```
-
-这里要注意：
-
-- 返回值是切片，不是整个数组
-- 它表示“实际写入的那一段”
-- 如果缓冲区不够大，会返回错误
-
-### `allocPrint`：分配并返回格式化结果
-
-当你不想自己准备缓冲区，或者结果长度不容易预估时，`allocPrint` 更方便。
-
-```zig
-const std = @import("std");
-
-pub fn main(_: std.process.Init) !void {
-    const allocator = std.heap.page_allocator;
-
-    // 这里会发生分配，因此结果的释放责任也落在调用者身上。
-    const text = try std.fmt.allocPrint(
-        allocator,
-        "hello, {s}!",
-        .{"zig"},
-    );
-    defer allocator.free(text);
-
-    std.debug.print("{s}\n", .{text});
-}
-```
-
-这里最重要的不是“会格式化”，而是：
-
-- 它发生了分配
-- 所以必须传入 allocator
-- 返回结果由调用者负责释放
+- **短生命周期、固定大小**：优先 `bufPrint`。返回值是实际写入的切片，不是整个数组；缓冲区不够大会返回错误。
+- **结果长度不方便预估，或者需要独立拥有结果**：使用 `allocPrint`。它会发生堆分配，因此必须传入 allocator，返回结果由调用者负责释放 (`defer allocator.free(...)`)。
 
 ## `std.debug`
 
@@ -544,13 +457,13 @@ test "parseAssignment rejects empty value" {
 
 ### 断言函数速查
 
-| 函数 | 用途 |
-| ---- | ---- |
-| `expect` | 验证布尔条件为真 |
-| `expectEqual` | 比较两个值是否相等（类型推导，失败信息更清楚） |
-| `expectEqualStrings` | 比较两个字符串内容 |
-| `expectEqualSlices` | 比较两个切片的逐元素内容 |
-| `expectError` | 验证错误联合体返回的特定错误 |
+| 函数                 | 用途                                           |
+| -------------------- | ---------------------------------------------- |
+| `expect`             | 验证布尔条件为真                               |
+| `expectEqual`        | 比较两个值是否相等（类型推导，失败信息更清楚） |
+| `expectEqualStrings` | 比较两个字符串内容                             |
+| `expectEqualSlices`  | 比较两个切片的逐元素内容                       |
+| `expectError`        | 验证错误联合体返回的特定错误                   |
 
 > 各断言函数的详细用法和示例，见[测试章节](chapter-testing.md)。
 
@@ -819,16 +732,16 @@ pub fn main(_: std.process.Init) !void {
 
 初始化方式对比：
 
-| 方式 | 写法 | 适用场景 |
-| ---- | ---- | -------- |
-| 空列表 | `var list: std.ArrayList(T) = .empty` | 不确定最终大小 |
+| 方式   | 写法                                        | 适用场景       |
+| ------ | ------------------------------------------- | -------------- |
+| 空列表 | `var list: std.ArrayList(T) = .empty`       | 不确定最终大小 |
 | 预分配 | `try std.ArrayList(T).initCapacity(gpa, n)` | 能预估元素数量 |
 
 `ArrayList` 的核心字段只有两个，都可以直接访问：
 
-| 字段 | 类型 | 含义 |
-| ---- | ---- | ---- |
-| `items` | `[]T` | 当前所有元素组成的切片 |
+| 字段       | 类型    | 含义                     |
+| ---------- | ------- | ------------------------ |
+| `items`    | `[]T`   | 当前所有元素组成的切片   |
 | `capacity` | `usize` | 已分配空间能容纳的元素数 |
 
 `items` 就是普通切片——所有切片操作（索引、`for` 遍历、传给函数）都适用。
@@ -873,11 +786,11 @@ const removed2 = list.swapRemove(0);
 
 三种删除方式的对比：
 
-| 方法 | 复杂度 | 顺序 | 返回值 |
-| ---- | ------ | ---- | ------ |
-| `pop()` | O(1) | 只删末尾 | `?T` |
-| `orderedRemove(i)` | O(n) | 保持 | `T` |
-| `swapRemove(i)` | O(1) | 不保持 | `T` |
+| 方法               | 复杂度 | 顺序     | 返回值 |
+| ------------------ | ------ | -------- | ------ |
+| `pop()`            | O(1)   | 只删末尾 | `?T`   |
+| `orderedRemove(i)` | O(n)   | 保持     | `T`    |
+| `swapRemove(i)`    | O(1)   | 不保持   | `T`    |
 
 这三种方法都不需要传入 allocator——它们只缩小列表，不涉及内存分配。
 
@@ -908,12 +821,12 @@ defer allocator.free(owned);
 
 `std.HashMap` 是基于哈希表的键值存储结构。给定一个 key，可以快速查找、插入或删除对应的 value。Zig 标准库提供了两个系列的实现：
 
-| 类型 | 特点 | 适用场景 |
-| ---- | ---- | -------- |
-| `AutoHashMap(K, V)` | 开放寻址，通用哈希 | 整数、枚举、指针等基础类型作为 key |
-| `StringHashMap(V)` | 同上，key 为 `[]const u8` | 字符串作为 key |
-| `array_hash_map.Auto(K, V)` | 数组存储，保留插入顺序 | 需要有序遍历 |
-| `array_hash_map.String(V)` | 同上，key 为 `[]const u8` | 字符串 key + 有序遍历 |
+| 类型                        | 特点                      | 适用场景                           |
+| --------------------------- | ------------------------- | ---------------------------------- |
+| `AutoHashMap(K, V)`         | 开放寻址，通用哈希        | 整数、枚举、指针等基础类型作为 key |
+| `StringHashMap(V)`          | 同上，key 为 `[]const u8` | 字符串作为 key                     |
+| `array_hash_map.Auto(K, V)` | 数组存储，保留插入顺序    | 需要有序遍历                       |
+| `array_hash_map.String(V)`  | 同上，key 为 `[]const u8` | 字符串 key + 有序遍历              |
 
 `AutoHashMap` 和 `StringHashMap` 是**托管的**——结构体内部存储 allocator，调用方法时不需要额外传入。`array_hash_map` 系列是**非托管的**——每个可能分配的方法都需要传入 allocator。
 
@@ -948,16 +861,16 @@ pub fn main(_: std.process.Init) !void {
 
 常用方法一览：
 
-| 方法 | 返回值 | 说明 |
-| ---- | ------ | ---- |
-| `put(key, value)` | `!void` | 插入或覆盖已有值 |
-| `get(key)` | `?V` | 按键查值，不存在返回 `null` |
-| `getPtr(key)` | `?*V` | 返回值的指针（可就地修改） |
-| `contains(key)` | `bool` | 是否存在该 key |
-| `remove(key)` | `bool` | 删除，返回是否成功 |
-| `fetchRemove(key)` | `?KV` | 删除并返回被删除的键值对 |
-| `count()` | `u32` | 当前元素数量 |
-| `getOrPut(key)` | `!GetOrPutResult` | 存在则返回指针，不存在则插入空位 |
+| 方法               | 返回值            | 说明                             |
+| ------------------ | ----------------- | -------------------------------- |
+| `put(key, value)`  | `!void`           | 插入或覆盖已有值                 |
+| `get(key)`         | `?V`              | 按键查值，不存在返回 `null`      |
+| `getPtr(key)`      | `?*V`             | 返回值的指针（可就地修改）       |
+| `contains(key)`    | `bool`            | 是否存在该 key                   |
+| `remove(key)`      | `bool`            | 删除，返回是否成功               |
+| `fetchRemove(key)` | `?KV`             | 删除并返回被删除的键值对         |
+| `count()`          | `u32`             | 当前元素数量                     |
+| `getOrPut(key)`    | `!GetOrPutResult` | 存在则返回指针，不存在则插入空位 |
 
 `get` 返回 `?V`——使用前必须处理"不存在"的情况。这是 Zig 显式错误处理的体现：你不可能意外地访问一个不存在的值。
 
@@ -1035,12 +948,12 @@ _ = map.orderedRemove(3); // O(n)，保持剩余元素的顺序
 
 `array_hash_map` 与 `AutoHashMap` 的关键区别：
 
-| 特性 | `AutoHashMap` | `array_hash_map.Auto` |
-| ---- | ------------- | --------------------- |
-| allocator 传递 | 托管（内部存储） | 非托管（方法参数传入） |
-| 遍历顺序 | 不确定 | 插入顺序 |
-| 直接访问键/值 | 通过迭代器 | `.keys()` / `.values()` 返回切片 |
-| 删除方法 | `remove(key)` | `swapRemove(key)` / `orderedRemove(key)` |
+| 特性           | `AutoHashMap`    | `array_hash_map.Auto`                    |
+| -------------- | ---------------- | ---------------------------------------- |
+| allocator 传递 | 托管（内部存储） | 非托管（方法参数传入）                   |
+| 遍历顺序       | 不确定           | 插入顺序                                 |
+| 直接访问键/值  | 通过迭代器       | `.keys()` / `.values()` 返回切片         |
+| 删除方法       | `remove(key)`    | `swapRemove(key)` / `orderedRemove(key)` |
 
 `.keys()` 和 `.values()` 直接返回切片，这让 `array_hash_map` 在需要序列化、调试输出或批量处理时更方便。
 
@@ -1130,21 +1043,19 @@ pub fn main(_: std.process.Init) !void {
 
 在固定内存块上分配，不向系统申请新内存，适合已知上限、嵌入式或临时工作区。详见[内存管理模型](chapter-memory-management.md)。
 
----
-
 ## 各模块直觉速查
 
-| 模块 | 核心直觉 |
-| ---- | -------- |
-| `std.mem` | 字符串问题是字节切片问题；不拥有数据，只处理数据视图 |
-| `std.fmt` | 先区分格式化与输出；固定缓冲区用 `bufPrint`，需所有权用 `allocPrint` |
-| `std.debug` | `print` 观察状态，`assert` 表达逻辑假设 |
-| `std.testing` | 覆盖正常/错误/边界路径；小函数易测 |
-| `std.Io` | `io` 是 0.16 I/O 统一入口；操作从目录对象出发 |
-| `std.process` | 参数与环境变量从 `Init` 显式传入；位于入口层 |
-| `std.ArrayList` | 不定数量元素首选；0.16 非托管，方法传 allocator |
-| `std.HashMap` | 字符串用 `StringHashMap`；保持顺序用 `array_hash_map` |
-| `std.heap` | allocator 是接口的一部分；分配即资源责任 |
+| 模块            | 核心直觉                                                             |
+| --------------- | -------------------------------------------------------------------- |
+| `std.mem`       | 字符串问题是字节切片问题；不拥有数据，只处理数据视图                 |
+| `std.fmt`       | 先区分格式化与输出；固定缓冲区用 `bufPrint`，需所有权用 `allocPrint` |
+| `std.debug`     | `print` 观察状态，`assert` 表达逻辑假设                              |
+| `std.testing`   | 覆盖正常/错误/边界路径；小函数易测                                   |
+| `std.Io`        | `io` 是 0.16 I/O 统一入口；操作从目录对象出发                        |
+| `std.process`   | 参数与环境变量从 `Init` 显式传入；位于入口层                         |
+| `std.ArrayList` | 不定数量元素首选；0.16 非托管，方法传 allocator                      |
+| `std.HashMap`   | 字符串用 `StringHashMap`；保持顺序用 `array_hash_map`                |
+| `std.heap`      | allocator 是接口的一部分；分配即资源责任                             |
 
 > **相关阅读**：[内存管理模型](chapter-memory-management.md)、[测试与验证](chapter-testing.md)、[CLI 工具开发](../part3-practice/chapter-cli-tool.md)
 
@@ -1215,23 +1126,23 @@ pub fn main(init: std.process.Init) !void {
     // 先按行拆分输入，再逐行做配置解析。
     var lines = std.mem.splitScalar(u8, content, '\n');
 
-    // `ArrayList` 适合逐步构造一段最终输出文本。
-    var report = std.ArrayList(u8).init(init.gpa);
+    // `Io.Writer.Allocating` 适合逐步构造一段最终输出文本。
+    var report = std.Io.Writer.Allocating.init(init.gpa);
     defer report.deinit();
 
-    try report.writer().print("mode: {s}\n", .{mode});
-    try report.writer().writeAll("parsed entries:\n");
+    try report.writer.print("mode: {s}\n", .{mode});
+    try report.writer.writeAll("parsed entries:\n");
 
     while (lines.next()) |line| {
         const parsed = try parseLine(line) orelse continue;
-        try report.writer().print("  {s} = {s}\n", .{ parsed.key, parsed.value });
+        try report.writer.print("  {s} = {s}\n", .{ parsed.key, parsed.value });
     }
 
-    const output_file = try cwd.createFile("report.txt", .{ .truncate = true });
-    defer output_file.close();
+    const output_file = try std.Io.Dir.cwd().createFile(io, "report.txt", .{ .truncate = true });
+    defer output_file.close(io);
 
-    try output_file.writeAll(report.items);
-    std.debug.print("{s}", .{report.items});
+    try output_file.writeStreamingAll(io, report.written());
+    std.debug.print("{s}", .{report.written()});
 }
 ```
 
@@ -1246,8 +1157,6 @@ pub fn main(init: std.process.Init) !void {
 
 这就是 Zig 标准库在真实程序里的常见样子：  
 **不是单个模块孤立使用，而是围绕一条清晰的程序主线协作。**
-
----
 
 ## 本章小结
 

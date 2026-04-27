@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-eaf4bf9b.js";
+            window.path_to_searchindex_js = "searchindex-23a6b307.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-626d6463.js"></script>
@@ -186,7 +186,6 @@
 <p><strong>用强调显式表达的语言，逐步理解控制流、失败路径和资源生命周期。</strong></p>
 </blockquote>
 <p>阅读时持续关注四个问题：代码是否把意图写清楚了？失败路径是否被当作主流程的一部分？资源由谁持有、由谁释放、生命周期到哪里结束？编译期机制和运行时机制分别解决什么问题？</p>
-<hr>
 <h2 id="这本书适合谁"><a class="header" href="#这本书适合谁">这本书适合谁？</a></h2>
 <ul>
 <li>已具备至少一门编程语言经验的开发者</li>
@@ -195,7 +194,6 @@
 <li>希望理解语言设计，而不只停留在语法层面的读者</li>
 </ul>
 <p>本书不是零基础的编程入门教材。</p>
-<hr>
 <h2 id="全书结构"><a class="header" href="#全书结构">全书结构</a></h2>
 <h3 id="第一部分基础"><a class="header" href="#第一部分基础">第一部分：基础</a></h3>
 <p>建立 Zig 的基本语法和阅读方式：语言定位、开发环境、类型、函数、复合类型、控制流、错误处理和构建系统。</p>
@@ -203,11 +201,9 @@
 <p>进入 Zig 的核心机制和工程主题：标准库、<code>comptime</code>、泛型、指针、内存管理、接口设计、C 互操作、并发、测试、构建系统与包管理。重点逐步看清哪些能力属于编译期、哪些属于运行时、哪些抽象是零成本的、工程代码中如何组织资源与依赖。</p>
 <h3 id="第三部分实战与专题"><a class="header" href="#第三部分实战与专题">第三部分：实战与专题</a></h3>
 <p>把前两部分的内容放回完整案例和专题中：CLI 工具、HTTP 服务器、内存池、配置系统、SIMD、异步 I/O、高级内存管理、性能优化等。重点不再是单个语法点，而是如何把语言机制和标准库能力组合起来解决问题。</p>
-<hr>
 <h2 id="建议怎么阅读"><a class="header" href="#建议怎么阅读">建议怎么阅读？</a></h2>
 <p>第一次接触 Zig 时，按目录顺序阅读。自然的路径是：从《认识 Zig》建立整体认识 → 完成环境搭建 → 学习基础语法、控制流和错误处理 → 进入标准库与高级机制 → 在实战章节回看这些机制如何落到项目中。</p>
 <p>有较强系统编程背景的读者，可以把本书当作“教程 + 参考读物“结合使用。</p>
-<hr>
 <h2 id="版本说明"><a class="header" href="#版本说明">版本说明</a></h2>
 <p>本教程面向 <strong>Zig 0.16.0 稳定版</strong>。Zig 仍在持续演进，版本号说明：</p>
 <ul>
@@ -222,7 +218,6 @@
 <li><code>@cImport</code> 已废弃，推荐构建系统中的 <code>addTranslateC</code></li>
 <li>旧的语言级 <code>async</code>/<code>await</code> 已移除，异步方向偏向库层与 I/O 基础设施演进</li>
 </ul>
-<hr>
 <h2 id="关于代码示例"><a class="header" href="#关于代码示例">关于代码示例</a></h2>
 <ul>
 <li>优先选择容易读懂、便于解释、能体现设计意图的写法</li>
@@ -242,7 +237,6 @@
 <li>学 Zig 时最需要建立哪些思维方式？</li>
 <li>这本教程的第一部分会涵盖哪些内容？</li>
 </ol>
-<hr>
 <h2 id="zig-想解决什么问题"><a class="header" href="#zig-想解决什么问题">Zig 想解决什么问题？</a></h2>
 <p>很多语言都试图改进系统编程体验，但 Zig 的切入点有几个非常鲜明的特点：</p>
 <h3 id="显式优于隐式"><a class="header" href="#显式优于隐式">显式优于隐式</a></h3>
@@ -290,7 +284,6 @@
 <li><strong>编译期能力</strong>：Zig 的 <code>comptime</code> 不是单纯“做模板“或“写宏“，而是让开发者用同一套语言语法，把一部分逻辑提前到编译期完成，这也是 Zig 在泛型、元编程、编译期检查等方面很有辨识度的原因之一。</li>
 <li><strong>跨平台与 C 互操作</strong>：Zig 对交叉编译和 C 互操作的支持非常强，这让它在替代部分 C/C++ 基础设施、构建工具、CLI 工具或平台胶水层时非常有竞争力。</li>
 </ul>
-<hr>
 <h2 id="zig-适合哪些场景"><a class="header" href="#zig-适合哪些场景">Zig 适合哪些场景？</a></h2>
 <p>Zig 并不是“什么都替代“的语言，但它在以下场景尤其值得关注：</p>
 <ul>
@@ -309,7 +302,6 @@
 <li>比传统 C 工具链更统一的开发体验</li>
 </ul>
 <p>那么 Zig 很值得认真了解。</p>
-<hr>
 <h2 id="zig-和常见语言相比定位在哪里"><a class="header" href="#zig-和常见语言相比定位在哪里">Zig 和常见语言相比，定位在哪里？</a></h2>
 <p>下面这张表不是为了分出“谁更好“，而是帮助快速建立定位感。</p>
 <div class="table-wrapper">
@@ -328,50 +320,28 @@
 </tbody>
 </table>
 </div>
-<h3 id="和-c-的关系"><a class="header" href="#和-c-的关系">和 C 的关系</a></h3>
-<p>Zig 和 C 都强调底层控制能力，但 Zig 提供了更统一的工具链、更清晰的错误处理模型和更强的编译期能力，同时避免了预处理器式的技巧。</p>
-<h3 id="和-c-的关系-1"><a class="header" href="#和-c-的关系-1">和 C++ 的关系</a></h3>
-<p>Zig 有意减少语言复杂度，不追求“什么都能抽象“，而更强调规则少、特性交互直接、元编程能力统一、可读性优先。</p>
-<h3 id="和-rust-的关系"><a class="header" href="#和-rust-的关系">和 Rust 的关系</a></h3>
-<p>两者都在改进系统编程体验，但路径不同：Rust 更强调通过编译期约束提供强安全保证，Zig 更强调显式控制、简单规则和更直接的底层协作能力。</p>
-<h3 id="和-go-的关系"><a class="header" href="#和-go-的关系">和 Go 的关系</a></h3>
-<p>Zig 没有垃圾回收，资源管理和失败路径都需要显式处理，换来的是更可预测的性能、更低的运行时成本和更直接的底层控制能力。</p>
-<hr>
-<h2 id="学-zig-时最值得先建立的-5-个观念"><a class="header" href="#学-zig-时最值得先建立的-5-个观念">学 Zig 时，最值得先建立的 5 个观念</a></h2>
-<p>第一遍学 Zig，不要急着追求“会写所有语法“。先建立下面 5 个观念，后面会顺很多。</p>
-<h3 id="先问这段代码可能怎么失败"><a class="header" href="#先问这段代码可能怎么失败">先问“这段代码可能怎么失败？“</a></h3>
-<p>在 Zig 里，失败路径不是边缘情况，而是主线设计的一部分，后续章节会反复体现这些问题：</p>
+<p>与 C 相比，Zig 提供统一的工具链和更清晰的错误处理模型，同时避免预处理器式的技巧。与 C++ 相比，Zig 有意减少语言复杂度，不追求“什么都能抽象“，强调规则少、特性交互直接。与 Rust 相比，Zig 不依赖编译期约束提供强安全保证，更强调显式控制、简单规则和直接的底层协作能力。与 Go 相比，Zig 没有 GC，资源管理和失败路径都需显式处理，换来更可预测的性能和更低的运行时成本。</p>
+<h2 id="学习-zig-的-5-个核心观念"><a class="header" href="#学习-zig-的-5-个核心观念">学习 Zig 的 5 个核心观念</a></h2>
+<h3 id="失败路径是主线的一部分"><a class="header" href="#失败路径是主线的一部分">失败路径是主线的一部分</a></h3>
+<p>阅读和编写 Zig 代码时，持续关注四个问题：</p>
 <ul>
 <li>这个函数可能返回什么错误？</li>
 <li>这个值可能是 <code>null</code> 吗？</li>
 <li>如果中途失败，哪些资源需要清理？</li>
 <li>错误应该在这里处理，还是继续向上传播？</li>
 </ul>
-<h3 id="先问这份数据是谁拥有的"><a class="header" href="#先问这份数据是谁拥有的">先问“这份数据是谁拥有的？“</a></h3>
-<p>很多 Zig 初学者真正容易混淆的，不是语法本身，而是：</p>
+<h3 id="数据所有权决定如何访问"><a class="header" href="#数据所有权决定如何访问">数据所有权决定如何访问</a></h3>
 <ul>
-<li>这里是在复制值吗？</li>
-<li>这里是在借用一段已有数据吗？</li>
-<li>这里修改的是副本，还是底层原数据？</li>
+<li>这里是在复制值，还是在借用已有数据？</li>
+<li>修改的是副本，还是底层原数据？</li>
 </ul>
-<p>在学习数组、切片、指针、分配器时，这个问题会变得尤其关键。</p>
-<h3 id="先把代码写清楚再谈高级抽象"><a class="header" href="#先把代码写清楚再谈高级抽象">先把代码写清楚，再谈高级抽象</a></h3>
-<p>Zig 鼓励直接、明确、可验证的代码。很多时候，一段稍微啰嗦一点但意图明确的实现，比“很巧“的写法更符合 Zig 风格。</p>
-<h3 id="编译器报错不是在为难你而是在帮你收窄问题"><a class="header" href="#编译器报错不是在为难你而是在帮你收窄问题">编译器报错不是在为难你，而是在帮你收窄问题</a></h3>
-<p>Zig 的编译器经常会很直接地指出：</p>
-<ul>
-<li>类型不匹配</li>
-<li>错误没有处理</li>
-<li>分支不穷尽</li>
-<li>可能越界</li>
-<li>声明冲突</li>
-</ul>
-<p>学习 Zig 的一个重要过程，就是逐步适应这种“更早暴露问题“的工作方式。</p>
-<h3 id="不要把-zig-当成另一门更难的语法课"><a class="header" href="#不要把-zig-当成另一门更难的语法课">不要把 Zig 当成“另一门更难的语法课“</a></h3>
-<p>Zig 的学习重点不只是语法，而是程序结构、失败路径、资源管理和意图表达方式。如果只把它当作“新关键字 + 新标准库“，会觉得零散；如果把它当作“重新学习如何更清楚地写系统代码“，就会理解得更快。</p>
-<hr>
+<h3 id="清晰优先于巧妙"><a class="header" href="#清晰优先于巧妙">清晰优先于巧妙</a></h3>
+<p>直接、明确、可验证的实现，比“很巧“的写法更符合 Zig 风格。</p>
+<h3 id="编译器报错在帮助定位问题"><a class="header" href="#编译器报错在帮助定位问题">编译器报错在帮助定位问题</a></h3>
+<p>类型不匹配、未处理的错误、分支不穷尽、可能越界、声明冲突——编译器在编译期暴露这些问题，比运行时才发现更省力。</p>
+<h3 id="学习的重点是程序结构而非语法细节"><a class="header" href="#学习的重点是程序结构而非语法细节">学习的重点是程序结构而非语法细节</a></h3>
+<p>重点是程序结构、失败路径、资源管理和意图表达。只关注“新关键字 + 新标准库“容易零散；关注“如何更清楚地组织代码“则更连贯。</p>
 <h2 id="本章小结"><a class="header" href="#本章小结">本章小结</a></h2>
-<p>本章核心要点：</p>
 <ul>
 <li>Zig 的重点不只是“底层“，更是“清晰、显式、可控“</li>
 <li>Zig 很适合需要资源控制、跨平台能力和工程统一性的场景</li>
@@ -381,40 +351,29 @@
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="开发环境与第一个程序"><a class="header" href="#开发环境与第一个程序">开发环境与第一个程序</a></h1>
-<p>本章目标：安装 Zig、确认工具可用、写出并运行第一个程序。</p>
+<p>本章的目标是完成三件事：安装 Zig、确认工具链可用、写出并运行第一个程序。</p>
 <blockquote>
 <p><strong>版本说明</strong>
-本教程面向 <strong>Zig 0.16.0-dev</strong>。由于开发版仍在持续演进，标准库和部分 API 可能发生变化。
+本教程面向 <strong>Zig 0.16</strong>。开发版仍在持续演进，标准库和部分 API 可能发生变化。
 如果使用的是稳定版或其他开发版，示例代码可能需要做少量调整。</p>
 </blockquote>
-<hr>
-<h2 id="本章你会学到什么"><a class="header" href="#本章你会学到什么">本章你会学到什么</a></h2>
-<p>本章涵盖：</p>
-<ul>
-<li>安装并验证 Zig 编译器</li>
-<li>为编辑器配置基本的 Zig 开发支持</li>
-<li>运行一个最小的 <code>Hello, World!</code> 程序</li>
-<li>理解 <code>zig run</code>、<code>zig test</code>、<code>zig fmt</code> 这几个最常用命令</li>
-<li>对 Zig 0.16 中常见的 <code>main</code> 写法有一个清晰的初步认识</li>
-</ul>
-<hr>
 <h2 id="安装-zig"><a class="header" href="#安装-zig">安装 Zig</a></h2>
 <h3 id="官方下载推荐"><a class="header" href="#官方下载推荐">官方下载（推荐）</a></h3>
-<p>最稳妥的方式是从官方页面下载与当前平台匹配的预编译版本：</p>
+<p>最稳妥的做法是从官网下载与当前平台匹配的预编译版本：</p>
 <ul>
 <li>访问 <a href="https://ziglang.org/download/">https://ziglang.org/download/</a></li>
 <li>下载对应平台的压缩包</li>
-<li>解压到合适的位置</li>
+<li>解压到合适的目录</li>
 <li>将 Zig 可执行文件所在目录加入 <code>PATH</code></li>
 </ul>
-<p>这样做的好处是：</p>
+<p>这样做的好处在于：</p>
 <ul>
-<li>更容易拿到教程对应的开发版</li>
-<li>不依赖系统包管理器的更新速度</li>
-<li>避免“教程是新版本，系统装的是旧版本“的落差</li>
+<li>更容易拿到与教程匹配的开发版</li>
+<li>不依赖系统包管理器的更新节奏</li>
+<li>避免「教程是新版本，系统装的是旧版本」的落差</li>
 </ul>
 <h3 id="包管理器安装"><a class="header" href="#包管理器安装">包管理器安装</a></h3>
-<p>也可以使用包管理器安装。</p>
+<p>也可以通过包管理器安装。</p>
 <p><strong>macOS</strong></p>
 <pre><code class="language-bash">brew install zig
 </code></pre>
@@ -434,39 +393,36 @@ choco install zig
 </code></pre>
 <blockquote>
 <p><strong>注意</strong>：包管理器提供的版本通常偏稳定，不一定和本教程使用的 <code>0.16.0-dev</code> 完全一致。
-如果后续示例出现差异，优先先确认版本。</p>
+如果后续示例出现差异，优先确认版本。</p>
 </blockquote>
-<hr>
 <h2 id="验证安装"><a class="header" href="#验证安装">验证安装</a></h2>
-<p>安装完成后，先确认 Zig 已经可用：</p>
+<p>安装完成后，先确认 Zig 可以正常使用：</p>
 <pre><code class="language-bash">zig version
 # 例如：0.16.0-dev.xxx+xxxxxxxx
 </code></pre>
-<p>如果终端能正确输出版本号，说明安装成功。</p>
-<p>还可以确认几个最常用的命令是否存在：</p>
+<p>终端能正确输出版本号，说明安装成功。</p>
+<p>还可以顺便验证几个最常用的命令：</p>
 <pre><code class="language-bash">zig help
 zig env
 zig version
 zig fmt --help
 </code></pre>
-<hr>
 <h2 id="编辑器支持"><a class="header" href="#编辑器支持">编辑器支持</a></h2>
-<p>任意文本编辑器均可编写 Zig。</p>
-<p>如果想获得补全、跳转、错误提示、格式化等体验，可以在常见编辑器中安装 Zig 相关扩展，并启用语言服务器支持。
-例如 <code>VS Code</code>、<code>Zed</code>、<code>Neovim</code> 等编辑器通常都有对应的 Zig 开发插件或集成方案。</p>
-<p>很多编辑器会自动提示安装或配置 <code>ZLS</code>（Zig Language Server）。
-如果需要手动安装、更新或排查问题，建议参考 ZLS 官方安装说明：</p>
+<p>编写 Zig 不挑编辑器，任意文本编辑器都可以。</p>
+<p>如果希望获得补全、跳转、错误提示、格式化等更好的编辑体验，可以在常用编辑器中安装 Zig 相关扩展并启用语言服务器支持。
+像 VS Code、Zed、Neovim 等编辑器通常都有对应的 Zig 开发插件或集成方案。</p>
+<p>很多编辑器会自动提示安装或配置 ZLS（Zig Language Server）。
+如果需要手动安装、更新或排查问题，建议参考 ZLS 官方说明：</p>
 <ul>
 <li><a href="https://zigtools.org/zls/install/">https://zigtools.org/zls/install/</a></li>
 </ul>
 <blockquote>
-<p><strong>注意</strong>：版本兼容很重要
-<code>ZLS</code> 应尽量与所使用的 Zig 版本匹配。
-如果使用的是开发版 Zig，也应尽量使用对应版本的 <code>ZLS</code>，否则可能出现补全异常、诊断不准确等问题。</p>
+<p><strong>注意</strong>：版本兼容很关键。
+ZLS 应尽量与所使用的 Zig 版本匹配。
+如果用的是开发版 Zig，也应尽量使用对应版本的 ZLS，否则可能出现补全异常、诊断不准确等问题。</p>
 </blockquote>
-<hr>
 <h2 id="第一个-zig-程序"><a class="header" href="#第一个-zig-程序">第一个 Zig 程序</a></h2>
-<p>在任意目录中创建文件 <code>hello.zig</code>：</p>
+<p>在任意目录创建文件 <code>hello.zig</code>：</p>
 <pre><code class="language-zig">const std = @import("std");
 
 pub fn main() void {
@@ -479,7 +435,7 @@ pub fn main() void {
 <p>预期输出：</p>
 <pre><code class="language-text">Hello, World!
 </code></pre>
-<h3 id="这段代码先只理解三件事"><a class="header" href="#这段代码先只理解三件事">这段代码先只理解三件事</a></h3>
+<h3 id="这段代码现阶段只需理解三件事"><a class="header" href="#这段代码现阶段只需理解三件事">这段代码现阶段只需理解三件事</a></h3>
 <ol>
 <li>
 <p><code>@import("std")</code>
@@ -494,16 +450,13 @@ pub fn main() void {
 输出一段文本。</p>
 </li>
 </ol>
-<hr>
-<h2 id="关于-stddebugprint-的一个小提醒"><a class="header" href="#关于-stddebugprint-的一个小提醒">关于 <code>std.debug.print</code> 的一个小提醒</a></h2>
-<p><code>std.debug.print</code> 很适合写入门示例，因为它简单直接。
-但需要注意：</p>
+<h2 id="关于-stddebugprint-的提醒"><a class="header" href="#关于-stddebugprint-的提醒">关于 <code>std.debug.print</code> 的提醒</a></h2>
+<p><code>std.debug.print</code> 简单直接，很适合入门示例，但有两点值得留意：</p>
 <ul>
-<li><code>std.debug.print</code> 默认输出到 <strong>stderr</strong></li>
-<li>它很适合调试和教学中的最小示例</li>
-<li>如果想更明确地控制输出流，后面可以再学习 <code>stdout</code> 相关 API</li>
+<li>它默认输出到 <strong>stderr</strong>，而不是 stdout</li>
+<li>它非常适合调试和教学中的最小示例</li>
+<li>后续需要更明确地控制输出流时，可以再学习 stdout 相关 API</li>
 </ul>
-<hr>
 <h2 id="zig-016-的-main-形式"><a class="header" href="#zig-016-的-main-形式">Zig 0.16 的 <code>main</code> 形式</a></h2>
 <div class="table-wrapper">
 <table>
@@ -517,24 +470,22 @@ pub fn main() void {
 </tbody>
 </table>
 </div>
-<p>是否接收 <code>std.process.Init</code>（访问初始化上下文）与是否返回 <code>!void</code>（错误传播）是两个独立维度。</p>
-<hr>
+<p>是否接收 <code>std.process.Init</code>（访问初始化上下文）与是否返回 <code>!void</code>（错误传播）是两个独立的维度。</p>
 <h2 id="常用命令与工作流"><a class="header" href="#常用命令与工作流">常用命令与工作流</a></h2>
-<pre><code class="language-bash">zig run hello.zig      # 运行单文件
-zig test hello.zig     # 运行测试
-zig fmt hello.zig      # 格式化代码
+<pre><code class="language-bash">zig run hello.zig       # 运行单文件
+zig test hello.zig      # 运行测试
+zig fmt hello.zig       # 格式化代码
 zig build-exe hello.zig # 编译可执行文件
 </code></pre>
-<p>排查安装问题时使用 <code>zig env</code> 查看标准库路径和版本信息。</p>
-<p>入门建议的节奏：写一个很小的示例 → <code>zig fmt</code> → <code>zig run</code> → 修改再运行 → 看懂编译器报错。</p>
-<hr>
-<h2 id="关于项目结构先认识不急着展开"><a class="header" href="#关于项目结构先认识不急着展开">关于项目结构：先认识，不急着展开</a></h2>
-<p>如果运行过：</p>
+<p>排查安装问题时，用 <code>zig env</code> 查看标准库路径和版本信息。</p>
+<p>入门阶段的建议节奏：写一个很小的示例 → <code>zig fmt</code> → <code>zig run</code> → 修改再运行 → 读懂编译器报错。</p>
+<h2 id="关于项目结构先认识不急着深入"><a class="header" href="#关于项目结构先认识不急着深入">关于项目结构：先认识，不急着深入</a></h2>
+<p>如果执行过：</p>
 <pre><code class="language-bash">mkdir hello-zig
 cd hello-zig
 zig init
 </code></pre>
-<p>生成的项目结构如下：</p>
+<p>会生成以下项目结构：</p>
 <pre><code class="language-text">hello-zig/
 ├── build.zig
 ├── build.zig.zon
@@ -542,45 +493,43 @@ zig init
     ├── main.zig
     └── root.zig
 </code></pre>
-<p>现在只需要知道：</p>
+<p>现阶段只需知道：</p>
 <ul>
 <li><code>src/main.zig</code> 常作为程序入口</li>
 <li><code>build.zig</code> 是构建脚本</li>
 <li><code>build.zig.zon</code> 是项目清单文件</li>
 </ul>
-<p>这些内容会在<a href="#构建系统入门">构建系统入门</a>里专门讲。本章不展开讲解，是为了避免在还没熟悉语言基础之前被工程化细节打断。</p>
-<hr>
+<p>这些内容会在<a href="#构建系统入门">构建系统入门</a>中专门讲解。本章不展开，是为了避免在熟悉语言基础之前就被工程化细节打断。</p>
 <h2 id="常见问题"><a class="header" href="#常见问题">常见问题</a></h2>
-<h3 id="为什么我复制示例后编不过"><a class="header" href="#为什么我复制示例后编不过">为什么我复制示例后编不过？</a></h3>
-<p>优先检查这几件事：</p>
+<h3 id="为什么复制示例后编不过"><a class="header" href="#为什么复制示例后编不过">为什么复制示例后编不过？</a></h3>
+<p>优先检查以下几项：</p>
 <ol>
-<li>你的 Zig 版本是不是和教程差异较大</li>
+<li>Zig 版本是否和教程版本差异较大</li>
 <li>是否漏掉了结尾分号</li>
-<li>文件是不是保存为 UTF-8 编码</li>
-<li>是否把 <code>std.debug.print</code> 写成了别的名字</li>
+<li>文件是否保存为 UTF-8 编码</li>
+<li><code>std.debug.print</code> 是否误写成了别的名字</li>
 <li>是否在 <code>void</code> 返回的函数里使用了 <code>try</code></li>
 </ol>
 <h3 id="为什么编辑器提示和命令行编译结果不一致"><a class="header" href="#为什么编辑器提示和命令行编译结果不一致">为什么编辑器提示和命令行编译结果不一致？</a></h3>
-<p>通常是因为：</p>
+<p>常见原因包括：</p>
 <ul>
 <li>编辑器使用的 Zig 版本和终端里的 Zig 版本不同</li>
 <li>ZLS 版本和 Zig 版本不匹配</li>
 <li>编辑器缓存了旧的诊断结果</li>
 </ul>
-<h3 id="我是不是必须立刻学会-stdprocessinit-和-stdio"><a class="header" href="#我是不是必须立刻学会-stdprocessinit-和-stdio">我是不是必须立刻学会 <code>std.process.Init</code> 和 <code>std.Io</code>？</a></h3>
+<h3 id="是不是必须立刻学会-stdprocessinit-和-stdio"><a class="header" href="#是不是必须立刻学会-stdprocessinit-和-stdio">是不是必须立刻学会 <code>std.process.Init</code> 和 <code>std.Io</code>？</a></h3>
 <p>不是。
-你只需要先知道：这是 Zig 0.16 中比较常见的新风格。
-本章目标是先让你把程序跑起来，而不是要求你一开始就彻底理解新 I/O 体系。</p>
-<hr>
+现阶段只需知道：这是 Zig 0.16 中比较常见的新风格。
+本章的目标是先把程序跑起来，而不是一开始就彻底理解新 I/O 体系。</p>
 <h2 id="本章小结-1"><a class="header" href="#本章小结-1">本章小结</a></h2>
-<p>本章建立了一个可靠的起点：</p>
+<p>至此，读者应已建立一个可靠的起点：</p>
 <ul>
 <li>Zig 已经安装成功</li>
-<li>知道如何验证版本</li>
-<li>知道如何配置基础编辑器支持</li>
-<li>已经运行了第一个程序</li>
+<li>掌握了验证版本的方法</li>
+<li>了解了基础的编辑器支持配置</li>
+<li>成功运行了第一个程序</li>
 <li>认识了 Zig 0.16 中几种常见的 <code>main</code> 写法</li>
-<li>知道了最常用的几个命令：<code>zig run</code>、<code>zig test</code>、<code>zig fmt</code>、<code>zig build-exe</code></li>
+<li>熟悉了最常用的命令：<code>zig run</code>、<code>zig test</code>、<code>zig fmt</code>、<code>zig build-exe</code></li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="变量常量与基础类型"><a class="header" href="#变量常量与基础类型">变量、常量与基础类型</a></h1>
@@ -1524,14 +1473,6 @@ multiply(3, 4) = 12
 <p><strong>深入学习</strong>：函数指针在接口和 VTable 中的应用请参考<a href="#接口组合与设计模式">接口与多态</a>。</p>
 </blockquote>
 <h2 id="本章要点-1"><a class="header" href="#本章要点-1">本章要点</a></h2>
-<p>本章核心要点：</p>
-<ul>
-<li>会定义和调用基本函数</li>
-<li>理解参数、返回值和 <code>void</code></li>
-<li>知道什么时候用 <code>?T</code>，什么时候用 <code>!T</code></li>
-<li>知道参数默认不可变，修改调用者数据需要显式传指针</li>
-<li>能区分“入门必须掌握的函数知识“和“后续再深入的高级特性“</li>
-</ul>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -3447,7 +3388,8 @@ fn good() !void {
 <p>判断原则可以表述为：<strong>只有当当前函数能够继续向上传播错误时，才可以使用 <code>try</code>。</strong></p>
 <h3 id="catch在当前层处理错误"><a class="header" href="#catch在当前层处理错误"><code>catch</code>：在当前层处理错误</a></h3>
 <p>如果不希望继续传播错误，而是希望在当前层将其处理掉，可以使用 <code>catch</code>。</p>
-<p><strong>提供默认值</strong></p>
+<p><code>catch</code> 的基本形式是 <code>expression catch handler</code>，handler 有以下几种写法。</p>
+<p><strong><code>catch</code> 默认值兜底</strong></p>
 <pre><code class="language-zig">fn divide(a: i32, b: i32) !i32 {
     if (b == 0) return error.DivisionByZero;
     return @divTrunc(a, b);
@@ -3455,9 +3397,38 @@ fn good() !void {
 
 const result = divide(10, 0) catch 0;
 </code></pre>
-<p>这里表示：如果计算失败，就使用 <code>0</code> 作为替代值。</p>
-<p>这种方式适用于“失败后存在合理默认值”的场景。</p>
-<p><strong>捕获错误并执行逻辑</strong></p>
+<p><code>catch 0</code> 的含义是：如果 <code>divide</code> 失败，用 <code>0</code> 作为替代值。</p>
+<p>这种方式适用于“失败后存在合理默认值“的场景。</p>
+<p><strong><code>catch { ... }</code> 执行代码块</strong></p>
+<p>如果不需要错误本身的具体信息，只想在失败时执行一段逻辑，可以省略错误捕获：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+fn divide(a: i32, b: i32) !i32 {
+    if (b == 0) return error.DivisionByZero;
+    return @divTrunc(a, b);
+}
+
+fn example() void {
+    const result = divide(10, 0) catch {
+        std.debug.print("计算出错，使用默认值\n", .{});
+        return; // 从 example 中退出
+    };
+
+    std.debug.print("结果：{}\n", .{result});
+}
+</code></pre>
+<p><code>catch { ... }</code> 也可以用来做错误转换——在代码块中从外层函数返回另一个错误：</p>
+<pre><code class="language-zig">fn safeDivide(a: i32, b: i32) error{InvalidArg}!i32 {
+    const result = divide(a, b) catch {
+        return error.InvalidArg; // 捕获任意错误，转为上层语义
+    };
+    return result;
+}
+</code></pre>
+<p>这里不关心 <code>divide</code> 具体失败原因，只要失败就统一转为 <code>error.InvalidArg</code> 并退出 <code>safeDivide</code>。</p>
+<p>需要注意 <code>catch</code> 代码块的类型必须与成功值的类型匹配。如果函数返回 <code>!T</code>，<code>catch { error.X }</code> 不能直接作为表达式值（因为 <code>error</code> 不是 <code>T</code>），只能通过 <code>return</code> 提前退出函数来实现错误转换。</p>
+<p><strong><code>catch |err| { ... }</code> 捕获错误值</strong></p>
+<p>如果需要根据错误内容做不同处理，可以捕获错误值：</p>
 <pre><code class="language-zig">const std = @import("std");
 
 fn divide(a: i32, b: i32) !i32 {
@@ -3474,7 +3445,7 @@ fn example() void {
     std.debug.print("结果：{}\n", .{result});
 }
 </code></pre>
-<p>这里的 <code>catch |err|</code> 会把错误值绑定到 <code>err</code>，以便执行进一步处理，例如：</p>
+<p>这里 <code>catch |err|</code> 将错误值绑定到 <code>err</code>，<code>@errorName(err)</code> 可以获取错误的名称。常见的后续处理包括：</p>
 <ul>
 <li>记录日志</li>
 <li>转换错误</li>
@@ -3485,9 +3456,9 @@ fn example() void {
 <p>如果能够严格证明某个操作不会失败，可以写成：</p>
 <pre><code class="language-zig">const value = parseNumber("42") catch unreachable;
 </code></pre>
-<p>它的含义不是“忽略错误”，而是断言这里不可能失败；一旦失败，就说明程序的逻辑假设不成立。</p>
+<p>它的含义不是“忽略错误“，而是断言这里不可能失败；一旦失败，就说明程序的逻辑假设不成立。</p>
 <p>关于 <code>unreachable</code> 在不同构建模式下的行为，见<a href="#unreachable">控制流章节的 unreachable 小节</a>。它只适合用于<strong>逻辑上确实可以证明不失败</strong>的场景，不应用来省略本应存在的错误处理。</p>
-<p><strong>匹配具体错误</strong></p>
+<p><strong><code>catch |err| switch</code> 按错误类别分别处理</strong></p>
 <p>如果不同错误需要不同处理方式，可以在 <code>catch</code> 后配合 <code>switch</code> 使用。</p>
 <pre><code class="language-zig">const std = @import("std");
 
@@ -4031,32 +4002,7 @@ pub fn build(b: *std.Build) void {
 </ul>
 <p>两者都很常见，只是面向的层级不同。</p>
 <h2 id="更复杂的工程组织"><a class="header" href="#更复杂的工程组织">更复杂的工程组织</a></h2>
-<p>以下主题在更复杂的项目中会逐步出现。</p>
-<h3 id="模块拆分"><a class="header" href="#模块拆分">模块拆分</a></h3>
-<p>项目变大以后，代码通常会拆分成多个模块，而不是把所有逻辑都放进 <code>main.zig</code>。这时 <code>build.zig</code> 会承担更多职责，例如创建额外模块、管理导入关系、为不同目标复用模块配置。</p>
-<h3 id="多目标项目"><a class="header" href="#多目标项目">多目标项目</a></h3>
-<p>一个项目不一定只有一个可执行程序。它还可能同时包含：</p>
-<ul>
-<li>多个可执行目标</li>
-<li>库目标</li>
-<li>示例程序</li>
-<li>测试目标</li>
-<li>文档或其他辅助步骤</li>
-</ul>
-<p>这会让 <code>build.zig</code> 的结构更丰富，但核心思想不变：用步骤组织项目工作流。</p>
-<h3 id="库目标"><a class="header" href="#库目标">库目标</a></h3>
-<p>项目除了构建可执行文件，还可以构建库目标——静态库和动态库。静态库在链接时被完整嵌入最终产物，动态库则在运行时加载。构建脚本中通过 <code>b.addLibrary</code> 创建库目标，其他目标通过 <code>linkLibrary</code> 消费它。详见<a href="#构建系统与包管理">高级章节</a>。</p>
-<h3 id="外部依赖与系统库"><a class="header" href="#外部依赖与系统库">外部依赖与系统库</a></h3>
-<p>随着项目复杂度上升，还会遇到：</p>
-<ul>
-<li>外部依赖接入</li>
-<li>系统库链接</li>
-<li>C 代码集成</li>
-<li>文件生成与代码生成（构建期运行工具、生成 Zig 源码、为 <code>@embedFile</code> 生成资源）</li>
-<li>多平台发布策略</li>
-<li>更复杂的平台差异处理</li>
-</ul>
-<p>这些主题都放在高级部分系统展开。</p>
+<p>模块拆分、多目标项目（多可执行文件+库+测试）、静态库/动态库构建、外部依赖接入、系统库链接、文件生成与代码生成、交叉编译发布等高级主题，详见<a href="#构建系统与包管理">构建系统与包管理</a>。</p>
 <h2 id="最常用的几个构建命令"><a class="header" href="#最常用的几个构建命令">最常用的几个构建命令</a></h2>
 <p>本章提到的命令有：</p>
 <pre><code class="language-bash"># 构建项目
@@ -4094,33 +4040,25 @@ zig build --help
 <li><code>build.zig</code> 也可以把构建期配置传给程序代码。</li>
 <li>构建系统基于有向无环图（DAG），步骤之间通过依赖边连接。<code>zig-out/</code> 存放最终产物，<code>.zig-cache/</code> 存放构建缓存。</li>
 </ol>
-<p>→ 以下主题将在<a href="#构建系统与包管理">高级章节</a>展开：</p>
-<ul>
-<li><code>build.zig.zon</code> 的依赖声明细节</li>
-<li>构建图的核心机制（DAG、惰性求值、并发与缓存）</li>
-<li>库目标：静态库与动态库</li>
-<li>文件生成与代码生成</li>
-<li>多目标构建与交叉编译发布</li>
-<li>外部依赖接入</li>
-<li>哈希获取与固定</li>
-<li>系统库与 C 代码集成</li>
-</ul>
+<blockquote>
+<p><strong>相关阅读</strong>：<a href="#构建系统与包管理">构建系统与包管理</a> — 深入构建图机制、库目标、代码生成、交叉编译发布和依赖管理。</p>
+</blockquote>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="常用标准库模块详解"><a class="header" href="#常用标准库模块详解">常用标准库模块详解</a></h1>
 <h2 id="速查表"><a class="header" href="#速查表">速查表</a></h2>
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th>模块</th><th>说明</th><th>优先级</th></tr>
+<tr><th>模块</th><th>常见需求</th><th>优先级</th></tr>
 </thead>
 <tbody>
-<tr><td><code>std.mem</code></td><td>切片比较、搜索、裁剪、拷贝等字节级操作</td><td>★★★</td></tr>
-<tr><td><code>std.fmt</code></td><td><code>allocPrint</code> / <code>bufPrint</code> / 格式化字符串</td><td>★★★</td></tr>
-<tr><td><code>std.debug</code></td><td><code>print</code> 调试输出、<code>assert</code> 断言</td><td>★★★</td></tr>
-<tr><td><code>std.testing</code></td><td>测试断言、<code>testing.allocator</code>（带泄漏检测）</td><td>★★★</td></tr>
-<tr><td><code>std.fs</code> / <code>Io.Dir</code></td><td>打开/创建文件、遍历目录、路径操作</td><td>★★☆</td></tr>
+<tr><td><code>std.mem</code></td><td>比较字符串或切片、搜索、裁剪、拷贝等字节级操作</td><td>★★★</td></tr>
+<tr><td><code>std.fmt</code></td><td>拼装字符串、<code>allocPrint</code> / <code>bufPrint</code> 格式化输出</td><td>★★★</td></tr>
+<tr><td><code>std.debug</code></td><td>调试输出、<code>assert</code> 断言</td><td>★★★</td></tr>
+<tr><td><code>std.testing</code></td><td>编写测试、比较预期结果、<code>testing.allocator</code>（带泄漏检测）</td><td>★★★</td></tr>
+<tr><td><code>std.Io.Dir</code> / <code>std.Io.File</code></td><td>打开/创建文件、遍历目录、路径操作</td><td>★★☆</td></tr>
 <tr><td><code>std.process</code></td><td>命令行参数、环境变量、程序入口上下文</td><td>★★☆</td></tr>
-<tr><td><code>std.heap</code></td><td>分配器（Arena、FixedBuffer、Debug 等）</td><td>★★☆</td></tr>
+<tr><td><code>std.heap</code></td><td>选择或组合分配器（Arena、FixedBuffer、Debug 等）</td><td>★★☆</td></tr>
 <tr><td><code>std.math</code></td><td>数值与数学函数</td><td>★☆☆</td></tr>
 <tr><td><code>std.json</code></td><td>JSON 解析与序列化</td><td>★☆☆</td></tr>
 <tr><td><code>std.Build</code></td><td>构建脚本 API</td><td>工程阶段重点</td></tr>
@@ -4130,38 +4068,6 @@ zig build --help
 <blockquote>
 <p><strong>版本说明</strong>：本教程面向 Zig 0.16.0 稳定版。构建系统、I/O 接口等区域优先以本地标准库源码为准。</p>
 </blockquote>
-<h2 id="问题--模块速查"><a class="header" href="#问题--模块速查">问题 → 模块速查</a></h2>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>需求</th><th>模块</th></tr>
-</thead>
-<tbody>
-<tr><td>比较字符串或切片</td><td><code>std.mem</code></td></tr>
-<tr><td>拼装字符串</td><td><code>std.fmt</code></td></tr>
-<tr><td>调试输出</td><td><code>std.debug</code></td></tr>
-<tr><td>打开文件、遍历目录</td><td><code>std.Io.Dir</code> / <code>std.Io.File</code></td></tr>
-<tr><td>处理命令行参数、环境变量</td><td><code>std.process</code></td></tr>
-<tr><td>编写测试、比较预期结果</td><td><code>std.testing</code></td></tr>
-<tr><td>选择或组合分配器</td><td><code>std.heap</code></td></tr>
-<tr><td>I/O / 网络</td><td>本地标准库源码 + 当前文挡</td></tr>
-</tbody>
-</table>
-</div>
-<hr>
-<p>这一章讲解标准库中最常用、也最容易在真实程序里一起出现的几个模块：</p>
-<ul>
-<li><code>std.mem</code></li>
-<li><code>std.fmt</code></li>
-<li><code>std.debug</code></li>
-<li><code>std.testing</code></li>
-<li><code>std.fs</code></li>
-<li><code>std.process</code></li>
-<li><code>std.ArrayList</code>：动态数组</li>
-<li><code>std.HashMap</code>：哈希表与键值存储</li>
-<li><code>std.heap</code></li>
-</ul>
-<hr>
 <h2 id="stdmem"><a class="header" href="#stdmem"><code>std.mem</code></a></h2>
 <p><code>std.mem</code> 是最基础、也最常用的标准库模块之一。</p>
 <p>在 Zig 里，很多看起来像“字符串处理”的问题，本质上其实是：</p>
@@ -4180,7 +4086,8 @@ zig build --help
 <li><code>std.mem.eql</code></li>
 <li><code>std.mem.startsWith</code></li>
 <li><code>std.mem.endsWith</code></li>
-<li><code>std.mem.indexOf</code></li>
+<li><code>std.mem.find</code></li>
+<li><code>std.mem.indexOfScalar</code></li>
 <li><code>std.mem.trim</code></li>
 <li><code>std.mem.splitScalar</code></li>
 <li><code>std.mem.copyForwards</code></li>
@@ -4221,7 +4128,7 @@ pub fn main(_: std.process.Init) !void {
         std.debug.print("fast suffix detected\n", .{});
     }
 
-    if (std.mem.indexOf(u8, value, "-")) |pos| {
+    if (std.mem.find(u8, value, "-")) |pos| {
         std.debug.print("separator '-' at index {}\n", .{pos});
     }
 
@@ -4235,7 +4142,7 @@ pub fn main(_: std.process.Init) !void {
 </code></pre>
 <h3 id="eql比较切片内容"><a class="header" href="#eql比较切片内容"><code>eql</code>：比较切片内容</a></h3>
 <p>切片比较最常见的需求是“内容是否相同”，这时通常用 <code>std.mem.eql</code>。</p>
-<pre><code class="language-zig-tutorial/src/part2-advanced/chapter-standard-library-detail.md#L82-93">const std = @import("std");
+<pre><code class="language-zig">const std = @import("std");
 
 pub fn main(_: std.process.Init) void {
     const a = "zig";
@@ -4301,14 +4208,14 @@ pub fn main(_: std.process.Init) void {
     std.debug.print("trimmed: [{s}]\n", .{trimmed});
 }
 </code></pre>
-<p>第三个参数不是“某一种空白模式”，而是“要裁掉的字符集合”。因此你经常会看到：</p>
+<p>第三个参数是“要裁掉的字符集合”，常见值有：</p>
 <ul>
 <li><code>" "</code></li>
 <li><code>" \t\r\n"</code></li>
 </ul>
 <h3 id="copyforwards"><a class="header" href="#copyforwards"><code>copyForwards</code></a></h3>
 <p>当你已经有目标缓冲区时，<code>copyForwards</code> 是最直接的复制方式之一。</p>
-<pre><code class="language-zig-tutorial/src/part2-advanced/chapter-standard-library-detail.md#L153-164">const std = @import("std");
+<pre><code class="language-zig">const std = @import("std");
 
 pub fn main(_: std.process.Init) void {
     var buffer: [8]u8 = undefined;
@@ -4398,60 +4305,8 @@ pub fn main(_: std.process.Init) !void {
 </code></pre>
 <p>这个例子体现了 <code>std.fmt</code> 最常见的两条主线：</p>
 <ul>
-<li><strong>短生命周期、固定大小</strong>：优先 <code>bufPrint</code></li>
-<li><strong>结果长度不方便预估，或者需要独立拥有结果</strong>：使用 <code>allocPrint</code></li>
-</ul>
-<h3 id="bufprint把格式化结果写入缓冲区"><a class="header" href="#bufprint把格式化结果写入缓冲区"><code>bufPrint</code>：把格式化结果写入缓冲区</a></h3>
-<p><code>bufPrint</code> 的典型场景是：</p>
-<ul>
-<li>你已经有一块栈上数组</li>
-<li>你不想做堆分配</li>
-<li>你只需要一段临时结果</li>
-</ul>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn main(_: std.process.Init) !void {
-    var buffer: [64]u8 = undefined;
-
-    // 返回值是“实际写入的那一段切片”，而不是整个数组。
-    const result = try std.fmt.bufPrint(
-        &amp;buffer,
-        "name={s}, version={d}",
-        .{ "zig", 16 },
-    );
-
-    std.debug.print("{s}\n", .{result});
-}
-</code></pre>
-<p>这里要注意：</p>
-<ul>
-<li>返回值是切片，不是整个数组</li>
-<li>它表示“实际写入的那一段”</li>
-<li>如果缓冲区不够大，会返回错误</li>
-</ul>
-<h3 id="allocprint分配并返回格式化结果"><a class="header" href="#allocprint分配并返回格式化结果"><code>allocPrint</code>：分配并返回格式化结果</a></h3>
-<p>当你不想自己准备缓冲区，或者结果长度不容易预估时，<code>allocPrint</code> 更方便。</p>
-<pre><code class="language-zig">const std = @import("std");
-
-pub fn main(_: std.process.Init) !void {
-    const allocator = std.heap.page_allocator;
-
-    // 这里会发生分配，因此结果的释放责任也落在调用者身上。
-    const text = try std.fmt.allocPrint(
-        allocator,
-        "hello, {s}!",
-        .{"zig"},
-    );
-    defer allocator.free(text);
-
-    std.debug.print("{s}\n", .{text});
-}
-</code></pre>
-<p>这里最重要的不是“会格式化”，而是：</p>
-<ul>
-<li>它发生了分配</li>
-<li>所以必须传入 allocator</li>
-<li>返回结果由调用者负责释放</li>
+<li><strong>短生命周期、固定大小</strong>：优先 <code>bufPrint</code>。返回值是实际写入的切片，不是整个数组；缓冲区不够大会返回错误。</li>
+<li><strong>结果长度不方便预估，或者需要独立拥有结果</strong>：使用 <code>allocPrint</code>。它会发生堆分配，因此必须传入 allocator，返回结果由调用者负责释放 (<code>defer allocator.free(...)</code>)。</li>
 </ul>
 <h2 id="stddebug"><a class="header" href="#stddebug"><code>std.debug</code></a></h2>
 <p><code>std.debug</code> 是学习阶段和开发阶段都非常高频的模块。</p>
@@ -5135,7 +4990,6 @@ pub fn main(_: std.process.Init) !void {
 <p>适合“集中分配、集中释放“的场景（如解析配置、构造语法树、请求级临时对象）。详见<a href="#内存管理模型">内存管理模型</a>。</p>
 <h3 id="fixedbufferallocator"><a class="header" href="#fixedbufferallocator"><code>FixedBufferAllocator</code></a></h3>
 <p>在固定内存块上分配，不向系统申请新内存，适合已知上限、嵌入式或临时工作区。详见<a href="#内存管理模型">内存管理模型</a>。</p>
-<hr>
 <h2 id="各模块直觉速查"><a class="header" href="#各模块直觉速查">各模块直觉速查</a></h2>
 <div class="table-wrapper">
 <table>
@@ -5222,23 +5076,23 @@ pub fn main(init: std.process.Init) !void {
     // 先按行拆分输入，再逐行做配置解析。
     var lines = std.mem.splitScalar(u8, content, '\n');
 
-    // `ArrayList` 适合逐步构造一段最终输出文本。
-    var report = std.ArrayList(u8).init(init.gpa);
+    // `Io.Writer.Allocating` 适合逐步构造一段最终输出文本。
+    var report = std.Io.Writer.Allocating.init(init.gpa);
     defer report.deinit();
 
-    try report.writer().print("mode: {s}\n", .{mode});
-    try report.writer().writeAll("parsed entries:\n");
+    try report.writer.print("mode: {s}\n", .{mode});
+    try report.writer.writeAll("parsed entries:\n");
 
     while (lines.next()) |line| {
         const parsed = try parseLine(line) orelse continue;
-        try report.writer().print("  {s} = {s}\n", .{ parsed.key, parsed.value });
+        try report.writer.print("  {s} = {s}\n", .{ parsed.key, parsed.value });
     }
 
-    const output_file = try cwd.createFile("report.txt", .{ .truncate = true });
-    defer output_file.close();
+    const output_file = try std.Io.Dir.cwd().createFile(io, "report.txt", .{ .truncate = true });
+    defer output_file.close(io);
 
-    try output_file.writeAll(report.items);
-    std.debug.print("{s}", .{report.items});
+    try output_file.writeStreamingAll(io, report.written());
+    std.debug.print("{s}", .{report.written()});
 }
 </code></pre>
 <p>这个例子最值得观察的不是某一个 API，而是模块之间的职责分工：</p>
@@ -5251,7 +5105,6 @@ pub fn main(init: std.process.Init) !void {
 <li><code>std.debug</code>：把结果输出到终端</li>
 </ul>
 <p>这就是 Zig 标准库在真实程序里的常见样子：<br><strong>不是单个模块孤立使用，而是围绕一条清晰的程序主线协作。</strong></p>
-<hr>
 <h2 id="本章小结-2"><a class="header" href="#本章小结-2">本章小结</a></h2>
 <p>这一章的重点不是覆盖尽可能多的 API，而是建立面向实战的第一轮标准库直觉：</p>
 <ul>
@@ -5287,17 +5140,7 @@ pub fn main(init: std.process.Init) !void {
 </blockquote>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="编译期计算与元编程"><a class="header" href="#编译期计算与元编程">编译期计算与元编程</a></h1>
-<p>Zig 的 <code>comptime</code> 让一部分代码在编译阶段执行，从而把类型生成、约束检查、代码选择和预计算提前完成。本章聚焦于 <strong><code>comptime</code> 的机制</strong>——语法、内建函数、能力边界。泛型设计模式将在<a href="#泛型编程">泛型编程</a>中展开。</p>
-<blockquote>
-<p><strong>进阶</strong>：读完后应该能回答——</p>
-<ul>
-<li><code>comptime</code> 参数、<code>comptime</code> 块、<code>comptime var</code> 分别用来做什么？</li>
-<li><code>@typeInfo</code>、<code>@hasDecl</code>、<code>@hasField</code>、<code>@embedFile</code> 等内建函数在编译期能提供什么能力？</li>
-<li><code>inline fn</code> 和 <code>comptime</code> 参数有什么区别？</li>
-<li>编译期计算有哪些硬性限制？</li>
-</ul>
-</blockquote>
-<hr>
+<p>Zig 的 <code>comptime</code> 让一部分代码在编译阶段执行，从而把类型生成、约束检查、代码选择和预计算提前完成。它不是宏系统或 DSL，而是用普通 Zig 代码参与编译阶段的计算与决策——编译期检查和运行时逻辑共享同一套表达方式，泛型和普通函数风格一致。本章聚焦于 <strong><code>comptime</code> 的机制</strong>——语法、内建函数、能力边界。泛型设计模式将在<a href="#泛型编程">泛型编程</a>中展开。</p>
 <h2 id="编译期和运行时核心区分"><a class="header" href="#编译期和运行时核心区分">编译期和运行时：核心区分</a></h2>
 <div class="table-wrapper">
 <table>
@@ -5312,24 +5155,8 @@ pub fn main(init: std.process.Init) !void {
 </tbody>
 </table>
 </div>
-<blockquote>
-<p><strong>只有那些在编译阶段已经确定的信息，才能参与 <code>comptime</code> 计算。</strong></p>
-</blockquote>
-<p>例如类型参数、固定常量、结构体字段的类型信息都属于编译期已知；而用户输入、文件读取结果、网络请求内容则属于运行时。</p>
-<hr>
-<h2 id="comptime-不是宏"><a class="header" href="#comptime-不是宏"><code>comptime</code> 不是宏</a></h2>
-<p>很多初学者把 <code>comptime</code> 误解成“Zig 版宏系统“或“更厉害的模板“。更准确的理解是：</p>
-<blockquote>
-<p><code>comptime</code> 是 Zig 语言本身的一部分，允许用<strong>普通 Zig 代码</strong>参与编译阶段的计算与决策。</p>
-</blockquote>
-<p>它复用同一门语言的语法和类型系统，不需要额外的 DSL。这带来几个效果：</p>
-<ol>
-<li>编译期检查和运行时逻辑共享同一套表达方式</li>
-<li>泛型和普通函数风格一致</li>
-<li>元编程不必绕进“宏展开式思维“</li>
-</ol>
-<hr>
-<h2 id="机制一comptime-参数"><a class="header" href="#机制一comptime-参数">机制一：<code>comptime</code> 参数</a></h2>
+<p>只有编译期已知的值和类型信息才能参与 <code>comptime</code> 计算。类型参数、常量、结构体字段信息属于编译期已知；用户输入、文件内容、网络请求则属于运行时。</p>
+<h2 id="comptime-参数"><a class="header" href="#comptime-参数"><code>comptime</code> 参数</a></h2>
 <p>这是最基础也最常用的机制——函数参数标记为 <code>comptime</code>，调用者必须在编译期提供值。</p>
 <pre><code class="language-zig">const std = @import("std");
 
@@ -5363,10 +5190,23 @@ pub fn main() void {
     std.debug.print("{s}\n", .{&amp;buf}); // AAAAA
 }
 </code></pre>
-<hr>
-<h2 id="机制二comptime-块"><a class="header" href="#机制二comptime-块">机制二：<code>comptime</code> 块</a></h2>
-<p><code>comptime { }</code> 块用于显式写出“一段代码必须在编译期执行”。</p>
-<p>如果只是初始化一个顶层 <code>const</code>常量对象，通常不需要额外写 <code>comptime</code>，因为顶层常量初始化本来就在编译期求值。<br>显式 <code>comptime</code> 更典型的用法，是在类型定义或普通代码附近写编译期检查：</p>
+<h4 id="inline-fn-vs-comptime-参数"><a class="header" href="#inline-fn-vs-comptime-参数"><code>inline fn</code> vs <code>comptime</code> 参数</a></h4>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th></th><th><code>comptime</code> 参数</th><th><code>inline fn</code></th></tr>
+</thead>
+<tbody>
+<tr><td>参数是否必须编译期已知</td><td>是</td><td>否</td></tr>
+<tr><td>是否生成多份特化代码</td><td>是（按参数值特化）</td><td>否（只是内联展开）</td></tr>
+<tr><td>主要用途</td><td>泛型、编译期计算</td><td>性能优化、避免函数调用开销</td></tr>
+<tr><td>类型参数化能力</td><td>有（<code>comptime T: type</code>）</td><td>无</td></tr>
+</tbody>
+</table>
+</div>
+<p><code>inline</code> 不等于编译期——它只是建议编译器在调用处展开函数体，不会让参数变成编译期值。</p>
+<h2 id="comptime-块"><a class="header" href="#comptime-块"><code>comptime</code> 块</a></h2>
+<p><code>comptime { }</code> 块用于显式写出“一段代码必须在编译期执行“。典型用法是在类型定义中写编译期检查：</p>
 <pre><code class="language-zig">const std = @import("std");
 
 const Block = struct {
@@ -5386,10 +5226,9 @@ pub fn main() void {
     std.debug.print("first byte: {}\n", .{b.data[0]});
 }
 </code></pre>
-<p>这个例子里，<code>comptime</code> 的作用不是“计算一个常量”，而是把静态约束放到编译期检查。<br>如果断言不成立，错误会在编译阶段直接暴露出来。</p>
-<hr>
-<h2 id="机制三comptime-var"><a class="header" href="#机制三comptime-var">机制三：<code>comptime var</code></a></h2>
-<p><code>comptime var</code> 声明一个只存在于编译期的可变变量，可以在编译期循环中累积状态：</p>
+<p>如果断言不成立，错误会在编译阶段直接暴露出来。</p>
+<h2 id="comptime-var"><a class="header" href="#comptime-var"><code>comptime var</code></a></h2>
+<p><code>comptime</code> 参数和 <code>comptime</code> 块处理的都是编译期已知的<strong>固定值</strong>。但如果编译期计算需要循环累积中间结果，就需要一个能在编译期<strong>被修改</strong>的变量——这正是 <code>comptime var</code> 的设计意图：声明一个只存在于编译期的可变变量。</p>
 <pre><code class="language-zig">const std = @import("std");
 
 fn fibonacci(comptime n: u32) u32 {
@@ -5408,11 +5247,8 @@ test "fibonacci at comptime" {
     try std.testing.expectEqual(55, comptime fibonacci(10));
 }
 </code></pre>
-<blockquote>
-<p><strong>注意</strong>：<code>comptime var</code> 只能在编译期上下文中被修改。配合 <code>inline for</code> 使用时，循环本身在编译期展开，每次迭代都能读写 <code>comptime var</code>。</p>
-</blockquote>
-<hr>
-<h2 id="机制四编译期条件选择与-typeinfo"><a class="header" href="#机制四编译期条件选择与-typeinfo">机制四：编译期条件选择与 <code>@typeInfo</code></a></h2>
+<p><code>comptime var</code> 只能在编译期执行的代码中修改——包括 <code>comptime</code> 函数体、<code>comptime</code> 块和 <code>inline for</code> / <code>inline while</code> 循环体。普通运行时 <code>for</code> 不能修改 <code>comptime var</code>，因为运行时代码执行时编译期变量已不存在。<code>inline for</code> 之所以可以，是因为它在编译期展开：每次迭代生成一份独立的编译期语句，所有语句都在编译期执行完毕后才进入运行时。</p>
+<h2 id="typeinfo-与-compileerror"><a class="header" href="#typeinfo-与-compileerror"><code>@typeInfo</code> 与 <code>@compileError</code></a></h2>
 <p><code>@typeInfo</code> 返回一个类型的结构化描述，可以在编译期根据类型信息做分支决策：</p>
 <pre><code class="language-zig">const std = @import("std");
 
@@ -5431,7 +5267,7 @@ test "zeroValue" {
     try std.testing.expectEqual(false, zeroValue(bool));
 }
 </code></pre>
-<p>更完整的类型描述示例——读取结构体字段数量：</p>
+<p>读取结构体字段信息：</p>
 <pre><code class="language-zig">const std = @import("std");
 
 fn fieldCount(comptime T: type) usize {
@@ -5451,36 +5287,15 @@ test "fieldCount" {
     try std.testing.expectEqual(3, fieldCount(User));
 }
 </code></pre>
-<hr>
-<h2 id="机制五inline-for-与编译期循环展开"><a class="header" href="#机制五inline-for-与编译期循环展开">机制五：<code>inline for</code> 与编译期循环展开</a></h2>
-<p><code>inline for</code> 在编译期展开循环，每次迭代的捕获值都是编译期已知的。这使得在循环体内可以做编译期类型推导：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-fn printFieldNames(comptime T: type) void {
-    const fields = @typeInfo(T).@"struct".fields;
-    inline for (fields) |field| {
-        std.debug.print("{s}\n", .{field.name});
-    }
-}
-
-const Config = struct {
-    host: []const u8,
-    port: u16,
-    debug: bool,
-};
-
-pub fn main() void {
-    printFieldNames(Config);
-}
-</code></pre>
-<p>输出：</p>
-<pre><code>host
-port
-debug
-</code></pre>
-<hr>
-<h2 id="机制六compileerror--把约束写进编译阶段"><a class="header" href="#机制六compileerror--把约束写进编译阶段">机制六：<code>@compileError</code> —— 把约束写进编译阶段</a></h2>
-<p>当某段抽象只允许某些条件成立时，<code>@compileError</code> 可以在编译期阻止错误用法：</p>
+<p><code>.@"struct" =&gt; |info|</code> 捕获的 <code>info</code> 是一个 <code>std.builtin.Type.Struct</code>，包含：</p>
+<ul>
+<li><strong><code>fields</code></strong> — <code>[]const StructField</code>，每个字段含 <code>name</code>（名称）、<code>type</code>（类型）、<code>default_value</code>（默认值）、<code>is_comptime</code>、<code>alignment</code></li>
+<li><strong><code>decls</code></strong> — <code>[]const Declaration</code>，类型内部的声明（函数、常量）</li>
+<li><strong><code>layout</code></strong> — <code>ContainerLayout</code>，结构体布局方式（<code>.auto</code> / <code>@"packed"</code>）</li>
+<li><strong><code>is_tuple</code></strong> — 是否为元组（匿名结构体）</li>
+</ul>
+<p>这组信息使得编译期代码可以遍历字段、按名称查找、根据字段类型做条件分支，是系列化、配置映射和代码生成的基础。<code>inline for</code> 一节将展示如何遍历 <code>fields</code>。</p>
+<p><code>@compileError</code> 在 <code>@typeInfo</code> 的 <code>else</code> 分支中用于阻止不支持的用法，也可单独用于类型前置校验：</p>
 <pre><code class="language-zig">const std = @import("std");
 
 fn safeDiv(comptime T: type, a: T, b: T) T {
@@ -5499,79 +5314,63 @@ test "safeDiv" {
     try std.testing.expectEqual(@as(i32, 0), safeDiv(i32, 10, 0));
 }
 </code></pre>
-<p>编译期错误信息直接出现在编译输出中，比运行时 panic 更早、更明确。</p>
-<hr>
-<h2 id="机制七hasdecl-与-hasfield--编译期鸭子类型"><a class="header" href="#机制七hasdecl-与-hasfield--编译期鸭子类型">机制七：<code>@hasDecl</code> 与 <code>@hasField</code> —— 编译期鸭子类型</a></h2>
-<p>这两个内建函数可以在编译期检查一个类型是否具备某个声明或字段：</p>
+<h2 id="inline-for编译期循环展开"><a class="header" href="#inline-for编译期循环展开"><code>inline for</code>：编译期循环展开</a></h2>
+<p><code>inline for</code> 在编译期展开循环，每次迭代的捕获值都是编译期已知的，可在循环体内做编译期类型推导：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+fn printFieldNames(comptime T: type) void {
+    const fields = @typeInfo(T).@"struct".fields;
+    inline for (fields) |field| {
+        std.debug.print("{s}\n", .{field.name});
+    }
+}
+
+const Config = struct { host: []const u8, port: u16, debug: bool };
+
+pub fn main() void {
+    printFieldNames(Config);
+}
+</code></pre>
+<p>输出：<code>host</code> / <code>port</code> / <code>debug</code></p>
+<h2 id="hasdecl-与-hasfield编译期鸭子类型"><a class="header" href="#hasdecl-与-hasfield编译期鸭子类型"><code>@hasDecl</code> 与 <code>@hasField</code>：编译期鸭子类型</a></h2>
 <pre><code class="language-zig">const std = @import("std");
 
 fn canSerialize(comptime T: type) bool {
     return @hasDecl(T, "serialize");
 }
-
 fn hasNameField(comptime T: type) bool {
     return @hasField(T, "name");
 }
 
-const Serializable = struct {
+const S = struct {
     data: u32,
-
-    pub fn serialize(self: @This()) []const u8 {
-        _ = self;
-        return "serialized";
-    }
+    pub fn serialize(_: @This()) []const u8 { return "ok"; }
 };
-
-const Plain = struct {
-    name: []const u8,
-    value: u32,
-};
+const P = struct { name: []const u8, value: u32 };
 
 test "@hasDecl and @hasField" {
-    try std.testing.expect(canSerialize(Serializable));
-    try std.testing.expect(!canSerialize(Plain));
-
-    try std.testing.expect(hasNameField(Plain));
-    try std.testing.expect(!hasNameField(Serializable));
+    try std.testing.expect(canSerialize(S));
+    try std.testing.expect(!canSerialize(P));
+    try std.testing.expect(hasNameField(P));
+    try std.testing.expect(!hasNameField(S));
 }
 </code></pre>
-<blockquote>
-<p><strong>注意</strong>：<code>@hasDecl</code> 检查的是类型的<strong>命名空间声明</strong>（函数、常量等），<code>@hasField</code> 检查的是<strong>数据字段</strong>。两者用途不同。</p>
-</blockquote>
-<p>这种能力是编译期约束检查的基础——泛型中如何用它实现接口约束，详见<a href="#泛型编程">泛型编程</a>。</p>
-<hr>
-<h2 id="机制八embedfile--编译期嵌入文件"><a class="header" href="#机制八embedfile--编译期嵌入文件">机制八：<code>@embedFile</code> —— 编译期嵌入文件</a></h2>
-<p><code>@embedFile</code> 在编译期读取文件内容，将其作为字节数组常量嵌入到二进制中：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-// 假设项目中存在 src/data/version.txt，内容为 "1.0.0"
-// const version = @embedFile("data/version.txt");
-// version 的类型是 *const [N:0]u8
-
-// 以下示例使用一个编译期已知的字符串来演示相同的效果：
-const fallback_version = "1.0.0-dev";
-
-pub fn main() void {
-    std.debug.print("version: {s}\n", .{fallback_version});
-}
+<p><code>@hasDecl</code> 检查命名空间声明，<code>@hasField</code> 检查数据字段。详见<a href="#泛型编程">泛型编程</a>。</p>
+<h2 id="embedfile编译期嵌入文件"><a class="header" href="#embedfile编译期嵌入文件"><code>@embedFile</code>：编译期嵌入文件</a></h2>
+<p><code>@embedFile</code> 在编译期将文件内容嵌入为 <code>*const [N:0]u8</code> 字节数组常量：</p>
+<pre><code class="language-zig">// const version = @embedFile("data/version.txt");
+// 返回 *const [N:0]u8，NUL 结尾
 </code></pre>
-<p><code>@embedFile</code> 的典型使用场景：</p>
-<ul>
-<li>嵌入配置文件、模板、shader 源码</li>
-<li>嵌入静态资源（图标、证书等）</li>
-<li>嵌入版本号或构建信息</li>
-</ul>
-<p>返回类型是 <code>*const [N:0]u8</code>——一个编译期已知长度的、以 0 结尾的字节数组指针。</p>
-<hr>
-<h2 id="机制九类型构造内建函数"><a class="header" href="#机制九类型构造内建函数">机制九：类型构造内建函数</a></h2>
-<p>在 0.16-dev 中，从 <code>@typeInfo</code> 结果构造类型的能力由一组专用内建函数提供，而非单一的 <code>@Type</code>：</p>
+<p>典型场景：嵌入配置文件、模板、shader 源码、静态资源、版本号或构建信息。</p>
+<h2 id="类型构造内建函数"><a class="header" href="#类型构造内建函数">类型构造内建函数</a></h2>
+<p>从 <code>@typeInfo</code> 结果构造类型的能力由一组专用内建函数提供：</p>
 <div class="table-wrapper">
 <table>
 <thead>
 <tr><th>内建函数</th><th>用途</th></tr>
 </thead>
 <tbody>
-<tr><td><code>@Int(signedness, bits)</code></td><td>构造整数类型，如 <code>@Int(.unsigned, 18)</code> → <code>u18</code></td></tr>
+<tr><td><code>@Int(signedness, bits)</code></td><td>构造整数类型</td></tr>
 <tr><td><code>@Struct(...)</code></td><td>构造结构体类型</td></tr>
 <tr><td><code>@Union(...)</code></td><td>构造联合体类型</td></tr>
 <tr><td><code>@Enum(...)</code></td><td>构造枚举类型</td></tr>
@@ -5581,88 +5380,34 @@ pub fn main() void {
 </tbody>
 </table>
 </div>
-<p>一个使用 <code>@Int</code> 的示例——根据需求选择最小整数类型：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-fn SmallestUint(comptime max_val: comptime_int) type {
+<p>这些内建函数与 <code>@typeInfo</code> 形成<strong>拆解—组装</strong>的对应关系：<code>@typeInfo</code> 把一个类型拆成结构化信息（<code>std.builtin.Type</code> 标签联合的某个 variant），内建函数把这些信息重新组装成类型。例如 <code>@typeInfo(i32)</code> 返回 <code>.int = .{ .signedness = .signed, .bits = 32 }</code>，<code>@Int(.signed, 32)</code> 则用同样的信息构造出 <code>i32</code>。下面的 <code>DoubleWidth</code> 就是这个模式的最好示范——读出、修改、重建。</p>
+<p>根据需求选择最小整数类型：</p>
+<pre><code class="language-zig">fn SmallestUint(comptime max_val: comptime_int) type {
     if (max_val &lt; (1 &lt;&lt; 8)) return u8;
     if (max_val &lt; (1 &lt;&lt; 16)) return u16;
     if (max_val &lt; (1 &lt;&lt; 32)) return u32;
     return u64;
 }
-
-test "SmallestUint" {
-    try std.testing.expect(SmallestUint(100) == u8);
-    try std.testing.expect(SmallestUint(1000) == u16);
-    try std.testing.expect(SmallestUint(100_000) == u32);
-}
 </code></pre>
-<p>使用 <code>@Int</code> 构造精确位宽类型的示例：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-fn DoubleWidth(comptime T: type) type {
+<p>使用 <code>@Int</code> 构造精确位宽：</p>
+<pre><code class="language-zig">fn DoubleWidth(comptime T: type) type {
     const info = @typeInfo(T).int;
     return @Int(info.signedness, info.bits * 2);
 }
-
-test "DoubleWidth" {
-    try std.testing.expect(DoubleWidth(u16) == u32);
-    try std.testing.expect(DoubleWidth(i8) == i16);
-}
 </code></pre>
-<hr>
-<h2 id="inline-fn-vs-comptime-参数"><a class="header" href="#inline-fn-vs-comptime-参数"><code>inline fn</code> vs <code>comptime</code> 参数</a></h2>
-<p>这两个概念经常被混淆，但它们解决不同的问题：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-// comptime 参数：调用者必须在编译期提供值
-fn comptimeAdd(comptime a: u32, b: u32) u32 {
-    // a 在编译期已知，b 可以是运行时值
-    return a + b;
-}
-
-// inline fn：建议编译器内联整个函数体（不强制参数为编译期值）
-inline fn inlineAdd(a: u32, b: u32) u32 {
-    return a + b;
-}
-
-test "comptime param vs inline fn" {
-    const x = comptimeAdd(10, 20);
-    try std.testing.expectEqual(30, x);
-
-    const y = inlineAdd(10, 20);
-    try std.testing.expectEqual(30, y);
-}
+<p><code>@Struct</code> 可在编译期重建结构体（如修改字段）：</p>
+<pre><code class="language-zig">const MyStruct = @Struct(
+    .@"packed", null,
+    &amp;.{ "x", "y" },       // 字段名
+    &amp;.{ u8, u8 },         // 字段类型
+    &amp;.{ null, null },     // 默认值
+    &amp;.{ false, false },   // is_comptime
+    &amp;.{ null, null },     // 对齐
+);
 </code></pre>
-<p>区别总结：</p>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th></th><th><code>comptime</code> 参数</th><th><code>inline fn</code></th></tr>
-</thead>
-<tbody>
-<tr><td>参数是否必须编译期已知</td><td>是</td><td>否</td></tr>
-<tr><td>是否生成多份特化代码</td><td>是（按参数值特化）</td><td>否（只是内联展开）</td></tr>
-<tr><td>主要用途</td><td>泛型、编译期计算</td><td>性能优化、避免函数调用开销</td></tr>
-<tr><td>类型参数化能力</td><td>有（<code>comptime T: type</code>）</td><td>无</td></tr>
-</tbody>
-</table>
-</div>
-<blockquote>
-<p><strong>注意</strong>：<code>inline fn</code> 不等于 <code>comptime</code>。把函数标记为 <code>inline</code> 不会让它的参数变成编译期值，只是建议编译器在调用处展开函数体。</p>
-</blockquote>
-<hr>
 <h2 id="编译期的硬性限制"><a class="header" href="#编译期的硬性限制">编译期的硬性限制</a></h2>
 <p><code>comptime</code> 能力强大，但有明确的边界：</p>
 <pre><code class="language-zig">const std = @import("std");
-
-// 演示：编译期不能做 I/O
-fn attemptCompileTimeWork() void {
-    // 以下如果在 comptime 块中调用，都会产生编译错误：
-    // - std.fs.cwd()         → 编译期不能访问文件系统
-    // - std.net.tcpConnect() → 编译期不能进行网络操作
-    // - std.heap.page_allocator.alloc() → 编译期不能使用运行时分配器
-}
 
 comptime {
     // 编译期可以做的：
@@ -5674,21 +5419,9 @@ comptime {
 
     // 编译期不能做的（取消注释会产生编译错误）：
     // _ = std.heap.page_allocator;  // 运行时分配器
-}
-
-test "comptime limits are clear" {
-    // 编译期计算结果可以在运行时使用
-    const sum = comptime blk: {
-        var s: u32 = 0;
-        for (0..100) |i| {
-            s += @as(u32, @intCast(i));
-        }
-        break :blk s;
-    };
-    try std.testing.expectEqual(4950, sum);
+    // std.fs.cwd()                  // 编译期不能访问文件系统
 }
 </code></pre>
-<p>完整的限制清单：</p>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -5697,104 +5430,37 @@ test "comptime limits are clear" {
 <tbody>
 <tr><td><strong>无 I/O</strong></td><td>不能读写文件、网络、标准输入输出（<code>@embedFile</code> 是例外——由编译器特殊处理）</td></tr>
 <tr><td><strong>无运行时指针</strong></td><td>不能解引用指向运行时内存的指针</td></tr>
-<tr><td><strong>有限内存</strong></td><td>编译期求值器有内存上限，过大的数据结构会触发“eval branch quota exceeded“或内存不足</td></tr>
+<tr><td><strong>有限内存</strong></td><td>编译期求值器有内存上限，过大的数据结构会触发 <code>"eval branch quota exceeded"</code> 或内存不足</td></tr>
 <tr><td><strong>递归深度限制</strong></td><td>默认分支配额 1000，可用 <code>@setEvalBranchQuota</code> 提高，但不能无限</td></tr>
 <tr><td><strong>无内联汇编</strong></td><td><code>asm</code> 在编译期不可用</td></tr>
 <tr><td><strong>无运行时副作用</strong></td><td>不能修改全局可变状态、不能调用外部函数</td></tr>
 </tbody>
 </table>
 </div>
-<p>如果遇到 <code>"unable to evaluate comptime expression"</code> 或 <code>"eval branch quota exceeded"</code>，通常意味着编译期计算触碰了这些限制。</p>
-<hr>
-<h2 id="预计算静态数据"><a class="header" href="#预计算静态数据">预计算静态数据</a></h2>
-<p>当某个结果在编译期完全可知且运行时会频繁使用时，预计算是 <code>comptime</code> 的经典应用：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-/// 编译期生成 ASCII 查找表：标记哪些字符是十六进制数字
-const hex_table: [256]bool = comptime blk: {
-    var table = [_]bool{false} ** 256;
-    for ("0123456789abcdefABCDEF") |c| {
-        table[c] = true;
-    }
-    break :blk table;
-};
-
-fn isHexDigit(c: u8) bool {
-    return hex_table[c];
-}
-
-test "hex lookup table" {
-    try std.testing.expect(isHexDigit('a'));
-    try std.testing.expect(isHexDigit('F'));
-    try std.testing.expect(isHexDigit('0'));
-    try std.testing.expect(!isHexDigit('g'));
-    try std.testing.expect(!isHexDigit(' '));
-}
-</code></pre>
-<p>这个查找表在编译期构建完毕，运行时只需一次数组索引——O(1) 查找，零运行时构建成本。</p>
-<hr>
-<h2 id="一个完整示例按类型选择描述信息"><a class="header" href="#一个完整示例按类型选择描述信息">一个完整示例：按类型选择描述信息</a></h2>
-<p>综合运用多种机制——编译期类型参数、<code>@typeInfo</code> 分支、<code>@compileError</code>：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-fn describeType(comptime T: type) []const u8 {
-    return switch (@typeInfo(T)) {
-        .int =&gt; "integer",
-        .float =&gt; "float",
-        .bool =&gt; "boolean",
-        .pointer =&gt; "pointer",
-        .array =&gt; "array",
-        .@"struct" =&gt; "struct",
-        .@"enum" =&gt; "enum",
-        else =&gt; "other",
-    };
-}
-
-test "describeType" {
-    try std.testing.expectEqualStrings("integer", describeType(i32));
-    try std.testing.expectEqualStrings("float", describeType(f64));
-    try std.testing.expectEqualStrings("boolean", describeType(bool));
-    try std.testing.expectEqualStrings("pointer", describeType(*u8));
-    try std.testing.expectEqualStrings("struct", describeType(struct { x: u32 }));
-}
-</code></pre>
-<hr>
-<h2 id="本章小结核心机制与适用场景"><a class="header" href="#本章小结核心机制与适用场景">本章小结：核心机制与适用场景</a></h2>
+<h2 id="本章小结-3"><a class="header" href="#本章小结-3">本章小结</a></h2>
 <div class="table-wrapper">
 <table>
 <thead>
 <tr><th>机制</th><th>关键语法</th><th>适用场景</th></tr>
 </thead>
 <tbody>
-<tr><td>编译期参数</td><td><code>fn f(comptime T: type, ...)</code></td><td>泛型数据结构与函数，类型参数化——详见<a href="#泛型编程">泛型编程</a></td></tr>
-<tr><td>编译期块</td><td><code>comptime { }</code>, <code>comptime blk: { ... }</code></td><td>编译期断言与静态检查</td></tr>
-<tr><td>编译期变量</td><td><code>comptime var x = ...</code></td><td>预计算静态数据</td></tr>
-<tr><td>类型反射</td><td><code>@typeInfo(T)</code></td><td>根据类型生成代码路径</td></tr>
-<tr><td>类型构造</td><td><code>@Int</code>, <code>@Struct</code>, <code>@Enum</code> 等</td><td>编译期生成自定义类型</td></tr>
-<tr><td>声明/字段检查</td><td><code>@hasDecl</code>, <code>@hasField</code></td><td>编译期鸭子类型检查</td></tr>
-<tr><td>编译期错误</td><td><code>@compileError("msg")</code></td><td>编译期约束检查</td></tr>
-<tr><td>文件嵌入</td><td><code>@embedFile("path")</code></td><td>嵌入外部资源</td></tr>
+<tr><td><code>comptime</code> 参数</td><td><code>fn f(comptime T: type, ...)</code></td><td>泛型数据结构与函数——详见<a href="#泛型编程">泛型编程</a></td></tr>
+<tr><td><code>comptime</code> 块</td><td><code>comptime { }</code></td><td>编译期断言与静态检查</td></tr>
+<tr><td><code>comptime</code> 变量</td><td><code>comptime var x = ...</code></td><td>编译期循环中累积状态</td></tr>
+<tr><td>类型反射 + 约束</td><td><code>@typeInfo(T)</code> + <code>@compileError</code></td><td>根据类型生成代码、编译期约束检查</td></tr>
+<tr><td>编译期鸭子类型</td><td><code>@hasDecl</code>, <code>@hasField</code></td><td>检查类型是否具备某声明或字段</td></tr>
 <tr><td>循环展开</td><td><code>inline for</code></td><td>编译期遍历与展开</td></tr>
-<tr><td>性能配额</td><td><code>@setEvalBranchQuota(N)</code></td><td>调整编译期计算上限</td></tr>
+<tr><td>文件嵌入</td><td><code>@embedFile("path")</code></td><td>嵌入外部资源</td></tr>
+<tr><td>类型构造</td><td><code>@Int</code>, <code>@Struct</code>, <code>@Enum</code> 等</td><td>编译期生成自定义类型</td></tr>
 </tbody>
 </table>
 </div>
-<hr>
 <h2 id="边界与常见陷阱"><a class="header" href="#边界与常见陷阱">边界与常见陷阱</a></h2>
-<p>以下问题在实践中最容易遇到，合并为一节。</p>
-<h3 id="1-别把运行时问题硬塞进编译期"><a class="header" href="#1-别把运行时问题硬塞进编译期">1. 别把运行时问题硬塞进编译期</a></h3>
-<p>如果值来自用户输入、文件、网络、数据库——它天然属于运行时。不要为了“看起来高级“而强行 <code>comptime</code> 化。</p>
-<h3 id="2-别让编译期代码比运行时更难读"><a class="header" href="#2-别让编译期代码比运行时更难读">2. 别让编译期代码比运行时更难读</a></h3>
-<p>层层嵌套的 <code>@typeInfo</code> 反射、过度抽象的字段驱动生成——如果明明可以普通写，却非要绕一圈编译期拼装，问自己：</p>
-<blockquote>
-<p>这段 <code>comptime</code> 真的让设计更清楚了吗？</p>
-</blockquote>
-<h3 id="3-编译期--免费"><a class="header" href="#3-编译期--免费">3. 编译期 ≠ 免费</a></h3>
-<p>编译期计算会增加编译时间。如果只是为了省下微不足道的运行时开销而大幅拖慢编译，通常不值得。</p>
-<h3 id="4-先学稳基础再玩反射"><a class="header" href="#4-先学稳基础再玩反射">4. 先学稳基础再玩反射</a></h3>
-<p>推荐顺序：<code>comptime</code> 参数 → 编译期生成类型 → 编译期条件分支 → 类型反射。跳过前面直接沉迷复杂反射，往往导致代码自己也看不清。</p>
-<h3 id="5-别用-comptime-掩盖设计不清"><a class="header" href="#5-别用-comptime-掩盖设计不清">5. 别用 <code>comptime</code> 掩盖设计不清</a></h3>
-<p>有时问题不是“需要更强的元编程“，而是数据结构没想清楚、接口边界没想清楚。继续堆 <code>comptime</code> 只会放大混乱。</p>
+<ul>
+<li><strong>别把运行时问题硬塞进编译期</strong>——用户输入、文件、网络数据天然属于运行时。</li>
+<li><strong>编译期 ≠ 免费</strong>——编译期计算会增加编译时间，不要为省下微不足道的运行时开销而大幅拖慢编译。</li>
+<li><strong>先学稳基础再玩反射</strong>——推荐顺序：<code>comptime</code> 参数 → 编译期条件分支 → 类型构造 → <code>@typeInfo</code> 反射。跳过前面直接沉迷复杂反射，代码往往自己也看不清。</li>
+</ul>
 <blockquote>
 <p><strong>注意</strong>：如果需要运行时切换实现、类型擦除或 VTable，那更适合运行时抽象而非 <code>comptime</code>。完整对比见<a href="#接口组合与设计模式">接口与设计模式</a>章节。</p>
 </blockquote>
@@ -5807,7 +5473,6 @@ test "describeType" {
 <blockquote>
 <p><strong>进阶</strong>：本章讨论 Zig 中泛型的<strong>设计模式</strong>。关于 <code>comptime</code> 的底层机制，参见<a href="#编译期计算与元编程">编译期计算与元编程</a>。</p>
 </blockquote>
-<hr>
 <h2 id="先建立正确心智模型"><a class="header" href="#先建立正确心智模型">先建立正确心智模型</a></h2>
 <p>更贴近 Zig 的理解方式：</p>
 <ol>
@@ -5818,7 +5483,6 @@ test "describeType" {
 <li><strong>约束通常不是写在一套独立“trait 语法“里，而是通过编译期检查显式表达</strong></li>
 </ol>
 <p>所以，泛型本质上是 <code>comptime</code> 能力的延伸：把类型作为编译期参数传入，生成针对该类型的专门实现。</p>
-<hr>
 <h2 id="与-crust-泛型的差异"><a class="header" href="#与-crust-泛型的差异">与 C++/Rust 泛型的差异</a></h2>
 <p>C++ 用 <code>template&lt;typename T&gt;</code>，Rust 用 <code>T: Trait</code> 约束。Zig 把类型参数显式写成编译期值：</p>
 <pre><code class="language-zig">fn add(comptime T: type, a: T, b: T) T {
@@ -5826,7 +5490,6 @@ test "describeType" {
 }
 </code></pre>
 <p>核心差异：Zig 不引入独立的模板/trait 语法——类型也是值，约束靠 <code>comptime</code> 检查显式表达。</p>
-<hr>
 <h2 id="为什么需要泛型"><a class="header" href="#为什么需要泛型">为什么需要泛型？</a></h2>
 <p>没有泛型时，同一种逻辑需要为每种类型重复维护。泛型的价值在于复用实现、保持类型安全、把错误提前到编译期、不引入额外运行时分发成本。</p>
 <h2 id="最基本的泛型函数"><a class="header" href="#最基本的泛型函数">最基本的泛型函数</a></h2>
@@ -5874,7 +5537,6 @@ test "double with explicit type argument" {
 <blockquote>
 <p><strong>优先把类型参数写清楚，而不是过早追求省略。</strong></p>
 </blockquote>
-<hr>
 <h2 id="多个类型参数泛型不只是一种类型的复用"><a class="header" href="#多个类型参数泛型不只是一种类型的复用">多个类型参数：泛型不只是一种类型的复用</a></h2>
 <p>泛型不仅可以接收一个类型，也可以接收多个类型。</p>
 <pre><code class="language-zig">const std = @import("std");
@@ -5913,7 +5575,6 @@ test "pair with two type parameters" {
 <li><code>Pair</code> 是<strong>类型工厂</strong></li>
 <li><code>makePair</code> 是<strong>值构造函数</strong></li>
 </ul>
-<hr>
 <h2 id="泛型结构体把返回类型当成一种正常设计"><a class="header" href="#泛型结构体把返回类型当成一种正常设计">泛型结构体：把“返回类型“当成一种正常设计</a></h2>
 <p>这通常是 Zig 泛型里最需要尽快建立直觉的部分。</p>
 <pre><code class="language-zig">const std = @import("std");
@@ -5959,7 +5620,6 @@ test "generic Point type" {
 <li>然后再在这个类型上调用 <code>init</code></li>
 </ul>
 <p>如果这个心智模型没建立好，后面读容器、接口工厂、类型驱动设计时会一直别扭。</p>
-<hr>
 <h2 id="泛型结构里常见的-self--this-是什么"><a class="header" href="#泛型结构里常见的-self--this-是什么">泛型结构里常见的 <code>Self = @This()</code> 是什么？</a></h2>
 <p>在很多 Zig 泛型示例里会看到这一句：</p>
 <pre><code class="language-zig">const Self = @This();
@@ -5997,7 +5657,6 @@ test "Self in generic struct" {
 </code></pre>
 <p>这里的 <code>Self</code> 不是额外魔法，
 它只是让方法里引用“当前结构体类型“更方便。</p>
-<hr>
 <h2 id="非类型编译期参数"><a class="header" href="#非类型编译期参数">非类型编译期参数</a></h2>
 <p><code>comptime</code> 参数不仅可以是类型，也可以是编译期已知的数值。这是泛型另一个常用模式——用编译期常量控制数据结构的大小或行为。</p>
 <pre><code class="language-zig">const std = @import("std");
@@ -6064,7 +5723,6 @@ test "BoundedArray with type and size" {
 <blockquote>
 <p><strong>注意</strong>：标准库中的 <code>std.BoundedArray</code> 就是这种模式的工程级实现，可以参考其源码学习更多细节。</p>
 </blockquote>
-<hr>
 <h2 id="泛型不是对所有类型都成立"><a class="header" href="#泛型不是对所有类型都成立">泛型不是“对所有类型都成立“</a></h2>
 <p>这是本章最重要的边界意识之一。</p>
 <p>很多初学者看到泛型后，容易自然地产生一种误解：</p>
@@ -6109,7 +5767,6 @@ test "abs works for supported numeric types" {
 <li>但约束和边界要自己说清楚</li>
 <li>说不清楚，就容易把示例写成“看起来很通用，实际上有前提“</li>
 </ul>
-<hr>
 <h2 id="用-typeinfo-做约束价值在表达边界不在炫技"><a class="header" href="#用-typeinfo-做约束价值在表达边界不在炫技">用 <code>@typeInfo</code> 做约束：价值在“表达边界“，不在“炫技“</a></h2>
 <p><code>@typeInfo</code> 很强，但也是最容易被滥用的部分之一。</p>
 <p>对于初学者，更重要的不是记住所有分支名称，而是理解它解决的问题：</p>
@@ -6149,7 +5806,6 @@ test "Numeric constraint example" {
 <li>不要把每个泛型都包装得层层嵌套</li>
 <li>约束应该服务于可读性，而不是制造神秘感</li>
 </ul>
-<hr>
 <h2 id="泛型容器类型安全的工厂模式"><a class="header" href="#泛型容器类型安全的工厂模式">泛型容器：类型安全的工厂模式</a></h2>
 <p>泛型在实际工程里最常见的用途之一，就是做类型安全容器。</p>
 <p>下面是一个最小栈实现：</p>
@@ -6206,7 +5862,6 @@ test "generic stack of i32" {
 <blockquote>
 <p><strong>泛型帮助复用逻辑，但不会偷偷做资源决策。</strong></p>
 </blockquote>
-<hr>
 <h2 id="泛型与错误联合"><a class="header" href="#泛型与错误联合">泛型与错误联合</a></h2>
 <p>泛型函数可以返回错误联合 <code>!T</code>，类型参数同时参与正常返回路径和错误路径。这在实际代码中非常常见——容器操作、解析函数、IO 包装等几乎都会涉及。</p>
 <pre><code class="language-zig">const std = @import("std");
@@ -6236,7 +5891,6 @@ test "generic error union return" {
 <li>返回 <code>!T</code> 时，Zig 会自动推断具体的错误集</li>
 <li>调用方用 <code>try</code> 或 <code>catch</code> 处理即可，不需要关心泛型细节</li>
 </ul>
-<hr>
 <h2 id="测试泛型代码"><a class="header" href="#测试泛型代码">测试泛型代码</a></h2>
 <p>泛型代码需用多种类型分别测试，因为不同类型可能触发不同的编译期分支。为每种目标类型写独立 <code>test</code> 块，失败时定位更快。如果泛型函数使用了 <code>@typeInfo</code> 做分支，每个分支至少覆盖一类。</p>
 <h2 id="小结"><a class="header" href="#小结">小结</a></h2>
@@ -6601,7 +6255,6 @@ test "fieldParentPtr" {
 <li>如果更想先看实践案例，也可以在读完本章后回到第三部分对照阅读<a href="#高级内存管理技巧">高级内存管理技巧（专题）</a>，观察这些原则在案例里的落地方式。</li>
 </ul>
 </blockquote>
-<hr>
 <h2 id="总视角zig-的内存管理在解决什么问题"><a class="header" href="#总视角zig-的内存管理在解决什么问题">总视角：Zig 的内存管理在解决什么问题？</a></h2>
 <p>在系统编程里，很多最难定位的问题都和内存有关。例如：</p>
 <ul>
@@ -6616,7 +6269,6 @@ test "fieldParentPtr" {
 <p><strong>把资源责任表达得更明确，把分配行为放回接口层，把调试期检查交给工具和运行时防护。</strong></p>
 </blockquote>
 <p>这意味着 Zig 提供了更高的自由度，也要求建立更强的资源管理纪律。</p>
-<hr>
 <h2 id="zig-的内存管理哲学"><a class="header" href="#zig-的内存管理哲学">Zig 的内存管理哲学</a></h2>
 <blockquote>
 <p>📜 <strong>Zig Zen 原则关联</strong></p>
@@ -6635,10 +6287,8 @@ test "fieldParentPtr" {
 <li><strong>释放逻辑必须可靠，不能把清理写成“碰运气”</strong></li>
 <li><strong>接口应当明确表达：谁分配、谁拥有、谁释放</strong></li>
 </ol>
-<hr>
 <h2 id="zig-与其他语言在内存管理上的差异"><a class="header" href="#zig-与其他语言在内存管理上的差异">Zig 与其他语言在内存管理上的差异</a></h2>
 <p>与依赖 GC 的语言不同，Zig 没有自动回收。与 Rust 不同，Zig 没有借用检查器。Zig 依赖显式传递分配器和开发者自律来管理内存。这也意味着“内存管理“本质上是<strong>设计问题</strong>，不是“几个 API 的记忆题“。</p>
-<hr>
 <h2 id="所有权借用与生命周期"><a class="header" href="#所有权借用与生命周期">所有权、借用与生命周期</a></h2>
 <p>虽然 Zig 没有 Rust 式所有权系统，但依然需要主动建立这套思维。</p>
 <h3 id="所有权最重要的三个问题"><a class="header" href="#所有权最重要的三个问题">所有权最重要的三个问题</a></h3>
@@ -6697,7 +6347,6 @@ test "borrowed slice does not transfer ownership" {
 <blockquote>
 <p><strong>注意</strong>：<br>返回新分配的数据，通常意味着把释放责任交给调用者；<br>接收 <code>[]const T</code>、<code>*const T</code> 这类只读视图，通常意味着“只借用、不拥有”。</p>
 </blockquote>
-<hr>
 <h2 id="栈与堆两种最常见的内存来源"><a class="header" href="#栈与堆两种最常见的内存来源">栈与堆：两种最常见的内存来源</a></h2>
 <p>理解 Zig 内存管理时，最容易先混淆的是：哪些值在栈上，哪些值需要显式分配。</p>
 <h3 id="栈内存"><a class="header" href="#栈内存">栈内存</a></h3>
@@ -6754,7 +6403,6 @@ test "heap allocation requires explicit cleanup" {
 <li>生命周期协调</li>
 <li>泄漏与悬空问题</li>
 </ul>
-<hr>
 <h2 id="分配器接口为什么-zig-要显式传-allocator"><a class="header" href="#分配器接口为什么-zig-要显式传-allocator">分配器接口：为什么 Zig 要显式传 allocator？</a></h2>
 <p>这是 Zig 最有代表性的设计之一。</p>
 <p>很多语言会把分配行为隐藏在运行时或容器内部，但 Zig 倾向于把它显式放到接口上：</p>
@@ -6785,7 +6433,6 @@ test "heap allocation requires explicit cleanup" {
 <h3 id="allocator-的接口结构ptr--vtable"><a class="header" href="#allocator-的接口结构ptr--vtable"><code>Allocator</code> 的接口结构：<code>ptr</code> + <code>vtable</code></a></h3>
 <p><code>std.mem.Allocator</code> 使用显式接口模式：内部持有一个类型擦除指针 <code>ptr</code> 和一张函数表 <code>vtable</code>，通过运行时分发实现多态。任何实现了所需方法的类型都可以生成 <code>Allocator</code> 值，调用方只和统一接口打交道。</p>
 <p>Allocator 接口的内部结构（<code>ptr</code> + <code>vtable</code> 模式）在<a href="#接口组合与设计模式">接口与设计模式</a>章节有完整解析。</p>
-<hr>
 <h2 id="常见分配器它们各自解决什么问题"><a class="header" href="#常见分配器它们各自解决什么问题">常见分配器：它们各自解决什么问题</a></h2>
 <p>本节的重点是建立“这些分配器分别适合什么场景”。</p>
 <h3 id="stdtestingallocator-1"><a class="header" href="#stdtestingallocator-1"><code>std.testing.allocator</code></a></h3>
@@ -6983,7 +6630,6 @@ test "page_allocator can allocate memory directly from the system" {
 <li>分配器本身就是工程权衡的一部分</li>
 <li><code>page_allocator</code> 常被用作 <code>DebugAllocator</code> 或 <code>ArenaAllocator</code> 的底层后端</li>
 </ul>
-<hr>
 <h2 id="资源清理defer-和-errdefer-在内存管理中的核心模式"><a class="header" href="#资源清理defer-和-errdefer-在内存管理中的核心模式">资源清理：<code>defer</code> 和 <code>errdefer</code> 在内存管理中的核心模式</a></h2>
 <blockquote>
 <p><strong>相关阅读</strong>：<code>defer</code> 在作用域结束时无条件执行，<code>errdefer</code> 只在函数以错误返回时执行，多个 <code>defer</code>/<code>errdefer</code> 按 LIFO 顺序执行。如果还不熟悉它们的基本语法和执行顺序，请先阅读<a href="#错误处理">错误处理</a>中的相关章节。</p>
@@ -7020,7 +6666,6 @@ test "errdefer cleans up on partial failure" {
 <li><strong>调用者</strong>：只在成功时获得资源，用 <code>defer</code> 负责最终释放</li>
 </ul>
 <p>这个“分配 → <code>errdefer</code> → 下一步“的写法在标准库和实际项目中非常普遍。掌握它，失败路径上的资源泄漏问题就基本不会出现。</p>
-<hr>
 <h2 id="分配器传递模式什么才算zig-风格的接口"><a class="header" href="#分配器传递模式什么才算zig-风格的接口">分配器传递模式：什么才算“Zig 风格”的接口？</a></h2>
 <p>一个更符合 Zig 风格的接口，通常会体现以下几个原则。</p>
 <h3 id="原则-1不要偷偷依赖全局分配器"><a class="header" href="#原则-1不要偷偷依赖全局分配器">原则 1：不要偷偷依赖全局分配器</a></h3>
@@ -7062,7 +6707,6 @@ test "allocator-passing keeps ownership explicit" {
 <li>返回值是否可以长期保存？</li>
 </ul>
 <p>如果接口语义不清楚，再漂亮的实现也很危险。</p>
-<hr>
 <h2 id="容器与版本敏感区域"><a class="header" href="#容器与版本敏感区域">容器与版本敏感区域</a></h2>
 <blockquote>
 <p><strong>版本说明</strong>：容器 API（如 <code>ArrayList</code> 的初始化与方法签名）可能随版本演进。
@@ -7086,7 +6730,6 @@ test "current ArrayList style is explicit about allocation context" {
     try std.testing.expectEqual(@as(u32, 42), list.items[0]);
 }
 </code></pre>
-<hr>
 <h2 id="线程安全不是换一个分配器名字就自动得到的"><a class="header" href="#线程安全不是换一个分配器名字就自动得到的">线程安全不是“换一个分配器名字”就自动得到的</a></h2>
 <p>多线程场景下，分配器问题常常被误解。</p>
 <p>更稳妥的理解方式是：</p>
@@ -7106,7 +6749,6 @@ test "current ArrayList style is explicit about allocation context" {
 <blockquote>
 <p><strong>API 可能变，真正稳定的是资源边界与同步责任的设计。</strong></p>
 </blockquote>
-<hr>
 <h2 id="内存管理中的常见设计建议"><a class="header" href="#内存管理中的常见设计建议">内存管理中的常见设计建议</a></h2>
 <h3 id="1-能不分配就不分配"><a class="header" href="#1-能不分配就不分配">1. 能不分配就不分配</a></h3>
 <p>很多时候，最好的内存优化不是换分配器，而是根本不分配。</p>
@@ -7134,8 +6776,7 @@ test "current ArrayList style is explicit about allocation context" {
 <li>先用调试期工具验证没有明显泄漏</li>
 <li>再根据热点决定是否要进一步优化</li>
 </ol>
-<hr>
-<h2 id="本章小结-3"><a class="header" href="#本章小结-3">本章小结</a></h2>
+<h2 id="本章小结-4"><a class="header" href="#本章小结-4">本章小结</a></h2>
 <p>这一章最值得带走的判断：</p>
 <ol>
 <li>Zig 把内存视为需要显式管理的资源</li>
@@ -7167,7 +6808,6 @@ test "current ArrayList style is explicit about allocation context" {
 </tbody>
 </table>
 </div>
-<hr>
 <h2 id="泛型anytype"><a class="header" href="#泛型anytype">泛型：<code>anytype</code></a></h2>
 <p>具体类型在编译期已知时，泛型是默认首选。</p>
 <pre><code class="language-zig">const std = @import("std");
@@ -7190,7 +6830,6 @@ test "泛型 writeLine" {
 <p>函数不要求提前定义统一接口类型，只要求传入对象具备 <code>writeAll</code> 方法。编译器在实例化时检查约束。</p>
 <p><strong>优点</strong>：无运行时分发开销、编译期类型检查、代码简洁。</p>
 <p><strong>局限</strong>：不能把不同实现放进同一个运行时容器，不能在运行时切换实现类型。</p>
-<hr>
 <h2 id="tagged-unionunionenum"><a class="header" href="#tagged-unionunionenum">Tagged Union：<code>union(enum)</code></a></h2>
 <p>实现集合有限且封闭时，<code>union(enum)</code> 比 VTable 更清楚。</p>
 <pre><code class="language-zig">const std = @import("std");
@@ -7219,7 +6858,6 @@ test "union 分发" {
 </code></pre>
 <p><strong>优势</strong>：分支穷尽检查、结构明确、易阅读调试、无需维护函数指针表。</p>
 <p><strong>适用场景</strong>：AST 节点、命令类型、有限状态机、项目内部固定的几种策略。</p>
-<hr>
 <h2 id="vtableanyopaque--函数指针"><a class="header" href="#vtableanyopaque--函数指针">VTable：<code>*anyopaque</code> + 函数指针</a></h2>
 <p>VTable 是开放集合与运行时抽象的工具，核心三步：<strong>类型擦除</strong>（<code>*anyopaque</code>）→ <strong>运行时分发</strong>（函数指针）→ <strong>类型恢复</strong>（<code>@ptrCast(@alignCast(...))</code>）。</p>
 <p>只有在需要以下能力时才引入：</p>
@@ -7295,7 +6933,6 @@ test "VTable Writer 端到端" {
 <li><strong>错误边界过宽</strong> — 所有函数返回 <code>anyerror</code> 让接口语义模糊。</li>
 <li><strong>把泛型问题当成 VTable 问题</strong> — 很多场景一个 <code>anytype</code> 函数就足够。</li>
 </ol>
-<hr>
 <h2 id="标准库中的-vtable-实例"><a class="header" href="#标准库中的-vtable-实例">标准库中的 VTable 实例</a></h2>
 <h3 id="stdmemallocator"><a class="header" href="#stdmemallocator"><code>std.mem.Allocator</code></a></h3>
 <p><code>Allocator</code> 的结构与上面的 <code>Writer</code> 一致：</p>
@@ -7327,7 +6964,6 @@ fn alloc(ctx: *anyopaque, n: usize, alignment: mem.Alignment, ra: usize) ?[*]u8 
 }
 </code></pre>
 <p>关于 <code>@ptrCast</code> 和 <code>@alignCast</code> 的详细说明，见<a href="#指针切片与对齐">指针、切片与对齐</a>。</p>
-<hr>
 <h2 id="组合比继承更重要"><a class="header" href="#组合比继承更重要">组合比继承更重要</a></h2>
 <p>在 Zig 中，组合比模拟继承体系更自然：</p>
 <pre><code class="language-zig">const Service = struct {
@@ -7337,7 +6973,6 @@ fn alloc(ctx: *anyopaque, n: usize, alignment: mem.Alignment, ra: usize) ?[*]u8 
 };
 </code></pre>
 <p>依赖关系、模块边界和生命周期通过结构体字段显式表达，测试时容易替换部件，资源管理路径也一目了然。</p>
-<hr>
 <h2 id="小结-1"><a class="header" href="#小结-1">小结</a></h2>
 <ul>
 <li><strong>泛型 / <code>anytype</code></strong> — 默认首选，编译期已知类型，零运行时开销。</li>
@@ -7418,6 +7053,20 @@ pub fn main(init: std.process.Init) !void {
 <li>旧写法：<code>std.fs.cwd().openFile(path, .{})</code></li>
 <li>新写法：<code>std.Io.Dir.cwd().openFile(io, path, .{})</code></li>
 </ul>
+<p><code>openFile</code> 的第三个参数是 <code>OpenFlags</code>，常用选项：</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>标志</th><th>作用</th></tr>
+</thead>
+<tbody>
+<tr><td><code>.mode = .read_only</code></td><td>只读（默认）</td></tr>
+<tr><td><code>.mode = .write_only</code></td><td>只写</td></tr>
+<tr><td><code>.mode = .read_write</code></td><td>读写</td></tr>
+</tbody>
+</table>
+</div>
+<p><code>createFile</code> 默认只写，加 <code>.read = true</code> 可同时开放读取。</p>
 <h3 id="直接写入整个字节切片"><a class="header" href="#直接写入整个字节切片">直接写入整个字节切片</a></h3>
 <p>整块写入时，可以直接使用 <code>File.writeStreamingAll</code>：</p>
 <pre><code class="language-zig">const std = @import("std");
@@ -7534,6 +7183,8 @@ _ = chunk;
 </code></pre>
 <h2 id="使用-filewriter"><a class="header" href="#使用-filewriter">使用 <code>File.Writer</code></a></h2>
 <p>需要缓冲、格式化或多次写入时，使用 <code>File.Writer</code>。</p>
+<h3 id="缓冲-io-与-flush"><a class="header" href="#缓冲-io-与-flush">缓冲 IO 与 flush</a></h3>
+<p>Zig 的 Reader 和 Writer 要求显式传入缓冲区——与 C 的 <code>FILE*</code>（隐式分配内部缓冲区）不同，程序员完全控制缓冲区的大小和生命周期，符合“无隐藏分配“原则。数据先写入缓冲区，调用 <code>flush()</code> 后才真正落到底层 IO 资源。忘记 <code>flush()</code> 最常见的结果是输出不完整。</p>
 <pre><code class="language-zig">const std = @import("std");
 const Io = std.Io;
 
@@ -7552,7 +7203,6 @@ pub fn main(init: std.process.Init) !void {
     try file_writer.interface.flush();
 }
 </code></pre>
-<p><code>flush()</code> 很重要。<code>File.Writer</code> 先写入缓冲区，不刷新就不能保证数据已经落到底层文件。</p>
 <h3 id="写入内存缓冲区"><a class="header" href="#写入内存缓冲区">写入内存缓冲区</a></h3>
 <p>写入内存而不是文件时，可以直接使用 <code>Io.Writer.fixed</code>：</p>
 <pre><code class="language-zig">const std = @import("std");
@@ -7569,6 +7219,34 @@ pub fn main() !void {
     std.debug.print("{s}", .{written});
 }
 </code></pre>
+<h2 id="标准输入输出"><a class="header" href="#标准输入输出">标准输入输出</a></h2>
+<p>操作系统为每个进程创建三个标准通道：stdin（输入）、stdout（输出）、stderr（错误）。Zig 通过 <code>std.Io.File</code> 暴露它们：</p>
+<pre><code class="language-zig">const std = @import("std");
+const Io = std.Io;
+
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+
+    // stdout：正常输出
+    var out_buf: [1024]u8 = undefined;
+    var stdout_writer = Io.File.stdout().writer(io, &amp;out_buf);
+    try stdout_writer.interface.writeAll("hello stdout\n");
+    try stdout_writer.interface.flush();
+
+    // stderr：错误和警告
+    var err_buf: [1024]u8 = undefined;
+    var stderr_writer = Io.File.stderr().writer(io, &amp;err_buf);
+    try stderr_writer.interface.writeAll("error: something went wrong\n");
+    try stderr_writer.interface.flush();
+
+    // stdin：读取用户输入（阻塞直到收到换行）
+    var in_buf: [1024]u8 = undefined;
+    var stdin_reader = Io.File.stdin().reader(io, &amp;in_buf);
+    const name = try stdin_reader.interface.takeDelimiter('\n');
+    std.debug.print("you typed: {s}\n", .{name});
+}
+</code></pre>
+<p>stdout 和 stderr 都用于输出，区别在于约定：正常输出走 stdout，错误和警告走 stderr（终端中通常以不同颜色显示）。</p>
 <h2 id="readfailedwritefailed-与-err"><a class="header" href="#readfailedwritefailed-与-err"><code>ReadFailed</code>、<code>WriteFailed</code> 与 <code>.err</code></a></h2>
 <p><code>Io.Reader</code> 和 <code>Io.Writer</code> 的通用接口会把底层错误折叠成较高层的错误：</p>
 <ul>
@@ -7745,7 +7423,7 @@ pub fn main(init: std.process.Init) !void {
 </table>
 </div>
 <p>最大的迁移变化不是某一个函数名，而是：<strong>I/O 依赖从隐式环境变成显式参数。</strong></p>
-<h2 id="本章小结-4"><a class="header" href="#本章小结-4">本章小结</a></h2>
+<h2 id="本章小结-5"><a class="header" href="#本章小结-5">本章小结</a></h2>
 <p><code>std.Io</code> 这一章可以压缩成四个判断：</p>
 <ol>
 <li><code>io</code> 是 0.16 中 I/O 与并发能力的统一入口</li>
@@ -7776,7 +7454,6 @@ pub fn main(init: std.process.Init) !void {
 <li><strong>资源管理边界</strong> — 分配与释放的归属</li>
 <li><strong>构建与链接边界</strong> — 头文件、系统库的路径与链接</li>
 </ol>
-<hr>
 <h2 id="abi-与类型差异"><a class="header" href="#abi-与类型差异">ABI 与类型差异</a></h2>
 <p>ABI（Application Binary Interface）决定了函数参数如何传递、返回值如何传回、结构体如何布局。Zig 的切片 <code>[]T</code>（指针+长度）、可选类型 <code>?T</code>、错误联合 <code>!T</code> 等在 Zig 内部很有表达力，但跨 ABI 边界时应退回到更基础的表示：裸指针、显式长度、整数错误码、<code>extern struct</code>。</p>
 <p>跨边界时需明确：</p>
@@ -7786,7 +7463,6 @@ pub fn main(init: std.process.Init) !void {
 <li>是否要求 <code>extern struct</code> 保证 C ABI 布局？</li>
 <li>错误该转换成什么？</li>
 </ul>
-<hr>
 <h2 id="导入-c"><a class="header" href="#导入-c">导入 C</a></h2>
 <h3 id="cimport"><a class="header" href="#cimport"><code>@cImport</code></a></h3>
 <pre><code class="language-zig">const c = @cImport({
@@ -7807,7 +7483,6 @@ pub fn main() void {
 pub extern fn make_point(x: f32, y: f32) Point;
 </code></pre>
 <p>翻译结果是机器生成的参考，不适合直接复制到项目中。</p>
-<hr>
 <h2 id="字符串"><a class="header" href="#字符串">字符串</a></h2>
 <p>C 和 Zig 对字符串的表示有本质区别：</p>
 <div class="table-wrapper">
@@ -7849,7 +7524,6 @@ pub fn main() !void {
 }
 </code></pre>
 <p><code>dupeZ</code> 返回 <code>[:0]u8</code>，编译器层面保证 NUL 终止。非零哨兵值可用 <code>allocator.dupeSentinel(u8, slice, sentinel_value)</code>。</p>
-<hr>
 <h2 id="资源与所有权"><a class="header" href="#资源与所有权">资源与所有权</a></h2>
 <p>跨语言边界的资源管理遵循三条原则：</p>
 <ol>
@@ -7857,7 +7531,6 @@ pub fn main() !void {
 <li><strong>不混用分配器</strong> — Zig allocator 和 C allocator 的实现、元数据布局、调试状态都可能不同，混用会导致未定义行为。</li>
 <li><strong>优先使用 C 库提供的构造函数</strong> — 如果 C 库提供了 <code>xxx_create()</code> / <code>xxx_destroy()</code> 等入口，应优先使用它们，因为库作者往往隐含了字段初始化顺序、额外状态位、平台相关设置等约束。手工填结构体字段容易被库内部约定所困。</li>
 </ol>
-<hr>
 <h2 id="extern-struct"><a class="header" href="#extern-struct">extern struct</a></h2>
 <p>跨 ABI 边界传递或共享布局的结构体应使用 <code>extern struct</code>，保证字段顺序与 C 一致、对齐规则匹配 C ABI：</p>
 <pre><code class="language-zig">const std = @import("std");
@@ -7885,7 +7558,6 @@ test "Pixel layout" {
 }
 </code></pre>
 <p>纯 Zig 内部用普通 <code>struct</code> 即可，编译器可自由优化布局。<code>extern struct</code> 仅用于确实要跨 ABI 边界的类型。</p>
-<hr>
 <h2 id="导出给-c"><a class="header" href="#导出给-c">导出给 C</a></h2>
 <p><code>export fn</code> 导出 C ABI 兼容的函数。边界上的类型必须收缩到 C 可理解的范围——基本类型、指针、<code>extern struct</code>，不应暴露 <code>[]T</code>、<code>?T</code>、<code>!T</code> 等 Zig 特有类型。传递数组的标准模式是 <code>ptr + len</code>：</p>
 <pre><code class="language-zig">// mathlib.zig
@@ -7914,7 +7586,6 @@ int sum_array(const int *ptr, size_t len);
 #endif
 </code></pre>
 <p>对外 ABI 设计通常比 Zig 内部 API 更朴素——这不是退步，而是边界设计本来就更保守。</p>
-<hr>
 <h2 id="回调函数"><a class="header" href="#回调函数">回调函数</a></h2>
 <p>C 库通过函数指针接受回调时（排序、事件、线程入口等），Zig 侧需声明 <code>callconv(.c)</code>：</p>
 <pre><code class="language-zig">const std = @import("std");
@@ -7938,7 +7609,6 @@ test "qsort callback" {
 }
 </code></pre>
 <p>关键要素：<code>callconv(.c)</code> 匹配 C 调用约定；<code>?*const anyopaque</code> 对应 <code>const void*</code>，需 <code>@ptrCast(@alignCast(...))</code> 恢复具体类型；返回 <code>c_int</code> 匹配 C 的 <code>int</code>。</p>
-<hr>
 <h2 id="构建与链接"><a class="header" href="#构建与链接">构建与链接</a></h2>
 <p>在 <code>build.zig</code> 中链接 C 库：</p>
 <pre><code class="language-zig">// build.zig 片段
@@ -7956,7 +7626,6 @@ exe.root_module.addIncludePath(b.path("vendor/include"));
 b.installArtifact(exe);
 </code></pre>
 <p>构建脚本的核心意图只有几类：链接系统库（<code>linkSystemLibrary</code>）、启用 libc（<code>link_libc = true</code>）、添加头文件路径（<code>addIncludePath</code>）、添加 C 源文件（<code>addCSourceFiles</code>）。遇到不确定的写法时，先理解目标再核对本地 Zig 版本的 API。</p>
-<hr>
 <h2 id="常见陷阱-1"><a class="header" href="#常见陷阱-1">常见陷阱</a></h2>
 <ol>
 <li><strong>把 <code>[]const u8</code> 直接传给 C</strong> — 只保证长度，不保证 NUL 终止。</li>
@@ -7967,7 +7636,6 @@ b.installArtifact(exe);
 <li><strong>认为 <code>c_int</code>/<code>c_long</code> 跨平台一致</strong> — 这些是 ABI 类型，大小随平台变化。</li>
 </ol>
 <p>排查顺序：先查边界类型（是否要求 NUL 终止？是否需 <code>extern struct</code>？），再查所有权（谁分配？谁释放？混用了分配器？），再查构建（头文件路径、系统库安装、版本 API 匹配），最后再怀疑 API 细节。</p>
-<hr>
 <h2 id="小结-2"><a class="header" href="#小结-2">小结</a></h2>
 <ul>
 <li><strong>C 互操作首先是 ABI 问题</strong>：类型匹配、布局一致、调用约定正确。</li>
@@ -8376,7 +8044,7 @@ pub fn main(_: std.process.Init) !void {
 <p>对于学习目的，手动管理一组线程加上条件变量通知，恰好是理解线程池内部工作原理的好练习。</p>
 <h2 id="关于死锁"><a class="header" href="#关于死锁">关于死锁</a></h2>
 <p>死锁的经典条件：<strong>互斥</strong>（需要独占资源）+ <strong>持有并等待</strong>（持有一个锁的同时等待另一个锁）+ <strong>不可抢占</strong> + <strong>循环等待</strong>。避免方法：锁的获取顺序在所有代码路径中保持一致；避免嵌套锁；使用 <code>tryLock</code> + 短暂超时而非无限等待。</p>
-<h2 id="本章小结-5"><a class="header" href="#本章小结-5">本章小结</a></h2>
+<h2 id="本章小结-6"><a class="header" href="#本章小结-6">本章小结</a></h2>
 <p>本章的核心判断：</p>
 <ul>
 <li>并发、并行、异步不是一回事</li>
@@ -8413,10 +8081,8 @@ pub fn main(_: std.process.Init) !void {
 <li>如果准备进入第三部分实战案例，那么本章最值得反复回看的部分通常是：测试命名、错误路径验证、<code>std.testing.allocator</code> 和简单测量方法。</li>
 </ul>
 </blockquote>
-<hr>
 <h2 id="为什么测试在-zig-中很重要"><a class="header" href="#为什么测试在-zig-中很重要">为什么测试在 Zig 中很重要</a></h2>
 <p>Zig 强调显式错误处理、显式资源管理和显式分配器传递。测试直接验证这些约束是否被遵守。难以测试的函数往往说明设计本身需要改进。</p>
-<hr>
 <h2 id="zig-测试的基本形式"><a class="header" href="#zig-测试的基本形式">Zig 测试的基本形式</a></h2>
 <p>Zig 使用 <code>test</code> 块定义测试：</p>
 <pre><code class="language-zig">const std = @import("std");
@@ -8443,7 +8109,6 @@ test "add returns the sum of two integers" {
 <p>如果测试写在某个模块文件里，也可以直接测试那个文件：</p>
 <pre><code class="language-bash">zig test src/math.zig
 </code></pre>
-<hr>
 <h2 id="把测试和代码放在一起"><a class="header" href="#把测试和代码放在一起">把测试和代码放在一起</a></h2>
 <p>Zig 很常见的一种风格，是让测试与被测代码放在同一个文件中：</p>
 <pre><code class="language-zig">const std = @import("std");
@@ -8473,7 +8138,6 @@ test "clamp returns original value when already in range" {
 <li>测试本身也能起到“行为文档”的作用</li>
 </ul>
 <p>当然，当模块很大、测试很多时，也可以把测试拆到单独文件中。<br>但在本教程阶段，<strong>理解“测试描述行为”这件事，比纠结文件布局更重要</strong>。</p>
-<hr>
 <h2 id="最常用的断言函数"><a class="header" href="#最常用的断言函数">最常用的断言函数</a></h2>
 <p>Zig 的测试辅助主要来自 <code>std.testing</code>。<br>不需要把所有辅助函数都记住，掌握下面这些最常用的即可。</p>
 <h3 id="expect"><a class="header" href="#expect"><code>expect</code></a></h3>
@@ -8548,7 +8212,6 @@ test "floating-point values should use approximate comparison" {
     try std.testing.expectApproxEqAbs(expected, actual, 0.001);
 }
 </code></pre>
-<hr>
 <h2 id="先测什么优先级应该怎么排"><a class="header" href="#先测什么优先级应该怎么排">先测什么？优先级应该怎么排？</a></h2>
 <p>刚开始写测试时，最容易犯的错误是：</p>
 <ul>
@@ -8564,7 +8227,6 @@ test "floating-point values should use approximate comparison" {
 <li><strong>再补资源释放检查</strong> — 如果涉及分配，验证 <code>defer</code> 和 <code>errdefer</code> 的执行</li>
 <li><strong>最后补回归测试</strong> — 修过的 bug 应增加测试，防止悄悄回归</li>
 </ol>
-<hr>
 <h2 id="一个更完整的测试示例"><a class="header" href="#一个更完整的测试示例">一个更完整的测试示例</a></h2>
 <p>下面这个例子展示了正常路径、边界条件和错误路径如何组合：</p>
 <pre><code class="language-zig">const std = @import("std");
@@ -8590,7 +8252,6 @@ test "firstOrError returns error.EmptyInput for empty slices" {
 <li>两到三个行为测试</li>
 <li>明确区分正常路径和失败路径</li>
 </ul>
-<hr>
 <h2 id="用测试验证资源释放责任"><a class="header" href="#用测试验证资源释放责任">用测试验证资源释放责任</a></h2>
 <p>在 Zig 中，资源释放责任需要说清楚。<br>测试也应该帮助验证这件事。</p>
 <p>最常见的方式之一，是在测试中使用 <code>std.testing.allocator</code>。</p>
@@ -8633,7 +8294,6 @@ test "duplicate allocates and returns a copy" {
 <li>分配失败时会发生什么？</li>
 </ul>
 <p>如果这些问题在测试里说不清楚，通常说明接口本身也还不够清楚。</p>
-<hr>
 <h2 id="使用-defer-和-errdefer-设计可测试代码"><a class="header" href="#使用-defer-和-errdefer-设计可测试代码">使用 <code>defer</code> 和 <code>errdefer</code> 设计可测试代码</a></h2>
 <p>可测试的资源管理代码，往往也更容易写对。</p>
 <p>例如：</p>
@@ -8665,7 +8325,6 @@ test "buildMessage returns allocated greeting text" {
 <li>测试里也因此必须显式 <code>free</code></li>
 </ul>
 <p>这类结构很符合 Zig 的风格：<br><strong>资源边界清楚，因此也更容易测试。</strong></p>
-<hr>
 <h2 id="嵌套测试它是什么什么时候关心"><a class="header" href="#嵌套测试它是什么什么时候关心">嵌套测试：它是什么，什么时候关心？</a></h2>
 <p>Zig 支持把 <code>test</code> 写在结构体等声明内部。<br>这通常被称为“嵌套测试”：</p>
 <pre><code class="language-zig">const std = @import("std");
@@ -8708,7 +8367,6 @@ const Counter = struct {
 <li><code>divide truncates integer division toward zero</code></li>
 </ul>
 <p>都比简单写成 <code>test1</code>、<code>divide test</code> 更好。</p>
-<hr>
 <h2 id="怎样给测试命名更清楚"><a class="header" href="#怎样给测试命名更清楚">怎样给测试命名更清楚？</a></h2>
 <p>推荐的命名风格是：</p>
 <ul>
@@ -8727,7 +8385,6 @@ const Counter = struct {
 <li>读测试列表时就能大致知道覆盖了什么</li>
 <li>测试失败时，日志本身就像一句行为说明</li>
 </ol>
-<hr>
 <h2 id="什么是好测试"><a class="header" href="#什么是好测试">什么是好测试</a></h2>
 <ol>
 <li>关注一个明确行为</li>
@@ -8738,7 +8395,6 @@ const Counter = struct {
 <li>把基准测量当作提问工具
 基准测量应该帮助提出更好的问题，而不是导致过早下结论。</li>
 </ol>
-<hr>
 <h2 id="一个简单容器测试示例"><a class="header" href="#一个简单容器测试示例">一个简单容器测试示例</a></h2>
 <p>下面是一个更贴近第二部分后续章节的例子：</p>
 <pre><code class="language-zig">const std = @import("std");
@@ -8794,7 +8450,6 @@ test "Stack.push returns error.Full when capacity is exceeded" {
 <li>容量溢出错误单独测</li>
 </ul>
 <p>而不是把这三件事塞进一个超长测试里。</p>
-<hr>
 <h2 id="基准测试"><a class="header" href="#基准测试">基准测试</a></h2>
 <blockquote>
 <p><strong>基准测试的目标，是帮助比较实现差异，并验证优化是否真的有效。</strong></p>
@@ -8826,7 +8481,6 @@ fn sum(items: []const u64) u64 {
 </blockquote>
 <p>粗略计时适合观察耗时量级、对比两个实现的大致差异、判断是否值得深入分析。但它<strong>不适合</strong>得出精确的、可复现的性能结论——性能受编译优化级别、输入规模、缓存状态、机器负载等众多因素影响，一次测量结果应始终被审慎对待。</p>
 <p>测试和基准关注的问题不同：测试回答“对不对“（输出：通过/失败），基准回答“快不快“（输出：时间、吞吐等）。更合理的顺序是：先确认逻辑正确，再确认错误路径可靠，最后才讨论性能表现。</p>
-<hr>
 <h2 id="版本敏感说明哪些内容值得小心"><a class="header" href="#版本敏感说明哪些内容值得小心">版本敏感说明：哪些内容值得小心？</a></h2>
 <p>这一章里，真正稳定、应优先掌握的主线是：</p>
 <ul>
@@ -8849,7 +8503,6 @@ fn sum(items: []const u64) u64 {
 <p><strong>如何把一个 Zig 接口拆成可验证的行为，并为这些行为写出清楚的小测试。</strong></p>
 </blockquote>
 <p>至于更复杂的构建集成，可以结合后续构建系统章节再看。</p>
-<hr>
 <h2 id="小结-3"><a class="header" href="#小结-3">小结</a></h2>
 <p>这一章最重要的，不是记住一长串测试 API，而是建立下面这些习惯：</p>
 <ul>
@@ -9285,7 +8938,7 @@ exe.root_module.linkSystemLibrary("z", .{});
 <li>把构建问题都当成代码问题（实际可能是版本/环境/依赖）</li>
 <li>静态库和动态库混用导致符号找不到</li>
 </ul>
-<h2 id="本章小结-6"><a class="header" href="#本章小结-6">本章小结</a></h2>
+<h2 id="本章小结-7"><a class="header" href="#本章小结-7">本章小结</a></h2>
 <ul>
 <li>构建图底层是 <strong>DAG</strong>，步骤通过 <code>dependOn</code> 建立关系，构建运行器确定执行顺序和并发</li>
 <li><strong>惰性求值</strong>意味着只有被依赖图引用的目标才会编译</li>
@@ -10262,7 +9915,6 @@ pub fn main(init: std.process.Init) !void {
 </ul>
 <p>把这三章连起来读，会更容易建立“什么时候该优化资源获取、什么时候该先把抽象边界讲清楚”的判断。</p>
 </blockquote>
-<hr>
 <h2 id="先问一个更本质的问题为什么要做内存池"><a class="header" href="#先问一个更本质的问题为什么要做内存池">先问一个更本质的问题：为什么要做内存池？</a></h2>
 <p>内存池适合解决一类非常具体的问题：</p>
 <ul>
@@ -10289,7 +9941,6 @@ pub fn main(init: std.process.Init) !void {
 </ul>
 <p>那么直接使用通用分配器通常更简单，也更稳妥。</p>
 <p>所以，内存池不是“默认更好”，而是一种<strong>针对特定约束的优化性设计</strong>。</p>
-<hr>
 <h2 id="这一章的实现目标"><a class="header" href="#这一章的实现目标">这一章的实现目标</a></h2>
 <p>我们将实现一个教学用最小内存池，并围绕它讲清楚四件事：</p>
 <ol>
@@ -10304,7 +9955,6 @@ pub fn main(init: std.process.Init) !void {
 <li>什么行为会破坏模型</li>
 <li>什么约束是性能换来的代价</li>
 </ul>
-<hr>
 <h2 id="先给出实现"><a class="header" href="#先给出实现">先给出实现</a></h2>
 <pre><code class="language-zig">const std = @import("std");
 
@@ -10409,7 +10059,6 @@ test "memory pool basic lifecycle" {
 }
 </code></pre>
 <p>先不要急着看细节。<br>这份实现最重要的不是“它怎么写”，而是“它依赖什么成立”。</p>
-<hr>
 <h2 id="先理解数据布局"><a class="header" href="#先理解数据布局">先理解数据布局</a></h2>
 <p>这个最小内存池由四部分核心状态组成：</p>
 <ul>
@@ -10445,7 +10094,6 @@ test "memory pool basic lifecycle" {
 <li>避免每次都遍历 <code>used</code></li>
 <li>帮助我们检查池状态是否大致合理</li>
 </ul>
-<hr>
 <h2 id="这个实现依赖哪些不变量"><a class="header" href="#这个实现依赖哪些不变量">这个实现依赖哪些不变量？</a></h2>
 <p>这是整章最重要的部分。</p>
 <h3 id="不变量-1itemslen--usedlen"><a class="header" href="#不变量-1itemslen--usedlen">不变量 1：<code>items.len == used.len</code></a></h3>
@@ -10486,7 +10134,6 @@ test "memory pool basic lifecycle" {
 <li>它没有被重复释放</li>
 </ul>
 <p>一旦这个前提被破坏，<code>release</code> 的行为就不再可靠。</p>
-<hr>
 <h2 id="初始化阶段池在建立什么状态"><a class="header" href="#初始化阶段池在建立什么状态">初始化阶段：池在建立什么状态？</a></h2>
 <p>看 <code>init</code>：</p>
 <pre><code class="language-zig">const items = try allocator.alloc(T, capacity);
@@ -10504,7 +10151,6 @@ errdefer allocator.free(used);
 <li>把所有槽位初始化为空闲状态</li>
 </ol>
 <p>这里使用 <code>errdefer</code> 确保初始化中途失败时已分配的资源被回滚（<code>errdefer</code> 详见<a href="#错误处理">错误处理</a>）。</p>
-<hr>
 <h2 id="acquire借出对象时到底发生了什么"><a class="header" href="#acquire借出对象时到底发生了什么"><code>acquire</code>：借出对象时到底发生了什么？</a></h2>
 <p>实现如下：</p>
 <pre><code class="language-zig">pub fn acquire(self: *Self) ?*T {
@@ -10526,7 +10172,6 @@ errdefer allocator.free(used);
 <li>返回该槽位的指针</li>
 </ol>
 <p><code>acquire()</code> 返回 <code>?*T</code>：池满时返回 <code>null</code>，调用者必须显式处理。当前实现使用线性扫描，<code>acquire</code> 的时间复杂度为 <code>O(n)</code>。</p>
-<hr>
 <h2 id="release归还对象时真正困难的是什么"><a class="header" href="#release归还对象时真正困难的是什么"><code>release</code>：归还对象时真正困难的是什么？</a></h2>
 <p>实现如下：</p>
 <pre><code class="language-zig">pub fn release(self: *Self, item: *T) void {
@@ -10578,7 +10223,6 @@ errdefer allocator.free(used);
 <p><strong>当前 <code>release</code> 更像“高信任契约接口”，而不是“强防御式接口”。</strong></p>
 </blockquote>
 <p>这并不是教学实现的错误，<br>但必须被明确写出来，不能让读者误以为它天然安全。</p>
-<hr>
 <h2 id="这个接口契约到底是什么"><a class="header" href="#这个接口契约到底是什么">这个接口契约到底是什么？</a></h2>
 <p>可以把当前内存池的接口契约写得非常明确。</p>
 <h3 id="initallocator-capacity"><a class="header" href="#initallocator-capacity"><code>init(allocator, capacity)</code></a></h3>
@@ -10621,7 +10265,6 @@ errdefer allocator.free(used);
 <li>换来更低的额外成本</li>
 <li>前提是调用者必须更守规矩**</li>
 </ul>
-<hr>
 <h2 id="一个最容易被忽略的问题复用意味着旧状态仍然存在"><a class="header" href="#一个最容易被忽略的问题复用意味着旧状态仍然存在">一个最容易被忽略的问题：复用意味着旧状态仍然存在</a></h2>
 <p>很多初学者第一次看对象池时，会潜意识觉得：</p>
 <blockquote>
@@ -10648,7 +10291,6 @@ const reused = pool.acquire().?;
 <li>还是在 <code>acquire</code> 后做初始化？</li>
 </ul>
 <p>这属于设计决策的一部分，不应默认含糊过去。</p>
-<hr>
 <h2 id="为什么这里不用更聪明的设计"><a class="header" href="#为什么这里不用更聪明的设计">为什么这里不用“更聪明”的设计？</a></h2>
 <p>你可能会问：</p>
 <ul>
@@ -10678,7 +10320,6 @@ const reused = pool.acquire().?;
 <li>最后讨论如何增强</li>
 </ol>
 <p>这比一开始就堆上“完整版”更适合学习。</p>
-<hr>
 <h2 id="这个实现适合什么场景"><a class="header" href="#这个实现适合什么场景">这个实现适合什么场景？</a></h2>
 <p>当前版本更适合作为：</p>
 <h3 id="1-教学型原型"><a class="header" href="#1-教学型原型">1. 教学型原型</a></h3>
@@ -10705,7 +10346,6 @@ const reused = pool.acquire().?;
 <li>粒子对象</li>
 <li>固定尺寸消息块</li>
 </ul>
-<hr>
 <h2 id="这个实现不适合什么场景"><a class="header" href="#这个实现不适合什么场景">这个实现不适合什么场景？</a></h2>
 <p>当前版本<strong>不适合直接拿去当生产组件</strong>，尤其是这些情况：</p>
 <h3 id="1-多线程共享访问"><a class="header" href="#1-多线程共享访问">1. 多线程共享访问</a></h3>
@@ -10737,7 +10377,6 @@ const reused = pool.acquire().?;
 <li>锁或句柄</li>
 </ul>
 <p>那么“释放槽位”不等于“完成对象析构”。<br>这种场景必须更小心设计对象生命周期。</p>
-<hr>
 <h2 id="如果继续演进下一步通常会怎么改"><a class="header" href="#如果继续演进下一步通常会怎么改">如果继续演进，下一步通常会怎么改？</a></h2>
 <p>在真正工程里，最常见的增强方向通常有下面几类。</p>
 <h2 id="1-用空闲链表替代线性扫描"><a class="header" href="#1-用空闲链表替代线性扫描">1. 用空闲链表替代线性扫描</a></h2>
@@ -10781,7 +10420,6 @@ const reused = pool.acquire().?;
 <li>Release 模式保留更轻量逻辑</li>
 </ul>
 <p>这通常是高性能组件很常见的做法。</p>
-<hr>
 <h2 id="从这章真正应该学到什么"><a class="header" href="#从这章真正应该学到什么">从这章真正应该学到什么？</a></h2>
 <p>如果你只把这章理解成“一个泛型数据结构示例”，那其实还不够。</p>
 <p>这章真正要教你的，是下面这些判断。</p>
@@ -10811,7 +10449,6 @@ const reused = pool.acquire().?;
 <li>不是一次性变成“可上线组件”</li>
 </ul>
 <p>能区分这点，是阅读第三部分案例时非常重要的能力。</p>
-<hr>
 <h2 id="小结-6"><a class="header" href="#小结-6">小结</a></h2>
 <p>这一章最重要的，不是“你会不会手写一个对象池”，而是你是否已经开始形成这些工程判断：</p>
 <ul>
@@ -10828,7 +10465,6 @@ const reused = pool.acquire().?;
 <blockquote>
 <p><strong>章节定位</strong>：本章借助教学原型探讨配置字段的描述方式、元信息如何驱动运行时接口、以及类型安全方案的边界。这是一个围绕 <code>comptime</code>、字段元信息和接口设计展开的原型案例，已刻意简化默认值、校验、持久化等能力。</p>
 </blockquote>
-<hr>
 <h2 id="先说清楚这不是生产级配置系统"><a class="header" href="#先说清楚这不是生产级配置系统">先说清楚：这不是生产级配置系统</a></h2>
 <p>很多读者看到“配置系统”四个字，会自然期待：</p>
 <ul>
@@ -10853,7 +10489,6 @@ const reused = pool.acquire().?;
 <li>再明确指出“它为什么还远远不够”</li>
 </ol>
 <p>如果你带着这个预期来读，本章会很有价值。<br>如果把它当成现成模板来抄，就会高估这个实现的通用性。</p>
-<hr>
 <h2 id="配置系统最核心的问题是什么"><a class="header" href="#配置系统最核心的问题是什么">配置系统最核心的问题是什么？</a></h2>
 <p>在写任何配置系统之前，先别急着想“读哪个文件格式”，而应该先回答几个结构性问题：</p>
 <h3 id="1-有哪些字段"><a class="header" href="#1-有哪些字段">1. 有哪些字段？</a></h3>
@@ -10887,7 +10522,6 @@ const reused = pool.acquire().?;
 <p><strong>先把字段元信息集中描述，再让运行时代码围绕这份元信息工作。</strong></p>
 </blockquote>
 <p>而这也正是 Zig 的 <code>comptime</code> 很适合介入的地方。</p>
-<hr>
 <h2 id="本章原型想展示什么"><a class="header" href="#本章原型想展示什么">本章原型想展示什么？</a></h2>
 <p>这个原型主要展示三件事：</p>
 <ol>
@@ -10902,7 +10536,6 @@ const reused = pool.acquire().?;
 <li>你如何让 <code>set</code> / <code>get</code> 这样的接口围绕这份描述工作起来</li>
 </ul>
 <p>为了突出这一点，本章会采用一个<strong>刻意简化</strong>的实现。</p>
-<hr>
 <h2 id="原型的字段描述"><a class="header" href="#原型的字段描述">原型的字段描述</a></h2>
 <p>先定义每个配置字段的元信息：</p>
 <pre><code class="language-zig">const std = @import("std");
@@ -10927,7 +10560,6 @@ const ConfigField = struct {
 <li>生成帮助文本</li>
 </ul>
 <p>都可以围绕这份元信息展开，而不是把逻辑散落在很多地方。</p>
-<hr>
 <h2 id="一个教学性原型"><a class="header" href="#一个教学性原型">一个教学性原型</a></h2>
 <p>下面这个实现不是为了“最优雅”或“最完整”，而是为了把结构问题讲清楚：</p>
 <pre><code class="language-zig">const std = @import("std");
@@ -11034,7 +10666,6 @@ fn Config(comptime fields: []const ConfigField) type {
     };
 }
 </code></pre>
-<hr>
 <h2 id="这个原型的核心思路是什么"><a class="header" href="#这个原型的核心思路是什么">这个原型的核心思路是什么？</a></h2>
 <p>先不要急着纠结 <code>u64</code>、<code>@bitCast</code>、<code>@typeInfo</code> 这些细节。<br>更值得先抓住的是整体结构：</p>
 <h3 id="1-configfield-负责描述字段"><a class="header" href="#1-configfield-负责描述字段">1. <code>ConfigField</code> 负责描述字段</a></h3>
@@ -11066,7 +10697,6 @@ fn Config(comptime fields: []const ConfigField) type {
 <blockquote>
 <p><strong>编译期字段描述，可以直接塑造运行时接口的结构。</strong></p>
 </blockquote>
-<hr>
 <h2 id="使用这个原型"><a class="header" href="#使用这个原型">使用这个原型</a></h2>
 <p>完整的 <code>Config</code> 实现见前文，这里只展示差异部分和用法。</p>
 <h3 id="差异printconfig-增加了描述信息"><a class="header" href="#差异printconfig-增加了描述信息">差异：<code>printConfig</code> 增加了描述信息</a></h3>
@@ -11099,7 +10729,6 @@ fn Config(comptime fields: []const ConfigField) type {
     try std.testing.expectEqual(@as(?bool, true), config.get("debug_mode", bool));
 }
 </code></pre>
-<hr>
 <h2 id="原型边界"><a class="header" href="#原型边界">原型边界</a></h2>
 <div class="table-wrapper">
 <table>
@@ -11251,8 +10880,7 @@ pub fn main(_: std.process.Init) void {
     std.debug.print("点积：{}\n", .{dot}); // 1*5 + 2*6 + 3*7 + 4*8 = 70
 }
 </code></pre>
-<hr>
-<h2 id="本章小结-7"><a class="header" href="#本章小结-7">本章小结</a></h2>
+<h2 id="本章小结-8"><a class="header" href="#本章小结-8">本章小结</a></h2>
 <p>这一章最重要的收获，不是“会写几个 <code>@Vector</code> 示例”，而是理解下面这些判断：</p>
 <ul>
 <li><code>@Vector</code> 表达的是向量语义，不是自动性能承诺</li>
@@ -11267,7 +10895,6 @@ pub fn main(_: std.process.Init) void {
 <p><strong>章节定位</strong>：第三部分的<strong>方向性专题</strong>，聚焦于 Zig 异步 I/O 的<strong>历史演进和决策框架</strong>。</p>
 <p><code>std.Io</code> 的具体 API 用法见 <a href="#stdio-接口详解">std.Io 接口详解</a>；线程、锁、原子操作等并发基础见 <a href="#并发编程概述">并发编程概述</a>；网络程序实战见 <a href="#实战案例---http-服务器设计与最小实现">HTTP 服务器设计与最小实现</a>。</p>
 </blockquote>
-<hr>
 <h2 id="现状结论"><a class="header" href="#现状结论">现状结论</a></h2>
 <p>今天的 Zig 异步 I/O，可以这样理解：</p>
 <ol>
@@ -11335,7 +10962,6 @@ pub fn main(_: std.process.Init) void {
 </ul>
 <h2 id="第三方库"><a class="header" href="#第三方库">第三方库</a></h2>
 <p>标准库高层异步 I/O 方向仍在演进，第三方库可以作为现实工程中的候选方案。但要注意：库的 API 变化可能比语言还快，“能跑“不等于“适合长期依赖”，需结合版本、维护状态、文档质量单独评估。</p>
-<hr>
 <h2 id="小结-8"><a class="header" href="#小结-8">小结</a></h2>
 <ol>
 <li>旧的语言级 <code>async</code>/<code>await</code>/<code>suspend</code>/<code>resume</code> 已退出主线</li>
@@ -11363,7 +10989,6 @@ const result = try future.await(io);
 <li><strong>对象池优化</strong>：用空闲索引表替代线性扫描，降低获取空闲对象的开销</li>
 </ul>
 <p>核心前提是：这些技巧适合在已经确认优化必要时引入，不应作为默认起手式。基本的内存管理原则——显式传递 <code>Allocator</code>、用 <code>defer</code>/<code>errdefer</code> 收拢清理路径、明确所有权边界——在大多数项目中已经足够。</p>
-<hr>
 <h2 id="一包装分配器增加分配行为的可观测性"><a class="header" href="#一包装分配器增加分配行为的可观测性">一、包装分配器：增加分配行为的可观测性</a></h2>
 <h3 id="一个最小统计分配器"><a class="header" href="#一个最小统计分配器">一个最小统计分配器</a></h3>
 <p>下面的实现包装了一个已有分配器，记录分配次数、释放次数和当前统计字节数。</p>
@@ -11508,7 +11133,6 @@ pub fn main(_: std.process.Init) !void {
 <li>怀疑分配次数过多是热点</li>
 <li>在不改业务逻辑的前提下做局部实验</li>
 </ul>
-<hr>
 <h2 id="二对象池空闲索引表优化"><a class="header" href="#二对象池空闲索引表优化">二、对象池：空闲索引表优化</a></h2>
 <p>对象池的核心思路是提前准备一批对象槽位，获取和归还都在这批存储上完成。前一章的<a href="#实战案例---内存池实现">内存池</a>使用线性扫描寻找空闲槽位（O(n)），本节使用空闲索引表（free list）优化为 O(1)。</p>
 <h3 id="空闲列表对象池"><a class="header" href="#空闲列表对象池">空闲列表对象池</a></h3>
@@ -11597,7 +11221,6 @@ pub fn main(_: std.process.Init) !void {
 </ul>
 <h3 id="适用场景-1"><a class="header" href="#适用场景-1">适用场景</a></h3>
 <p>对象大小固定、创建和释放频繁、容量上界已知的场景，如任务节点、事件对象、固定尺寸消息块。不适合大小变化大、容量不可预测或并发共享无同步保护的情况。</p>
-<hr>
 <h2 id="三两种策略对比"><a class="header" href="#三两种策略对比">三、两种策略对比</a></h2>
 <div class="table-wrapper">
 <table>
@@ -11614,15 +11237,12 @@ pub fn main(_: std.process.Init) !void {
 </table>
 </div>
 <p>核心判断：先区分“观察问题“还是“分配策略问题“。</p>
-<hr>
 <h2 id="四版本敏感说明"><a class="header" href="#四版本敏感说明">四、版本敏感说明</a></h2>
 <p>本章中相对稳定的内容是设计原则：所有权与释放责任、<code>Allocator</code> 作为显式接口、对象池适合固定形状频繁复用对象、高级优化意味着更强的正确性约束。</p>
 <p>更可能随版本变化的是：手动拼装 allocator vtable 的方式、底层 <code>rawAlloc</code>/<code>rawResize</code>/<code>rawRemap</code>/<code>rawFree</code> 接口的签名。阅读时应结合本地标准库源码确认，优先掌握设计判断和责任边界。</p>
-<hr>
 <h2 id="五进一步演进方向"><a class="header" href="#五进一步演进方向">五、进一步演进方向</a></h2>
 <p><strong>包装分配器</strong>：补全 <code>resize</code>/<code>remap</code> 的统计一致性、添加并发安全（<code>std.Io.Mutex</code> 等）、记录调用来源和堆栈、增加测试覆盖。</p>
 <p><strong>对象池</strong>：合法性检查（指针范围、对齐验证）、重复释放检测、对象重置策略、线程安全、容量耗尽时的策略选择（阻塞等待/自动扩容/返回错误）。</p>
-<hr>
 <h2 id="小结-9"><a class="header" href="#小结-9">小结</a></h2>
 <p>本章的核心不是记住两段代码，而是建立以下判断：</p>
 <ul>
@@ -11639,7 +11259,6 @@ pub fn main(_: std.process.Init) !void {
 <p><strong>先测量，再调试，再验证。</strong></p>
 </blockquote>
 <p>如果你已经完成了前面的 CLI、HTTP、内存池等案例，这一章会更有价值，因为你已经有了可以观察、修改、比较的实际程序。<br>也正因为如此，本章更像一个<strong>实践工具箱</strong>，而不是一份需要按顺序死记的“固定答案”。</p>
-<hr>
 <h2 id="为什么性能优化最容易被做错"><a class="header" href="#为什么性能优化最容易被做错">为什么性能优化最容易被做错？</a></h2>
 <p>很多性能问题不是出在“不会优化”，而是出在<strong>优化顺序错误</strong>。</p>
 <p>常见误区包括：</p>
@@ -11655,7 +11274,6 @@ pub fn main(_: std.process.Init) !void {
 <li><strong>先定位问题，再决定是否值得优化</strong></li>
 <li><strong>每次改动后都重新验证正确性和结果</strong></li>
 </ol>
-<hr>
 <h2 id="一个更可靠的工作流measure--debug--verify"><a class="header" href="#一个更可靠的工作流measure--debug--verify">一个更可靠的工作流：Measure → Debug → Verify</a></h2>
 <p>你可以把本章的主线记成下面三个词：</p>
 <h3 id="1-measure先测量"><a class="header" href="#1-measure先测量">1. Measure：先测量</a></h3>
@@ -11683,7 +11301,6 @@ pub fn main(_: std.process.Init) !void {
 <li>性能是否真的改善</li>
 <li>改动是否只在某个偶然输入下才显得更快</li>
 </ul>
-<hr>
 <h2 id="第一步先测量而不是先猜"><a class="header" href="#第一步先测量而不是先猜">第一步：先测量，而不是先猜</a></h2>
 <h3 id="先区分构建模式"><a class="header" href="#先区分构建模式">先区分构建模式</a></h3>
 <p>构建模式会显著影响性能表现（各模式的区别见<a href="#构建系统入门">构建系统章节</a>）。性能比较前先确认你用的是哪种模式。</p>
@@ -11735,7 +11352,6 @@ pub fn main(init: std.process.Init) void {
 <blockquote>
 <p><strong>这个方法适合做第一轮粗测，不适合做最终结论。</strong></p>
 </blockquote>
-<hr>
 <h2 id="第二步调试时先看正确性和边界"><a class="header" href="#第二步调试时先看正确性和边界">第二步：调试时先看“正确性“和“边界“</a></h2>
 <p>很多所谓“性能问题”，最后查出来其实是：</p>
 <ul>
@@ -11778,7 +11394,6 @@ fn process(value: i32) void {
 <li>只比较改动前后的一个局部版本</li>
 </ul>
 <p>这往往比一开始就盯着整个系统更有效。</p>
-<hr>
 <h2 id="第三步验证优化是否真的成立"><a class="header" href="#第三步验证优化是否真的成立">第三步：验证优化是否真的成立</a></h2>
 <p>这是最容易被忽略的一步。</p>
 <p>你做了一次“优化”之后，至少还要重新回答四个问题：</p>
@@ -11803,7 +11418,6 @@ fn process(value: i32) void {
 <li>局部更快，但整体工作流更难理解</li>
 </ul>
 <p>所以验证时，不要只看某一个局部数字。</p>
-<hr>
 <h2 id="优化时最值得优先考虑的方向"><a class="header" href="#优化时最值得优先考虑的方向">优化时最值得优先考虑的方向</a></h2>
 <p>在 Zig 里，真正“高收益且常见”的优化，通常不是最炫的那一类，而是这些：</p>
 <h3 id="1-减少不必要的分配"><a class="header" href="#1-减少不必要的分配">1. 减少不必要的分配</a></h3>
@@ -11838,7 +11452,6 @@ fn process(value: i32) void {
 <li>是否频繁跨结构跳转</li>
 <li>是否本来可以顺序访问，却写成了低局部性模式</li>
 </ul>
-<hr>
 <h2 id="什么时候才该考虑更底层的优化"><a class="header" href="#什么时候才该考虑更底层的优化">什么时候才该考虑更底层的优化？</a></h2>
 <p>更底层的优化当然重要，但不应成为默认起手式。</p>
 <p>例如这些方向：</p>
@@ -11860,7 +11473,6 @@ fn process(value: i32) void {
 <blockquote>
 <p><strong>先把“大方向”做对，再考虑“底层榨干”。</strong></p>
 </blockquote>
-<hr>
 <h2 id="一个更实用的性能检查清单"><a class="header" href="#一个更实用的性能检查清单">一个更实用的性能检查清单</a></h2>
 <p>当你怀疑某段代码慢时，可以按这个顺序检查：</p>
 <h3 id="测量前"><a class="header" href="#测量前">测量前</a></h3>
@@ -11884,7 +11496,6 @@ fn process(value: i32) void {
 <li>代码是否变得更难维护？</li>
 <li>这次优化的收益，是否值得它带来的复杂度？</li>
 </ul>
-<hr>
 <h2 id="版本敏感提醒"><a class="header" href="#版本敏感提醒">版本敏感提醒</a></h2>
 <p>本教程整体面向 Zig <code>0.16.0-dev</code> 语境。<br>对本章来说，真正重要的不是某个 API 名字是否变化，而是下面这些方法论：</p>
 <ul>
@@ -11896,8 +11507,7 @@ fn process(value: i32) void {
 <blockquote>
 <p><strong>Measure → Debug → Verify</strong> 这条工作流本身。</p>
 </blockquote>
-<hr>
-<h2 id="本章小结-8"><a class="header" href="#本章小结-8">本章小结</a></h2>
+<h2 id="本章小结-9"><a class="header" href="#本章小结-9">本章小结</a></h2>
 <p>这一章最希望你带走的，不是某个“性能秘籍”，而是一个更稳妥的实践顺序：</p>
 <ol>
 <li><strong>先测量，再优化</strong></li>

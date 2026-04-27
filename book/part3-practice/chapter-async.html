@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-eaf4bf9b.js";
+            window.path_to_searchindex_js = "../searchindex-23a6b307.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-626d6463.js"></script>
@@ -186,7 +186,6 @@
 <p><strong>章节定位</strong>：第三部分的<strong>方向性专题</strong>，聚焦于 Zig 异步 I/O 的<strong>历史演进和决策框架</strong>。</p>
 <p><code>std.Io</code> 的具体 API 用法见 <a href="../part2-advanced/chapter-io.html">std.Io 接口详解</a>；线程、锁、原子操作等并发基础见 <a href="../part2-advanced/chapter-concurrency.html">并发编程概述</a>；网络程序实战见 <a href="chapter-http-server.html">HTTP 服务器设计与最小实现</a>。</p>
 </blockquote>
-<hr>
 <h2 id="现状结论"><a class="header" href="#现状结论">现状结论</a></h2>
 <p>今天的 Zig 异步 I/O，可以这样理解：</p>
 <ol>
@@ -254,7 +253,6 @@
 </ul>
 <h2 id="第三方库"><a class="header" href="#第三方库">第三方库</a></h2>
 <p>标准库高层异步 I/O 方向仍在演进，第三方库可以作为现实工程中的候选方案。但要注意：库的 API 变化可能比语言还快，“能跑“不等于“适合长期依赖”，需结合版本、维护状态、文档质量单独评估。</p>
-<hr>
 <h2 id="小结"><a class="header" href="#小结">小结</a></h2>
 <ol>
 <li>旧的语言级 <code>async</code>/<code>await</code>/<code>suspend</code>/<code>resume</code> 已退出主线</li>

@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-eaf4bf9b.js";
+            window.path_to_searchindex_js = "../searchindex-23a6b307.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-626d6463.js"></script>
@@ -188,7 +188,6 @@
 <li><strong>对象池优化</strong>：用空闲索引表替代线性扫描，降低获取空闲对象的开销</li>
 </ul>
 <p>核心前提是：这些技巧适合在已经确认优化必要时引入，不应作为默认起手式。基本的内存管理原则——显式传递 <code>Allocator</code>、用 <code>defer</code>/<code>errdefer</code> 收拢清理路径、明确所有权边界——在大多数项目中已经足够。</p>
-<hr>
 <h2 id="一包装分配器增加分配行为的可观测性"><a class="header" href="#一包装分配器增加分配行为的可观测性">一、包装分配器：增加分配行为的可观测性</a></h2>
 <h3 id="一个最小统计分配器"><a class="header" href="#一个最小统计分配器">一个最小统计分配器</a></h3>
 <p>下面的实现包装了一个已有分配器，记录分配次数、释放次数和当前统计字节数。</p>
@@ -333,7 +332,6 @@ pub fn main(_: std.process.Init) !void {
 <li>怀疑分配次数过多是热点</li>
 <li>在不改业务逻辑的前提下做局部实验</li>
 </ul>
-<hr>
 <h2 id="二对象池空闲索引表优化"><a class="header" href="#二对象池空闲索引表优化">二、对象池：空闲索引表优化</a></h2>
 <p>对象池的核心思路是提前准备一批对象槽位，获取和归还都在这批存储上完成。前一章的<a href="chapter-memory-pool.html">内存池</a>使用线性扫描寻找空闲槽位（O(n)），本节使用空闲索引表（free list）优化为 O(1)。</p>
 <h3 id="空闲列表对象池"><a class="header" href="#空闲列表对象池">空闲列表对象池</a></h3>
@@ -422,7 +420,6 @@ pub fn main(_: std.process.Init) !void {
 </ul>
 <h3 id="适用场景-1"><a class="header" href="#适用场景-1">适用场景</a></h3>
 <p>对象大小固定、创建和释放频繁、容量上界已知的场景，如任务节点、事件对象、固定尺寸消息块。不适合大小变化大、容量不可预测或并发共享无同步保护的情况。</p>
-<hr>
 <h2 id="三两种策略对比"><a class="header" href="#三两种策略对比">三、两种策略对比</a></h2>
 <div class="table-wrapper">
 <table>
@@ -439,15 +436,12 @@ pub fn main(_: std.process.Init) !void {
 </table>
 </div>
 <p>核心判断：先区分“观察问题“还是“分配策略问题“。</p>
-<hr>
 <h2 id="四版本敏感说明"><a class="header" href="#四版本敏感说明">四、版本敏感说明</a></h2>
 <p>本章中相对稳定的内容是设计原则：所有权与释放责任、<code>Allocator</code> 作为显式接口、对象池适合固定形状频繁复用对象、高级优化意味着更强的正确性约束。</p>
 <p>更可能随版本变化的是：手动拼装 allocator vtable 的方式、底层 <code>rawAlloc</code>/<code>rawResize</code>/<code>rawRemap</code>/<code>rawFree</code> 接口的签名。阅读时应结合本地标准库源码确认，优先掌握设计判断和责任边界。</p>
-<hr>
 <h2 id="五进一步演进方向"><a class="header" href="#五进一步演进方向">五、进一步演进方向</a></h2>
 <p><strong>包装分配器</strong>：补全 <code>resize</code>/<code>remap</code> 的统计一致性、添加并发安全（<code>std.Io.Mutex</code> 等）、记录调用来源和堆栈、增加测试覆盖。</p>
 <p><strong>对象池</strong>：合法性检查（指针范围、对齐验证）、重复释放检测、对象重置策略、线程安全、容量耗尽时的策略选择（阻塞等待/自动扩容/返回错误）。</p>
-<hr>
 <h2 id="小结"><a class="header" href="#小结">小结</a></h2>
 <p>本章的核心不是记住两段代码，而是建立以下判断：</p>
 <ul>

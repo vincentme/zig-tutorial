@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-eaf4bf9b.js";
+            window.path_to_searchindex_js = "../searchindex-23a6b307.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-626d6463.js"></script>
@@ -464,32 +464,7 @@ pub fn build(b: *std.Build) void {
 </ul>
 <p>两者都很常见，只是面向的层级不同。</p>
 <h2 id="更复杂的工程组织"><a class="header" href="#更复杂的工程组织">更复杂的工程组织</a></h2>
-<p>以下主题在更复杂的项目中会逐步出现。</p>
-<h3 id="模块拆分"><a class="header" href="#模块拆分">模块拆分</a></h3>
-<p>项目变大以后，代码通常会拆分成多个模块，而不是把所有逻辑都放进 <code>main.zig</code>。这时 <code>build.zig</code> 会承担更多职责，例如创建额外模块、管理导入关系、为不同目标复用模块配置。</p>
-<h3 id="多目标项目"><a class="header" href="#多目标项目">多目标项目</a></h3>
-<p>一个项目不一定只有一个可执行程序。它还可能同时包含：</p>
-<ul>
-<li>多个可执行目标</li>
-<li>库目标</li>
-<li>示例程序</li>
-<li>测试目标</li>
-<li>文档或其他辅助步骤</li>
-</ul>
-<p>这会让 <code>build.zig</code> 的结构更丰富，但核心思想不变：用步骤组织项目工作流。</p>
-<h3 id="库目标"><a class="header" href="#库目标">库目标</a></h3>
-<p>项目除了构建可执行文件，还可以构建库目标——静态库和动态库。静态库在链接时被完整嵌入最终产物，动态库则在运行时加载。构建脚本中通过 <code>b.addLibrary</code> 创建库目标，其他目标通过 <code>linkLibrary</code> 消费它。详见<a href="../part2-advanced/chapter-package-management.html">高级章节</a>。</p>
-<h3 id="外部依赖与系统库"><a class="header" href="#外部依赖与系统库">外部依赖与系统库</a></h3>
-<p>随着项目复杂度上升，还会遇到：</p>
-<ul>
-<li>外部依赖接入</li>
-<li>系统库链接</li>
-<li>C 代码集成</li>
-<li>文件生成与代码生成（构建期运行工具、生成 Zig 源码、为 <code>@embedFile</code> 生成资源）</li>
-<li>多平台发布策略</li>
-<li>更复杂的平台差异处理</li>
-</ul>
-<p>这些主题都放在高级部分系统展开。</p>
+<p>模块拆分、多目标项目（多可执行文件+库+测试）、静态库/动态库构建、外部依赖接入、系统库链接、文件生成与代码生成、交叉编译发布等高级主题，详见<a href="../part2-advanced/chapter-package-management.html">构建系统与包管理</a>。</p>
 <h2 id="最常用的几个构建命令"><a class="header" href="#最常用的几个构建命令">最常用的几个构建命令</a></h2>
 <p>本章提到的命令有：</p>
 <pre><code class="language-bash"># 构建项目
@@ -527,17 +502,9 @@ zig build --help
 <li><code>build.zig</code> 也可以把构建期配置传给程序代码。</li>
 <li>构建系统基于有向无环图（DAG），步骤之间通过依赖边连接。<code>zig-out/</code> 存放最终产物，<code>.zig-cache/</code> 存放构建缓存。</li>
 </ol>
-<p>→ 以下主题将在<a href="../part2-advanced/chapter-package-management.html">高级章节</a>展开：</p>
-<ul>
-<li><code>build.zig.zon</code> 的依赖声明细节</li>
-<li>构建图的核心机制（DAG、惰性求值、并发与缓存）</li>
-<li>库目标：静态库与动态库</li>
-<li>文件生成与代码生成</li>
-<li>多目标构建与交叉编译发布</li>
-<li>外部依赖接入</li>
-<li>哈希获取与固定</li>
-<li>系统库与 C 代码集成</li>
-</ul>
+<blockquote>
+<p><strong>相关阅读</strong>：<a href="../part2-advanced/chapter-package-management.html">构建系统与包管理</a> — 深入构建图机制、库目标、代码生成、交叉编译发布和依赖管理。</p>
+</blockquote>
 
                     </main>
 

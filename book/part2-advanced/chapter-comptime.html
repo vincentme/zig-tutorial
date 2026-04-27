@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-eaf4bf9b.js";
+            window.path_to_searchindex_js = "../searchindex-23a6b307.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-626d6463.js"></script>
@@ -182,17 +182,7 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="编译期计算与元编程"><a class="header" href="#编译期计算与元编程">编译期计算与元编程</a></h1>
-<p>Zig 的 <code>comptime</code> 让一部分代码在编译阶段执行，从而把类型生成、约束检查、代码选择和预计算提前完成。本章聚焦于 <strong><code>comptime</code> 的机制</strong>——语法、内建函数、能力边界。泛型设计模式将在<a href="chapter-generics.html">泛型编程</a>中展开。</p>
-<blockquote>
-<p><strong>进阶</strong>：读完后应该能回答——</p>
-<ul>
-<li><code>comptime</code> 参数、<code>comptime</code> 块、<code>comptime var</code> 分别用来做什么？</li>
-<li><code>@typeInfo</code>、<code>@hasDecl</code>、<code>@hasField</code>、<code>@embedFile</code> 等内建函数在编译期能提供什么能力？</li>
-<li><code>inline fn</code> 和 <code>comptime</code> 参数有什么区别？</li>
-<li>编译期计算有哪些硬性限制？</li>
-</ul>
-</blockquote>
-<hr>
+<p>Zig 的 <code>comptime</code> 让一部分代码在编译阶段执行，从而把类型生成、约束检查、代码选择和预计算提前完成。它不是宏系统或 DSL，而是用普通 Zig 代码参与编译阶段的计算与决策——编译期检查和运行时逻辑共享同一套表达方式，泛型和普通函数风格一致。本章聚焦于 <strong><code>comptime</code> 的机制</strong>——语法、内建函数、能力边界。泛型设计模式将在<a href="chapter-generics.html">泛型编程</a>中展开。</p>
 <h2 id="编译期和运行时核心区分"><a class="header" href="#编译期和运行时核心区分">编译期和运行时：核心区分</a></h2>
 <div class="table-wrapper">
 <table>
@@ -207,24 +197,8 @@
 </tbody>
 </table>
 </div>
-<blockquote>
-<p><strong>只有那些在编译阶段已经确定的信息，才能参与 <code>comptime</code> 计算。</strong></p>
-</blockquote>
-<p>例如类型参数、固定常量、结构体字段的类型信息都属于编译期已知；而用户输入、文件读取结果、网络请求内容则属于运行时。</p>
-<hr>
-<h2 id="comptime-不是宏"><a class="header" href="#comptime-不是宏"><code>comptime</code> 不是宏</a></h2>
-<p>很多初学者把 <code>comptime</code> 误解成“Zig 版宏系统“或“更厉害的模板“。更准确的理解是：</p>
-<blockquote>
-<p><code>comptime</code> 是 Zig 语言本身的一部分，允许用<strong>普通 Zig 代码</strong>参与编译阶段的计算与决策。</p>
-</blockquote>
-<p>它复用同一门语言的语法和类型系统，不需要额外的 DSL。这带来几个效果：</p>
-<ol>
-<li>编译期检查和运行时逻辑共享同一套表达方式</li>
-<li>泛型和普通函数风格一致</li>
-<li>元编程不必绕进“宏展开式思维“</li>
-</ol>
-<hr>
-<h2 id="机制一comptime-参数"><a class="header" href="#机制一comptime-参数">机制一：<code>comptime</code> 参数</a></h2>
+<p>只有编译期已知的值和类型信息才能参与 <code>comptime</code> 计算。类型参数、常量、结构体字段信息属于编译期已知；用户输入、文件内容、网络请求则属于运行时。</p>
+<h2 id="comptime-参数"><a class="header" href="#comptime-参数"><code>comptime</code> 参数</a></h2>
 <p>这是最基础也最常用的机制——函数参数标记为 <code>comptime</code>，调用者必须在编译期提供值。</p>
 <pre><code class="language-zig">const std = @import("std");
 
@@ -258,10 +232,23 @@ pub fn main() void {
     std.debug.print("{s}\n", .{&amp;buf}); // AAAAA
 }
 </code></pre>
-<hr>
-<h2 id="机制二comptime-块"><a class="header" href="#机制二comptime-块">机制二：<code>comptime</code> 块</a></h2>
-<p><code>comptime { }</code> 块用于显式写出“一段代码必须在编译期执行”。</p>
-<p>如果只是初始化一个顶层 <code>const</code>常量对象，通常不需要额外写 <code>comptime</code>，因为顶层常量初始化本来就在编译期求值。<br>显式 <code>comptime</code> 更典型的用法，是在类型定义或普通代码附近写编译期检查：</p>
+<h4 id="inline-fn-vs-comptime-参数"><a class="header" href="#inline-fn-vs-comptime-参数"><code>inline fn</code> vs <code>comptime</code> 参数</a></h4>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th></th><th><code>comptime</code> 参数</th><th><code>inline fn</code></th></tr>
+</thead>
+<tbody>
+<tr><td>参数是否必须编译期已知</td><td>是</td><td>否</td></tr>
+<tr><td>是否生成多份特化代码</td><td>是（按参数值特化）</td><td>否（只是内联展开）</td></tr>
+<tr><td>主要用途</td><td>泛型、编译期计算</td><td>性能优化、避免函数调用开销</td></tr>
+<tr><td>类型参数化能力</td><td>有（<code>comptime T: type</code>）</td><td>无</td></tr>
+</tbody>
+</table>
+</div>
+<p><code>inline</code> 不等于编译期——它只是建议编译器在调用处展开函数体，不会让参数变成编译期值。</p>
+<h2 id="comptime-块"><a class="header" href="#comptime-块"><code>comptime</code> 块</a></h2>
+<p><code>comptime { }</code> 块用于显式写出“一段代码必须在编译期执行“。典型用法是在类型定义中写编译期检查：</p>
 <pre><code class="language-zig">const std = @import("std");
 
 const Block = struct {
@@ -281,10 +268,9 @@ pub fn main() void {
     std.debug.print("first byte: {}\n", .{b.data[0]});
 }
 </code></pre>
-<p>这个例子里，<code>comptime</code> 的作用不是“计算一个常量”，而是把静态约束放到编译期检查。<br>如果断言不成立，错误会在编译阶段直接暴露出来。</p>
-<hr>
-<h2 id="机制三comptime-var"><a class="header" href="#机制三comptime-var">机制三：<code>comptime var</code></a></h2>
-<p><code>comptime var</code> 声明一个只存在于编译期的可变变量，可以在编译期循环中累积状态：</p>
+<p>如果断言不成立，错误会在编译阶段直接暴露出来。</p>
+<h2 id="comptime-var"><a class="header" href="#comptime-var"><code>comptime var</code></a></h2>
+<p><code>comptime</code> 参数和 <code>comptime</code> 块处理的都是编译期已知的<strong>固定值</strong>。但如果编译期计算需要循环累积中间结果，就需要一个能在编译期<strong>被修改</strong>的变量——这正是 <code>comptime var</code> 的设计意图：声明一个只存在于编译期的可变变量。</p>
 <pre><code class="language-zig">const std = @import("std");
 
 fn fibonacci(comptime n: u32) u32 {
@@ -303,11 +289,8 @@ test "fibonacci at comptime" {
     try std.testing.expectEqual(55, comptime fibonacci(10));
 }
 </code></pre>
-<blockquote>
-<p><strong>注意</strong>：<code>comptime var</code> 只能在编译期上下文中被修改。配合 <code>inline for</code> 使用时，循环本身在编译期展开，每次迭代都能读写 <code>comptime var</code>。</p>
-</blockquote>
-<hr>
-<h2 id="机制四编译期条件选择与-typeinfo"><a class="header" href="#机制四编译期条件选择与-typeinfo">机制四：编译期条件选择与 <code>@typeInfo</code></a></h2>
+<p><code>comptime var</code> 只能在编译期执行的代码中修改——包括 <code>comptime</code> 函数体、<code>comptime</code> 块和 <code>inline for</code> / <code>inline while</code> 循环体。普通运行时 <code>for</code> 不能修改 <code>comptime var</code>，因为运行时代码执行时编译期变量已不存在。<code>inline for</code> 之所以可以，是因为它在编译期展开：每次迭代生成一份独立的编译期语句，所有语句都在编译期执行完毕后才进入运行时。</p>
+<h2 id="typeinfo-与-compileerror"><a class="header" href="#typeinfo-与-compileerror"><code>@typeInfo</code> 与 <code>@compileError</code></a></h2>
 <p><code>@typeInfo</code> 返回一个类型的结构化描述，可以在编译期根据类型信息做分支决策：</p>
 <pre><code class="language-zig">const std = @import("std");
 
@@ -326,7 +309,7 @@ test "zeroValue" {
     try std.testing.expectEqual(false, zeroValue(bool));
 }
 </code></pre>
-<p>更完整的类型描述示例——读取结构体字段数量：</p>
+<p>读取结构体字段信息：</p>
 <pre><code class="language-zig">const std = @import("std");
 
 fn fieldCount(comptime T: type) usize {
@@ -346,36 +329,15 @@ test "fieldCount" {
     try std.testing.expectEqual(3, fieldCount(User));
 }
 </code></pre>
-<hr>
-<h2 id="机制五inline-for-与编译期循环展开"><a class="header" href="#机制五inline-for-与编译期循环展开">机制五：<code>inline for</code> 与编译期循环展开</a></h2>
-<p><code>inline for</code> 在编译期展开循环，每次迭代的捕获值都是编译期已知的。这使得在循环体内可以做编译期类型推导：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-fn printFieldNames(comptime T: type) void {
-    const fields = @typeInfo(T).@"struct".fields;
-    inline for (fields) |field| {
-        std.debug.print("{s}\n", .{field.name});
-    }
-}
-
-const Config = struct {
-    host: []const u8,
-    port: u16,
-    debug: bool,
-};
-
-pub fn main() void {
-    printFieldNames(Config);
-}
-</code></pre>
-<p>输出：</p>
-<pre><code>host
-port
-debug
-</code></pre>
-<hr>
-<h2 id="机制六compileerror--把约束写进编译阶段"><a class="header" href="#机制六compileerror--把约束写进编译阶段">机制六：<code>@compileError</code> —— 把约束写进编译阶段</a></h2>
-<p>当某段抽象只允许某些条件成立时，<code>@compileError</code> 可以在编译期阻止错误用法：</p>
+<p><code>.@"struct" =&gt; |info|</code> 捕获的 <code>info</code> 是一个 <code>std.builtin.Type.Struct</code>，包含：</p>
+<ul>
+<li><strong><code>fields</code></strong> — <code>[]const StructField</code>，每个字段含 <code>name</code>（名称）、<code>type</code>（类型）、<code>default_value</code>（默认值）、<code>is_comptime</code>、<code>alignment</code></li>
+<li><strong><code>decls</code></strong> — <code>[]const Declaration</code>，类型内部的声明（函数、常量）</li>
+<li><strong><code>layout</code></strong> — <code>ContainerLayout</code>，结构体布局方式（<code>.auto</code> / <code>@"packed"</code>）</li>
+<li><strong><code>is_tuple</code></strong> — 是否为元组（匿名结构体）</li>
+</ul>
+<p>这组信息使得编译期代码可以遍历字段、按名称查找、根据字段类型做条件分支，是系列化、配置映射和代码生成的基础。<code>inline for</code> 一节将展示如何遍历 <code>fields</code>。</p>
+<p><code>@compileError</code> 在 <code>@typeInfo</code> 的 <code>else</code> 分支中用于阻止不支持的用法，也可单独用于类型前置校验：</p>
 <pre><code class="language-zig">const std = @import("std");
 
 fn safeDiv(comptime T: type, a: T, b: T) T {
@@ -394,79 +356,63 @@ test "safeDiv" {
     try std.testing.expectEqual(@as(i32, 0), safeDiv(i32, 10, 0));
 }
 </code></pre>
-<p>编译期错误信息直接出现在编译输出中，比运行时 panic 更早、更明确。</p>
-<hr>
-<h2 id="机制七hasdecl-与-hasfield--编译期鸭子类型"><a class="header" href="#机制七hasdecl-与-hasfield--编译期鸭子类型">机制七：<code>@hasDecl</code> 与 <code>@hasField</code> —— 编译期鸭子类型</a></h2>
-<p>这两个内建函数可以在编译期检查一个类型是否具备某个声明或字段：</p>
+<h2 id="inline-for编译期循环展开"><a class="header" href="#inline-for编译期循环展开"><code>inline for</code>：编译期循环展开</a></h2>
+<p><code>inline for</code> 在编译期展开循环，每次迭代的捕获值都是编译期已知的，可在循环体内做编译期类型推导：</p>
+<pre><code class="language-zig">const std = @import("std");
+
+fn printFieldNames(comptime T: type) void {
+    const fields = @typeInfo(T).@"struct".fields;
+    inline for (fields) |field| {
+        std.debug.print("{s}\n", .{field.name});
+    }
+}
+
+const Config = struct { host: []const u8, port: u16, debug: bool };
+
+pub fn main() void {
+    printFieldNames(Config);
+}
+</code></pre>
+<p>输出：<code>host</code> / <code>port</code> / <code>debug</code></p>
+<h2 id="hasdecl-与-hasfield编译期鸭子类型"><a class="header" href="#hasdecl-与-hasfield编译期鸭子类型"><code>@hasDecl</code> 与 <code>@hasField</code>：编译期鸭子类型</a></h2>
 <pre><code class="language-zig">const std = @import("std");
 
 fn canSerialize(comptime T: type) bool {
     return @hasDecl(T, "serialize");
 }
-
 fn hasNameField(comptime T: type) bool {
     return @hasField(T, "name");
 }
 
-const Serializable = struct {
+const S = struct {
     data: u32,
-
-    pub fn serialize(self: @This()) []const u8 {
-        _ = self;
-        return "serialized";
-    }
+    pub fn serialize(_: @This()) []const u8 { return "ok"; }
 };
-
-const Plain = struct {
-    name: []const u8,
-    value: u32,
-};
+const P = struct { name: []const u8, value: u32 };
 
 test "@hasDecl and @hasField" {
-    try std.testing.expect(canSerialize(Serializable));
-    try std.testing.expect(!canSerialize(Plain));
-
-    try std.testing.expect(hasNameField(Plain));
-    try std.testing.expect(!hasNameField(Serializable));
+    try std.testing.expect(canSerialize(S));
+    try std.testing.expect(!canSerialize(P));
+    try std.testing.expect(hasNameField(P));
+    try std.testing.expect(!hasNameField(S));
 }
 </code></pre>
-<blockquote>
-<p><strong>注意</strong>：<code>@hasDecl</code> 检查的是类型的<strong>命名空间声明</strong>（函数、常量等），<code>@hasField</code> 检查的是<strong>数据字段</strong>。两者用途不同。</p>
-</blockquote>
-<p>这种能力是编译期约束检查的基础——泛型中如何用它实现接口约束，详见<a href="chapter-generics.html">泛型编程</a>。</p>
-<hr>
-<h2 id="机制八embedfile--编译期嵌入文件"><a class="header" href="#机制八embedfile--编译期嵌入文件">机制八：<code>@embedFile</code> —— 编译期嵌入文件</a></h2>
-<p><code>@embedFile</code> 在编译期读取文件内容，将其作为字节数组常量嵌入到二进制中：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-// 假设项目中存在 src/data/version.txt，内容为 "1.0.0"
-// const version = @embedFile("data/version.txt");
-// version 的类型是 *const [N:0]u8
-
-// 以下示例使用一个编译期已知的字符串来演示相同的效果：
-const fallback_version = "1.0.0-dev";
-
-pub fn main() void {
-    std.debug.print("version: {s}\n", .{fallback_version});
-}
+<p><code>@hasDecl</code> 检查命名空间声明，<code>@hasField</code> 检查数据字段。详见<a href="chapter-generics.html">泛型编程</a>。</p>
+<h2 id="embedfile编译期嵌入文件"><a class="header" href="#embedfile编译期嵌入文件"><code>@embedFile</code>：编译期嵌入文件</a></h2>
+<p><code>@embedFile</code> 在编译期将文件内容嵌入为 <code>*const [N:0]u8</code> 字节数组常量：</p>
+<pre><code class="language-zig">// const version = @embedFile("data/version.txt");
+// 返回 *const [N:0]u8，NUL 结尾
 </code></pre>
-<p><code>@embedFile</code> 的典型使用场景：</p>
-<ul>
-<li>嵌入配置文件、模板、shader 源码</li>
-<li>嵌入静态资源（图标、证书等）</li>
-<li>嵌入版本号或构建信息</li>
-</ul>
-<p>返回类型是 <code>*const [N:0]u8</code>——一个编译期已知长度的、以 0 结尾的字节数组指针。</p>
-<hr>
-<h2 id="机制九类型构造内建函数"><a class="header" href="#机制九类型构造内建函数">机制九：类型构造内建函数</a></h2>
-<p>在 0.16-dev 中，从 <code>@typeInfo</code> 结果构造类型的能力由一组专用内建函数提供，而非单一的 <code>@Type</code>：</p>
+<p>典型场景：嵌入配置文件、模板、shader 源码、静态资源、版本号或构建信息。</p>
+<h2 id="类型构造内建函数"><a class="header" href="#类型构造内建函数">类型构造内建函数</a></h2>
+<p>从 <code>@typeInfo</code> 结果构造类型的能力由一组专用内建函数提供：</p>
 <div class="table-wrapper">
 <table>
 <thead>
 <tr><th>内建函数</th><th>用途</th></tr>
 </thead>
 <tbody>
-<tr><td><code>@Int(signedness, bits)</code></td><td>构造整数类型，如 <code>@Int(.unsigned, 18)</code> → <code>u18</code></td></tr>
+<tr><td><code>@Int(signedness, bits)</code></td><td>构造整数类型</td></tr>
 <tr><td><code>@Struct(...)</code></td><td>构造结构体类型</td></tr>
 <tr><td><code>@Union(...)</code></td><td>构造联合体类型</td></tr>
 <tr><td><code>@Enum(...)</code></td><td>构造枚举类型</td></tr>
@@ -476,88 +422,34 @@ pub fn main() void {
 </tbody>
 </table>
 </div>
-<p>一个使用 <code>@Int</code> 的示例——根据需求选择最小整数类型：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-fn SmallestUint(comptime max_val: comptime_int) type {
+<p>这些内建函数与 <code>@typeInfo</code> 形成<strong>拆解—组装</strong>的对应关系：<code>@typeInfo</code> 把一个类型拆成结构化信息（<code>std.builtin.Type</code> 标签联合的某个 variant），内建函数把这些信息重新组装成类型。例如 <code>@typeInfo(i32)</code> 返回 <code>.int = .{ .signedness = .signed, .bits = 32 }</code>，<code>@Int(.signed, 32)</code> 则用同样的信息构造出 <code>i32</code>。下面的 <code>DoubleWidth</code> 就是这个模式的最好示范——读出、修改、重建。</p>
+<p>根据需求选择最小整数类型：</p>
+<pre><code class="language-zig">fn SmallestUint(comptime max_val: comptime_int) type {
     if (max_val &lt; (1 &lt;&lt; 8)) return u8;
     if (max_val &lt; (1 &lt;&lt; 16)) return u16;
     if (max_val &lt; (1 &lt;&lt; 32)) return u32;
     return u64;
 }
-
-test "SmallestUint" {
-    try std.testing.expect(SmallestUint(100) == u8);
-    try std.testing.expect(SmallestUint(1000) == u16);
-    try std.testing.expect(SmallestUint(100_000) == u32);
-}
 </code></pre>
-<p>使用 <code>@Int</code> 构造精确位宽类型的示例：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-fn DoubleWidth(comptime T: type) type {
+<p>使用 <code>@Int</code> 构造精确位宽：</p>
+<pre><code class="language-zig">fn DoubleWidth(comptime T: type) type {
     const info = @typeInfo(T).int;
     return @Int(info.signedness, info.bits * 2);
 }
-
-test "DoubleWidth" {
-    try std.testing.expect(DoubleWidth(u16) == u32);
-    try std.testing.expect(DoubleWidth(i8) == i16);
-}
 </code></pre>
-<hr>
-<h2 id="inline-fn-vs-comptime-参数"><a class="header" href="#inline-fn-vs-comptime-参数"><code>inline fn</code> vs <code>comptime</code> 参数</a></h2>
-<p>这两个概念经常被混淆，但它们解决不同的问题：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-// comptime 参数：调用者必须在编译期提供值
-fn comptimeAdd(comptime a: u32, b: u32) u32 {
-    // a 在编译期已知，b 可以是运行时值
-    return a + b;
-}
-
-// inline fn：建议编译器内联整个函数体（不强制参数为编译期值）
-inline fn inlineAdd(a: u32, b: u32) u32 {
-    return a + b;
-}
-
-test "comptime param vs inline fn" {
-    const x = comptimeAdd(10, 20);
-    try std.testing.expectEqual(30, x);
-
-    const y = inlineAdd(10, 20);
-    try std.testing.expectEqual(30, y);
-}
+<p><code>@Struct</code> 可在编译期重建结构体（如修改字段）：</p>
+<pre><code class="language-zig">const MyStruct = @Struct(
+    .@"packed", null,
+    &amp;.{ "x", "y" },       // 字段名
+    &amp;.{ u8, u8 },         // 字段类型
+    &amp;.{ null, null },     // 默认值
+    &amp;.{ false, false },   // is_comptime
+    &amp;.{ null, null },     // 对齐
+);
 </code></pre>
-<p>区别总结：</p>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th></th><th><code>comptime</code> 参数</th><th><code>inline fn</code></th></tr>
-</thead>
-<tbody>
-<tr><td>参数是否必须编译期已知</td><td>是</td><td>否</td></tr>
-<tr><td>是否生成多份特化代码</td><td>是（按参数值特化）</td><td>否（只是内联展开）</td></tr>
-<tr><td>主要用途</td><td>泛型、编译期计算</td><td>性能优化、避免函数调用开销</td></tr>
-<tr><td>类型参数化能力</td><td>有（<code>comptime T: type</code>）</td><td>无</td></tr>
-</tbody>
-</table>
-</div>
-<blockquote>
-<p><strong>注意</strong>：<code>inline fn</code> 不等于 <code>comptime</code>。把函数标记为 <code>inline</code> 不会让它的参数变成编译期值，只是建议编译器在调用处展开函数体。</p>
-</blockquote>
-<hr>
 <h2 id="编译期的硬性限制"><a class="header" href="#编译期的硬性限制">编译期的硬性限制</a></h2>
 <p><code>comptime</code> 能力强大，但有明确的边界：</p>
 <pre><code class="language-zig">const std = @import("std");
-
-// 演示：编译期不能做 I/O
-fn attemptCompileTimeWork() void {
-    // 以下如果在 comptime 块中调用，都会产生编译错误：
-    // - std.fs.cwd()         → 编译期不能访问文件系统
-    // - std.net.tcpConnect() → 编译期不能进行网络操作
-    // - std.heap.page_allocator.alloc() → 编译期不能使用运行时分配器
-}
 
 comptime {
     // 编译期可以做的：
@@ -569,21 +461,9 @@ comptime {
 
     // 编译期不能做的（取消注释会产生编译错误）：
     // _ = std.heap.page_allocator;  // 运行时分配器
-}
-
-test "comptime limits are clear" {
-    // 编译期计算结果可以在运行时使用
-    const sum = comptime blk: {
-        var s: u32 = 0;
-        for (0..100) |i| {
-            s += @as(u32, @intCast(i));
-        }
-        break :blk s;
-    };
-    try std.testing.expectEqual(4950, sum);
+    // std.fs.cwd()                  // 编译期不能访问文件系统
 }
 </code></pre>
-<p>完整的限制清单：</p>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -592,106 +472,39 @@ test "comptime limits are clear" {
 <tbody>
 <tr><td><strong>无 I/O</strong></td><td>不能读写文件、网络、标准输入输出（<code>@embedFile</code> 是例外——由编译器特殊处理）</td></tr>
 <tr><td><strong>无运行时指针</strong></td><td>不能解引用指向运行时内存的指针</td></tr>
-<tr><td><strong>有限内存</strong></td><td>编译期求值器有内存上限，过大的数据结构会触发“eval branch quota exceeded“或内存不足</td></tr>
+<tr><td><strong>有限内存</strong></td><td>编译期求值器有内存上限，过大的数据结构会触发 <code>"eval branch quota exceeded"</code> 或内存不足</td></tr>
 <tr><td><strong>递归深度限制</strong></td><td>默认分支配额 1000，可用 <code>@setEvalBranchQuota</code> 提高，但不能无限</td></tr>
 <tr><td><strong>无内联汇编</strong></td><td><code>asm</code> 在编译期不可用</td></tr>
 <tr><td><strong>无运行时副作用</strong></td><td>不能修改全局可变状态、不能调用外部函数</td></tr>
 </tbody>
 </table>
 </div>
-<p>如果遇到 <code>"unable to evaluate comptime expression"</code> 或 <code>"eval branch quota exceeded"</code>，通常意味着编译期计算触碰了这些限制。</p>
-<hr>
-<h2 id="预计算静态数据"><a class="header" href="#预计算静态数据">预计算静态数据</a></h2>
-<p>当某个结果在编译期完全可知且运行时会频繁使用时，预计算是 <code>comptime</code> 的经典应用：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-/// 编译期生成 ASCII 查找表：标记哪些字符是十六进制数字
-const hex_table: [256]bool = comptime blk: {
-    var table = [_]bool{false} ** 256;
-    for ("0123456789abcdefABCDEF") |c| {
-        table[c] = true;
-    }
-    break :blk table;
-};
-
-fn isHexDigit(c: u8) bool {
-    return hex_table[c];
-}
-
-test "hex lookup table" {
-    try std.testing.expect(isHexDigit('a'));
-    try std.testing.expect(isHexDigit('F'));
-    try std.testing.expect(isHexDigit('0'));
-    try std.testing.expect(!isHexDigit('g'));
-    try std.testing.expect(!isHexDigit(' '));
-}
-</code></pre>
-<p>这个查找表在编译期构建完毕，运行时只需一次数组索引——O(1) 查找，零运行时构建成本。</p>
-<hr>
-<h2 id="一个完整示例按类型选择描述信息"><a class="header" href="#一个完整示例按类型选择描述信息">一个完整示例：按类型选择描述信息</a></h2>
-<p>综合运用多种机制——编译期类型参数、<code>@typeInfo</code> 分支、<code>@compileError</code>：</p>
-<pre><code class="language-zig">const std = @import("std");
-
-fn describeType(comptime T: type) []const u8 {
-    return switch (@typeInfo(T)) {
-        .int =&gt; "integer",
-        .float =&gt; "float",
-        .bool =&gt; "boolean",
-        .pointer =&gt; "pointer",
-        .array =&gt; "array",
-        .@"struct" =&gt; "struct",
-        .@"enum" =&gt; "enum",
-        else =&gt; "other",
-    };
-}
-
-test "describeType" {
-    try std.testing.expectEqualStrings("integer", describeType(i32));
-    try std.testing.expectEqualStrings("float", describeType(f64));
-    try std.testing.expectEqualStrings("boolean", describeType(bool));
-    try std.testing.expectEqualStrings("pointer", describeType(*u8));
-    try std.testing.expectEqualStrings("struct", describeType(struct { x: u32 }));
-}
-</code></pre>
-<hr>
-<h2 id="本章小结核心机制与适用场景"><a class="header" href="#本章小结核心机制与适用场景">本章小结：核心机制与适用场景</a></h2>
+<h2 id="本章小结"><a class="header" href="#本章小结">本章小结</a></h2>
 <div class="table-wrapper">
 <table>
 <thead>
 <tr><th>机制</th><th>关键语法</th><th>适用场景</th></tr>
 </thead>
 <tbody>
-<tr><td>编译期参数</td><td><code>fn f(comptime T: type, ...)</code></td><td>泛型数据结构与函数，类型参数化——详见<a href="chapter-generics.html">泛型编程</a></td></tr>
-<tr><td>编译期块</td><td><code>comptime { }</code>, <code>comptime blk: { ... }</code></td><td>编译期断言与静态检查</td></tr>
-<tr><td>编译期变量</td><td><code>comptime var x = ...</code></td><td>预计算静态数据</td></tr>
-<tr><td>类型反射</td><td><code>@typeInfo(T)</code></td><td>根据类型生成代码路径</td></tr>
-<tr><td>类型构造</td><td><code>@Int</code>, <code>@Struct</code>, <code>@Enum</code> 等</td><td>编译期生成自定义类型</td></tr>
-<tr><td>声明/字段检查</td><td><code>@hasDecl</code>, <code>@hasField</code></td><td>编译期鸭子类型检查</td></tr>
-<tr><td>编译期错误</td><td><code>@compileError("msg")</code></td><td>编译期约束检查</td></tr>
-<tr><td>文件嵌入</td><td><code>@embedFile("path")</code></td><td>嵌入外部资源</td></tr>
+<tr><td><code>comptime</code> 参数</td><td><code>fn f(comptime T: type, ...)</code></td><td>泛型数据结构与函数——详见<a href="chapter-generics.html">泛型编程</a></td></tr>
+<tr><td><code>comptime</code> 块</td><td><code>comptime { }</code></td><td>编译期断言与静态检查</td></tr>
+<tr><td><code>comptime</code> 变量</td><td><code>comptime var x = ...</code></td><td>编译期循环中累积状态</td></tr>
+<tr><td>类型反射 + 约束</td><td><code>@typeInfo(T)</code> + <code>@compileError</code></td><td>根据类型生成代码、编译期约束检查</td></tr>
+<tr><td>编译期鸭子类型</td><td><code>@hasDecl</code>, <code>@hasField</code></td><td>检查类型是否具备某声明或字段</td></tr>
 <tr><td>循环展开</td><td><code>inline for</code></td><td>编译期遍历与展开</td></tr>
-<tr><td>性能配额</td><td><code>@setEvalBranchQuota(N)</code></td><td>调整编译期计算上限</td></tr>
+<tr><td>文件嵌入</td><td><code>@embedFile("path")</code></td><td>嵌入外部资源</td></tr>
+<tr><td>类型构造</td><td><code>@Int</code>, <code>@Struct</code>, <code>@Enum</code> 等</td><td>编译期生成自定义类型</td></tr>
 </tbody>
 </table>
 </div>
-<hr>
 <h2 id="边界与常见陷阱"><a class="header" href="#边界与常见陷阱">边界与常见陷阱</a></h2>
-<p>以下问题在实践中最容易遇到，合并为一节。</p>
-<h3 id="1-别把运行时问题硬塞进编译期"><a class="header" href="#1-别把运行时问题硬塞进编译期">1. 别把运行时问题硬塞进编译期</a></h3>
-<p>如果值来自用户输入、文件、网络、数据库——它天然属于运行时。不要为了“看起来高级“而强行 <code>comptime</code> 化。</p>
-<h3 id="2-别让编译期代码比运行时更难读"><a class="header" href="#2-别让编译期代码比运行时更难读">2. 别让编译期代码比运行时更难读</a></h3>
-<p>层层嵌套的 <code>@typeInfo</code> 反射、过度抽象的字段驱动生成——如果明明可以普通写，却非要绕一圈编译期拼装，问自己：</p>
+<ul>
+<li><strong>别把运行时问题硬塞进编译期</strong>——用户输入、文件、网络数据天然属于运行时。</li>
+<li><strong>编译期 ≠ 免费</strong>——编译期计算会增加编译时间，不要为省下微不足道的运行时开销而大幅拖慢编译。</li>
+<li><strong>先学稳基础再玩反射</strong>——推荐顺序：<code>comptime</code> 参数 → 编译期条件分支 → 类型构造 → <code>@typeInfo</code> 反射。跳过前面直接沉迷复杂反射，代码往往自己也看不清。</li>
+</ul>
 <blockquote>
-<p>这段 <code>comptime</code> 真的让设计更清楚了吗？</p>
-</blockquote>
-<h3 id="3-编译期--免费"><a class="header" href="#3-编译期--免费">3. 编译期 ≠ 免费</a></h3>
-<p>编译期计算会增加编译时间。如果只是为了省下微不足道的运行时开销而大幅拖慢编译，通常不值得。</p>
-<h3 id="4-先学稳基础再玩反射"><a class="header" href="#4-先学稳基础再玩反射">4. 先学稳基础再玩反射</a></h3>
-<p>推荐顺序：<code>comptime</code> 参数 → 编译期生成类型 → 编译期条件分支 → 类型反射。跳过前面直接沉迷复杂反射，往往导致代码自己也看不清。</p>
-<h3 id="5-别用-comptime-掩盖设计不清"><a class="header" href="#5-别用-comptime-掩盖设计不清">5. 别用 <code>comptime</code> 掩盖设计不清</a></h3>
-<p>有时问题不是“需要更强的元编程“，而是数据结构没想清楚、接口边界没想清楚。继续堆 <code>comptime</code> 只会放大混乱。</p>
-<blockquote>
-<p><strong>注意</strong>：如果需要运行时切换实现、类型擦除或 VTable，那更适合运行时抽象而非 <code>comptime</code>。完整对比见<a href="../part2-advanced/chapter-interfaces.html">接口与设计模式</a>章节。</p>
+<p><strong>注意</strong>：如果需要运行时切换实现、类型擦除或 VTable，那更适合运行时抽象而非 <code>comptime</code>。完整对比见<a href="chapter-interfaces.html">接口与设计模式</a>章节。</p>
 </blockquote>
 <hr>
 <blockquote>

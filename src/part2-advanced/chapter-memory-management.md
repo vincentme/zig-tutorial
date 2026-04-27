@@ -15,8 +15,6 @@
 > - 如果接下来准备阅读[接口、组合与设计模式](chapter-interfaces.md)，可以特别留意本章里“分配器是接口设计一部分”这一主线。
 > - 如果更想先看实践案例，也可以在读完本章后回到第三部分对照阅读[高级内存管理技巧（专题）](../part3-practice/chapter-advanced-memory.md)，观察这些原则在案例里的落地方式。
 
----
-
 ## 总视角：Zig 的内存管理在解决什么问题？
 
 在系统编程里，很多最难定位的问题都和内存有关。例如：
@@ -33,8 +31,6 @@ Zig 没有垃圾回收器，也没有 Rust 那样的借用检查器自动兜底�
 > **把资源责任表达得更明确，把分配行为放回接口层，把调试期检查交给工具和运行时防护。**
 
 这意味着 Zig 提供了更高的自由度，也要求建立更强的资源管理纪律。
-
----
 
 ## Zig 的内存管理哲学
 
@@ -54,13 +50,9 @@ Zig 没有垃圾回收器，也没有 Rust 那样的借用检查器自动兜底�
 3. **释放逻辑必须可靠，不能把清理写成“碰运气”**
 4. **接口应当明确表达：谁分配、谁拥有、谁释放**
 
----
-
 ## Zig 与其他语言在内存管理上的差异
 
 与依赖 GC 的语言不同，Zig 没有自动回收。与 Rust 不同，Zig 没有借用检查器。Zig 依赖显式传递分配器和开发者自律来管理内存。这也意味着"内存管理"本质上是**设计问题**，不是"几个 API 的记忆题"。
-
----
 
 ## 所有权、借用与生命周期
 
@@ -131,8 +123,6 @@ test "borrowed slice does not transfer ownership" {
 > 返回新分配的数据，通常意味着把释放责任交给调用者；  
 > 接收 `[]const T`、`*const T` 这类只读视图，通常意味着“只借用、不拥有”。
 
----
-
 ## 栈与堆：两种最常见的内存来源
 
 理解 Zig 内存管理时，最容易先混淆的是：哪些值在栈上，哪些值需要显式分配。
@@ -198,8 +188,6 @@ test "heap allocation requires explicit cleanup" {
 - 生命周期协调
 - 泄漏与悬空问题
 
----
-
 ## 分配器接口：为什么 Zig 要显式传 allocator？
 
 这是 Zig 最有代表性的设计之一。
@@ -242,8 +230,6 @@ fn buildSomething(allocator: std.mem.Allocator) !Result
 `std.mem.Allocator` 使用显式接口模式：内部持有一个类型擦除指针 `ptr` 和一张函数表 `vtable`，通过运行时分发实现多态。任何实现了所需方法的类型都可以生成 `Allocator` 值，调用方只和统一接口打交道。
 
 Allocator 接口的内部结构（`ptr` + `vtable` 模式）在[接口与设计模式](../part2-advanced/chapter-interfaces.md)章节有完整解析。
-
----
 
 ## 常见分配器：它们各自解决什么问题
 
@@ -478,8 +464,6 @@ test "page_allocator can allocate memory directly from the system" {
 - 分配器本身就是工程权衡的一部分
 - `page_allocator` 常被用作 `DebugAllocator` 或 `ArenaAllocator` 的底层后端
 
----
-
 ## 资源清理：`defer` 和 `errdefer` 在内存管理中的核心模式
 
 > **相关阅读**：`defer` 在作用域结束时无条件执行，`errdefer` 只在函数以错误返回时执行，多个 `defer`/`errdefer` 按 LIFO 顺序执行。如果还不熟悉它们的基本语法和执行顺序，请先阅读[错误处理](../part1-basics/chapter-error-handling.md)中的相关章节。
@@ -519,8 +503,6 @@ test "errdefer cleans up on partial failure" {
 - **调用者**：只在成功时获得资源，用 `defer` 负责最终释放
 
 这个"分配 → `errdefer` → 下一步"的写法在标准库和实际项目中非常普遍。掌握它，失败路径上的资源泄漏问题就基本不会出现。
-
----
 
 ## 分配器传递模式：什么才算“Zig 风格”的接口？
 
@@ -571,8 +553,6 @@ test "allocator-passing keeps ownership explicit" {
 
 如果接口语义不清楚，再漂亮的实现也很危险。
 
----
-
 ## 容器与版本敏感区域
 
 > **版本说明**：容器 API（如 `ArrayList` 的初始化与方法签名）可能随版本演进。
@@ -599,8 +579,6 @@ test "current ArrayList style is explicit about allocation context" {
 }
 ```
 
----
-
 ## 线程安全不是“换一个分配器名字”就自动得到的
 
 多线程场景下，分配器问题常常被误解。
@@ -621,8 +599,6 @@ test "current ArrayList style is explicit about allocation context" {
 本教程不把某个具体“线程安全分配器包装器”写成通用配方，原因正是：
 
 > **API 可能变，真正稳定的是资源边界与同步责任的设计。**
-
----
 
 ## 内存管理中的常见设计建议
 
@@ -658,8 +634,6 @@ test "current ArrayList style is explicit about allocation context" {
 1. 先把生命周期和责任边界写清楚
 2. 先用调试期工具验证没有明显泄漏
 3. 再根据热点决定是否要进一步优化
-
----
 
 ## 本章小结
 

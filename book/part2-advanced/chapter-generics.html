@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-eaf4bf9b.js";
+            window.path_to_searchindex_js = "../searchindex-23a6b307.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-626d6463.js"></script>
@@ -185,7 +185,6 @@
 <blockquote>
 <p><strong>进阶</strong>：本章讨论 Zig 中泛型的<strong>设计模式</strong>。关于 <code>comptime</code> 的底层机制，参见<a href="chapter-comptime.html">编译期计算与元编程</a>。</p>
 </blockquote>
-<hr>
 <h2 id="先建立正确心智模型"><a class="header" href="#先建立正确心智模型">先建立正确心智模型</a></h2>
 <p>更贴近 Zig 的理解方式：</p>
 <ol>
@@ -196,7 +195,6 @@
 <li><strong>约束通常不是写在一套独立“trait 语法“里，而是通过编译期检查显式表达</strong></li>
 </ol>
 <p>所以，泛型本质上是 <code>comptime</code> 能力的延伸：把类型作为编译期参数传入，生成针对该类型的专门实现。</p>
-<hr>
 <h2 id="与-crust-泛型的差异"><a class="header" href="#与-crust-泛型的差异">与 C++/Rust 泛型的差异</a></h2>
 <p>C++ 用 <code>template&lt;typename T&gt;</code>，Rust 用 <code>T: Trait</code> 约束。Zig 把类型参数显式写成编译期值：</p>
 <pre><code class="language-zig">fn add(comptime T: type, a: T, b: T) T {
@@ -204,7 +202,6 @@
 }
 </code></pre>
 <p>核心差异：Zig 不引入独立的模板/trait 语法——类型也是值，约束靠 <code>comptime</code> 检查显式表达。</p>
-<hr>
 <h2 id="为什么需要泛型"><a class="header" href="#为什么需要泛型">为什么需要泛型？</a></h2>
 <p>没有泛型时，同一种逻辑需要为每种类型重复维护。泛型的价值在于复用实现、保持类型安全、把错误提前到编译期、不引入额外运行时分发成本。</p>
 <h2 id="最基本的泛型函数"><a class="header" href="#最基本的泛型函数">最基本的泛型函数</a></h2>
@@ -252,7 +249,6 @@ test "double with explicit type argument" {
 <blockquote>
 <p><strong>优先把类型参数写清楚，而不是过早追求省略。</strong></p>
 </blockquote>
-<hr>
 <h2 id="多个类型参数泛型不只是一种类型的复用"><a class="header" href="#多个类型参数泛型不只是一种类型的复用">多个类型参数：泛型不只是一种类型的复用</a></h2>
 <p>泛型不仅可以接收一个类型，也可以接收多个类型。</p>
 <pre><code class="language-zig">const std = @import("std");
@@ -291,7 +287,6 @@ test "pair with two type parameters" {
 <li><code>Pair</code> 是<strong>类型工厂</strong></li>
 <li><code>makePair</code> 是<strong>值构造函数</strong></li>
 </ul>
-<hr>
 <h2 id="泛型结构体把返回类型当成一种正常设计"><a class="header" href="#泛型结构体把返回类型当成一种正常设计">泛型结构体：把“返回类型“当成一种正常设计</a></h2>
 <p>这通常是 Zig 泛型里最需要尽快建立直觉的部分。</p>
 <pre><code class="language-zig">const std = @import("std");
@@ -337,7 +332,6 @@ test "generic Point type" {
 <li>然后再在这个类型上调用 <code>init</code></li>
 </ul>
 <p>如果这个心智模型没建立好，后面读容器、接口工厂、类型驱动设计时会一直别扭。</p>
-<hr>
 <h2 id="泛型结构里常见的-self--this-是什么"><a class="header" href="#泛型结构里常见的-self--this-是什么">泛型结构里常见的 <code>Self = @This()</code> 是什么？</a></h2>
 <p>在很多 Zig 泛型示例里会看到这一句：</p>
 <pre><code class="language-zig">const Self = @This();
@@ -375,7 +369,6 @@ test "Self in generic struct" {
 </code></pre>
 <p>这里的 <code>Self</code> 不是额外魔法，
 它只是让方法里引用“当前结构体类型“更方便。</p>
-<hr>
 <h2 id="非类型编译期参数"><a class="header" href="#非类型编译期参数">非类型编译期参数</a></h2>
 <p><code>comptime</code> 参数不仅可以是类型，也可以是编译期已知的数值。这是泛型另一个常用模式——用编译期常量控制数据结构的大小或行为。</p>
 <pre><code class="language-zig">const std = @import("std");
@@ -442,7 +435,6 @@ test "BoundedArray with type and size" {
 <blockquote>
 <p><strong>注意</strong>：标准库中的 <code>std.BoundedArray</code> 就是这种模式的工程级实现，可以参考其源码学习更多细节。</p>
 </blockquote>
-<hr>
 <h2 id="泛型不是对所有类型都成立"><a class="header" href="#泛型不是对所有类型都成立">泛型不是“对所有类型都成立“</a></h2>
 <p>这是本章最重要的边界意识之一。</p>
 <p>很多初学者看到泛型后，容易自然地产生一种误解：</p>
@@ -487,7 +479,6 @@ test "abs works for supported numeric types" {
 <li>但约束和边界要自己说清楚</li>
 <li>说不清楚，就容易把示例写成“看起来很通用，实际上有前提“</li>
 </ul>
-<hr>
 <h2 id="用-typeinfo-做约束价值在表达边界不在炫技"><a class="header" href="#用-typeinfo-做约束价值在表达边界不在炫技">用 <code>@typeInfo</code> 做约束：价值在“表达边界“，不在“炫技“</a></h2>
 <p><code>@typeInfo</code> 很强，但也是最容易被滥用的部分之一。</p>
 <p>对于初学者，更重要的不是记住所有分支名称，而是理解它解决的问题：</p>
@@ -527,7 +518,6 @@ test "Numeric constraint example" {
 <li>不要把每个泛型都包装得层层嵌套</li>
 <li>约束应该服务于可读性，而不是制造神秘感</li>
 </ul>
-<hr>
 <h2 id="泛型容器类型安全的工厂模式"><a class="header" href="#泛型容器类型安全的工厂模式">泛型容器：类型安全的工厂模式</a></h2>
 <p>泛型在实际工程里最常见的用途之一，就是做类型安全容器。</p>
 <p>下面是一个最小栈实现：</p>
@@ -584,7 +574,6 @@ test "generic stack of i32" {
 <blockquote>
 <p><strong>泛型帮助复用逻辑，但不会偷偷做资源决策。</strong></p>
 </blockquote>
-<hr>
 <h2 id="泛型与错误联合"><a class="header" href="#泛型与错误联合">泛型与错误联合</a></h2>
 <p>泛型函数可以返回错误联合 <code>!T</code>，类型参数同时参与正常返回路径和错误路径。这在实际代码中非常常见——容器操作、解析函数、IO 包装等几乎都会涉及。</p>
 <pre><code class="language-zig">const std = @import("std");
@@ -614,7 +603,6 @@ test "generic error union return" {
 <li>返回 <code>!T</code> 时，Zig 会自动推断具体的错误集</li>
 <li>调用方用 <code>try</code> 或 <code>catch</code> 处理即可，不需要关心泛型细节</li>
 </ul>
-<hr>
 <h2 id="测试泛型代码"><a class="header" href="#测试泛型代码">测试泛型代码</a></h2>
 <p>泛型代码需用多种类型分别测试，因为不同类型可能触发不同的编译期分支。为每种目标类型写独立 <code>test</code> 块，失败时定位更快。如果泛型函数使用了 <code>@typeInfo</code> 做分支，每个分支至少覆盖一类。</p>
 <h2 id="小结"><a class="header" href="#小结">小结</a></h2>

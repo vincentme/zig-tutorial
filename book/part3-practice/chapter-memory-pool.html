@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-eaf4bf9b.js";
+            window.path_to_searchindex_js = "../searchindex-23a6b307.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-626d6463.js"></script>
@@ -208,7 +208,6 @@
 </ul>
 <p>把这三章连起来读，会更容易建立“什么时候该优化资源获取、什么时候该先把抽象边界讲清楚”的判断。</p>
 </blockquote>
-<hr>
 <h2 id="先问一个更本质的问题为什么要做内存池"><a class="header" href="#先问一个更本质的问题为什么要做内存池">先问一个更本质的问题：为什么要做内存池？</a></h2>
 <p>内存池适合解决一类非常具体的问题：</p>
 <ul>
@@ -235,7 +234,6 @@
 </ul>
 <p>那么直接使用通用分配器通常更简单，也更稳妥。</p>
 <p>所以，内存池不是“默认更好”，而是一种<strong>针对特定约束的优化性设计</strong>。</p>
-<hr>
 <h2 id="这一章的实现目标"><a class="header" href="#这一章的实现目标">这一章的实现目标</a></h2>
 <p>我们将实现一个教学用最小内存池，并围绕它讲清楚四件事：</p>
 <ol>
@@ -250,7 +248,6 @@
 <li>什么行为会破坏模型</li>
 <li>什么约束是性能换来的代价</li>
 </ul>
-<hr>
 <h2 id="先给出实现"><a class="header" href="#先给出实现">先给出实现</a></h2>
 <pre><code class="language-zig">const std = @import("std");
 
@@ -355,7 +352,6 @@ test "memory pool basic lifecycle" {
 }
 </code></pre>
 <p>先不要急着看细节。<br>这份实现最重要的不是“它怎么写”，而是“它依赖什么成立”。</p>
-<hr>
 <h2 id="先理解数据布局"><a class="header" href="#先理解数据布局">先理解数据布局</a></h2>
 <p>这个最小内存池由四部分核心状态组成：</p>
 <ul>
@@ -391,7 +387,6 @@ test "memory pool basic lifecycle" {
 <li>避免每次都遍历 <code>used</code></li>
 <li>帮助我们检查池状态是否大致合理</li>
 </ul>
-<hr>
 <h2 id="这个实现依赖哪些不变量"><a class="header" href="#这个实现依赖哪些不变量">这个实现依赖哪些不变量？</a></h2>
 <p>这是整章最重要的部分。</p>
 <h3 id="不变量-1itemslen--usedlen"><a class="header" href="#不变量-1itemslen--usedlen">不变量 1：<code>items.len == used.len</code></a></h3>
@@ -432,7 +427,6 @@ test "memory pool basic lifecycle" {
 <li>它没有被重复释放</li>
 </ul>
 <p>一旦这个前提被破坏，<code>release</code> 的行为就不再可靠。</p>
-<hr>
 <h2 id="初始化阶段池在建立什么状态"><a class="header" href="#初始化阶段池在建立什么状态">初始化阶段：池在建立什么状态？</a></h2>
 <p>看 <code>init</code>：</p>
 <pre><code class="language-zig">const items = try allocator.alloc(T, capacity);
@@ -450,7 +444,6 @@ errdefer allocator.free(used);
 <li>把所有槽位初始化为空闲状态</li>
 </ol>
 <p>这里使用 <code>errdefer</code> 确保初始化中途失败时已分配的资源被回滚（<code>errdefer</code> 详见<a href="../part1-basics/chapter-error-handling.html">错误处理</a>）。</p>
-<hr>
 <h2 id="acquire借出对象时到底发生了什么"><a class="header" href="#acquire借出对象时到底发生了什么"><code>acquire</code>：借出对象时到底发生了什么？</a></h2>
 <p>实现如下：</p>
 <pre><code class="language-zig">pub fn acquire(self: *Self) ?*T {
@@ -472,7 +465,6 @@ errdefer allocator.free(used);
 <li>返回该槽位的指针</li>
 </ol>
 <p><code>acquire()</code> 返回 <code>?*T</code>：池满时返回 <code>null</code>，调用者必须显式处理。当前实现使用线性扫描，<code>acquire</code> 的时间复杂度为 <code>O(n)</code>。</p>
-<hr>
 <h2 id="release归还对象时真正困难的是什么"><a class="header" href="#release归还对象时真正困难的是什么"><code>release</code>：归还对象时真正困难的是什么？</a></h2>
 <p>实现如下：</p>
 <pre><code class="language-zig">pub fn release(self: *Self, item: *T) void {
@@ -524,7 +516,6 @@ errdefer allocator.free(used);
 <p><strong>当前 <code>release</code> 更像“高信任契约接口”，而不是“强防御式接口”。</strong></p>
 </blockquote>
 <p>这并不是教学实现的错误，<br>但必须被明确写出来，不能让读者误以为它天然安全。</p>
-<hr>
 <h2 id="这个接口契约到底是什么"><a class="header" href="#这个接口契约到底是什么">这个接口契约到底是什么？</a></h2>
 <p>可以把当前内存池的接口契约写得非常明确。</p>
 <h3 id="initallocator-capacity"><a class="header" href="#initallocator-capacity"><code>init(allocator, capacity)</code></a></h3>
@@ -567,7 +558,6 @@ errdefer allocator.free(used);
 <li>换来更低的额外成本</li>
 <li>前提是调用者必须更守规矩**</li>
 </ul>
-<hr>
 <h2 id="一个最容易被忽略的问题复用意味着旧状态仍然存在"><a class="header" href="#一个最容易被忽略的问题复用意味着旧状态仍然存在">一个最容易被忽略的问题：复用意味着旧状态仍然存在</a></h2>
 <p>很多初学者第一次看对象池时，会潜意识觉得：</p>
 <blockquote>
@@ -594,7 +584,6 @@ const reused = pool.acquire().?;
 <li>还是在 <code>acquire</code> 后做初始化？</li>
 </ul>
 <p>这属于设计决策的一部分，不应默认含糊过去。</p>
-<hr>
 <h2 id="为什么这里不用更聪明的设计"><a class="header" href="#为什么这里不用更聪明的设计">为什么这里不用“更聪明”的设计？</a></h2>
 <p>你可能会问：</p>
 <ul>
@@ -624,7 +613,6 @@ const reused = pool.acquire().?;
 <li>最后讨论如何增强</li>
 </ol>
 <p>这比一开始就堆上“完整版”更适合学习。</p>
-<hr>
 <h2 id="这个实现适合什么场景"><a class="header" href="#这个实现适合什么场景">这个实现适合什么场景？</a></h2>
 <p>当前版本更适合作为：</p>
 <h3 id="1-教学型原型"><a class="header" href="#1-教学型原型">1. 教学型原型</a></h3>
@@ -651,7 +639,6 @@ const reused = pool.acquire().?;
 <li>粒子对象</li>
 <li>固定尺寸消息块</li>
 </ul>
-<hr>
 <h2 id="这个实现不适合什么场景"><a class="header" href="#这个实现不适合什么场景">这个实现不适合什么场景？</a></h2>
 <p>当前版本<strong>不适合直接拿去当生产组件</strong>，尤其是这些情况：</p>
 <h3 id="1-多线程共享访问"><a class="header" href="#1-多线程共享访问">1. 多线程共享访问</a></h3>
@@ -683,7 +670,6 @@ const reused = pool.acquire().?;
 <li>锁或句柄</li>
 </ul>
 <p>那么“释放槽位”不等于“完成对象析构”。<br>这种场景必须更小心设计对象生命周期。</p>
-<hr>
 <h2 id="如果继续演进下一步通常会怎么改"><a class="header" href="#如果继续演进下一步通常会怎么改">如果继续演进，下一步通常会怎么改？</a></h2>
 <p>在真正工程里，最常见的增强方向通常有下面几类。</p>
 <h2 id="1-用空闲链表替代线性扫描"><a class="header" href="#1-用空闲链表替代线性扫描">1. 用空闲链表替代线性扫描</a></h2>
@@ -727,7 +713,6 @@ const reused = pool.acquire().?;
 <li>Release 模式保留更轻量逻辑</li>
 </ul>
 <p>这通常是高性能组件很常见的做法。</p>
-<hr>
 <h2 id="从这章真正应该学到什么"><a class="header" href="#从这章真正应该学到什么">从这章真正应该学到什么？</a></h2>
 <p>如果你只把这章理解成“一个泛型数据结构示例”，那其实还不够。</p>
 <p>这章真正要教你的，是下面这些判断。</p>
@@ -757,7 +742,6 @@ const reused = pool.acquire().?;
 <li>不是一次性变成“可上线组件”</li>
 </ul>
 <p>能区分这点，是阅读第三部分案例时非常重要的能力。</p>
-<hr>
 <h2 id="小结"><a class="header" href="#小结">小结</a></h2>
 <p>这一章最重要的，不是“你会不会手写一个对象池”，而是你是否已经开始形成这些工程判断：</p>
 <ul>

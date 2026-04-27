@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-eaf4bf9b.js";
+            window.path_to_searchindex_js = "../searchindex-23a6b307.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-626d6463.js"></script>
@@ -190,7 +190,6 @@
 <li><strong>资源管理边界</strong> — 分配与释放的归属</li>
 <li><strong>构建与链接边界</strong> — 头文件、系统库的路径与链接</li>
 </ol>
-<hr>
 <h2 id="abi-与类型差异"><a class="header" href="#abi-与类型差异">ABI 与类型差异</a></h2>
 <p>ABI（Application Binary Interface）决定了函数参数如何传递、返回值如何传回、结构体如何布局。Zig 的切片 <code>[]T</code>（指针+长度）、可选类型 <code>?T</code>、错误联合 <code>!T</code> 等在 Zig 内部很有表达力，但跨 ABI 边界时应退回到更基础的表示：裸指针、显式长度、整数错误码、<code>extern struct</code>。</p>
 <p>跨边界时需明确：</p>
@@ -200,7 +199,6 @@
 <li>是否要求 <code>extern struct</code> 保证 C ABI 布局？</li>
 <li>错误该转换成什么？</li>
 </ul>
-<hr>
 <h2 id="导入-c"><a class="header" href="#导入-c">导入 C</a></h2>
 <h3 id="cimport"><a class="header" href="#cimport"><code>@cImport</code></a></h3>
 <pre><code class="language-zig">const c = @cImport({
@@ -221,7 +219,6 @@ pub fn main() void {
 pub extern fn make_point(x: f32, y: f32) Point;
 </code></pre>
 <p>翻译结果是机器生成的参考，不适合直接复制到项目中。</p>
-<hr>
 <h2 id="字符串"><a class="header" href="#字符串">字符串</a></h2>
 <p>C 和 Zig 对字符串的表示有本质区别：</p>
 <div class="table-wrapper">
@@ -263,7 +260,6 @@ pub fn main() !void {
 }
 </code></pre>
 <p><code>dupeZ</code> 返回 <code>[:0]u8</code>，编译器层面保证 NUL 终止。非零哨兵值可用 <code>allocator.dupeSentinel(u8, slice, sentinel_value)</code>。</p>
-<hr>
 <h2 id="资源与所有权"><a class="header" href="#资源与所有权">资源与所有权</a></h2>
 <p>跨语言边界的资源管理遵循三条原则：</p>
 <ol>
@@ -271,7 +267,6 @@ pub fn main() !void {
 <li><strong>不混用分配器</strong> — Zig allocator 和 C allocator 的实现、元数据布局、调试状态都可能不同，混用会导致未定义行为。</li>
 <li><strong>优先使用 C 库提供的构造函数</strong> — 如果 C 库提供了 <code>xxx_create()</code> / <code>xxx_destroy()</code> 等入口，应优先使用它们，因为库作者往往隐含了字段初始化顺序、额外状态位、平台相关设置等约束。手工填结构体字段容易被库内部约定所困。</li>
 </ol>
-<hr>
 <h2 id="extern-struct"><a class="header" href="#extern-struct">extern struct</a></h2>
 <p>跨 ABI 边界传递或共享布局的结构体应使用 <code>extern struct</code>，保证字段顺序与 C 一致、对齐规则匹配 C ABI：</p>
 <pre><code class="language-zig">const std = @import("std");
@@ -299,7 +294,6 @@ test "Pixel layout" {
 }
 </code></pre>
 <p>纯 Zig 内部用普通 <code>struct</code> 即可，编译器可自由优化布局。<code>extern struct</code> 仅用于确实要跨 ABI 边界的类型。</p>
-<hr>
 <h2 id="导出给-c"><a class="header" href="#导出给-c">导出给 C</a></h2>
 <p><code>export fn</code> 导出 C ABI 兼容的函数。边界上的类型必须收缩到 C 可理解的范围——基本类型、指针、<code>extern struct</code>，不应暴露 <code>[]T</code>、<code>?T</code>、<code>!T</code> 等 Zig 特有类型。传递数组的标准模式是 <code>ptr + len</code>：</p>
 <pre><code class="language-zig">// mathlib.zig
@@ -328,7 +322,6 @@ int sum_array(const int *ptr, size_t len);
 #endif
 </code></pre>
 <p>对外 ABI 设计通常比 Zig 内部 API 更朴素——这不是退步，而是边界设计本来就更保守。</p>
-<hr>
 <h2 id="回调函数"><a class="header" href="#回调函数">回调函数</a></h2>
 <p>C 库通过函数指针接受回调时（排序、事件、线程入口等），Zig 侧需声明 <code>callconv(.c)</code>：</p>
 <pre><code class="language-zig">const std = @import("std");
@@ -352,7 +345,6 @@ test "qsort callback" {
 }
 </code></pre>
 <p>关键要素：<code>callconv(.c)</code> 匹配 C 调用约定；<code>?*const anyopaque</code> 对应 <code>const void*</code>，需 <code>@ptrCast(@alignCast(...))</code> 恢复具体类型；返回 <code>c_int</code> 匹配 C 的 <code>int</code>。</p>
-<hr>
 <h2 id="构建与链接"><a class="header" href="#构建与链接">构建与链接</a></h2>
 <p>在 <code>build.zig</code> 中链接 C 库：</p>
 <pre><code class="language-zig">// build.zig 片段
@@ -370,7 +362,6 @@ exe.root_module.addIncludePath(b.path("vendor/include"));
 b.installArtifact(exe);
 </code></pre>
 <p>构建脚本的核心意图只有几类：链接系统库（<code>linkSystemLibrary</code>）、启用 libc（<code>link_libc = true</code>）、添加头文件路径（<code>addIncludePath</code>）、添加 C 源文件（<code>addCSourceFiles</code>）。遇到不确定的写法时，先理解目标再核对本地 Zig 版本的 API。</p>
-<hr>
 <h2 id="常见陷阱"><a class="header" href="#常见陷阱">常见陷阱</a></h2>
 <ol>
 <li><strong>把 <code>[]const u8</code> 直接传给 C</strong> — 只保证长度，不保证 NUL 终止。</li>
@@ -381,7 +372,6 @@ b.installArtifact(exe);
 <li><strong>认为 <code>c_int</code>/<code>c_long</code> 跨平台一致</strong> — 这些是 ABI 类型，大小随平台变化。</li>
 </ol>
 <p>排查顺序：先查边界类型（是否要求 NUL 终止？是否需 <code>extern struct</code>？），再查所有权（谁分配？谁释放？混用了分配器？），再查构建（头文件路径、系统库安装、版本 API 匹配），最后再怀疑 API 细节。</p>
-<hr>
 <h2 id="小结"><a class="header" href="#小结">小结</a></h2>
 <ul>
 <li><strong>C 互操作首先是 ABI 问题</strong>：类型匹配、布局一致、调用约定正确。</li>

@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-eaf4bf9b.js";
+            window.path_to_searchindex_js = "searchindex-23a6b307.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-626d6463.js"></script>
@@ -188,7 +188,6 @@
 <p><strong>用强调显式表达的语言，逐步理解控制流、失败路径和资源生命周期。</strong></p>
 </blockquote>
 <p>阅读时持续关注四个问题：代码是否把意图写清楚了？失败路径是否被当作主流程的一部分？资源由谁持有、由谁释放、生命周期到哪里结束？编译期机制和运行时机制分别解决什么问题？</p>
-<hr>
 <h2 id="这本书适合谁"><a class="header" href="#这本书适合谁">这本书适合谁？</a></h2>
 <ul>
 <li>已具备至少一门编程语言经验的开发者</li>
@@ -197,7 +196,6 @@
 <li>希望理解语言设计，而不只停留在语法层面的读者</li>
 </ul>
 <p>本书不是零基础的编程入门教材。</p>
-<hr>
 <h2 id="全书结构"><a class="header" href="#全书结构">全书结构</a></h2>
 <h3 id="第一部分基础"><a class="header" href="#第一部分基础">第一部分：基础</a></h3>
 <p>建立 Zig 的基本语法和阅读方式：语言定位、开发环境、类型、函数、复合类型、控制流、错误处理和构建系统。</p>
@@ -205,11 +203,9 @@
 <p>进入 Zig 的核心机制和工程主题：标准库、<code>comptime</code>、泛型、指针、内存管理、接口设计、C 互操作、并发、测试、构建系统与包管理。重点逐步看清哪些能力属于编译期、哪些属于运行时、哪些抽象是零成本的、工程代码中如何组织资源与依赖。</p>
 <h3 id="第三部分实战与专题"><a class="header" href="#第三部分实战与专题">第三部分：实战与专题</a></h3>
 <p>把前两部分的内容放回完整案例和专题中：CLI 工具、HTTP 服务器、内存池、配置系统、SIMD、异步 I/O、高级内存管理、性能优化等。重点不再是单个语法点，而是如何把语言机制和标准库能力组合起来解决问题。</p>
-<hr>
 <h2 id="建议怎么阅读"><a class="header" href="#建议怎么阅读">建议怎么阅读？</a></h2>
 <p>第一次接触 Zig 时，按目录顺序阅读。自然的路径是：从《认识 Zig》建立整体认识 → 完成环境搭建 → 学习基础语法、控制流和错误处理 → 进入标准库与高级机制 → 在实战章节回看这些机制如何落到项目中。</p>
 <p>有较强系统编程背景的读者，可以把本书当作“教程 + 参考读物“结合使用。</p>
-<hr>
 <h2 id="版本说明"><a class="header" href="#版本说明">版本说明</a></h2>
 <p>本教程面向 <strong>Zig 0.16.0 稳定版</strong>。Zig 仍在持续演进，版本号说明：</p>
 <ul>
@@ -224,7 +220,6 @@
 <li><code>@cImport</code> 已废弃，推荐构建系统中的 <code>addTranslateC</code></li>
 <li>旧的语言级 <code>async</code>/<code>await</code> 已移除，异步方向偏向库层与 I/O 基础设施演进</li>
 </ul>
-<hr>
 <h2 id="关于代码示例"><a class="header" href="#关于代码示例">关于代码示例</a></h2>
 <ul>
 <li>优先选择容易读懂、便于解释、能体现设计意图的写法</li>

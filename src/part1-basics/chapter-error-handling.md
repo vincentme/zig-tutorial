@@ -386,7 +386,9 @@ fn good() !void {
 
 如果不希望继续传播错误，而是希望在当前层将其处理掉，可以使用 `catch`。
 
-**提供默认值**
+`catch` 的基本形式是 `expression catch handler`，handler 有以下几种写法。
+
+**`catch` 默认值兜底**
 
 ```zig
 fn divide(a: i32, b: i32) !i32 {
@@ -397,11 +399,50 @@ fn divide(a: i32, b: i32) !i32 {
 const result = divide(10, 0) catch 0;
 ```
 
-这里表示：如果计算失败，就使用 `0` 作为替代值。
+`catch 0` 的含义是：如果 `divide` 失败，用 `0` 作为替代值。
 
-这种方式适用于“失败后存在合理默认值”的场景。
+这种方式适用于"失败后存在合理默认值"的场景。
 
-**捕获错误并执行逻辑**
+**`catch { ... }` 执行代码块**
+
+如果不需要错误本身的具体信息，只想在失败时执行一段逻辑，可以省略错误捕获：
+
+```zig
+const std = @import("std");
+
+fn divide(a: i32, b: i32) !i32 {
+    if (b == 0) return error.DivisionByZero;
+    return @divTrunc(a, b);
+}
+
+fn example() void {
+    const result = divide(10, 0) catch {
+        std.debug.print("计算出错，使用默认值\n", .{});
+        return; // 从 example 中退出
+    };
+
+    std.debug.print("结果：{}\n", .{result});
+}
+```
+
+`catch { ... }` 也可以用来做错误转换——在代码块中从外层函数返回另一个错误：
+
+```zig
+fn safeDivide(a: i32, b: i32) error{InvalidArg}!i32 {
+    const result = divide(a, b) catch {
+        return error.InvalidArg; // 捕获任意错误，转为上层语义
+    };
+    return result;
+}
+```
+
+这里不关心 `divide` 具体失败原因，只要失败就统一转为 `error.InvalidArg` 并退出 `safeDivide`。
+
+需要注意 `catch` 代码块的类型必须与成功值的类型匹配。如果函数返回 `!T`，`catch { error.X }` 不能直接作为表达式值（因为 `error` 不是 `T`），只能通过 `return` 提前退出函数来实现错误转换。
+
+**`catch |err| { ... }` 捕获错误值**
+
+如果需要根据错误内容做不同处理，可以捕获错误值：
 
 ```zig
 const std = @import("std");
@@ -421,7 +462,7 @@ fn example() void {
 }
 ```
 
-这里的 `catch |err|` 会把错误值绑定到 `err`，以便执行进一步处理，例如：
+这里 `catch |err|` 将错误值绑定到 `err`，`@errorName(err)` 可以获取错误的名称。常见的后续处理包括：
 
 - 记录日志
 - 转换错误
@@ -436,11 +477,11 @@ fn example() void {
 const value = parseNumber("42") catch unreachable;
 ```
 
-它的含义不是“忽略错误”，而是断言这里不可能失败；一旦失败，就说明程序的逻辑假设不成立。
+它的含义不是"忽略错误"，而是断言这里不可能失败；一旦失败，就说明程序的逻辑假设不成立。
 
 关于 `unreachable` 在不同构建模式下的行为，见[控制流章节的 unreachable 小节](chapter-control-flow.md#unreachable)。它只适合用于**逻辑上确实可以证明不失败**的场景，不应用来省略本应存在的错误处理。
 
-**匹配具体错误**
+**`catch |err| switch` 按错误类别分别处理**
 
 如果不同错误需要不同处理方式，可以在 `catch` 后配合 `switch` 使用。
 

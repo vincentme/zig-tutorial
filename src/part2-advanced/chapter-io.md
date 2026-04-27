@@ -89,6 +89,16 @@ pub fn main(init: std.process.Init) !void {
 - 旧写法：`std.fs.cwd().openFile(path, .{})`
 - 新写法：`std.Io.Dir.cwd().openFile(io, path, .{})`
 
+`openFile` 的第三个参数是 `OpenFlags`，常用选项：
+
+| 标志 | 作用 |
+| ---- | ---- |
+| `.mode = .read_only` | 只读（默认） |
+| `.mode = .write_only` | 只写 |
+| `.mode = .read_write` | 读写 |
+
+`createFile` 默认只写，加 `.read = true` 可同时开放读取。
+
 ### 直接写入整个字节切片
 
 整块写入时，可以直接使用 `File.writeStreamingAll`：
@@ -235,6 +245,10 @@ _ = chunk;
 
 需要缓冲、格式化或多次写入时，使用 `File.Writer`。
 
+### 缓冲 IO 与 flush
+
+Zig 的 Reader 和 Writer 要求显式传入缓冲区——与 C 的 `FILE*`（隐式分配内部缓冲区）不同，程序员完全控制缓冲区的大小和生命周期，符合"无隐藏分配"原则。数据先写入缓冲区，调用 `flush()` 后才真正落到底层 IO 资源。忘记 `flush()` 最常见的结果是输出不完整。
+
 ```zig
 const std = @import("std");
 const Io = std.Io;
@@ -255,8 +269,6 @@ pub fn main(init: std.process.Init) !void {
 }
 ```
 
-`flush()` 很重要。`File.Writer` 先写入缓冲区，不刷新就不能保证数据已经落到底层文件。
-
 ### 写入内存缓冲区
 
 写入内存而不是文件时，可以直接使用 `Io.Writer.fixed`：
@@ -276,6 +288,39 @@ pub fn main() !void {
     std.debug.print("{s}", .{written});
 }
 ```
+
+## 标准输入输出
+
+操作系统为每个进程创建三个标准通道：stdin（输入）、stdout（输出）、stderr（错误）。Zig 通过 `std.Io.File` 暴露它们：
+
+```zig
+const std = @import("std");
+const Io = std.Io;
+
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
+
+    // stdout：正常输出
+    var out_buf: [1024]u8 = undefined;
+    var stdout_writer = Io.File.stdout().writer(io, &out_buf);
+    try stdout_writer.interface.writeAll("hello stdout\n");
+    try stdout_writer.interface.flush();
+
+    // stderr：错误和警告
+    var err_buf: [1024]u8 = undefined;
+    var stderr_writer = Io.File.stderr().writer(io, &err_buf);
+    try stderr_writer.interface.writeAll("error: something went wrong\n");
+    try stderr_writer.interface.flush();
+
+    // stdin：读取用户输入（阻塞直到收到换行）
+    var in_buf: [1024]u8 = undefined;
+    var stdin_reader = Io.File.stdin().reader(io, &in_buf);
+    const name = try stdin_reader.interface.takeDelimiter('\n');
+    std.debug.print("you typed: {s}\n", .{name});
+}
+```
+
+stdout 和 stderr 都用于输出，区别在于约定：正常输出走 stdout，错误和警告走 stderr（终端中通常以不同颜色显示）。
 
 ## `ReadFailed`、`WriteFailed` 与 `.err`
 

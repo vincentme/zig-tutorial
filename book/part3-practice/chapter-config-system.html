@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-eaf4bf9b.js";
+            window.path_to_searchindex_js = "../searchindex-23a6b307.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-626d6463.js"></script>
@@ -185,7 +185,6 @@
 <blockquote>
 <p><strong>章节定位</strong>：本章借助教学原型探讨配置字段的描述方式、元信息如何驱动运行时接口、以及类型安全方案的边界。这是一个围绕 <code>comptime</code>、字段元信息和接口设计展开的原型案例，已刻意简化默认值、校验、持久化等能力。</p>
 </blockquote>
-<hr>
 <h2 id="先说清楚这不是生产级配置系统"><a class="header" href="#先说清楚这不是生产级配置系统">先说清楚：这不是生产级配置系统</a></h2>
 <p>很多读者看到“配置系统”四个字，会自然期待：</p>
 <ul>
@@ -210,7 +209,6 @@
 <li>再明确指出“它为什么还远远不够”</li>
 </ol>
 <p>如果你带着这个预期来读，本章会很有价值。<br>如果把它当成现成模板来抄，就会高估这个实现的通用性。</p>
-<hr>
 <h2 id="配置系统最核心的问题是什么"><a class="header" href="#配置系统最核心的问题是什么">配置系统最核心的问题是什么？</a></h2>
 <p>在写任何配置系统之前，先别急着想“读哪个文件格式”，而应该先回答几个结构性问题：</p>
 <h3 id="1-有哪些字段"><a class="header" href="#1-有哪些字段">1. 有哪些字段？</a></h3>
@@ -244,7 +242,6 @@
 <p><strong>先把字段元信息集中描述，再让运行时代码围绕这份元信息工作。</strong></p>
 </blockquote>
 <p>而这也正是 Zig 的 <code>comptime</code> 很适合介入的地方。</p>
-<hr>
 <h2 id="本章原型想展示什么"><a class="header" href="#本章原型想展示什么">本章原型想展示什么？</a></h2>
 <p>这个原型主要展示三件事：</p>
 <ol>
@@ -259,7 +256,6 @@
 <li>你如何让 <code>set</code> / <code>get</code> 这样的接口围绕这份描述工作起来</li>
 </ul>
 <p>为了突出这一点，本章会采用一个<strong>刻意简化</strong>的实现。</p>
-<hr>
 <h2 id="原型的字段描述"><a class="header" href="#原型的字段描述">原型的字段描述</a></h2>
 <p>先定义每个配置字段的元信息：</p>
 <pre><code class="language-zig">const std = @import("std");
@@ -284,7 +280,6 @@ const ConfigField = struct {
 <li>生成帮助文本</li>
 </ul>
 <p>都可以围绕这份元信息展开，而不是把逻辑散落在很多地方。</p>
-<hr>
 <h2 id="一个教学性原型"><a class="header" href="#一个教学性原型">一个教学性原型</a></h2>
 <p>下面这个实现不是为了“最优雅”或“最完整”，而是为了把结构问题讲清楚：</p>
 <pre><code class="language-zig">const std = @import("std");
@@ -391,7 +386,6 @@ fn Config(comptime fields: []const ConfigField) type {
     };
 }
 </code></pre>
-<hr>
 <h2 id="这个原型的核心思路是什么"><a class="header" href="#这个原型的核心思路是什么">这个原型的核心思路是什么？</a></h2>
 <p>先不要急着纠结 <code>u64</code>、<code>@bitCast</code>、<code>@typeInfo</code> 这些细节。<br>更值得先抓住的是整体结构：</p>
 <h3 id="1-configfield-负责描述字段"><a class="header" href="#1-configfield-负责描述字段">1. <code>ConfigField</code> 负责描述字段</a></h3>
@@ -423,7 +417,6 @@ fn Config(comptime fields: []const ConfigField) type {
 <blockquote>
 <p><strong>编译期字段描述，可以直接塑造运行时接口的结构。</strong></p>
 </blockquote>
-<hr>
 <h2 id="使用这个原型"><a class="header" href="#使用这个原型">使用这个原型</a></h2>
 <p>完整的 <code>Config</code> 实现见前文，这里只展示差异部分和用法。</p>
 <h3 id="差异printconfig-增加了描述信息"><a class="header" href="#差异printconfig-增加了描述信息">差异：<code>printConfig</code> 增加了描述信息</a></h3>
@@ -456,7 +449,6 @@ fn Config(comptime fields: []const ConfigField) type {
     try std.testing.expectEqual(@as(?bool, true), config.get("debug_mode", bool));
 }
 </code></pre>
-<hr>
 <h2 id="原型边界"><a class="header" href="#原型边界">原型边界</a></h2>
 <div class="table-wrapper">
 <table>

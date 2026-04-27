@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-eaf4bf9b.js";
+            window.path_to_searchindex_js = "../searchindex-23a6b307.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-626d6463.js"></script>
@@ -196,7 +196,6 @@
 </tbody>
 </table>
 </div>
-<hr>
 <h2 id="泛型anytype"><a class="header" href="#泛型anytype">泛型：<code>anytype</code></a></h2>
 <p>具体类型在编译期已知时，泛型是默认首选。</p>
 <pre><code class="language-zig">const std = @import("std");
@@ -219,7 +218,6 @@ test "泛型 writeLine" {
 <p>函数不要求提前定义统一接口类型，只要求传入对象具备 <code>writeAll</code> 方法。编译器在实例化时检查约束。</p>
 <p><strong>优点</strong>：无运行时分发开销、编译期类型检查、代码简洁。</p>
 <p><strong>局限</strong>：不能把不同实现放进同一个运行时容器，不能在运行时切换实现类型。</p>
-<hr>
 <h2 id="tagged-unionunionenum"><a class="header" href="#tagged-unionunionenum">Tagged Union：<code>union(enum)</code></a></h2>
 <p>实现集合有限且封闭时，<code>union(enum)</code> 比 VTable 更清楚。</p>
 <pre><code class="language-zig">const std = @import("std");
@@ -248,7 +246,6 @@ test "union 分发" {
 </code></pre>
 <p><strong>优势</strong>：分支穷尽检查、结构明确、易阅读调试、无需维护函数指针表。</p>
 <p><strong>适用场景</strong>：AST 节点、命令类型、有限状态机、项目内部固定的几种策略。</p>
-<hr>
 <h2 id="vtableanyopaque--函数指针"><a class="header" href="#vtableanyopaque--函数指针">VTable：<code>*anyopaque</code> + 函数指针</a></h2>
 <p>VTable 是开放集合与运行时抽象的工具，核心三步：<strong>类型擦除</strong>（<code>*anyopaque</code>）→ <strong>运行时分发</strong>（函数指针）→ <strong>类型恢复</strong>（<code>@ptrCast(@alignCast(...))</code>）。</p>
 <p>只有在需要以下能力时才引入：</p>
@@ -324,7 +321,6 @@ test "VTable Writer 端到端" {
 <li><strong>错误边界过宽</strong> — 所有函数返回 <code>anyerror</code> 让接口语义模糊。</li>
 <li><strong>把泛型问题当成 VTable 问题</strong> — 很多场景一个 <code>anytype</code> 函数就足够。</li>
 </ol>
-<hr>
 <h2 id="标准库中的-vtable-实例"><a class="header" href="#标准库中的-vtable-实例">标准库中的 VTable 实例</a></h2>
 <h3 id="stdmemallocator"><a class="header" href="#stdmemallocator"><code>std.mem.Allocator</code></a></h3>
 <p><code>Allocator</code> 的结构与上面的 <code>Writer</code> 一致：</p>
@@ -356,7 +352,6 @@ fn alloc(ctx: *anyopaque, n: usize, alignment: mem.Alignment, ra: usize) ?[*]u8 
 }
 </code></pre>
 <p>关于 <code>@ptrCast</code> 和 <code>@alignCast</code> 的详细说明，见<a href="chapter-pointers.html">指针、切片与对齐</a>。</p>
-<hr>
 <h2 id="组合比继承更重要"><a class="header" href="#组合比继承更重要">组合比继承更重要</a></h2>
 <p>在 Zig 中，组合比模拟继承体系更自然：</p>
 <pre><code class="language-zig">const Service = struct {
@@ -366,7 +361,6 @@ fn alloc(ctx: *anyopaque, n: usize, alignment: mem.Alignment, ra: usize) ?[*]u8 
 };
 </code></pre>
 <p>依赖关系、模块边界和生命周期通过结构体字段显式表达，测试时容易替换部件，资源管理路径也一目了然。</p>
-<hr>
 <h2 id="小结"><a class="header" href="#小结">小结</a></h2>
 <ul>
 <li><strong>泛型 / <code>anytype</code></strong> — 默认首选，编译期已知类型，零运行时开销。</li>

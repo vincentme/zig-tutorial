@@ -4,8 +4,6 @@
 >
 > `std.Io` 的具体 API 用法见 [std.Io 接口详解](../part2-advanced/chapter-io.md)；线程、锁、原子操作等并发基础见 [并发编程概述](../part2-advanced/chapter-concurrency.md)；网络程序实战见 [HTTP 服务器设计与最小实现](chapter-http-server.md)。
 
----
-
 ## 现状结论
 
 今天的 Zig 异步 I/O，可以这样理解：
@@ -73,8 +71,6 @@ Zig 曾经探索过语言级的 `async`/`await`/`suspend`/`resume` 关键字。�
 ## 第三方库
 
 标准库高层异步 I/O 方向仍在演进，第三方库可以作为现实工程中的候选方案。但要注意：库的 API 变化可能比语言还快，"能跑"不等于"适合长期依赖"，需结合版本、维护状态、文档质量单独评估。
-
----
 
 ## 小结
 
