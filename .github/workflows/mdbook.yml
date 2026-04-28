@@ -2,7 +2,7 @@ name: Deploy mdBook site to Pages
 
 on:
   push:
-    branches: ["main"]
+    branches: [ "main" ]
   workflow_dispatch:
 
 permissions:
@@ -41,13 +41,22 @@ jobs:
         with:
           tool: mdbook-mermaid@${{ env.MDBOOK_MERMAID_VERSION }}
 
-      # 4. 构建与部署
+      # 4. 使用专用 Action 安装 mdbook-utils（带缓存）
+      - name: 安装 mdbook-utils
+        uses: taiki-e/cache-cargo-install-action@v1
+        with:
+          tool: mdbook-utils
+
+      # 5. 构建与部署
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v5
 
       - name: Build with mdBook
         run: mdbook build
+
+      - name: 生成 sitemap
+        run: mdbook-utils sitemap
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
