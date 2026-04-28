@@ -53,7 +53,9 @@ pub fn main() void {
 }
 ```
 
-#### `inline fn` vs `comptime` 参数
+### `inline fn` vs `comptime` 参数
+
+两者都涉及"编译器在调用处展开代码"，容易混淆。但 `inline` 只是生成优化建议，不会把参数变成编译期值——`comptime` 参数才真正约束调用者必须在编译期提供值。
 
 |                        | `comptime` 参数          | `inline fn`                |
 | ---------------------- | ------------------------ | -------------------------- |
@@ -63,6 +65,38 @@ pub fn main() void {
 | 类型参数化能力         | 有（`comptime T: type`） | 无                         |
 
 `inline` 不等于编译期——它只是建议编译器在调用处展开函数体，不会让参数变成编译期值。
+
+### `comptime T: type` vs `anytype`
+
+两者都能让函数接受不同类型，但机制不同：
+
+|                | `comptime T: type`                     | `anytype`                                    |
+| -------------- | -------------------------------------- | -------------------------------------------- |
+| 类型是否可命名 | 是（`T` 可在函数体内直接使用）         | 否（需用 `@TypeOf(param)` 间接获取）         |
+| 适用位置       | 任意参数位置                           | 只能用于单个参数（且只能是最后一个泛型参数） |
+| 类型反射       | `@typeInfo(T)` / `@sizeOf(T)` 直接可用 | 需先通过 `const T = @TypeOf(x)` 获取类型     |
+| 主要用途       | 泛型数据结构、显式类型约束             | 快速实现"接受任意类型"的辅助函数             |
+
+```zig
+const std = @import("std");
+
+// comptime T: type — 类型有名，可反射
+fn printTypeInfo(comptime T: type) void {
+    std.debug.print("size of {} = {}\n", .{ T, @sizeOf(T) });
+}
+
+// anytype — 适合"我只是把值转发出去"的场景
+fn double(x: anytype) @TypeOf(x) {
+    return x + x;
+}
+
+pub fn main() void {
+    printTypeInfo(i32);                          // size of i32 = 4
+    std.debug.print("{d}\n", .{double(21)});     // 42
+}
+```
+
+`anytype` 的本质是"推迟类型推导"——编译器在调用处根据实参类型生成一份特化函数，但函数体内无法直接引用这个类型。如果需要在函数体内做类型判断、构造该类型的值、或者返回该类型的指针，`comptime T: type` 更合适。
 
 ## `comptime` 块
 
@@ -164,7 +198,7 @@ test "fieldCount" {
 ```
 
 `.@"struct" => |info|` 捕获的 `info` 是一个 `std.builtin.Type.Struct`，包含：
-- **`fields`** — `[]const StructField`，每个字段含 `name`（名称）、`type`（类型）、`default_value`（默认值）、`is_comptime`、`alignment`
+- **`fields`** — `[]const StructField`，每个字段含 `name`（名称）、`type`（类型）、`default_value_ptr`（默认值指针）、`is_comptime`、`alignment`
 - **`decls`** — `[]const Declaration`，类型内部的声明（函数、常量）
 - **`layout`** — `ContainerLayout`，结构体布局方式（`.auto` / `@"packed"`）
 - **`is_tuple`** — 是否为元组（匿名结构体）
@@ -291,16 +325,19 @@ fn DoubleWidth(comptime T: type) type {
 }
 ```
 
-`@Struct` 可在编译期重建结构体（如修改字段）：
+`@Struct` 可在编译期重建结构体：
 
 ```zig
+// 5 个参数：layout, backing_integer, 字段名数组, 类型数组, 默认值属性数组
 const MyStruct = @Struct(
-    .@"packed", null,
-    &.{ "x", "y" },       // 字段名
-    &.{ u8, u8 },         // 字段类型
-    &.{ null, null },     // 默认值
-    &.{ false, false },   // is_comptime
-    &.{ null, null },     // 对齐
+    .auto,                    // layout
+    null,                     // backing_integer（packed 时使用）
+    &.{ "x", "y" },          // field names
+    &.{ u8, u8 },            // field types
+    &.{                      // field default attributes
+        .{ .@"comptime" = false, .@"align" = null, .default_value_ptr = null },
+        .{ .@"comptime" = false, .@"align" = null, .default_value_ptr = null },
+    },
 );
 ```
 
@@ -320,8 +357,8 @@ comptime {
     std.debug.assert(x == 45);
 
     // 编译期不能做的（取消注释会产生编译错误）：
-    // _ = std.heap.page_allocator;  // 运行时分配器
-    // std.fs.cwd()                  // 编译期不能访问文件系统
+    // _ = std.heap.page_allocator;     // 运行时分配器
+    // _ = @import("std").Io.Dir.cwd(); // 编译期不能访问文件系统
 }
 ```
 
