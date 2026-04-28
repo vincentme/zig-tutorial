@@ -456,24 +456,13 @@ pub fn main(_: std.process.Init) void {
 
 ## switch 语句
 
-`if` 更适合处理少量、局部的条件判断；当分支较多，或者希望把"一个值映射成另一个值"时，`switch` 通常更清晰。  
-在 Zig 中，`switch` 不仅可用于分支控制，也常直接作为表达式返回结果。
-
-Zig 的 `switch` 具有这些特点：
-
-- **穷尽性检查**：必须覆盖所有可能情况；如果无法逐个列出，通常需要使用 `else` 兜底
-- **多种匹配方式**：支持按具体值、多个值、范围以及枚举成员分支
-- **可作为表达式**：每个分支都可以产生一个值，整个 `switch` 表达式再把该值返回给外层
-- **无隐式 fallthrough**：一个分支匹配后只执行该分支，不会自动继续进入下一个分支
+`if` 适合处理少量条件判断；当分支较多，或者希望把一个值映射成另一个值时，`switch` 更清晰。在 Zig 中，`switch` 也是表达式——可以直接返回结果。它要求穷尽覆盖所有可能情况（否则编译报错），且无隐式 fallthrough。
 
 ```zig
 const std = @import("std");
 
 pub fn main(_: std.process.Init) void {
-    const number: i32 = 2;
-
-    // 基本 switch：使用 else 处理未显式列出的情况
-    const result = switch (number) {
+    const result = switch (@as(i32, 2)) {
         1 => "一",
         2 => "二",
         3 => "三",
@@ -481,9 +470,7 @@ pub fn main(_: std.process.Init) void {
     };
     std.debug.print("结果：{s}\n", .{result});
 
-    // 范围匹配：1...10 表示闭区间，包含两端
-    const grade: u8 = 85;
-    const level = switch (grade) {
+    const level = switch (@as(u8, 85)) {
         90...100 => "A",
         80...89 => "B",
         70...79 => "C",
@@ -492,9 +479,7 @@ pub fn main(_: std.process.Init) void {
     };
     std.debug.print("等级：{s}\n", .{level});
 
-    // 多值匹配：多个候选值共用同一分支
-    const char: u8 = 'a';
-    const is_vowel = switch (char) {
+    const is_vowel = switch (@as(u8, 'a')) {
         'a', 'e', 'i', 'o', 'u' => true,
         'A', 'E', 'I', 'O', 'U' => true,
         else => false,
@@ -503,25 +488,12 @@ pub fn main(_: std.process.Init) void {
 }
 ```
 
-**预期输出：**
-```text
-结果：二
-等级：B
-是元音：true
-```
-
 ### switch 的高级用法
-
-除了基本的值匹配外，`switch` 的特性还包括：
-
-- **枚举匹配**：对枚举的所有成员分支，编译器会检查是否穷尽
-- **捕获匹配值**：在范围匹配等场景下，把当前匹配到的值绑定到局部变量
-- **配合指针修改数据**：在已经拿到指针的前提下，通过 `switch` 有条件地修改原值
 
 ```zig
 const std = @import("std");
 
-// 枚举匹配：已列出所有枚举成员，因此不需要 else
+// 枚举匹配：编译器检查穷尽性，因此不需要 else
 const Color = enum { red, green, blue };
 
 fn colorToHex(color: Color) u32 {
@@ -532,7 +504,7 @@ fn colorToHex(color: Color) u32 {
     };
 }
 
-// 捕获匹配值：1...10 分支中的 |val| 就是当前匹配到的具体值
+// 捕获匹配值：|val| 绑定当前匹配到的具体值
 fn classifyNumber(n: i32) []const u8 {
     return switch (n) {
         0 => "零",
@@ -545,7 +517,7 @@ fn classifyNumber(n: i32) []const u8 {
     };
 }
 
-// 配合指针修改原值：for 先拿到元素指针，再由 switch 决定是否修改
+// 配合指针：for 拿到指针，switch 根据值决定是否修改
 fn doublePositive(numbers: []i32) void {
     for (numbers) |*n| {
         switch (n.*) {
@@ -565,20 +537,41 @@ pub fn main(_: std.process.Init) void {
 }
 ```
 
-**预期输出：**
-```text
-红色：0xFF0000
-小数字：5
-分类：小
-翻倍后：{ 6, 100, -1, 198 }
+### 标签化 switch
+
+当 `switch` 带有标签时，分支内可以使用两种跳转：
+
+- `continue :label new_value` —— 以新值**重新进入**同一个 switch（等价于 while + switch）
+- `break :label result` —— 提前退出 switch，返回 `result` 作为整个 switch 表达式的值
+
+编译器可以将每个 `continue` 优化为直接跳转到目标分支，避免所有分支共用同一个分发点。
+
+```zig
+const std = @import("std");
+
+fn countdown(n: i32) []const u8 {
+    return loop: switch (n) {
+        0 => break :loop "zero!",
+        else => |v| {
+            std.debug.print("{}\n", .{v});
+            continue :loop v - 1;
+        },
+    };
+}
+
+pub fn main(_: std.process.Init) void {
+    std.debug.print("{s}\n", .{countdown(3)});
+}
 ```
+
+> 输出：3、2、1、zero!
 
 **关键点**：
 
-- 对穷尽枚举做 `switch` 时，如果已经覆盖所有枚举成员，就不需要 `else`
-- 在 `1...10 => |val| ...` 这种写法中，`val` 是当前匹配到的具体值
-- `blk: { ... break :blk value; }` 是一个带标签的块表达式，适合在“先做一点额外操作，再返回分支结果”时使用
-- `doublePositive` 中真正拿到原数组元素指针的是 `for (numbers) |*n|`；`switch` 则根据 `n.*` 的值决定是否修改它
+- 标签由外层的 `return loop: switch (...) { ... }` 定义
+- `continue :loop v - 1` 以新值重新进入 switch，等价于循环递减
+- `break :loop "zero!"` 直接退出整个 switch，将其结果作为表达式的值
+- 编译期能针对 switch 值做分支预测优化，适合状态机和字节码解释器
 
 ## defer 语句
 
@@ -790,13 +783,13 @@ std.debug.assert(x > 0);
 
 ## 本章要点
 
-| 主题           | 核心概念                                           |
-| -------------- | -------------------------------------------------- |
-| **可选类型**   | `?T` 表示值或 null；通过 `if`、`.?`、`orelse` 解包 |
-| **if**         | 支持模式匹配解包可选类型和错误联合类型；是表达式可返回值 |
-| **while**      | 支持 continue 表达式、可选/错误联合类型解包、else 分支 |
-| **for**        | 遍历序列；支持索引（`0..`）、并行遍历、指针捕获、范围遍历 |
-| **switch**     | 穷尽性检查；支持范围匹配、多值匹配、枚举匹配、值捕获 |
-| **defer**      | 作用域结束时执行（LIFO）；`errdefer` 仅错误时执行   |
-| **块表达式**   | 带标签的作用域，通过 `break :label value` 返回值   |
+| 主题            | 核心概念                                                                                      |
+| --------------- | --------------------------------------------------------------------------------------------- |
+| **可选类型**    | `?T` 表示值或 null；通过 `if`、`.?`、`orelse` 解包                                            |
+| **if**          | 支持模式匹配解包可选类型和错误联合类型；是表达式可返回值                                      |
+| **while**       | 支持 continue 表达式、可选/错误联合类型解包、else 分支                                        |
+| **for**         | 遍历序列；支持索引（`0..`）、并行遍历、指针捕获、范围遍历                                     |
+| **switch**      | 穷尽性检查；支持范围匹配、多值匹配、枚举匹配、值捕获                                          |
+| **defer**       | 作用域结束时执行（LIFO）；`errdefer` 仅错误时执行                                             |
+| **块表达式**    | 带标签的作用域，通过 `break :label value` 返回值                                              |
 | **unreachable** | 向编译器声明"此条件恒为真"；辅助优化，安全模式下违反则 panic；`std.debug.assert` 是其一行封装 |

@@ -1,22 +1,5 @@
 # 常用标准库模块详解
 
-## 速查表
-
-| 模块                         | 常见需求                                                  | 优先级       |
-| ---------------------------- | --------------------------------------------------------- | ------------ |
-| `std.mem`                    | 比较字符串或切片、搜索、裁剪、拷贝等字节级操作            | ★★★          |
-| `std.fmt`                    | 拼装字符串、`allocPrint` / `bufPrint` 格式化输出          | ★★★          |
-| `std.debug`                  | 调试输出、`assert` 断言                                   | ★★★          |
-| `std.testing`                | 编写测试、比较预期结果、`testing.allocator`（带泄漏检测） | ★★★          |
-| `std.Io.Dir` / `std.Io.File` | 打开/创建文件、遍历目录、路径操作                         | ★★☆          |
-| `std.process`                | 命令行参数、环境变量、程序入口上下文                      | ★★☆          |
-| `std.heap`                   | 选择或组合分配器（Arena、FixedBuffer、Debug 等）          | ★★☆          |
-| `std.math`                   | 数值与数学函数                                            | ★☆☆          |
-| `std.json`                   | JSON 解析与序列化                                         | ★☆☆          |
-| `std.Build`                  | 构建脚本 API                                              | 工程阶段重点 |
-
-> **版本说明**：本教程面向 Zig 0.16.0 稳定版。构建系统、I/O 接口等区域优先以本地标准库源码为准。
-
 ## `std.mem`
 
 `std.mem` 是最基础、也最常用的标准库模块之一。
@@ -399,54 +382,23 @@ while (try it.next(io)) |entry| {
 
 ## `std.process`
 
-`std.process` 负责处理程序作为一个进程运行时的上下文。
+`std.process` 负责程序作为进程运行时的上下文：命令行参数、环境变量、进程级 allocator（`gpa`）和 I/O（`io`）。这些能力在 Zig 0.16 中通过 `main` 的 `init: std.process.Init` 参数显式传入，不复用全局状态。
 
-在 Zig 0.16-dev 中，这一点尤其重要，因为程序入口通常直接接收 `std.process.Init`，很多进程相关能力都从这里进入。
-
-它最常解决的问题包括：
-
-- 读取命令行参数
-- 读取环境变量
-- 使用进程级 allocator 和 I/O 上下文
-- 在需要时启动子进程
-
-最常先接触到的名字包括：
-
-- `std.process.Init`
-- `init.minimal.args`
-- `init.environ_map`
-- `init.gpa`
-
-其中：
-
-- `args` 负责命令行参数
-- `environ_map` 负责环境变量
-- `gpa` 提供一个默认可用的通用分配器
-
-下面这个例子模拟一个很典型的 CLI 主线：
-
-1. 从参数中读取输入文件名
-2. 读取环境变量决定模式
-3. 打开文件并输出处理结果
+下面这个例子演示了一个典型的 CLI 主线：读参数 → 读环境变量 → 打开文件 → 输出处理结果。
 
 ```zig
 const std = @import("std");
 
 pub fn main(init: std.process.Init) !void {
     var args = init.minimal.args.iterate();
-
-    // 第一个参数通常是程序自身路径，这里先跳过。
-    _ = args.next();
+    _ = args.next(); // 第一个参数是程序自身路径
 
     const input_path = args.next() orelse {
         std.debug.print("usage: app <input-file>\n", .{});
         return;
     };
 
-    // 进程上下文里的环境变量和 allocator，常常会直接参与后续处理流程。
     const mode = init.environ_map.get("APP_MODE") orelse "default";
-    std.debug.print("mode = {s}\n", .{mode});
-    std.debug.print("input = {s}\n", .{input_path});
 
     const io = init.io;
     const file = try std.Io.Dir.cwd().openFile(io, input_path, .{});
@@ -462,54 +414,12 @@ pub fn main(init: std.process.Init) !void {
 }
 ```
 
-这个例子体现了 `std.process` 在真实程序里的位置：
+几个要点：
 
-- 它经常站在 `main` 的最前面
-- 负责把“程序外部世界”带进来
-- 然后再交给文件 I/O（`std.Io.Dir` / `std.Io.File`）、`std.mem`、`std.fmt` 去继续处理
-
-### 读取命令行参数
-
-在 0.16-dev 中，参数通过 `init.minimal.args` 获取。
-
-```zig
-const std = @import("std");
-
-pub fn main(init: std.process.Init) void {
-    var args = init.minimal.args.iterate();
-    // 参数通过迭代器逐个读取，而不是一次性隐式拿到。
-    while (args.next()) |arg| {
-        std.debug.print("{s}\n", .{arg});
-    }
-}
-```
-
-这里最重要的是理解：
-
-- 参数不是通过某个全局函数隐式拿到
-- 而是通过程序入口显式传入的上下文访问
-
-### 读取环境变量
-
-环境变量通过 `init.environ_map` 访问。
-
-```zig
-const std = @import("std");
-
-pub fn main(init: std.process.Init) void {
-    // 环境变量查找返回可选值，因此自然适合用 `if` 解包。
-    if (init.environ_map.get("HOME")) |home| {
-        std.debug.print("HOME={s}\n", .{home});
-    } else {
-        std.debug.print("HOME is not set\n", .{});
-    }
-}
-```
-
-这里返回的是可选值：
-
-- 找到时得到值
-- 找不到时得到 `null`
+- `init.minimal.args.iterate()` 返回迭代器，逐个读取命令行参数
+- `init.environ_map.get(...)` 返回 `?[]const u8`，环境变量不存在时为 `null`
+- `init.gpa` 和 `init.io` 分别提供进程级的通用 allocator 和 I/O 入口
+- 这些值都不是全局状态，而是从 `main` 入口显式传入
 
 ## `std.ArrayList`
 
@@ -777,235 +687,24 @@ _ = map.orderedRemove(3); // O(n)，保持剩余元素的顺序
 
 ## `std.heap`
 
-`std.heap` 是理解 allocator 的第一入口。
+`std.heap` 提供了一系列 allocator：`page_allocator`（最直接的分配方式）、`ArenaAllocator`（集中分配集中释放）、`FixedBufferAllocator`（在已有内存块上分配）等。
 
-它的重要性不在于“会分配内存”这么简单，而在于：
-
-> **Zig 把内存分配策略显式放进接口里。**
-
-所以 `std.heap` 的核心不是某一个函数，而是几种常见 allocator 的角色差异。
-
-最值得先认识的几个名字包括：
-
-- `std.heap.page_allocator`
-- `std.heap.ArenaAllocator`
-- `std.heap.FixedBufferAllocator`
-
-下面这个例子展示两种很常见的资源组织方式：
-
-- 小而固定的临时分配：`FixedBufferAllocator`
-- 一批对象一起释放：`ArenaAllocator`
-
-```zig
-const std = @import("std");
-
-pub fn main(_: std.process.Init) !void {
-    var backing_buffer: [256]u8 = undefined;
-    var fba = std.heap.FixedBufferAllocator.init(&backing_buffer);
-    const fixed_allocator = fba.allocator();
-
-    // 固定缓冲区分配器只在这块已有内存上工作，不再向系统申请新内存。
-    const a = try fixed_allocator.dupe(u8, "alpha");
-    const b = try fixed_allocator.dupe(u8, "beta");
-
-    std.debug.print("fixed: {s}, {s}\n", .{ a, b });
-
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    defer arena.deinit();
-
-    const arena_allocator = arena.allocator();
-
-    // arena 适合一批对象一起创建、最后统一释放。
-    const first = try arena_allocator.dupe(u8, "first item");
-    const second = try arena_allocator.dupe(u8, "second item");
-    const combined = try std.fmt.allocPrint(
-        arena_allocator,
-        "{s} + {s}",
-        .{ first, second },
-    );
-
-    std.debug.print("arena combined: {s}\n", .{combined});
-}
-```
-
-这个例子里最重要的不是记住所有细节，而是理解两种 allocator 的使用场景：
-
-- `FixedBufferAllocator`：在一块已有内存上分配，不再向系统申请新内存
-- `ArenaAllocator`：适合“分配很多对象，最后一起释放”
-
-### `page_allocator`
-
-`page_allocator` 是最容易直接拿来用的 allocator 之一。
-
-```zig
-const std = @import("std");
-
-pub fn main(_: std.process.Init) !void {
-    const allocator = std.heap.page_allocator;
-
-    // 即使是最直接的 allocator，用完后也仍然要显式释放。
-    const text = try allocator.dupe(u8, "hello");
-    defer allocator.free(text);
-
-    std.debug.print("{s}\n", .{text});
-}
-```
-
-它适合示例和简单程序，但在工程里不一定总是最佳默认选择。
-
-### `ArenaAllocator`
-
-适合"集中分配、集中释放"的场景（如解析配置、构造语法树、请求级临时对象）。详见[内存管理模型](chapter-memory-management.md)。
-
-### `FixedBufferAllocator`
-
-在固定内存块上分配，不向系统申请新内存，适合已知上限、嵌入式或临时工作区。详见[内存管理模型](chapter-memory-management.md)。
-
-## 各模块直觉速查
-
-| 模块            | 核心直觉                                                             |
-| --------------- | -------------------------------------------------------------------- |
-| `std.mem`       | 字符串问题是字节切片问题；不拥有数据，只处理数据视图                 |
-| `std.fmt`       | 先区分格式化与输出；固定缓冲区用 `bufPrint`，需所有权用 `allocPrint` |
-| `std.debug`     | `print` 观察状态，`assert` 表达逻辑假设                              |
-| `std.testing`   | 覆盖正常/错误/边界路径；小函数易测                                   |
-| `std.Io`        | `io` 是 0.16 I/O 统一入口；操作从目录对象出发                        |
-| `std.process`   | 参数与环境变量从 `Init` 显式传入；位于入口层                         |
-| `std.ArrayList` | 不定数量元素首选；0.16 非托管，方法传 allocator                      |
-| `std.HashMap`   | 字符串用 `StringHashMap`；保持顺序用 `array_hash_map`                |
-| `std.heap`      | allocator 是接口的一部分；分配即资源责任                             |
-
-> **相关阅读**：[内存管理模型](chapter-memory-management.md)、[测试与验证](chapter-testing.md)、[CLI 工具开发](../part3-practice/chapter-cli-tool.md)
-
-## 一个稍完整的组合示例
-
-前面每个模块都单独看过了。下面把它们串起来，写一个更接近真实程序的小例子。
-
-这个程序做的事情是：
-
-1. 从命令行参数读取输入文件名
-2. 从环境变量读取模式
-3. 读取文件内容
-4. 按行查找 `name = value` 形式的配置
-5. 生成一份格式化报告
-6. 输出到终端并写入文件
-
-这个例子会同时用到：
-
-- `std.process`
-- `std.Io.Dir` / `std.Io.File`
-- `std.mem`
-- `std.fmt`
-- `std.heap`
-- `std.debug`
-
-```zig
-const std = @import("std");
-
-const ParseError = error{
-    InvalidLine,
-};
-
-fn parseLine(line: []const u8) ParseError!?struct { key: []const u8, value: []const u8 } {
-    const trimmed = std.mem.trim(u8, line, " \t\r\n");
-    // 空行和注释行不算错误，直接跳过即可。
-    if (trimmed.len == 0) return null;
-    if (std.mem.startsWith(u8, trimmed, "#")) return null;
-
-    var parts = std.mem.splitScalar(u8, trimmed, '=');
-    const raw_key = parts.next() orelse return error.InvalidLine;
-    const raw_value = parts.next() orelse return error.InvalidLine;
-
-    const key = std.mem.trim(u8, raw_key, " \t\r\n");
-    const value = std.mem.trim(u8, raw_value, " \t\r\n");
-
-    if (key.len == 0 or value.len == 0) return error.InvalidLine;
-    return .{ .key = key, .value = value };
-}
-
-pub fn main(init: std.process.Init) !void {
-    var args = init.minimal.args.iterate();
-    _ = args.next();
-
-    const input_path = args.next() orelse {
-        std.debug.print("usage: app <config-file>\n", .{});
-        return;
-    };
-
-    const mode = init.environ_map.get("APP_MODE") orelse "default";
-
-    const io = init.io;
-
-    var read_buf: [1024]u8 = undefined;
-    var file_reader = try std.Io.Dir.cwd().openFile(io, input_path, .{}).reader(io, &read_buf);
-    const content = try file_reader.interface.allocRemaining(init.gpa, .limited(1024 * 1024));
-    defer init.gpa.free(content);
-
-    // 先按行拆分输入，再逐行做配置解析。
-    var lines = std.mem.splitScalar(u8, content, '\n');
-
-    // `Io.Writer.Allocating` 适合逐步构造一段最终输出文本。
-    var report = std.Io.Writer.Allocating.init(init.gpa);
-    defer report.deinit();
-
-    try report.writer.print("mode: {s}\n", .{mode});
-    try report.writer.writeAll("parsed entries:\n");
-
-    while (lines.next()) |line| {
-        const parsed = try parseLine(line) orelse continue;
-        try report.writer.print("  {s} = {s}\n", .{ parsed.key, parsed.value });
-    }
-
-    const output_file = try std.Io.Dir.cwd().createFile(io, "report.txt", .{ .truncate = true });
-    defer output_file.close(io);
-
-    try output_file.writeStreamingAll(io, report.written());
-    std.debug.print("{s}", .{report.written()});
-}
-```
-
-这个例子最值得观察的不是某一个 API，而是模块之间的职责分工：
-
-- `std.process`：拿到参数和环境变量
-- `std.Io`：读文件、写文件
-- `std.mem`：按行拆分、裁剪、解析键值
-- `std.heap`：通过 `init.gpa` 支持动态内存
-- `std.fmt`：通过 writer 的 `print` 生成格式化文本
-- `std.debug`：把结果输出到终端
-
-这就是 Zig 标准库在真实程序里的常见样子：  
-**不是单个模块孤立使用，而是围绕一条清晰的程序主线协作。**
+> 完整的 allocator 选择、使用和资源责任管理，见[内存管理模型](chapter-memory-management.md)。
 
 ## 本章小结
 
-这一章的重点不是覆盖尽可能多的 API，而是建立面向实战的第一轮标准库直觉：
+本章覆盖了标准库中最常用的模块。它们的分工可以这样记忆：
 
-- `std.mem`：处理切片、字节和已有缓冲区
-- `std.fmt`：把值格式化成文本
-- `std.debug`：观察状态、验证不变量
-- `std.testing`：固定行为、覆盖边界和错误路径
-- `std.Io`：处理文件和目录
-- `std.process`：处理参数、环境变量和进程上下文
-- `std.ArrayList`：动态数组——数量不确定的同类型元素的首选容器
-- `std.HashMap`：哈希表——按键快速查找值，注意选择合适的变体
-- `std.heap`：显式选择 allocator 和资源组织方式
+| 模块            | 定位                                                          |
+| --------------- | ------------------------------------------------------------- |
+| `std.process`   | 程序入口：参数、环境变量、gpa + io                            |
+| `std.Io`        | 文件与目录读写                                                |
+| `std.mem`       | 切片处理、字节级操作                                          |
+| `std.fmt`       | 格式化文本（`bufPrint` 写缓冲区，`allocPrint` 分配新内存）    |
+| `std.debug`     | `print` 观察状态，`assert` 验证不变量                         |
+| `std.testing`   | 固定行为、覆盖边界和错误路径                                  |
+| `std.ArrayList` | 动态数组（非托管，方法传 allocator）                          |
+| `std.HashMap`   | 哈希表（`StringHashMap` 按值查找，`array_hash_map` 保持顺序） |
+| `std.heap`      | allocator 的选择与资源组织策略                                |
 
-如果把真实程序看成一条主线，那么很常见的组合就是：
-
-1. `std.process` 从程序入口拿到上下文
-2. 文件 I/O（`std.Io.Dir` / `std.Io.File`）读取外部数据
-3. `std.mem` 解析和整理输入
-4. `std.ArrayList` 和 `std.HashMap` 在处理过程中存储和组织数据
-5. `std.fmt` 组织输出文本
-6. `std.heap` 提供动态内存支持
-7. `std.debug` 和 `std.testing` 分别负责开发期观察与验证
-
-接下来继续学习时，可以按下面的方向深入：
-
-- 想系统理解 allocator 与资源责任：读[内存管理模型](chapter-memory-management.md)
-- 想系统学习测试：读[测试与验证：从单元测试到基准测量](chapter-testing.md)
-- 想看这些模块在真实工具中的组合：读[实战案例 - CLI 工具开发](../part3-practice/chapter-cli-tool.md)
-
-回到标准库本身，最重要的能力始终是：
-
-> **看到一个实际问题时，能迅速判断这条程序主线应该由哪些标准库模块来承担。**
+> **相关阅读**：[内存管理模型](chapter-memory-management.md)、[测试与验证](chapter-testing.md)、[CLI 工具开发](../part3-practice/chapter-cli-tool.md)
