@@ -15,9 +15,6 @@ git-repository-url = "https://github.com/vincentme/zig-tutorial"
 edit-url-template = "https://github.com/vincentme/zig-tutorial/edit/main/{path}"
 additional-css = ["theme/css/auto-numbering.css"]
 additional-js = ["mermaid.min.js", "mermaid-init.js"]
-head = [
-    "<meta name=\"google-site-verification\" content=\"LWorZM6eDQ7hlAmY60ZRxUHJSu3ZZHCtOcSupaJVCS0\" />",
-]
 
 
 [output.html.search]
