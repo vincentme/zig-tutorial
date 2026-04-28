@@ -20,6 +20,7 @@ jobs:
     env:
       MDBOOK_VERSION: "0.5.2"
       MDBOOK_MERMAID_VERSION: "0.17.0"
+      MDBOOK_UTILS_VERSION: "0.1.3"
     steps:
       - uses: actions/checkout@v4
 
@@ -45,7 +46,7 @@ jobs:
       - name: 安装 mdbook-utils
         uses: taiki-e/cache-cargo-install-action@v1
         with:
-          tool: mdbook-utils
+          tool: mdbook-utils@${{ env.MDBOOK_UTILS_VERSION }}
 
       # 5. 构建与部署
       - name: Setup Pages
