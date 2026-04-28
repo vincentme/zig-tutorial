@@ -57,7 +57,7 @@ jobs:
         run: mdbook build
 
       - name: 生成 sitemap
-        run: mdbook-utils sitemap
+        run: mdbook-utils sitemap -b https://vincentme.github.io/zig-tutorial
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
