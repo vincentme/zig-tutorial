@@ -331,251 +331,69 @@ pub fn main(_: std.process.Init) !void {
 }
 ```
 
-### `std.debug.print`
+这个例子体现了 `std.debug` 的两个核心用法：
 
-这是最常见的调试输出方式之一。
-
-```zig
-const std = @import("std");
-
-pub fn main(_: std.process.Init) void {
-    const count = 3;
-    const name = "zig";
-
-    // 调试阶段最常见的用法就是直接把关键状态打印出来。
-    std.debug.print("count={}, name={s}\n", .{ count, name });
-}
-```
-
-它特别适合：
-
-- 临时观察变量值
-- 确认某条分支是否执行
-- 学习阶段理解程序行为
-
-但它不是完整日志系统的替代品。它更适合“开发时快速看状态”。
-
-### `std.debug.assert`
-
-`assert` 用来表达：
-
-- 这里必须成立
-- 如果不成立，说明程序内部逻辑已经出问题
-
-```zig
-const std = @import("std");
-
-fn divide(a: i32, b: i32) i32 {
-    // 这里不是处理用户错误，而是声明“调用者不应传入 0”。
-    std.debug.assert(b != 0);
-    return @divTrunc(a, b);
-}
-
-pub fn main(_: std.process.Init) void {
-    const result = divide(10, 2);
-    std.debug.print("result={}\n", .{result});
-}
-```
-
-这里的重点不是“处理用户输入错误”，而是“验证内部不变量”。
+- **`std.debug.print`**：开发时快速观察变量值、确认分支执行路径、理解程序行为。它不是完整日志系统的替代品，更适合「开发时看状态」。
+- **`std.debug.assert`**：验证内部不变量——这里必须成立，如果不成立说明程序逻辑本身已出问题。它和错误处理（`try`/`catch`）的职责不同：`try`/`catch` 处理可预期的运行时失败，`assert` 暴露不应发生的逻辑错误。
 
 ## `std.testing`
 
-`std.testing` 是 Zig 测试代码最核心的入口。
+| 函数                 | 用途                                             |
+| -------------------- | ------------------------------------------------ |
+| `expect`             | 验证布尔条件为真                                 |
+| `expectEqual`        | 比较两个值是否相等（带类型推导，失败信息更清楚） |
+| `expectEqualStrings` | 比较两个字符串内容                               |
+| `expectEqualSlices`  | 比较两个切片的逐元素内容                         |
+| `expectError`        | 验证错误联合体返回了特定错误                     |
 
-它的重点不是“把测试写得很花”，而是：
+测试代码中需要分配内存时，优先使用带有泄漏检测功能的 `std.testing.allocator`。
 
-> **把程序行为、边界条件和错误路径固定下来。**
+> 测试的完整写法、命名规范、错误路径验证和资源释放测试，见[测试章节](chapter-testing.md)。
 
-最常用的入口包括：
+## 文件操作：`std.Io.Dir` 与 `std.Io.File`
 
-- `std.testing.expect`
-- `std.testing.expectEqual`
-- `std.testing.expectError`
-- `std.testing.allocator`
+在 Zig 0.16 中，文件系统操作的核心是 `std.Io.Dir`（目录）和 `std.Io.File`（文件）。所有 I/O 操作都需要显式传入 `io: std.Io` 参数。
 
-下面这个例子延续前面 `std.mem` 的思路，写一个简单解析函数，并用测试验证正常路径和错误路径。
-
-```zig
-const std = @import("std");
-
-const ParseError = error{
-    MissingSeparator,
-    EmptyKey,
-    EmptyValue,
-};
-
-fn parseAssignment(line: []const u8) ParseError!struct { key: []const u8, value: []const u8 } {
-    // 先规范化输入，再做结构拆分和字段校验。
-    const trimmed = std.mem.trim(u8, line, " \t\r\n");
-    var parts = std.mem.splitScalar(u8, trimmed, '=');
-
-    const raw_key = parts.next() orelse return error.MissingSeparator;
-    const raw_value = parts.next() orelse return error.MissingSeparator;
-
-    const key = std.mem.trim(u8, raw_key, " \t\r\n");
-    const value = std.mem.trim(u8, raw_value, " \t\r\n");
-
-    if (key.len == 0) return error.EmptyKey;
-    if (value.len == 0) return error.EmptyValue;
-
-    return .{ .key = key, .value = value };
-}
-
-test "parseAssignment parses key and value" {
-    const result = try parseAssignment(" mode = debug ");
-
-    // 正常路径测试：确认解析后的 key 和 value 都符合预期。
-    try std.testing.expectEqualStrings("mode", result.key);
-    try std.testing.expectEqualStrings("debug", result.value);
-}
-
-test "parseAssignment rejects missing separator" {
-    // 错误路径测试：输入不合法时，应返回明确的错误。
-    try std.testing.expectError(
-        error.MissingSeparator,
-        parseAssignment("mode debug"),
-    );
-}
-
-test "parseAssignment rejects empty value" {
-    try std.testing.expectError(
-        error.EmptyValue,
-        parseAssignment("mode = "),
-    );
-}
-```
-
-这个例子里，测试的主线很清楚：
-
-1. 先写一个小而明确的函数
-2. 测正常输入
-3. 测错误输入
-4. 把边界条件固定下来
-
-这比只在 `main` 里手动打印结果更可靠。
-
-### 断言函数速查
-
-| 函数                 | 用途                                           |
-| -------------------- | ---------------------------------------------- |
-| `expect`             | 验证布尔条件为真                               |
-| `expectEqual`        | 比较两个值是否相等（类型推导，失败信息更清楚） |
-| `expectEqualStrings` | 比较两个字符串内容                             |
-| `expectEqualSlices`  | 比较两个切片的逐元素内容                       |
-| `expectError`        | 验证错误联合体返回的特定错误                   |
-
-> 各断言函数的详细用法和示例，见[测试章节](chapter-testing.md)。
-
-### `std.testing.allocator`
-
-当测试代码里需要分配内存时，优先考虑 `std.testing.allocator`。它的价值不只是“能分配”，更重要的是更容易暴露：
-
-- 泄漏
-- 重复释放
-- 生命周期错误
-
-## `std.fs`
-
-在 Zig 0.16 中，文件系统操作的核心类型是 `std.Io.Dir` 和 `std.Io.File`。  
-只要开始写真实程序，文件和目录几乎一定会出现。
-
-它负责的典型问题包括：
-
-- 打开文件
-- 创建文件
-- 读取文件内容
-- 写入文件内容
-- 遍历目录
-- 处理路径对应的文件系统对象
-
-更常见的入口是：
-
-- `Io.Dir.cwd()`——获取当前工作目录的句柄
-- 目录对象上的 `openFile`、`createFile`、`openDir`
-- 文件对象上的 `writeStreamingAll`、`reader` / `writer`
-- 目录遍历的 `iterate`
-
-下面这个例子模拟一个很常见的小工具流程：
-
-1. 从当前目录打开输入文件
-2. 读取全部内容
-3. 做一点简单处理
-4. 创建输出文件并写入结果
+下面这个例子演示了最典型的文件操作流程：读取 → 处理 → 写入。
 
 ```zig
 const std = @import("std");
-const Io = std.Io;
 
 pub fn main(init: std.process.Init) !void {
     const io = init.io;
     const gpa = init.gpa;
 
-    // 把整个文件读入动态内存，后面就可以按普通切片继续处理。
-    const content = try Io.Dir.cwd().readFileAlloc(io, "input.txt", gpa, .limited(1024 * 1024));
+    const content = try std.Io.Dir.cwd().readFileAlloc(io, "input.txt", gpa, .limited(1024 * 1024));
     defer gpa.free(content);
 
     const trimmed = std.mem.trim(u8, content, " \t\r\n");
 
-    const output_file = try Io.Dir.cwd().createFile(io, "output.txt", .{ .truncate = true });
+    const output_file = try std.Io.Dir.cwd().createFile(io, "output.txt", .{ .truncate = true });
     defer output_file.close(io);
 
     try output_file.writeStreamingAll(io, "processed: ");
     try output_file.writeStreamingAll(io, trimmed);
     try output_file.writeStreamingAll(io, "\n");
-
-    std.debug.print("wrote output.txt\n", .{});
 }
 ```
 
-这个例子里，文件操作的主线非常清楚：
+几个关键习惯：
 
-- 目录对象负责「从哪里操作」
-- 文件对象负责「读写什么」
-- `io` 是 0.16 中所有 I/O 操作的显式入口
-- 打开后的资源要关闭（`defer xxx.close(io)`）
-- 读取到动态内存后要释放
-
-这也是为什么文件操作经常和 `std.mem`、`std.process`、`std.heap` 一起出现。
-
-### 创建并写入文件
-
-最小写文件示例如下：
-
-```zig
-const std = @import("std");
-const Io = std.Io;
-
-pub fn main(init: std.process.Init) !void {
-    const io = init.io;
-
-    const file = try Io.Dir.cwd().createFile(io, "example.txt", .{});
-    defer file.close(io);
-
-    // 文件句柄打开后要记得关闭，写入则通过 `writeStreamingAll` 完成。
-    try file.writeStreamingAll(io, "hello from zig\n");
-}
-```
+- `Io.Dir.cwd()` 获取当前目录句柄，`openFile` / `createFile` 从目录出发
+- 打开的资源用 `defer xxx.close(io)` 确保释放
+- 读取到堆内存后用 `defer gpa.free(...)` 配对释放
 
 ### 遍历目录项
 
-目录遍历也是高频需求。
+`openDir` 配合 `.iterate = true` 打开一个目录，`iterate()` 返回迭代器，每次调用 `next(io)` 返回一个目录项。`entry.name` 是该项的文件名。
 
 ```zig
-const std = @import("std");
-const Io = std.Io;
+var dir = try std.Io.Dir.cwd().openDir(io, ".", .{ .iterate = true });
+defer dir.close(io);
 
-pub fn main(init: std.process.Init) !void {
-    const io = init.io;
-
-    var dir = try Io.Dir.cwd().openDir(io, ".", .{ .iterate = true });
-    defer dir.close(io);
-
-    // 目录遍历通过迭代器逐项产出目录项。
-    var it = dir.iterate();
-    while (try it.next(io)) |entry| {
-        std.debug.print("{s}\n", .{entry.name});
-    }
+var it = dir.iterate();
+while (try it.next(io)) |entry| {
+    std.debug.print("{s}\n", .{entry.name});
 }
 ```
 
@@ -648,7 +466,7 @@ pub fn main(init: std.process.Init) !void {
 
 - 它经常站在 `main` 的最前面
 - 负责把“程序外部世界”带进来
-- 然后再交给 `std.fs`、`std.mem`、`std.fmt` 去继续处理
+- 然后再交给文件 I/O（`std.Io.Dir` / `std.Io.File`）、`std.mem`、`std.fmt` 去继续处理
 
 ### 读取命令行参数
 
@@ -1075,7 +893,7 @@ pub fn main(_: std.process.Init) !void {
 这个例子会同时用到：
 
 - `std.process`
-- `std.fs`
+- `std.Io.Dir` / `std.Io.File`
 - `std.mem`
 - `std.fmt`
 - `std.heap`
@@ -1149,7 +967,7 @@ pub fn main(init: std.process.Init) !void {
 这个例子最值得观察的不是某一个 API，而是模块之间的职责分工：
 
 - `std.process`：拿到参数和环境变量
-- `std.fs`：读文件、写文件
+- `std.Io`：读文件、写文件
 - `std.mem`：按行拆分、裁剪、解析键值
 - `std.heap`：通过 `init.gpa` 支持动态内存
 - `std.fmt`：通过 writer 的 `print` 生成格式化文本
@@ -1166,7 +984,7 @@ pub fn main(init: std.process.Init) !void {
 - `std.fmt`：把值格式化成文本
 - `std.debug`：观察状态、验证不变量
 - `std.testing`：固定行为、覆盖边界和错误路径
-- `std.fs`：处理文件和目录
+- `std.Io`：处理文件和目录
 - `std.process`：处理参数、环境变量和进程上下文
 - `std.ArrayList`：动态数组——数量不确定的同类型元素的首选容器
 - `std.HashMap`：哈希表——按键快速查找值，注意选择合适的变体
@@ -1175,7 +993,7 @@ pub fn main(init: std.process.Init) !void {
 如果把真实程序看成一条主线，那么很常见的组合就是：
 
 1. `std.process` 从程序入口拿到上下文
-2. `std.fs` 读取外部数据
+2. 文件 I/O（`std.Io.Dir` / `std.Io.File`）读取外部数据
 3. `std.mem` 解析和整理输入
 4. `std.ArrayList` 和 `std.HashMap` 在处理过程中存储和组织数据
 5. `std.fmt` 组织输出文本
