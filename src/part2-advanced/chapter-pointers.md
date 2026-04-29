@@ -79,6 +79,29 @@ test "slice basics" {
 
 `array[1..4]` 是原数组的一段视图，不是复制；修改切片元素会反映到原数组。
 
+### `const` 位置：限制元素还是限制切片本身？
+
+切片声明中 `const` 的位置决定了限制的对象：
+
+```zig
+var slice: []i32        // 元素和切片变量都可修改
+const slice: []i32      // 切片变量不可改（不能重新赋值），元素可改
+var slice: []const i32  // 切片变量可改，元素不可改
+const slice: []const i32 // 两者都不可改
+```
+
+`const []T` 是最少见的——「切片变量锁定为这一份视图」，不关心元素可变性。一个典型场景是 `const items = list.items`：拿到 items 后不应该换一段内存，但元素本身由容器控制。
+
+`const []const T` 是「完全不可变视图」——切片句柄不可替换，元素也不可改。常见于结构体中存储的只读数据：
+
+```zig
+const Result = struct {
+    data: const []const u8;  // 既不能改内容，也不能替换为另一段视图
+};
+```
+
+`[]const T` 是最常见的——函数参数用 `[]const u8` 表示「我只读不写也不拥有」，切片变量本身是栈上的副本，改不改都看不到外面。
+
 ### 字符串
 
 Zig 中没有独立的字符串类型——字符串就是 `[]const u8`（只读字节切片）。
@@ -256,26 +279,38 @@ test "volatile pointer" {
 
 ## `@fieldParentPtr`：从字段指针反推结构体
 
-`@fieldParentPtr` 从某个字段的指针反推出整个结构体对象的指针，用于侵入式链表和回调上下文对象：
+`@fieldParentPtr` 从某个字段的指针反推出整个结构体对象的指针，典型场景是侵入式链表——遍历时只拿到节点字段的指针，但需要访问包含它的上层结构体：
 
 ```zig
 const std = @import("std");
 
-const Creature = struct {
-    health: f32,
-    mana: u32,
+const ListNode = struct {
+    next: ?*ListNode,
 };
 
-fn boostMana(mana_ptr: *u32, amount: u32) void {
-    const creature: *Creature = @fieldParentPtr("mana", mana_ptr);
-    creature.mana += amount;
+const Task = struct {
+    node: ListNode,  // 嵌入链表节点
+    name: []const u8,
+    priority: u32,
+};
+
+fn taskFromNode(node_ptr: *ListNode) *Task {
+    return @fieldParentPtr("node", node_ptr);
 }
 
 test "fieldParentPtr" {
-    var elf = Creature{ .health = 100.0, .mana = 10 };
-    boostMana(&elf.mana, 20);
-    try std.testing.expect(elf.mana == 30);
+    var task_a = Task{ .node = .{ .next = null }, .name = "build", .priority = 1 };
+    var task_b = Task{ .node = .{ .next = null }, .name = "test", .priority = 2 };
+
+    task_a.node.next = &task_b.node;
+
+    // 遍历链表时，只拿到 ListNode 指针，需要反推出 Task
+    var it: ?*ListNode = &task_a.node;
+    while (it) |node_ptr| : (it = node_ptr.next) {
+        const task = taskFromNode(node_ptr);
+        std.debug.print("{s} (priority={})\n", .{ task.name, task.priority });
+    }
 }
 ```
 
-字段必须确实来自对应结构体，偏移关系在当前类型布局中成立。
+`taskFromNode` 接收的是 `*ListNode`，无法直接访问 `Task` 的其他字段。`@fieldParentPtr("node", node_ptr)` 根据 `node` 字段在 `Task` 中的偏移量反推出 `Task` 指针。链表遍历代码只持有 `ListNode`，但通过它就能拿到完整任务信息。

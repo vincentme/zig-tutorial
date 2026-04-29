@@ -75,7 +75,7 @@ test "union 分发" {
 
 ## VTable：`*anyopaque` + 函数指针
 
-VTable 是开放集合与运行时抽象的工具，核心三步：**类型擦除**（`*anyopaque`）→ **运行时分发**（函数指针）→ **类型恢复**（`@ptrCast(@alignCast(...))`）。
+VTable 是开放集合与运行时抽象的工具，核心三步：**类型擦除**（`*anyopaque`）→ **运行时分发**（函数指针）→ **类型恢复**（`@ptrCast(@alignCast(...))`，将 `*anyopaque` 还原为具体类型）。关于指针转换的安全前提，见[指针、切片与对齐](chapter-pointers.md)。
 
 只有在需要以下能力时才引入：
 - 运行时动态替换实现
@@ -153,7 +153,9 @@ test "VTable Writer 端到端" {
 4. **错误边界过宽** — 所有函数返回 `anyerror` 让接口语义模糊。
 5. **把泛型问题当成 VTable 问题** — 很多场景一个 `anytype` 函数就足够。
 
-## 标准库中的 VTable 实例
+## 标准库中的 VTable
+
+`std.mem.Allocator` 和 `std.Io.Writer` 是 Zig 标准库中两个最核心的 VTable 实例。它们的实现模式和前面的 `Writer` 完全一致，但规模更大、更工程化。
 
 ### `std.mem.Allocator`
 
@@ -185,33 +187,30 @@ buffer: []u8,
 end: usize = 0,
 ```
 
-### `@ptrCast(@alignCast(...))` — 标准恢复写法
-
-VTable 实现函数中，通过 `@ptrCast(@alignCast(ptr))` 将 `*anyopaque` 恢复为具体类型：
-
-```zig
-// lib/std/heap/FixedBufferAllocator.zig
-fn alloc(ctx: *anyopaque, n: usize, alignment: mem.Alignment, ra: usize) ?[*]u8 {
-    const self: *FixedBufferAllocator = @ptrCast(@alignCast(ctx));
-    // ...
-}
-```
-
-关于 `@ptrCast` 和 `@alignCast` 的详细说明，见[指针、切片与对齐](chapter-pointers.md)。
-
 ## 组合比继承更重要
 
-在 Zig 中，组合比模拟继承体系更自然：
+在 Zig 中，组合比模拟继承体系更自然。依赖关系、模块边界和生命周期通过结构体字段显式表达：
 
 ```zig
 const Service = struct {
     allocator: std.mem.Allocator,
-    cache: Cache,
-    logger: Logger,
+    io: std.Io,
+
+    pub fn process(self: *Service, path: []const u8) !void {
+        const file = try std.Io.Dir.cwd().openFile(self.io, path, .{});
+        defer file.close(self.io);
+
+        var buf: [4096]u8 = undefined;
+        var reader = file.reader(self.io, &buf);
+        const content = try reader.interface.allocRemaining(self.allocator, .limited(1024 * 1024));
+        defer self.allocator.free(content);
+
+        // 业务逻辑...
+    }
 };
 ```
 
-依赖关系、模块边界和生命周期通过结构体字段显式表达，测试时容易替换部件，资源管理路径也一目了然。
+这里的 Service 不"继承"任何父类型，但通过持有 `allocator` 和 `io` 两个字段，自然获得了内存管理和文件 I/O 的能力。这与 VTable 模式互补：组合定义依赖关系，VTable 在需要运行时替换时才引入。
 
 ## 小结
 
