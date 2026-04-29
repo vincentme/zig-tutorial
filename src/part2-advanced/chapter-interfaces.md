@@ -4,10 +4,10 @@
 
 三种方案按推荐优先级：
 
-| 方案 | 适用场景 | 成本与特点 |
-| ---- | -------- | ---------- |
-| 泛型 / `anytype` | 编译期已知类型 | 零运行时开销 |
-| `union(enum)` | 封闭变体集合 | 编译器穷尽检查 |
+| 方案                             | 适用场景           | 成本与特点       |
+| -------------------------------- | ------------------ | ---------------- |
+| 泛型 / `anytype`                 | 编译期已知类型     | 零运行时开销     |
+| `union(enum)`                    | 封闭变体集合       | 编译器穷尽检查   |
 | VTable / `*anyopaque` + 函数指针 | 运行时动态替换实现 | 最灵活，也最复杂 |
 
 ## 泛型：`anytype`
@@ -91,47 +91,60 @@ const Writer = struct {
     vtable: *const VTable,
 
     const VTable = struct {
-        writeAll: *const fn (ptr: *anyopaque, data: []const u8) anyerror!void,
+        write: *const fn (ptr: *anyopaque, data: []const u8) anyerror!void,
     };
-
-    pub fn writeAll(self: Writer, data: []const u8) !void {
-        try self.vtable.writeAll(self.ptr, data);
+    pub fn write(self: Writer, data: []const u8) !void {
+        try self.vtable.write(self.ptr, data);
     }
 };
 
-const BufferWriter = struct {
+// 实现一：写入 ArrayList
+const Buf = struct {
     list: *std.ArrayList(u8),
-
-    fn writeAll(ptr: *anyopaque, data: []const u8) anyerror!void {
-        const self: *BufferWriter = @ptrCast(@alignCast(ptr));
+    fn write(ptr: *anyopaque, data: []const u8) anyerror!void {
+        const self: *Buf = @ptrCast(@alignCast(ptr));
         try self.list.appendSlice(data);
     }
-
-    const vtable = Writer.VTable{
-        .writeAll = writeAll,
-    };
-
-    pub fn writer(self: *BufferWriter) Writer {
-        return .{
-            .ptr = self,
-            .vtable = &vtable,
-        };
+    const vtable = Writer.VTable{ .write = write };
+    pub fn writer(self: *Buf) Writer {
+        return .{ .ptr = self, .vtable = &vtable };
     }
 };
 
-test "VTable Writer 端到端" {
+// 实现二：只计数，不存储
+const Count = struct {
+    n: usize = 0,
+    fn write(ptr: *anyopaque, data: []const u8) anyerror!void {
+        const self: *Count = @ptrCast(@alignCast(ptr));
+        self.n += data.len;
+    }
+    const vtable = Writer.VTable{ .write = write };
+    pub fn writer(self: *Count) Writer {
+        return .{ .ptr = self, .vtable = &vtable };
+    }
+};
+
+test "VTable 多实现" {
     var list = std.ArrayList(u8).init(std.testing.allocator);
     defer list.deinit();
 
-    var bw = BufferWriter{ .list = &list };
-    const w = bw.writer();
+    var buf = Buf{ .list = &list };
+    var cnt = Count{};
 
-    try w.writeAll("hello ");
-    try w.writeAll("vtable");
+    // 同一个 Writer 类型，赋值为不同实现
+    var w: Writer = buf.writer();
+    try w.write("hello");       // 写入 list
+    w = cnt.writer();
+    try w.write("discarded");   // 只计数，不存储
 
-    try std.testing.expectEqualStrings("hello vtable", list.items);
+    try std.testing.expectEqualStrings("hello", list.items);
+    try std.testing.expectEqual(@as(usize, 9), cnt.n);
 }
 ```
+
+`Buf` 和 `Count` 是两个不同实现，但 `var w: Writer` 可以先后指向两者——这就是 VTable 解决的核心问题：在运行时替换实现，无需修改调用代码。
+
+注意：VTable 接口的定义（`Writer` 的 VTable 和 `write` 方法）只在声明接口时写一次。实现侧的 `const vtable = ...` 和 `pub fn writer(...)` 是机械的固定模式。工程中标准库已经把最常见接口（`Allocator`、`Io.Writer`/`Reader`）给出了成品，大多数场景下是**实现既有接口**而非创建新 VTable。
 
 ### 何时避免 VTable
 

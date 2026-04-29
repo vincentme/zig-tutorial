@@ -190,6 +190,42 @@ test "makePair" {
 
 模式：每次成功分配后紧跟 `errdefer`。成功返回时 `errdefer` 不执行，失败时按 LIFO 逆序回收。多个 `defer` / `errdefer` 混用时，执行顺序也是 LIFO——最后注册的最先执行。
 
+## 实践：如何保证 Allocator 使用正确
+
+跨分配器混用的根因通常是生命周期不清。掌握 `defer`/`errdefer` 之后，以下是保证 Allocator 使用正确的几种实用模式。
+
+**始终在同一函数内分配并释放**——分配和释放距离越近，越难出错。`defer` 天然支撑这个模式：
+
+```zig
+fn process(allocator: std.mem.Allocator) !void {
+    const buf = try allocator.alloc(u8, 64);
+    defer allocator.free(buf);
+}
+```
+
+**批量对象用 Arena**——整个阶段用一个 Arena 分配，只需一次 `deinit`，不存在「该用哪个 allocator 释放」的问题。解析器、请求处理器、构建 AST 都是典型场景：
+
+```zig
+var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+defer arena.deinit();
+const a = arena.allocator();
+
+const config = try parseConfig(a, path);   // 内部可能频繁 alloc
+const report = try generateReport(a, config);
+// defer arena.deinit() 统一回收，无需逐项 free
+```
+
+**转移所有权时从函数名上区分**——`dupe`、`toOwned`、`create` 等前缀表明返回的是新分配的数据，调用者负责释放；`trim`、`eql`、`count` 不分配：
+
+```zig
+const owned = try allocator.dupe(u8, slice);  // 调用者必须 free
+const view = std.mem.trim(u8, slice, " ");    // 借用视图，无须释放
+```
+
+**测试用 `std.testing.allocator`**——每个 test 结束自动扫描泄漏，不正确的 allocator 使用直接测试失败。
+
+这些模式的核心思路相同：**让 allocator 的责任边界在代码中是可见的**——分配和释放在同一作用域、用 Arena 减少释放点、用命名传达所有权。
+
 ## 0.16 容器与 Allocator
 
 0.16 中 `ArrayList` 和大部分容器采用非托管设计——内部不存 allocator，每个需要分配的方法都显式传入：
