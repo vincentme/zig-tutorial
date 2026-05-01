@@ -1,11 +1,5 @@
 # 并发编程概述
 
-> **进阶**：
->
-> 本章聚焦于 Zig 中基于**操作系统线程**的并发编程：线程、共享状态、同步原语、原子操作与常见取舍。
->
-> Zig 0.16 引入的 `std.Io` 接口提供了更高层的异步和并发能力（`Future`、`Queue`、`Group`、`Select` 等），这些内容已在 [std.Io 接口详解](chapter-io.md) 中专门讲解。但理解本章的线程模型和同步原语，仍然是正确使用 `std.Io` 异步能力的基础——`std.Io.Threaded` 的底层实现正是基于操作系统线程。
-
 ## 三个容易混淆的概念
 
 在进入具体代码之前，必须先分清：**异步（asynchrony）**、**并发（concurrency）**、**并行（parallelism）**。
@@ -16,7 +10,7 @@
 | 并发 | 多个任务能否被同时推进 | 服务器同时处理多个客户端请求 |
 | 并行 | 多个任务是否真的在物理上同时运行 | 多核 CPU 上多个线程同时执行 |
 
-这三个概念在 [std.Io 接口详解](chapter-io.md) 中也会出现，但那里的重点是如何用 `Io` API 来利用异步和并发；本章的重点则是底层的线程机制和同步工具。
+这三个概念贯穿后续所有并发相关话题。
 
 ### 异步："顺序是否重要"
 
@@ -90,7 +84,8 @@ const std = @import("std");
 
 fn worker(id: usize) void {
     std.debug.print("worker {} start\n", .{id});
-    std.time.sleep(200 * std.time.ns_per_ms);
+    var i: usize = 0;
+    while (i < 100_000_000) : (i += 1) {} // 模拟耗时
     std.debug.print("worker {} done\n", .{id});
 }
 
@@ -157,53 +152,51 @@ counter += 1;
 
 ## 互斥锁：最常见的共享数据保护方式
 
-对于复杂共享数据，最常见的第一选择通常是互斥锁 `std.Thread.Mutex`。
+对于复杂共享数据，最常见的第一选择通常是互斥锁 `std.Io.Mutex`。
 
 ```zig
 const std = @import("std");
 
 const Counter = struct {
-    mutex: std.Thread.Mutex = .{},
+    mutex: std.Io.Mutex = .init,
     value: usize = 0,
 
-    pub fn increment(self: *Counter) void {
-        self.mutex.lock();
-        defer self.mutex.unlock();
+    pub fn increment(self: *Counter, io: std.Io) !void {
+        try self.mutex.lock(io);
+        defer self.mutex.unlock(io);
         self.value += 1;
     }
 
-    pub fn get(self: *Counter) usize {
-        self.mutex.lock();
-        defer self.mutex.unlock();
+    pub fn get(self: *Counter, io: std.Io) !usize {
+        try self.mutex.lock(io);
+        defer self.mutex.unlock(io);
         return self.value;
     }
 };
 
-fn worker(counter: *Counter) void {
+fn worker(data: *struct { counter: *Counter, io: std.Io }) void {
     for (0..1000) |_| {
-        counter.increment();
+        data.counter.increment(data.io) catch unreachable;
     }
 }
 
-pub fn main() !void {
+pub fn main(init: std.process.Init) !void {
+    const io = init.io;
     var counter = Counter{};
+
     var threads: [4]std.Thread = undefined;
-
     for (&threads) |*thread| {
-        thread.* = try std.Thread.spawn(.{}, worker, .{&counter});
+        thread.* = try std.Thread.spawn(.{}, worker, .{.{ .counter = &counter, .io = io }});
     }
+    for (threads) |thread| thread.join();
 
-    for (threads) |thread| {
-        thread.join();
-    }
-
-    std.debug.print("final = {}\n", .{counter.get()});
+    std.debug.print("final = {}\n", .{try counter.get(io)});
 }
 ```
 
-### 这段代码体现了什么？
+要点：
 
-- 锁保护的是**共享状态**，不是“线程本身”
+- 0.16 中 `Mutex.lock()` / `unlock()` 需要显式传入 `io`——和文件 I/O 同样的设计
 - `defer` 能帮助减少忘记解锁的风险
 - 把锁和数据封装在一起，通常比在外面散落管理更清晰
 
@@ -226,53 +219,48 @@ pub fn main() !void {
 - 某个后台步骤完成了
 - 生产者已经放入新任务
 
-这时可以使用 `std.Thread.Condition`。
+这时可以使用 `std.Io.Condition`。
 
 ```zig
 const std = @import("std");
 
-// 这些变量必须声明为模块级（全局），因为 std.Thread.spawn 要求线程函数
-// 的签名是固定的（不能捕获局部变量的闭包），所以共享状态只能通过全局变量
-// 或显式传入的指针来实现。这里用全局变量是为了让示例尽可能简洁。
-var mutex: std.Thread.Mutex = .{};
-var cond: std.Thread.Condition = .{};
-var ready = false;
+const State = struct {
+    mutex: std.Io.Mutex = .init,
+    cond: std.Io.Condition = .init,
+    ready: bool = false,
+    io: std.Io,
+};
 
-fn producer() void {
-    std.time.sleep(100 * std.time.ns_per_ms); // 模拟生产耗时
-    mutex.lock();
-    defer mutex.unlock();
-
-    ready = true;
-    cond.signal(); // 通知等待中的消费者
+fn producer(state: *State) void {
+    var i: usize = 0;
+    while (i < 50_000_000) : (i += 1) {}
+    state.mutex.lock(state.io) catch unreachable;
+    defer state.mutex.unlock(state.io);
+    state.ready = true;
+    state.cond.signal(state.io);
 }
 
-fn consumer() void {
-    mutex.lock();
-    defer mutex.unlock();
-
-    while (!ready) {
-        cond.wait(&mutex);
+fn consumer(state: *State) void {
+    state.mutex.lock(state.io) catch unreachable;
+    defer state.mutex.unlock(state.io);
+    while (!state.ready) {
+        state.cond.wait(state.io, &state.mutex) catch unreachable;
     }
-
     std.debug.print("consumer: resource is ready\n", .{});
 }
 
-pub fn main(_: std.process.Init) !void {
-    const producer_thread = try std.Thread.spawn(.{}, producer, .{});
-    const consumer_thread = try std.Thread.spawn(.{}, consumer, .{});
-
-    consumer_thread.join();
-    producer_thread.join();
+pub fn main(init: std.process.Init) !void {
+    var state = State{ .io = init.io };
+    const p = try std.Thread.spawn(.{}, producer, .{&state});
+    const c = try std.Thread.spawn(.{}, consumer, .{&state});
+    c.join();
+    p.join();
 }
 ```
 
-### 条件变量的核心模式
-
-
 - 等待条件变量时，要和一把互斥锁配合使用
 - 条件检查通常写在 `while` 循环里，而不是 `if`
-- 条件变量不是“数据本身”，而是“状态变化的通知机制”
+- 0.16 中 `Condition.wait()` / `signal()` 同样需要传入 `io`
 
 ## 原子操作：适合小而明确的共享状态
 
@@ -387,6 +375,11 @@ pub fn main(_: std.process.Init) !void {
 
 在 [std.Io 接口详解](chapter-io.md) 中，我们介绍了 `std.Io` 的异步和并发能力。那么，本章讲的线程模型与 `std.Io` 是什么关系？
 
+`std.Io` 提供了基于线程池的更高层抽象：
+
+- **`io.async(f, args)`** — 将任务提交给运行时执行，调用线程不会阻塞。底层可能使用线程池、也可能在当前线程上顺序执行——它只承诺任务会被推进，不承诺一定会并发
+- **`io.concurrent(f, args)`** — 与 `io.async` 类似，但额外要求运行时为任务**分配真实的并发执行资源**。如果无法提供并发（线程池已满或平台不支持），返回 `error.ConcurrencyUnavailable`
+
 ### `std.Io.Threaded` 的底层就是线程
 
 目前唯一完整可用的 `Io` 实现 `std.Io.Threaded`，底层使用的就是操作系统线程。当你调用 `io.async()` 时，`Threaded` 实现会将任务分配给线程池中的线程执行。
@@ -399,13 +392,11 @@ pub fn main(_: std.process.Init) !void {
 
 关于 `std.Io` 如何实现异步和并发操作，见[std.Io 接口详解](chapter-io.md)章节。
 
-> **注意**：`std.Io` 的异步任务应避免使用 `threadlocal`。不同 `Io` 实现可能使用不同的并发单元，`threadlocal` 代码在未来切换到非线程实现时可能行为异常。
+> **注意**：`std.Io` 的异步任务应避免使用 `threadlocal`。不同 `Io` 实现可能使用不同的并发单元（线程池、事件循环等），`threadlocal` 代码在 `Io` 实现切换时可能行为异常。
 
 ## 并发编程最常见的几个坑
 
-### 1. 把“睡眠等待”当同步机制
-
-`std.time.sleep()` 可以模拟场景，但不能代替真正的同步原语。
+### 1. 把睡眠等待当同步机制——`std.Io.sleep` 可以模拟耗时，但不能代替真正的同步原语。
 
 如果一个线程要等待另一个线程完成工作，应优先考虑：
 
@@ -446,13 +437,13 @@ pub fn main(_: std.process.Init) !void {
 
 ## 关于线程池（Thread Pool）
 
-可能会好奇标准库是否提供了线程池。在当前的 0.16-dev 版本中，`std.Thread` 不包含通用的线程池实现。早期版本曾经存在过 `std.Thread.Pool`，但在标准库重构过程中已被移除。
+可能会好奇标准库是否提供了线程池。在当前的 0.16 版本中，`std.Thread` 不包含通用的线程池实现。早期版本曾经存在过 `std.Thread.Pool`，但在标准库重构过程中已被移除。
 
 如果项目需要线程池模式，目前的常见做法是：
 
 - 自己维护一组工作线程 + 任务队列
 - 使用社区提供的第三方库
-- 使用 `std.Io` 的异步能力（`io.async`、`Group` 等）来获得类似效果，详见 [std.Io 接口详解](chapter-io.md)
+- 使用 `std.Io` 的 `io.async` / `io.concurrent` 来获得类似效果——它底层就是线程池
 
 对于学习目的，手动管理一组线程加上条件变量通知，恰好是理解线程池内部工作原理的好练习。
 

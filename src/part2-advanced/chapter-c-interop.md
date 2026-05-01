@@ -23,6 +23,8 @@ ABI（Application Binary Interface）决定了函数参数如何传递、返回�
 
 ### `@cImport`
 
+`@cImport` 是最直接的入口，适合快速原型和教学演示：
+
 ```zig
 const c = @cImport({
     @cInclude("stdio.h");
@@ -34,6 +36,21 @@ pub fn main() void {
 ```
 
 字符串字面量是 `*const [N:0]u8`，自动强转为 `[:0]const u8`，NUL 终止，传给 C 是安全的。但运行时构造的 `[]const u8` 并不保证 NUL 终止——这是最常见的坑。
+
+> **0.16 说明**：`@cImport` 在 0.16 中已标记为废弃（deprecated）。新代码推荐在 `build.zig` 中使用 `addTranslateC` 翻译头文件，再通过 `@import` 导入翻译后的模块。`@cImport` 仍可编译，方便学习和小型实验，但在正式项目中建议迁移：
+
+```zig
+// build.zig 中配置：
+const translate_c = b.addTranslateC(.{
+    .root_source_file = b.path("src/c.h"),
+    .target = target,
+    .optimize = optimize,
+});
+exe.root_module.addImport("c", translate_c.createModule());
+
+// Zig 中导入：
+const c = @import("c");
+```
 
 ### `zig translate-c`
 

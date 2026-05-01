@@ -35,6 +35,8 @@
 - [实战案例 - HTTP 服务器设计与最小实现](part3-practice/chapter-http-server.md)
 - [实战案例 - 内存池实现](part3-practice/chapter-memory-pool.md)
 - [实战案例 - 配置系统原型](part3-practice/chapter-config-system.md)
+- [实战案例 - 有限状态机](part3-practice/chapter-state-machine.md)
+- [实战案例 - TOML 解析器](part3-practice/chapter-toml-parser.md)
 - [SIMD 向量编程（专题）](part3-practice/chapter-simd.md)
 - [异步 I/O：现状与未来方向](part3-practice/chapter-async.md)
 - [高级内存管理技巧（专题）](part3-practice/chapter-advanced-memory.md)
