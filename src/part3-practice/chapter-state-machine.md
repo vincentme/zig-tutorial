@@ -28,7 +28,27 @@ if (mode == .normal) {
 
 状态机的本质就是这张表的程序化表达：**在给定状态下，当某个事件到达时，确定下一个状态是什么**——以及是否需要前置检查（guard）和后置动作（action）。
 
-这个抽象对应到 Zig 中的泛型模式：编译期传入状态类型、事件类型和转移表，生成一个带 `processEvent` 方法的结构体。Context 作为用户自定义的可变数据，被 guard 和 action 共享访问。
+## 从具体到泛型：为什么需要类型工厂
+
+如果只为交通灯写一个状态机，可以直接用 struct + switch：
+
+```zig
+const TrafficLight = struct {
+    state: enum { red, green, yellow } = .red,
+
+    fn tick(self: *TrafficLight) void {
+        self.state = switch (self.state) {
+            .red => .green,
+            .green => .yellow,
+            .yellow => .red,
+        };
+    }
+};
+```
+
+三行代码，清晰直观。但当有第二个、第三个场景（编辑器模式、网络协议状态、UI 页面栈）时，每个都要重写一遍近似的 struct——状态枚举不同、事件枚举不同、上下文字段不同，但`查表 → 检查 → 转移 → 回调` 这个逻辑完全一样。
+
+Zig 的解决方式是 `comptime` 类型工厂：把 State（可到达状态的枚举）、Event（触发转移的事件枚举）、Context（guard 和 action 共享的可变数据）作为编译期参数传入，生成的结构体对所有场景复用同一套逻辑。
 
 ## 泛型实现
 
@@ -57,7 +77,7 @@ const Transition = struct {
 };
 ```
 
-guard 和 action 都是可选的函数指针。`processEvent` 的核心逻辑：遍历转移表 → 匹配 `from == current && event == event` → 检查 guard → 执行 action → 更新 state → 返回。没有匹配的规则时返回 `error.NoTransition`。
+guard 和 action 都是可选的函数指针（`?*const fn`）。`if (t.guard) |g|` 是可选类型解包：`t.guard` 为 `null` 时跳过该块，非空时将函数指针绑定到 `g` 并调用。这一模式与 `while (reader.takeDelimiter(...)) |line|` 中的可选解包一致——详见[控制流章节](../part1-basics/chapter-control-flow.md)。`processEvent` 的核心逻辑：遍历转移表 → 匹配 `from == current && event == event` → 检查 guard → 执行 action → 更新 state → 返回。没有匹配的规则时返回 `error.NoTransition`。
 
 ## 完整代码
 
@@ -146,7 +166,7 @@ test "traffic light state machine" {
 }
 ```
 
-三个要点：
+这段代码反映了泛型状态机的几个设计选择：
 
 1. **转移表在编译期确定**——状态和事件都是枚举，拼写错误会在编译期暴露
 2. **`processEvent` 做一次 O(n) 遍历**——对教学原型足够；实际场景中转移规则通常不超过几十条
@@ -154,7 +174,7 @@ test "traffic light state machine" {
 
 ## guard 与 action
 
-guard 在转移前校验，action 在执行后触发副作用。下面用编辑器模式切换的案例同时展示：
+上面红绿灯只用到了 `action`——每次 Tick 切换到下一盏灯并打印。guard 和 action 的典型组合场景是：guard 在转移前做条件校验，action 在转移成功后执行副作用。下面用编辑器模式切换的案例同时展示：
 
 - 三种模式：Normal、Insert、Visual
 - `i` 进入 Insert，`Esc` 回 Normal，`v` 进入 Visual

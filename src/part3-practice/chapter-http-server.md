@@ -160,7 +160,7 @@ const Server = struct {
 
     fn start(self: *Self) !void {
         var listener = try self.address.listen(self.io, .{
-            .reuse_port = true,
+            .reuse_address = true,
         });
         defer listener.deinit(self.io);
 
@@ -179,9 +179,8 @@ const Server = struct {
         var rdr = stream.reader(self.io, &buf);
         const reader: *std.Io.Reader = &rdr.interface;
 
-        const maybe_line = reader.takeDelimiter('\n');
-        if (maybe_line == null) return;
-        const line = maybe_line.? orelse return;
+        const maybe_line = try reader.takeDelimiter('\n');
+        const line = maybe_line orelse return;
         _ = line;
 
         // 正文略：请求解析与响应生成逻辑见下方讲解
